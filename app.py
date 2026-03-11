@@ -1,0 +1,748 @@
+"""
+Hack the Case — AI-симулятор решения бизнес-кейсов
+Streamlit-приложение с YandexGPT API
+"""
+
+import streamlit as st
+import requests
+import json
+import time
+from dataclasses import dataclass
+
+# ─────────────────────────────────────────────
+# КОНФИГУРАЦИЯ
+# ─────────────────────────────────────────────
+
+st.set_page_config(
+    page_title="Hack the Case",
+    page_icon="🧠",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# ─────────────────────────────────────────────
+# YandexGPT API
+# ─────────────────────────────────────────────
+
+YANDEX_GPT_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
+
+
+def get_api_credentials():
+    """Получаем креды из Streamlit secrets или sidebar."""
+    api_key = st.secrets.get("YANDEX_API_KEY", "")
+    folder_id = st.secrets.get("YANDEX_FOLDER_ID", "")
+    model = st.secrets.get("YANDEX_MODEL", "yandexgpt-lite")
+    return api_key, folder_id, model
+
+
+def call_yandex_gpt(system_prompt: str, user_prompt: str, temperature: float = 0.6) -> str:
+    """Вызов YandexGPT Foundation Models API."""
+    api_key, folder_id, model = get_api_credentials()
+
+    if not api_key or not folder_id:
+        return "⚠️ Не заданы YANDEX_API_KEY и YANDEX_FOLDER_ID. Добавьте их в Settings → Secrets на Streamlit Cloud."
+
+    model_uri = f"gpt://{folder_id}/{model}/latest"
+
+    headers = {
+        "Authorization": f"Api-Key {api_key}",
+        "Content-Type": "application/json",
+    }
+
+    body = {
+        "modelUri": model_uri,
+        "completionOptions": {
+            "stream": False,
+            "temperature": temperature,
+            "maxTokens": 4000,
+        },
+        "messages": [
+            {"role": "system", "text": system_prompt},
+            {"role": "user", "text": user_prompt},
+        ],
+    }
+
+    try:
+        resp = requests.post(YANDEX_GPT_URL, headers=headers, json=body, timeout=60)
+        resp.raise_for_status()
+        data = resp.json()
+        return data["result"]["alternatives"][0]["message"]["text"]
+    except requests.exceptions.HTTPError as e:
+        return f"Ошибка API ({resp.status_code}): {resp.text}"
+    except Exception as e:
+        return f"Ошибка: {e}"
+
+
+# ─────────────────────────────────────────────
+# ДАННЫЕ: ЭТАПЫ И ФРЕЙМВОРКИ
+# ─────────────────────────────────────────────
+
+CASE_STEPS = [
+    {
+        "id": "issue_tree",
+        "title": "1. Issue Tree / Problem Tree",
+        "description": "Декомпозиция проблемы: разбей задачу на MECE-компоненты",
+        "frameworks": ["Issue Tree", "MECE-принцип", "Problem Tree"],
+        "coach_prompt": """Ты — Case Coach, эксперт по бизнес-консалтингу в стиле McKinsey/BCG.
+Студент работает над блоком Issue Tree. Твоя задача — НЕ давать готовый ответ, а:
+- Задавать наводящие вопросы
+- Проверять MECE (Mutually Exclusive, Collectively Exhaustive)
+- Если студент застрял — дать подсказку, но не решение
+- Спрашивать: "Все ли ветки ты учёл? Нет ли пересечений?"
+Отвечай на русском. Будь требовательным, но поддерживающим.""",
+    },
+    {
+        "id": "research",
+        "title": "2. Ресёрч и анализ рынка",
+        "description": "Анализ внешней среды: рынок, конкуренты, тренды",
+        "frameworks": [
+            "PEST / PESTEL",
+            "5 Porter Forces",
+            "SWOT",
+            "Benchmarking",
+            "Market Sizing",
+        ],
+        "coach_prompt": """Ты — Case Coach. Студент работает над блоком Ресёрч/Анализ рынка.
+Твоя задача — НЕ давать готовые данные, а:
+- Направлять: "Какие макро-факторы влияют? Используй PEST"
+- Проверять логику market sizing: "Откуда эта цифра? Как ты оцениваешь TAM/SAM/SOM?"
+- Спрашивать про конкурентов: "Кто основные игроки? Какие барьеры входа по Porter?"
+- Подсказывать фреймворк, если студент не знает какой применить
+Отвечай на русском.""",
+    },
+    {
+        "id": "segmentation",
+        "title": "3. Сегментация и инсайты",
+        "description": "Определи целевую аудиторию и ключевые инсайты",
+        "frameworks": [
+            "Customer Segmentation",
+            "Persona",
+            "JTBD (Jobs To Be Done)",
+            "Pain-Gain / Need-state",
+            "ABC-анализ",
+        ],
+        "coach_prompt": """Ты — Case Coach. Студент работает над сегментацией аудитории.
+Твоя задача:
+- Проверять: "По каким критериям ты сегментируешь? Демография? Поведение? Потребности?"
+- Направлять к JTBD: "Какую 'работу' выполняет продукт для клиента?"
+- Если поверхностно: "Опиши persona подробнее — что у неё болит? Какой gain?"
+- Проверять ABC-логику: "Кто твой сегмент A? Почему именно он приоритетный?"
+Отвечай на русском. Не давай готовых ответов.""",
+    },
+    {
+        "id": "cjm",
+        "title": "4. CJM и сервисный дизайн",
+        "description": "Customer Journey Map: путь клиента от осознания до лояльности",
+        "frameworks": [
+            "CJM (Customer Journey Map)",
+            "Penetration Funnel",
+            "Funnel Analysis",
+            "AARRR",
+        ],
+        "coach_prompt": """Ты — Case Coach. Студент строит CJM (Customer Journey Map).
+Твоя задача:
+- Проверять полноту: "Все ли этапы пути клиента ты описал? Awareness → Consideration → Purchase → Retention → Advocacy?"
+- Спрашивать про touchpoints: "Где клиент соприкасается с продуктом? Где pain points?"
+- Направлять к воронке: "Какая конверсия на каждом этапе? Где bottleneck?"
+- Напоминать про AARRR если уместно
+Отвечай на русском.""",
+    },
+    {
+        "id": "initiatives",
+        "title": "5. Инициативы и решения",
+        "description": "Предложи конкретные решения и приоритизируй их",
+        "frameworks": [
+            "Driver-based Solution Design",
+            "Prioritization Matrix",
+            "2x2 Matrix",
+            "Ansoff Matrix",
+            "4P / 7P Marketing Mix",
+        ],
+        "coach_prompt": """Ты — Case Coach. Студент предлагает инициативы/решения.
+Твоя задача:
+- Проверять связь с проблемой: "Как это решение связано с корневой причиной из issue tree?"
+- Требовать приоритизацию: "Расставь по impact/effort — что даёт максимум при минимуме затрат?"
+- Проверять 4P: "Ты продумал все P? Product понятен, а Place и Promotion?"
+- Спрашивать: "Почему именно это решение? Какие альтернативы ты отбросил и почему?"
+Отвечай на русском.""",
+    },
+    {
+        "id": "metrics",
+        "title": "6. Метрики и эксперименты",
+        "description": "Определи KPI, North Star Metric, план экспериментов",
+        "frameworks": [
+            "Metric Hierarchy",
+            "NSM (North Star Metric)",
+            "HEART",
+            "AARRR",
+            "Cohort Analysis",
+        ],
+        "coach_prompt": """Ты — Case Coach. Студент определяет метрики и эксперименты.
+Твоя задача:
+- Спрашивать: "Какая у тебя North Star Metric? Почему именно она?"
+- Проверять иерархию: "Как NSM декомпозируется на метрики уровня ниже?"
+- Направлять: "Как ты будешь измерять успех? Какой эксперимент проведёшь первым?"
+- Проверять HEART: "Happiness, Engagement, Adoption, Retention, Task success — что отслеживаешь?"
+Отвечай на русском.""",
+    },
+    {
+        "id": "economics",
+        "title": "7. Экономика и финмодель",
+        "description": "Unit Economics, Business Case, NPV/IRR",
+        "frameworks": [
+            "Unit Economics",
+            "Business Case / Financial Model",
+            "NPV / IRR / PBP",
+            "BCG Matrix",
+        ],
+        "coach_prompt": """Ты — Case Coach. Студент строит финансовую модель.
+Твоя задача:
+- Проверять unit economics: "Какой CAC? LTV? LTV/CAC ratio?"
+- Требовать sanity check: "Эта выручка реалистична? Откуда цифры?"
+- Спрашивать: "Какой payback period? Когда проект выходит в плюс?"
+- Если есть NPV: "Какую ставку дисконтирования ты взял и почему?"
+Отвечай на русском. Не считай за студента — задавай вопросы.""",
+    },
+    {
+        "id": "risks",
+        "title": "8. Риски и митигация",
+        "description": "Risk Matrix, план митигации, сценарный анализ",
+        "frameworks": [
+            "Risk Matrix",
+            "McKinsey 7S (для орг. рисков)",
+            "SWOT (угрозы и слабости)",
+        ],
+        "coach_prompt": """Ты — Case Coach. Студент анализирует риски.
+Твоя задача:
+- Проверять полноту: "Ты рассмотрел рыночные, операционные, финансовые, репутационные риски?"
+- Требовать оценку: "Какова вероятность? Какой impact? Покажи на risk matrix"
+- Спрашивать про митигацию: "Как ты будешь снижать каждый ключевой риск?"
+- Направлять: "Какой worst-case scenario? Что будешь делать?"
+Отвечай на русском.""",
+    },
+    {
+        "id": "roadmap",
+        "title": "9. Roadmap и реализация",
+        "description": "Gantt chart, Product Roadmap, план внедрения",
+        "frameworks": [
+            "Gantt Chart",
+            "Product Roadmap",
+            "Implementation Plan",
+        ],
+        "coach_prompt": """Ты — Case Coach. Студент строит план реализации.
+Твоя задача:
+- Проверять реалистичность: "Сроки адекватны? Нет ли параллельных задач, зависящих друг от друга?"
+- Спрашивать: "Кто отвечает за каждый этап? Какие ресурсы нужны?"
+- Направлять: "Покажи quick wins — что можно запустить в первый месяц?"
+- Проверять: "Есть ли контрольные точки (milestones)? Как ты узнаешь, что всё идёт по плану?"
+Отвечай на русском.""",
+    },
+]
+
+INDUSTRIES = [
+    "FMCG / Ритейл",
+    "Fintech / Банки",
+    "EdTech / Образование",
+    "HealthTech / Медицина",
+    "E-commerce / Маркетплейсы",
+    "Транспорт / Логистика",
+    "HoReCa / Рестораны",
+    "IT / SaaS",
+    "Телеком",
+    "Промышленность / Производство",
+    "Недвижимость / PropTech",
+    "Медиа / Развлечения",
+]
+
+DIFFICULTY_LEVELS = {
+    "Начальный": "Простой кейс для новичков: понятная проблема, один продукт, локальный рынок. Данные предоставлены.",
+    "Средний": "Кейс среднего уровня: несколько бизнес-направлений, нужен market sizing, конкурентный анализ. Часть данных нужно оценить.",
+    "Продвинутый": "Сложный кейс как на Changellenge/McKinsey: неоднозначная проблема, международный рынок, нужна финмодель и стратегия. Минимум данных.",
+}
+
+# ─────────────────────────────────────────────
+# ПРОМПТЫ
+# ─────────────────────────────────────────────
+
+CASE_GENERATION_SYSTEM = """Ты — генератор бизнес-кейсов для кейс-чемпионатов уровня Changellenge, McKinsey Solve, BCG.
+Генерируй реалистичные кейсы на русском языке.
+
+Структура кейса:
+1. **Компания** — название (вымышленное), отрасль, масштаб, краткое описание
+2. **Контекст** — рыночная ситуация, тренды, позиция компании
+3. **Проблема** — чёткая формулировка бизнес-задачи
+4. **Данные** — ключевые цифры (выручка, доля рынка, количество клиентов, рост/падение)
+5. **Вопрос для решения** — конкретный вопрос, на который нужно ответить
+6. **Дополнительные вводные** — ограничения, бюджет, сроки
+
+Кейс должен быть решаемым с помощью стандартных консалтинговых фреймворков.
+Не давай подсказок по решению. Пиши на русском."""
+
+RUBRIC_SYSTEM = """Ты — Rubric-жюри, автоматизированный оценщик бизнес-кейсов.
+Оцениваешь решение по рубрике из 10 критериев, каждый от 1 до 10 баллов.
+
+КРИТЕРИИ ОЦЕНКИ:
+1. **Структура и MECE** (1-10): Issue tree логичное? Нет пересечений? Полное?
+2. **Глубина анализа рынка** (1-10): Market sizing, PEST, Porter — насколько глубоко?
+3. **Сегментация и инсайты** (1-10): Чёткие сегменты? JTBD? Personas?
+4. **CJM и воронка** (1-10): Полный путь клиента? Touchpoints? Конверсии?
+5. **Качество инициатив** (1-10): Решения связаны с проблемой? Приоритизированы?
+6. **Метрики и KPI** (1-10): NSM определена? Иерархия метрик? Эксперименты?
+7. **Финансовая модель** (1-10): Unit economics? Реалистичные прогнозы? ROI?
+8. **Анализ рисков** (1-10): Полнота? Risk matrix? Митигация?
+9. **Roadmap** (1-10): Реалистичный план? Milestones? Ответственные?
+10. **Общая связность** (1-10): Решение целостное? Логика от проблемы к решению?
+
+Для каждого критерия:
+- Поставь балл
+- Объясни почему (1-2 предложения)
+- Дай конкретную рекомендацию по улучшению
+
+В конце дай общий балл (сумма /100) и резюме: сильные стороны, зоны роста, и 3 конкретных совета.
+Пиши на русском. Будь конструктивным но строгим — как настоящее жюри на Changellenge."""
+
+
+# ─────────────────────────────────────────────
+# СТИЛИ
+# ─────────────────────────────────────────────
+
+CUSTOM_CSS = """
+<style>
+    /* Main theme */
+    .stApp {
+        background-color: #f8f9fc;
+    }
+
+    /* Header */
+    .main-header {
+        background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+        padding: 1.5rem 2rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        color: white;
+    }
+    .main-header h1 {
+        color: white !important;
+        margin: 0;
+        font-size: 1.8rem;
+    }
+    .main-header p {
+        color: rgba(255,255,255,0.9);
+        margin: 0.3rem 0 0 0;
+        font-size: 1rem;
+    }
+
+    /* Step cards */
+    .step-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.2rem;
+        margin-bottom: 0.8rem;
+        border-left: 4px solid #ddd;
+        transition: all 0.2s;
+    }
+    .step-card.active {
+        border-left-color: #FF6B35;
+        box-shadow: 0 2px 8px rgba(255,107,53,0.15);
+    }
+    .step-card.done {
+        border-left-color: #28a745;
+        opacity: 0.8;
+    }
+
+    /* Framework tags */
+    .framework-tag {
+        display: inline-block;
+        background: #fff3e6;
+        color: #e67700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        margin: 0.15rem;
+    }
+
+    /* Score */
+    .score-box {
+        background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        font-size: 2rem;
+        font-weight: bold;
+    }
+
+    /* Chat messages */
+    .coach-msg {
+        background: #f0f4ff;
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border-left: 3px solid #4a6cf7;
+    }
+    .student-msg {
+        background: #fff8f0;
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border-left: 3px solid #FF6B35;
+    }
+
+    /* Progress bar */
+    .progress-container {
+        background: #e9ecef;
+        border-radius: 10px;
+        height: 8px;
+        margin: 1rem 0;
+    }
+    .progress-fill {
+        background: linear-gradient(90deg, #FF6B35, #F7931E);
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.3s;
+    }
+</style>
+"""
+
+
+# ─────────────────────────────────────────────
+# ИНИЦИАЛИЗАЦИЯ SESSION STATE
+# ─────────────────────────────────────────────
+
+def init_session_state():
+    defaults = {
+        "page": "start",          # start | solve | evaluate
+        "case_text": "",
+        "case_industry": "",
+        "case_difficulty": "",
+        "current_step": 0,
+        "step_answers": {},       # {step_id: "answer text"}
+        "step_chats": {},         # {step_id: [{"role": ..., "text": ...}, ...]}
+        "evaluation": "",
+        "generating": False,
+    }
+    for k, v in defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
+
+
+# ─────────────────────────────────────────────
+# СТРАНИЦЫ
+# ─────────────────────────────────────────────
+
+def page_start():
+    """Стартовая страница: генерация кейса."""
+    st.markdown("""
+    <div class="main-header">
+        <h1>Hack the Case</h1>
+        <p>AI-симулятор решения бизнес-кейсов. Учись думать как консультант.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        st.subheader("Настройки кейса")
+
+        industry = st.selectbox("Отрасль", INDUSTRIES, index=0)
+        difficulty = st.selectbox(
+            "Уровень сложности",
+            list(DIFFICULTY_LEVELS.keys()),
+            index=1,
+        )
+        st.caption(DIFFICULTY_LEVELS[difficulty])
+
+        extra_context = st.text_area(
+            "Дополнительный контекст (необязательно)",
+            placeholder="Например: международная экспансия, запуск нового продукта, оптимизация процессов...",
+            height=80,
+        )
+
+        if st.button("Сгенерировать кейс", type="primary", use_container_width=True):
+            with st.spinner("Генерирую кейс..."):
+                prompt = f"Сгенерируй бизнес-кейс.\nОтрасль: {industry}\nСложность: {difficulty} — {DIFFICULTY_LEVELS[difficulty]}"
+                if extra_context:
+                    prompt += f"\nДополнительный контекст: {extra_context}"
+
+                case_text = call_yandex_gpt(CASE_GENERATION_SYSTEM, prompt, temperature=0.8)
+
+                st.session_state.case_text = case_text
+                st.session_state.case_industry = industry
+                st.session_state.case_difficulty = difficulty
+                st.session_state.step_answers = {}
+                st.session_state.step_chats = {}
+                st.session_state.current_step = 0
+                st.session_state.evaluation = ""
+
+    with col2:
+        st.subheader("Как это работает")
+        st.markdown("""
+        **1. Генерация** — AI создаёт уникальный кейс по выбранным параметрам
+
+        **2. Решение** — ты проходишь 9 этапов, как на настоящем кейс-чемпионате
+
+        **3. AI-Coach** — на каждом этапе AI задаёт вопросы и направляет, но не решает за тебя
+
+        **4. Оценка** — в конце Rubric-жюри ставит баллы по 10 критериям
+        """)
+
+        st.markdown("---")
+        st.markdown("**Этапы решения:**")
+        for step in CASE_STEPS:
+            st.markdown(f"- {step['title']}")
+
+    # Показываем сгенерированный кейс
+    if st.session_state.case_text:
+        st.markdown("---")
+        st.subheader("Твой кейс")
+        st.markdown(st.session_state.case_text)
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            if st.button("Начать решение", type="primary", use_container_width=True):
+                st.session_state.page = "solve"
+                st.rerun()
+        with col_b:
+            if st.button("Сгенерировать другой кейс", use_container_width=True):
+                st.session_state.case_text = ""
+                st.rerun()
+
+
+def page_solve():
+    """Страница пошагового решения с AI-коучем."""
+    current = st.session_state.current_step
+    step = CASE_STEPS[current]
+    total = len(CASE_STEPS)
+
+    # Прогресс-бар
+    completed = sum(1 for s in CASE_STEPS if s["id"] in st.session_state.step_answers)
+    progress_pct = int(completed / total * 100)
+
+    st.markdown(f"""
+    <div class="main-header">
+        <h1>Hack the Case — Решение</h1>
+        <p>Этап {current + 1} из {total} | Прогресс: {completed}/{total} блоков</p>
+    </div>
+    <div class="progress-container">
+        <div class="progress-fill" style="width: {progress_pct}%"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Сайдбар: навигация по этапам + кейс
+    with st.sidebar:
+        st.subheader("Навигация")
+        for i, s in enumerate(CASE_STEPS):
+            done = s["id"] in st.session_state.step_answers
+            icon = "✅" if done else ("▶️" if i == current else "⬜")
+            if st.button(f"{icon} {s['title']}", key=f"nav_{i}", use_container_width=True):
+                st.session_state.current_step = i
+                st.rerun()
+
+        st.markdown("---")
+        with st.expander("Условие кейса", expanded=False):
+            st.markdown(st.session_state.case_text)
+
+        st.markdown("---")
+        if st.button("Завершить и получить оценку", type="primary", use_container_width=True):
+            st.session_state.page = "evaluate"
+            st.rerun()
+        if st.button("Назад к генерации"):
+            st.session_state.page = "start"
+            st.rerun()
+
+    # Основной контент
+    col_work, col_coach = st.columns([1, 1])
+
+    with col_work:
+        st.subheader(step["title"])
+        st.write(step["description"])
+
+        # Фреймворки-теги
+        tags = " ".join([f'<span class="framework-tag">{f}</span>' for f in step["frameworks"]])
+        st.markdown(f"**Рекомендуемые фреймворки:** {tags}", unsafe_allow_html=True)
+        st.markdown("")
+
+        # Поле ответа
+        answer_key = step["id"]
+        existing_answer = st.session_state.step_answers.get(answer_key, "")
+        answer = st.text_area(
+            "Твоё решение по этому блоку",
+            value=existing_answer,
+            height=300,
+            placeholder=f"Опиши своё решение для этапа «{step['title']}»...\n\nИспользуй фреймворки: {', '.join(step['frameworks'])}",
+            key=f"answer_{answer_key}",
+        )
+
+        col_save, col_next = st.columns(2)
+        with col_save:
+            if st.button("Сохранить ответ", use_container_width=True):
+                st.session_state.step_answers[answer_key] = answer
+                st.success("Сохранено!")
+        with col_next:
+            if current < total - 1:
+                if st.button("Следующий этап →", type="primary", use_container_width=True):
+                    st.session_state.step_answers[answer_key] = answer
+                    st.session_state.current_step = current + 1
+                    st.rerun()
+            else:
+                if st.button("Завершить →", type="primary", use_container_width=True):
+                    st.session_state.step_answers[answer_key] = answer
+                    st.session_state.page = "evaluate"
+                    st.rerun()
+
+    with col_coach:
+        st.subheader("AI Coach")
+        st.caption("Коуч не решает за тебя — он задаёт вопросы и направляет")
+
+        # Инициализация чата для этого шага
+        chat_key = step["id"]
+        if chat_key not in st.session_state.step_chats:
+            st.session_state.step_chats[chat_key] = []
+
+        # Показываем историю чата
+        chat_container = st.container(height=350)
+        with chat_container:
+            for msg in st.session_state.step_chats[chat_key]:
+                css_class = "coach-msg" if msg["role"] == "coach" else "student-msg"
+                label = "🤖 Coach" if msg["role"] == "coach" else "👤 Ты"
+                st.markdown(f'<div class="{css_class}"><b>{label}:</b><br>{msg["text"]}</div>', unsafe_allow_html=True)
+
+        # Ввод сообщения коучу
+        coach_input = st.text_input(
+            "Спроси коуча или попроси фидбек",
+            placeholder="Например: 'Проверь мой issue tree' или 'Какой фреймворк лучше подойдёт?'",
+            key=f"coach_input_{chat_key}",
+        )
+
+        col_ask, col_review = st.columns(2)
+        with col_ask:
+            if st.button("Спросить коуча", key=f"ask_{chat_key}", use_container_width=True):
+                if coach_input:
+                    _ask_coach(step, chat_key, coach_input, answer)
+        with col_review:
+            if st.button("Проверь мой ответ", key=f"review_{chat_key}", use_container_width=True):
+                if answer.strip():
+                    _ask_coach(step, chat_key, "Проверь мой ответ и дай фидбек.", answer)
+                else:
+                    st.warning("Сначала напиши ответ в поле слева")
+
+
+def _ask_coach(step, chat_key, user_message, answer_text):
+    """Отправляет сообщение AI-коучу."""
+    # Добавляем сообщение студента
+    st.session_state.step_chats[chat_key].append({
+        "role": "student",
+        "text": user_message,
+    })
+
+    # Контекст для коуча
+    context = f"""Кейс: {st.session_state.case_text[:1500]}
+
+Текущий этап: {step['title']}
+Рекомендуемые фреймворки: {', '.join(step['frameworks'])}
+
+Ответ студента на этот блок:
+{answer_text if answer_text.strip() else '(студент ещё не написал ответ)'}
+
+История диалога:
+{chr(10).join([f"{'Студент' if m['role']=='student' else 'Коуч'}: {m['text']}" for m in st.session_state.step_chats[chat_key][-6:]])}
+
+Сообщение студента: {user_message}"""
+
+    with st.spinner("Коуч думает..."):
+        response = call_yandex_gpt(step["coach_prompt"], context, temperature=0.5)
+
+    st.session_state.step_chats[chat_key].append({
+        "role": "coach",
+        "text": response,
+    })
+    st.rerun()
+
+
+def page_evaluate():
+    """Страница итоговой оценки."""
+    st.markdown("""
+    <div class="main-header">
+        <h1>Hack the Case — Оценка</h1>
+        <p>Rubric-жюри анализирует твоё решение</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Собираем все ответы
+    answers_summary = ""
+    filled = 0
+    for step in CASE_STEPS:
+        answer = st.session_state.step_answers.get(step["id"], "")
+        status = "✅" if answer.strip() else "⬜ (не заполнено)"
+        if answer.strip():
+            filled += 1
+        answers_summary += f"\n\n### {step['title']}\n{answer if answer.strip() else '(пропущено)'}"
+
+    col1, col2 = st.columns([2, 1])
+
+    with col2:
+        st.subheader("Статус заполнения")
+        st.metric("Заполнено блоков", f"{filled}/{len(CASE_STEPS)}")
+        for step in CASE_STEPS:
+            answer = st.session_state.step_answers.get(step["id"], "")
+            icon = "✅" if answer.strip() else "⬜"
+            st.write(f"{icon} {step['title']}")
+
+        st.markdown("---")
+        if st.button("Вернуться к решению"):
+            st.session_state.page = "solve"
+            st.rerun()
+        if st.button("Начать заново"):
+            st.session_state.page = "start"
+            st.session_state.case_text = ""
+            st.session_state.step_answers = {}
+            st.session_state.step_chats = {}
+            st.session_state.evaluation = ""
+            st.rerun()
+
+    with col1:
+        if not st.session_state.evaluation:
+            if filled == 0:
+                st.warning("Ты ещё не заполнил ни одного блока. Вернись к решению!")
+            else:
+                st.info(f"Заполнено {filled} из {len(CASE_STEPS)} блоков. Можно получить оценку — но чем больше блоков заполнено, тем точнее фидбек.")
+                if st.button("Получить оценку от Rubric-жюри", type="primary", use_container_width=True):
+                    eval_prompt = f"""Оцени решение бизнес-кейса.
+
+КЕЙС:
+{st.session_state.case_text[:2000]}
+
+РЕШЕНИЕ СТУДЕНТА:
+{answers_summary}
+
+Дай оценку по всем 10 критериям рубрики. Для незаполненных блоков ставь 0 и отметь что блок пропущен."""
+
+                    with st.spinner("Жюри оценивает решение... это может занять до минуты"):
+                        evaluation = call_yandex_gpt(RUBRIC_SYSTEM, eval_prompt, temperature=0.3)
+                        st.session_state.evaluation = evaluation
+                        st.rerun()
+        else:
+            st.subheader("Результаты оценки")
+            st.markdown(st.session_state.evaluation)
+
+
+# ─────────────────────────────────────────────
+# MAIN
+# ─────────────────────────────────────────────
+
+def main():
+    st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+    init_session_state()
+
+    # Роутинг
+    page = st.session_state.page
+    if page == "start":
+        page_start()
+    elif page == "solve":
+        page_solve()
+    elif page == "evaluate":
+        page_evaluate()
+
+
+if __name__ == "__main__":
+    main()
