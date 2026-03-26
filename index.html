@@ -232,7 +232,7 @@ footer{border-top:1px solid var(--border);padding:20px 0;margin-top:36px;text-al
 
 <script>
 // ── КОНФИГ ────────────────────────────────────────────────
-const KEY = "AQVN3D8MaSnny3j4oqimc1oVeZW60bQTzwNJFrOf";
+const KEY = "AQVN03kyp2c8HNVaT-T2unJiSRKI7CjLWgp0YdVM";
 const FID = "b1gv4m4vdn58mat55ggl";
 const URI = `gpt://${FID}/yandexgpt-lite/latest`;
 
@@ -253,7 +253,7 @@ let G = {ct:'', step:0, ans:{}, chats:{}};
 
 // ── API ───────────────────────────────────────────────────
 async function ask(msgs, temp=0.5, tok=2500){
-  const r = await fetch('https://llm.api.cloud.yandex.net/foundationModels/v1/completion',{
+  const r = await fetch('https://long-frog-2fa3.ekaterinadeeva16.workers.dev',{
     method:'POST',
     headers:{'Authorization':`Api-Key ${KEY}`,'Content-Type':'application/json'},
     body:JSON.stringify({modelUri:URI,completionOptions:{stream:false,temperature:temp,maxTokens:tok},messages:msgs})
