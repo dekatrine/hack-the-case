@@ -1,58 +1,56 @@
 # Hack the Case — AI-симулятор решения бизнес-кейсов
 
-AI-ассистент, который учит думать, а не решает за тебя.
+Прототип на Streamlit, который помогает студенту решать бизнес-кейсы по этапам и получать фидбек от AI-коуча и rubric-жюри.
 
-## Быстрый старт (локально)
+## Что улучшено в этой версии
+
+- более стабильный вызов YandexGPT: retry + backoff + понятные сообщения об ошибках;
+- безопасная работа с секретами через `st.secrets`;
+- улучшенный UX без смены платформы: stepper, подсказки по этапам, более чистый экран оценки;
+- мягкий fallback при ошибке JSON-оценки: приложение не падает, а показывает сырой текст ответа;
+- более аккуратная структура состояния через `st.session_state`.
+
+## Локальный запуск
 
 ```bash
 pip install -r requirements.txt
-```
-
-Создай файл `.streamlit/secrets.toml` (по примеру `secrets.toml.example`):
-
-```toml
-YANDEX_API_KEY = "твой-api-key"
-YANDEX_FOLDER_ID = "твой-folder-id"
-YANDEX_MODEL = "yandexgpt-lite"
-```
-
-Запуск:
-
-```bash
 streamlit run app.py
 ```
 
-## Деплой на Streamlit Community Cloud
+## Секреты
 
-1. Залей проект в GitHub-репозиторий (публичный или приватный)
-2. Зайди на [share.streamlit.io](https://share.streamlit.io)
-3. Нажми **New app** → выбери репозиторий → укажи `app.py`
-4. Перейди в **Settings → Secrets** и вставь:
+Локально создай файл:
+
+```bash
+.streamlit/secrets.toml
+```
+
+Пример содержимого смотри в `secrets.toml.example`.
+
+### Важно
+
+- не коммить реальный `secrets.toml` в Git;
+- в Streamlit Community Cloud добавляй секреты только через **App Settings → Secrets**.
+
+## Пример `.streamlit/secrets.toml`
 
 ```toml
-YANDEX_API_KEY = "твой-api-key"
-YANDEX_FOLDER_ID = "твой-folder-id"
+YANDEX_API_KEY = "your-api-key"
+YANDEX_FOLDER_ID = "your-folder-id"
 YANDEX_MODEL = "yandexgpt-lite"
 ```
 
-5. Нажми **Deploy** — через пару минут приложение будет доступно по ссылке
-
-## Где взять API-ключ Yandex Cloud
-
-1. Зайди в [console.yandex.cloud](https://console.yandex.cloud)
-2. Создай сервисный аккаунт с ролью `ai.languageModels.user`
-3. Создай API-ключ для этого сервисного аккаунта
-4. `folder_id` — ID каталога в Yandex Cloud (виден в URL консоли)
-
 ## Структура приложения
 
-- **Генерация кейса** — AI создаёт уникальный кейс по отрасли и сложности
-- **9 этапов решения** — Issue Tree → Ресёрч → Сегментация → CJM → Инициативы → Метрики → Экономика → Риски → Roadmap
-- **AI Coach** — на каждом этапе задаёт наводящие вопросы, не даёт готовых ответов
-- **Rubric-жюри** — оценка по 10 критериям (1-10 баллов каждый)
+- генерация кейса;
+- 9 этапов решения;
+- AI Coach для каждого этапа;
+- итоговая rubric-оценка с текстом и графиком.
 
-## Модели YandexGPT
+## Безопасный деплой
 
-- `yandexgpt-lite` — быстрая, дешевле (рекомендуется для прототипа)
-- `yandexgpt` — полная модель, качественнее
-- `yandexgpt-32k` — для длинного контекста
+1. Делай изменения в отдельной ветке, например `dev`.
+2. Подними отдельный staging-app на Streamlit Community Cloud.
+3. Проверь генерацию кейса, коуча и экран оценки.
+4. Только после этого мержи в `main`.
+5. Если после релиза что-то пошло не так, сделай rollback на предыдущий стабильный коммит и reboot app.
