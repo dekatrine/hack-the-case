@@ -454,15 +454,60 @@ CUSTOM_CSS = """
         box-shadow: none !important;
         overflow-wrap: anywhere;
     }
+    .stButton > button *,
+    .stButton > button p,
+    .stButton > button span {
+        color: inherit !important;
+    }
     .stButton > button:hover {
         border-color: #FF6B35 !important;
         color: #111827 !important;
+    }
+    .stButton > button:hover *,
+    .stButton > button:focus *,
+    .stButton > button:active * {
+        color: inherit !important;
     }
     .stButton > button[kind="primary"],
     .stButton > button[data-testid="baseButton-primary"] {
         background: #FF6B35 !important;
         color: #ffffff !important;
         border-color: #FF6B35 !important;
+    }
+    .stButton > button[kind="primary"] *,
+    .stButton > button[data-testid="baseButton-primary"] * {
+        color: #ffffff !important;
+    }
+    section[data-testid="stSidebar"] .stButton > button {
+        background: #151d2c !important;
+        color: #f8fafc !important;
+        border: 1px solid #334155 !important;
+    }
+    section[data-testid="stSidebar"] .stButton > button * {
+        color: #f8fafc !important;
+    }
+    section[data-testid="stSidebar"] .stButton > button:hover {
+        background: #1f2937 !important;
+        color: #ffffff !important;
+        border-color: #FF6B35 !important;
+    }
+    .stButton > button:disabled,
+    .stButton > button[disabled] {
+        background: #e5e7eb !important;
+        color: #6b7280 !important;
+        border-color: #d1d5db !important;
+        opacity: 1 !important;
+    }
+    .stButton > button:disabled *,
+    .stButton > button[disabled] * {
+        color: #6b7280 !important;
+    }
+    .stTextInput label,
+    .stTextArea label,
+    div[data-testid="stWidgetLabel"],
+    div[data-testid="stWidgetLabel"] * {
+        color: #17202f !important;
+        opacity: 1 !important;
     }
     .stTextInput input,
     .stTextArea textarea {
@@ -477,10 +522,11 @@ CUSTOM_CSS = """
         color: #6b7280 !important;
         opacity: 1 !important;
     }
-    .stTextArea textarea {
-        min-height: 240px !important;
+    .stTextInput input:focus,
+    .stTextArea textarea:focus {
+        border-color: #FF6B35 !important;
+        box-shadow: 0 0 0 1px #FF6B35 !important;
     }
-
     /* Score */
     .score-box {
         background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
