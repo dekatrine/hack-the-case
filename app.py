@@ -9,7 +9,11 @@ import json
 import time
 import logging
 import re
+import os
+import tomllib
 from html import escape
+from pathlib import Path
+from streamlit.errors import StreamlitSecretNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +37,32 @@ YANDEX_GPT_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/completio
 
 def get_api_credentials():
     """Получаем креды из Streamlit secrets или sidebar."""
-    api_key = st.secrets.get("YANDEX_API_KEY", "")
-    folder_id = st.secrets.get("YANDEX_FOLDER_ID", "")
-    model = st.secrets.get("YANDEX_MODEL", "yandexgpt-lite")
+    api_key = get_config_value("YANDEX_API_KEY", "")
+    folder_id = get_config_value("YANDEX_FOLDER_ID", "")
+    model = get_config_value("YANDEX_MODEL", "yandexgpt-lite")
     return api_key, folder_id, model
+
+
+def get_config_value(key: str, default: str = "") -> str:
+    """Читает настройку из Streamlit secrets, env или локального Secrets.toml."""
+    try:
+        return st.secrets.get(key, default)
+    except StreamlitSecretNotFoundError:
+        pass
+
+    env_value = os.getenv(key)
+    if env_value:
+        return env_value
+
+    local_secrets_path = Path(__file__).with_name("Secrets.toml")
+    if local_secrets_path.exists():
+        try:
+            with local_secrets_path.open("rb") as local_secrets:
+                return tomllib.load(local_secrets).get(key, default)
+        except (OSError, tomllib.TOMLDecodeError):
+            logger.warning("Could not read local Secrets.toml", exc_info=True)
+
+    return default
 
 
 def call_yandex_gpt(
@@ -373,10 +399,23 @@ CUSTOM_CSS = """
         font-size: 1rem;
     }
 
+    /* Streamlit layout hardening */
+    .block-container {
+        padding-top: 1.5rem;
+        padding-bottom: 2rem;
+    }
+    div[data-testid="stHorizontalBlock"] {
+        gap: 1.25rem;
+        align-items: stretch;
+    }
+    div[data-testid="column"] {
+        min-width: 0;
+    }
+
     /* Step cards */
     .step-card {
         background: white;
-        border-radius: 10px;
+        border-radius: 8px;
         padding: 1.2rem;
         margin-bottom: 0.8rem;
         border-left: 4px solid #ddd;
@@ -397,9 +436,49 @@ CUSTOM_CSS = """
         background: #fff3e6;
         color: #e67700;
         padding: 0.2rem 0.6rem;
-        border-radius: 12px;
+        border-radius: 8px;
         font-size: 0.8rem;
         margin: 0.15rem;
+    }
+
+    /* Buttons and inputs */
+    .stButton > button {
+        min-height: 2.7rem;
+        border-radius: 8px;
+        white-space: normal;
+        line-height: 1.2;
+        font-weight: 650;
+        color: #17202f !important;
+        background: #ffffff !important;
+        border: 1px solid #d8dee9 !important;
+        box-shadow: none !important;
+        overflow-wrap: anywhere;
+    }
+    .stButton > button:hover {
+        border-color: #FF6B35 !important;
+        color: #111827 !important;
+    }
+    .stButton > button[kind="primary"],
+    .stButton > button[data-testid="baseButton-primary"] {
+        background: #FF6B35 !important;
+        color: #ffffff !important;
+        border-color: #FF6B35 !important;
+    }
+    .stTextInput input,
+    .stTextArea textarea {
+        background: #ffffff !important;
+        color: #111827 !important;
+        border: 1px solid #cfd6e4 !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+    }
+    .stTextInput input::placeholder,
+    .stTextArea textarea::placeholder {
+        color: #6b7280 !important;
+        opacity: 1 !important;
+    }
+    .stTextArea textarea {
+        min-height: 240px !important;
     }
 
     /* Score */
@@ -416,17 +495,21 @@ CUSTOM_CSS = """
     /* Chat messages */
     .coach-msg {
         background: #f0f4ff;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 1rem;
         margin: 0.5rem 0;
         border-left: 3px solid #4a6cf7;
+        color: #17202f;
+        overflow-wrap: anywhere;
     }
     .student-msg {
         background: #fff8f0;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 1rem;
         margin: 0.5rem 0;
         border-left: 3px solid #FF6B35;
+        color: #17202f;
+        overflow-wrap: anywhere;
     }
 
     /* Progress bar */
@@ -441,6 +524,34 @@ CUSTOM_CSS = """
         height: 100%;
         border-radius: 10px;
         transition: width 0.3s;
+    }
+
+    @media (max-width: 1200px) {
+        .block-container {
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+        }
+        div[data-testid="stHorizontalBlock"] {
+            flex-wrap: wrap;
+        }
+        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+            flex: 1 1 340px !important;
+            min-width: 340px !important;
+        }
+    }
+
+    @media (max-width: 760px) {
+        .main-header {
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        .main-header h1 {
+            font-size: 1.4rem;
+        }
+        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+            flex-basis: 100% !important;
+            min-width: 100% !important;
+        }
     }
 </style>
 """
@@ -763,19 +874,15 @@ def page_solve():
                 st.markdown(f'<div class="{css_class}"><b>{label}:</b><br>{safe_text}</div>', unsafe_allow_html=True)
 
         st.markdown("**Быстрые действия:**")
-        quick_col1, quick_col2, quick_col3 = st.columns(3)
-        with quick_col1:
-            if st.button("Вопросы", key=f"quick_questions_{chat_key}", use_container_width=True):
-                _ask_coach(step, chat_key, "Задай 3 наводящих вопроса для этого этапа.", answer)
-        with quick_col2:
-            if st.button("Проверка", key=f"quick_review_{chat_key}", use_container_width=True):
-                if answer.strip():
-                    _ask_coach(step, chat_key, "Проверь мой ответ: где нарушена логика, MECE или связь с кейсом?", answer)
-                else:
-                    st.warning("Сначала напиши ответ в поле слева")
-        with quick_col3:
-            if st.button("Следующий шаг", key=f"quick_next_{chat_key}", use_container_width=True):
-                _ask_coach(step, chat_key, "Что мне стоит сделать следующим шагом, не давая готового решения?", answer)
+        if st.button("Задай 3 наводящих вопроса", key=f"quick_questions_{chat_key}", use_container_width=True):
+            _ask_coach(step, chat_key, "Задай 3 наводящих вопроса для этого этапа.", answer)
+        if st.button("Проверь логику и связь с кейсом", key=f"quick_review_{chat_key}", use_container_width=True):
+            if answer.strip():
+                _ask_coach(step, chat_key, "Проверь мой ответ: где нарушена логика, MECE или связь с кейсом?", answer)
+            else:
+                st.warning("Сначала напиши ответ в поле слева")
+        if st.button("Подскажи следующий шаг", key=f"quick_next_{chat_key}", use_container_width=True):
+            _ask_coach(step, chat_key, "Что мне стоит сделать следующим шагом, не давая готового решения?", answer)
 
         # Ввод сообщения коучу
         coach_input = st.text_input(
