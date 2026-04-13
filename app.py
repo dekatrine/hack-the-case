@@ -442,64 +442,104 @@ CUSTOM_CSS = """
     }
 
     /* Buttons and inputs */
-    .stButton > button {
+    div.stButton > button,
+    div.stButton button,
+    button[data-testid^="baseButton"] {
         min-height: 2.7rem;
         border-radius: 8px;
         white-space: normal;
         line-height: 1.2;
         font-weight: 650;
-        color: #17202f !important;
         background: #ffffff !important;
+        color: #17202f !important;
         border: 1px solid #d8dee9 !important;
         box-shadow: none !important;
         overflow-wrap: anywhere;
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     }
-    .stButton > button *,
-    .stButton > button p,
-    .stButton > button span {
+    div.stButton > button *,
+    div.stButton button *,
+    div.stButton > button p,
+    div.stButton button p,
+    button[data-testid^="baseButton"] *,
+    button[data-testid^="baseButton"] p,
+    button[data-testid^="baseButton"] span {
         color: inherit !important;
     }
-    .stButton > button:hover {
+    div.stButton > button:hover,
+    div.stButton button:hover,
+    button[data-testid^="baseButton"]:hover {
+        background: #fff7f2 !important;
         border-color: #FF6B35 !important;
         color: #111827 !important;
     }
-    .stButton > button:hover *,
-    .stButton > button:focus *,
-    .stButton > button:active * {
+    div.stButton > button:hover *,
+    div.stButton > button:focus *,
+    div.stButton > button:active *,
+    div.stButton button:hover *,
+    div.stButton button:focus *,
+    div.stButton button:active *,
+    button[data-testid^="baseButton"]:hover *,
+    button[data-testid^="baseButton"]:focus *,
+    button[data-testid^="baseButton"]:active * {
         color: inherit !important;
     }
-    .stButton > button[kind="primary"],
-    .stButton > button[data-testid="baseButton-primary"] {
+    div.stButton > button[kind="primary"],
+    div.stButton button[kind="primary"],
+    button[data-testid="baseButton-primary"] {
         background: #FF6B35 !important;
         color: #ffffff !important;
         border-color: #FF6B35 !important;
     }
-    .stButton > button[kind="primary"] *,
-    .stButton > button[data-testid="baseButton-primary"] * {
+    div.stButton > button[kind="primary"]:hover,
+    div.stButton button[kind="primary"]:hover,
+    button[data-testid="baseButton-primary"]:hover {
+        background: #e85f2f !important;
+        border-color: #e85f2f !important;
         color: #ffffff !important;
     }
-    section[data-testid="stSidebar"] .stButton > button {
+    div.stButton > button[kind="primary"] *,
+    div.stButton button[kind="primary"] *,
+    button[data-testid="baseButton-primary"] * {
+        color: #ffffff !important;
+    }
+    section[data-testid="stSidebar"] div.stButton button {
         background: #151d2c !important;
         color: #f8fafc !important;
         border: 1px solid #334155 !important;
+        justify-content: flex-start;
+        padding-left: 1rem;
+        text-align: left;
     }
-    section[data-testid="stSidebar"] .stButton > button * {
+    section[data-testid="stSidebar"] div.stButton button * {
         color: #f8fafc !important;
     }
-    section[data-testid="stSidebar"] .stButton > button:hover {
+    section[data-testid="stSidebar"] div.stButton button:hover {
         background: #1f2937 !important;
         color: #ffffff !important;
         border-color: #FF6B35 !important;
     }
-    .stButton > button:disabled,
-    .stButton > button[disabled] {
+    section[data-testid="stSidebar"] div.stButton button[kind="primary"],
+    section[data-testid="stSidebar"] button[data-testid="baseButton-primary"] {
+        background: #FF6B35 !important;
+        color: #ffffff !important;
+        border-color: #FF6B35 !important;
+    }
+    div.stButton > button:disabled,
+    div.stButton > button[disabled],
+    div.stButton button:disabled,
+    div.stButton button[disabled],
+    button[data-testid^="baseButton"]:disabled {
         background: #e5e7eb !important;
         color: #6b7280 !important;
         border-color: #d1d5db !important;
         opacity: 1 !important;
     }
-    .stButton > button:disabled *,
-    .stButton > button[disabled] * {
+    div.stButton > button:disabled *,
+    div.stButton > button[disabled] *,
+    div.stButton button:disabled *,
+    div.stButton button[disabled] *,
+    button[data-testid^="baseButton"]:disabled * {
         color: #6b7280 !important;
     }
     .stTextInput label,
@@ -843,8 +883,9 @@ def page_solve():
         st.subheader("Навигация")
         for i, s in enumerate(CASE_STEPS):
             done = s["id"] in st.session_state.step_answers
-            icon = "✅" if done else ("▶️" if i == current else "⬜")
-            if st.button(f"{icon} {s['title']}", key=f"nav_{i}", use_container_width=True):
+            marker = "✓" if done else ("→" if i == current else "•")
+            button_type = "primary" if i == current else "secondary"
+            if st.button(f"{marker} {s['title']}", key=f"nav_{i}", type=button_type, use_container_width=True):
                 st.session_state.current_step = i
                 st.rerun()
 
@@ -856,7 +897,7 @@ def page_solve():
         if st.button("Завершить и получить оценку", type="primary", use_container_width=True):
             st.session_state.page = "evaluate"
             st.rerun()
-        if st.button("Назад к генерации"):
+        if st.button("Назад к генерации", use_container_width=True):
             st.session_state.page = "start"
             st.rerun()
 
@@ -886,17 +927,17 @@ def page_solve():
 
         col_save, col_next = st.columns(2)
         with col_save:
-            if st.button("Сохранить ответ", use_container_width=True):
+            if st.button("Сохранить", use_container_width=True):
                 st.session_state.step_answers[answer_key] = answer
                 st.success("Сохранено!")
         with col_next:
             if current < total - 1:
-                if st.button("Следующий этап →", type="primary", use_container_width=True):
+                if st.button("Следующий этап", type="primary", use_container_width=True):
                     st.session_state.step_answers[answer_key] = answer
                     st.session_state.current_step = current + 1
                     st.rerun()
             else:
-                if st.button("Завершить →", type="primary", use_container_width=True):
+                if st.button("Завершить", type="primary", use_container_width=True):
                     st.session_state.step_answers[answer_key] = answer
                     st.session_state.page = "evaluate"
                     st.rerun()
@@ -920,15 +961,19 @@ def page_solve():
                 st.markdown(f'<div class="{css_class}"><b>{label}:</b><br>{safe_text}</div>', unsafe_allow_html=True)
 
         st.markdown("**Быстрые действия:**")
-        if st.button("Задай 3 наводящих вопроса", key=f"quick_questions_{chat_key}", use_container_width=True):
-            _ask_coach(step, chat_key, "Задай 3 наводящих вопроса для этого этапа.", answer)
-        if st.button("Проверь логику и связь с кейсом", key=f"quick_review_{chat_key}", use_container_width=True):
-            if answer.strip():
-                _ask_coach(step, chat_key, "Проверь мой ответ: где нарушена логика, MECE или связь с кейсом?", answer)
-            else:
-                st.warning("Сначала напиши ответ в поле слева")
-        if st.button("Подскажи следующий шаг", key=f"quick_next_{chat_key}", use_container_width=True):
-            _ask_coach(step, chat_key, "Что мне стоит сделать следующим шагом, не давая готового решения?", answer)
+        quick_col1, quick_col2, quick_col3 = st.columns(3)
+        with quick_col1:
+            if st.button("3 вопроса", key=f"quick_questions_{chat_key}", use_container_width=True):
+                _ask_coach(step, chat_key, "Задай 3 наводящих вопроса для этого этапа.", answer)
+        with quick_col2:
+            if st.button("Проверка", key=f"quick_review_{chat_key}", use_container_width=True):
+                if answer.strip():
+                    _ask_coach(step, chat_key, "Проверь мой ответ: где нарушена логика, MECE или связь с кейсом?", answer)
+                else:
+                    st.warning("Сначала напиши ответ в поле слева")
+        with quick_col3:
+            if st.button("Следующий шаг", key=f"quick_next_{chat_key}", use_container_width=True):
+                _ask_coach(step, chat_key, "Что мне стоит сделать следующим шагом, не давая готового решения?", answer)
 
         # Ввод сообщения коучу
         coach_input = st.text_input(
@@ -939,11 +984,10 @@ def page_solve():
 
         col_ask, col_review = st.columns(2)
         with col_ask:
-            if st.button("Спросить коуча", key=f"ask_{chat_key}", use_container_width=True):
-                if coach_input:
-                    _ask_coach(step, chat_key, coach_input, answer)
+            if st.button("Отправить", key=f"ask_{chat_key}", type="primary", use_container_width=True, disabled=not coach_input.strip()):
+                _ask_coach(step, chat_key, coach_input, answer)
         with col_review:
-            if st.button("Проверь мой ответ", key=f"review_{chat_key}", use_container_width=True):
+            if st.button("Проверить ответ", key=f"review_{chat_key}", use_container_width=True):
                 if answer.strip():
                     _ask_coach(step, chat_key, "Проверь мой ответ и дай фидбек.", answer)
                 else:
