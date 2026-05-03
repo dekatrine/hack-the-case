@@ -1,0 +1,16 @@
+.streamlit/secrets.toml
+Secrets.toml
+secrets.toml
+__pycache__/
+*.pyc
+.venv/
+venv/
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+.vercel/
+.DS_Store
+*.zip
+hack-the-case-clean/
