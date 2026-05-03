@@ -1,92 +1,59 @@
-"""
-config.py — Константы приложения, вынесенные из app.py
+import os
+from functools import lru_cache
+from pathlib import Path
 
-Можно менять этапы, отрасли и уровни без правки основного кода.
-"""
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python < 3.11
+    import tomli as tomllib
 
-CASE_STEPS = [
-    {
-        "id": "issue_tree",
-        "title": "1. Issue Tree / Problem Tree",
-        "description": "Декомпозиция проблемы: разбей задачу на MECE-компоненты",
-        "case_hint": "Внимательно прочитай раздел **Проблема** в условии кейса. Выдели главную проблему и разложи её на подпроблемы. Используй данные из кейса, чтобы определить ключевые ветки дерева.",
-        "frameworks": ["Issue Tree", "MECE-принцип", "Problem Tree"],
-    },
-    {
-        "id": "research",
-        "title": "2. Ресёрч и анализ рынка",
-        "description": "Анализ внешней среды: рынок, конкуренты, тренды",
-        "case_hint": "Обрати внимание на раздел **Контекст** — там описаны тренды рынка, конкуренция и позиция компании. Используй **Данные** (доля рынка, рост продаж) для market sizing и оценки конкурентного ландшафта.",
-        "frameworks": ["PEST / PESTEL", "5 Porter Forces", "SWOT", "Benchmarking", "Market Sizing"],
-    },
-    {
-        "id": "segmentation",
-        "title": "3. Сегментация и инсайты",
-        "description": "Определи целевую аудиторию и ключевые инсайты",
-        "case_hint": "Из раздела **Компания** и **Контекст** определи, кто основные клиенты. Используй данные о количестве клиентов и их поведении. Подумай, какие сегменты наиболее прибыльны и почему.",
-        "frameworks": ["Customer Segmentation", "Persona", "JTBD (Jobs To Be Done)", "Pain-Gain / Need-state", "ABC-анализ"],
-    },
-    {
-        "id": "cjm",
-        "title": "4. CJM и сервисный дизайн",
-        "description": "Customer Journey Map: путь клиента от осознания до лояльности",
-        "case_hint": "Подумай, как клиент узнаёт о продукте/услуге компании из кейса, как принимает решение о покупке и что происходит после. Используй данные о каналах продаж из раздела **Компания**.",
-        "frameworks": ["CJM (Customer Journey Map)", "Penetration Funnel", "Funnel Analysis", "AARRR"],
-    },
-    {
-        "id": "initiatives",
-        "title": "5. Инициативы и решения",
-        "description": "Предложи конкретные решения и приоритизируй их",
-        "case_hint": "Вернись к **Проблеме** и **Вопросу для решения**. Твои инициативы должны напрямую отвечать на вопрос из кейса. Учитывай **Дополнительные вводные** — бюджет и ограничения.",
-        "frameworks": ["Driver-based Solution Design", "Prioritization Matrix", "2x2 Matrix", "Ansoff Matrix", "4P / 7P Marketing Mix"],
-    },
-    {
-        "id": "metrics",
-        "title": "6. Метрики и эксперименты",
-        "description": "Определи KPI, North Star Metric, план экспериментов",
-        "case_hint": "Используй **Данные** из кейса (выручка, рост, количество клиентов) как базовые метрики. Подумай, какая метрика лучше всего отражает успех решения проблемы из кейса.",
-        "frameworks": ["Metric Hierarchy", "NSM (North Star Metric)", "HEART", "AARRR", "Cohort Analysis"],
-    },
-    {
-        "id": "economics",
-        "title": "7. Экономика и финмодель",
-        "description": "Unit Economics, Business Case, NPV/IRR",
-        "case_hint": "Используй **Данные** из кейса — выручку, количество клиентов, долю рынка. Рассчитай unit economics на основе этих цифр. Учитывай бюджетные ограничения из **Дополнительных вводных**.",
-        "frameworks": ["Unit Economics", "Business Case / Financial Model", "NPV / IRR / PBP", "BCG Matrix"],
-    },
-    {
-        "id": "risks",
-        "title": "8. Риски и митигация",
-        "description": "Risk Matrix, план митигации, сценарный анализ",
-        "case_hint": "Вернись к **Контексту** — конкуренция, тренды, ограничения. Какие из них создают риски для твоих инициатив? Подумай также о внутренних рисках компании.",
-        "frameworks": ["Risk Matrix", "McKinsey 7S (для орг. рисков)", "SWOT (угрозы и слабости)"],
-    },
-    {
-        "id": "roadmap",
-        "title": "9. Roadmap и реализация",
-        "description": "Gantt chart, Product Roadmap, план внедрения",
-        "case_hint": "Учитывай **сроки** и **бюджет** из Дополнительных вводных. Расставь приоритеты: что запустить первым (quick wins), а что требует подготовки. Свяжи roadmap с инициативами из этапа 5.",
-        "frameworks": ["Gantt Chart", "Product Roadmap", "Implementation Plan"],
-    },
-]
 
-INDUSTRIES = [
-    "FMCG / Ритейл",
-    "Fintech / Банки",
-    "EdTech / Образование",
-    "HealthTech / Медицина",
-    "E-commerce / Маркетплейсы",
-    "Транспорт / Логистика",
-    "HoReCa / Рестораны",
-    "IT / SaaS",
-    "Телеком",
-    "Промышленность / Производство",
-    "Недвижимость / PropTech",
-    "Медиа / Развлечения",
-]
+class Settings:
+    def __init__(self) -> None:
+        self.yandex_api_key = self._get("YANDEX_API_KEY", "")
+        self.yandex_folder_id = self._get("YANDEX_FOLDER_ID", "")
+        self.yandex_model = self._normalize_model(
+            self._get("YANDEX_MODEL", "yandexgpt-lite")
+        )
+        self.allowed_origins = [
+            origin.strip()
+            for origin in self._get(
+                "ALLOWED_ORIGINS",
+                "http://localhost:5173,http://127.0.0.1:5173",
+            ).split(",")
+            if origin.strip()
+        ]
 
-DIFFICULTY_LEVELS = {
-    "Начальный": "Простой кейс для новичков: понятная проблема, один продукт, локальный рынок.",
-    "Средний": "Кейс среднего уровня: несколько направлений, нужен market sizing, конкурентный анализ.",
-    "Продвинутый": "Сложный кейс как на Changellenge/McKinsey: неоднозначная проблема, международный рынок.",
-}
+    def _get(self, key: str, default: str) -> str:
+        env_value = os.getenv(key)
+        if env_value:
+            return env_value
+
+        for path in self._candidate_secret_files():
+            if not path.exists():
+                continue
+            try:
+                with path.open("rb") as file:
+                    return tomllib.load(file).get(key, default)
+            except (OSError, tomllib.TOMLDecodeError):
+                continue
+
+        return default
+
+    @staticmethod
+    def _candidate_secret_files() -> list[Path]:
+        root = Path(__file__).resolve().parents[2]
+        return [
+            root / ".streamlit" / "secrets.toml",
+            root / "Secrets.toml",
+            root / "secrets.toml",
+        ]
+
+    @staticmethod
+    def _normalize_model(model: str) -> str:
+        return model.removeprefix("/").removesuffix("/latest")
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
