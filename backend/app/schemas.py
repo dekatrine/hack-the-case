@@ -5,6 +5,8 @@ class GenerateCaseRequest(BaseModel):
     industry: str
     difficulty: str
     extraContext: str = ""
+    trackId: str | None = None
+    chapterId: str | None = None
 
 
 class GenerateCaseResponse(BaseModel):
@@ -28,6 +30,8 @@ class CoachRequest(BaseModel):
     userMessage: str
     chatHistory: list[ChatMessage] = Field(default_factory=list)
     previousAnswers: dict[str, str] = Field(default_factory=dict)
+    trackId: str | None = None
+    chapterId: str | None = None
 
 
 class CoachResponse(BaseModel):
@@ -37,6 +41,7 @@ class CoachResponse(BaseModel):
 class EvaluateRequest(BaseModel):
     caseText: str
     answers: dict[str, str] = Field(default_factory=dict)
+    trackId: str | None = None
 
 
 class EvaluateResponse(BaseModel):

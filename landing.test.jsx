@@ -4,7 +4,7 @@ import React from 'react';
 
 // We test the pure presentational pieces that have no side effects.
 // Workspace / API-dependent parts are excluded — those need integration tests.
-import '../src/styles.css';
+import './styles.css';
 
 const tracks = [
   {

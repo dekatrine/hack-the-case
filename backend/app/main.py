@@ -1,3 +1,5 @@
+import importlib.util
+from pathlib import Path
 from typing import Union
 
 from fastapi import FastAPI, HTTPException
@@ -9,9 +11,20 @@ from .llm import call_yandex_gpt
 from .prompts import CASE_GENERATION_SYSTEM, RUBRIC_SYSTEM, get_coach_system_prompt
 from .schemas import CoachRequest, CoachResponse, EvaluateRequest, EvaluateResponse, GenerateCaseRequest, GenerateCaseResponse
 
+
+def load_tracks() -> list[dict]:
+    tracks_path = Path(__file__).resolve().parents[2] / "tracks.py"
+    spec = importlib.util.spec_from_file_location("hack_the_case_tracks", tracks_path)
+    if spec is None or spec.loader is None:
+        return []
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return getattr(module, "TRACKS", [])
+
 app = FastAPI(title="Hack the Case API", version="0.1.0")
 
 settings = get_settings()
+TRACKS = load_tracks()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
@@ -47,16 +60,36 @@ def get_app_config() -> dict:
         "difficultyLevels": DIFFICULTY_LEVELS,
         "courseModules": COURSE_MODULES,
         "sourceNotes": SOURCE_NOTES,
+        "tracks": TRACKS,
     }
 
 
 @app.post("/api/cases/generate", response_model=GenerateCaseResponse)
 def generate_case(payload: GenerateCaseRequest) -> GenerateCaseResponse:
+    track = next((item for item in TRACKS if item.get("id") == payload.trackId), None)
+    track_name = track["name"] if track else "Бизнес-кейсы"
+    case_kind = (
+        "продуктовый кейс для PM-интервью"
+        if payload.trackId == "product"
+        else "бизнес-кейс для консалтинга и кейс-чемпионатов"
+    )
     prompt = (
-        f"Сгенерируй бизнес-кейс.\n"
+        f"Сгенерируй условие кейса, не решение.\n"
+        f"Направление: {track_name}\n"
+        f"Тип: {case_kind}\n"
         f"Отрасль: {payload.industry}\n"
         f"Сложность: {payload.difficulty} — {DIFFICULTY_LEVELS.get(payload.difficulty, '')}"
     )
+    if payload.trackId == "product":
+        prompt += (
+            "\nСделай вводную похожей на PM case interview: продукт, пользовательский сегмент, "
+            "метрика, боль, ограничения, данные по воронке или retention и конкретный вопрос."
+        )
+    else:
+        prompt += (
+            "\nСделай вводную похожей на consulting case: клиент, рынок, экономика, "
+            "операционные ограничения, численные данные и конкретный decision question."
+        )
     if payload.extraContext.strip():
         prompt += f"\nДополнительный контекст: {payload.extraContext.strip()}"
 

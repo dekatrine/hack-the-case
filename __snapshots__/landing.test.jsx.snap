@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Landing presentational > matches snapshot 1`] = `"<article class="track-card"><h3>Продуктовые кейсы</h3><p>PM-собеседования</p><span>1 chapters</span></article><article class="track-card"><h3>Бизнес-кейсы</h3><p>McKinsey / BCG</p><span>1 chapters</span></article>"`;
