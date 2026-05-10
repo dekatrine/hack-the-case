@@ -20,7 +20,7 @@ textarea {
 }
 
 button {
-  min-height: 42px;
+  min-height: 44px;
   border: 1px solid #d7dce6;
   border-radius: 8px;
   background: #fff;
@@ -28,6 +28,8 @@ button {
   cursor: pointer;
   font-weight: 650;
   padding: 0.6rem 1rem;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button:disabled {
@@ -51,6 +53,7 @@ textarea {
   background: #fff;
   color: #111827;
   padding: 0.75rem;
+  -webkit-appearance: none;
 }
 
 textarea {
@@ -62,6 +65,7 @@ textarea {
   max-width: 1440px;
   margin: 0 auto;
   padding: 24px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
 }
 
 .hero {
@@ -144,6 +148,12 @@ label {
   background: #fff1f1;
 }
 
+/* ── Solve layout ── */
+
+.solveContainer {
+  display: contents;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: 280px minmax(360px, 1fr) minmax(340px, 0.85fr);
@@ -200,6 +210,44 @@ label {
   margin: 14px 0;
 }
 
+/* ── Step actions ── */
+
+.stepActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.stepActions .primary {
+  flex: 1;
+}
+
+/* ── Mobile step strip ── */
+
+.stepStrip {
+  display: none;
+}
+
+/* ── Mobile case reference in work panel ── */
+
+.mobileCase {
+  display: none;
+}
+
+/* ── Mobile: floating coach button ── */
+
+.coachFloat {
+  display: none;
+}
+
+/* ── Mobile: coach overlay + bottom sheet ── */
+
+.coachOverlay {
+  display: none;
+}
+
+/* ── Case reference ── */
+
 .caseReference {
   border: 1px solid #e2e7f0;
   border-radius: 8px;
@@ -240,19 +288,48 @@ label {
   margin-bottom: 8px;
 }
 
+/* ── Learning block (collapsible) ── */
+
 .learning {
   border: 1px solid #e2e7f0;
   border-radius: 8px;
-  padding: 16px;
+  padding: 14px 16px;
   margin: 16px 0;
   background: #fbfcff;
 }
 
-.learning h3 {
+.learningToggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  min-height: 0;
+  cursor: pointer;
+  gap: 8px;
+}
+
+.learningToggle:hover {
+  opacity: 0.8;
+}
+
+.toggleArrow {
+  color: #687386;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.learningBody {
+  margin-top: 14px;
+}
+
+.learningBody h3 {
   margin: 0 0 8px;
 }
 
-.learning p {
+.learningBody p {
   line-height: 1.45;
 }
 
@@ -326,6 +403,8 @@ label {
   margin-bottom: 12px;
 }
 
+/* ── Coach panel ── */
+
 .chat {
   max-height: 330px;
   min-height: 96px;
@@ -334,6 +413,7 @@ label {
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 12px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .coachIntro {
@@ -391,6 +471,8 @@ label {
   margin-top: 10px;
 }
 
+/* ── Evaluation ── */
+
 .score {
   font-size: 3rem;
   font-weight: 800;
@@ -414,6 +496,8 @@ details {
   line-height: 1.55;
 }
 
+/* ── Tablet: collapse to 1 column ── */
+
 @media (max-width: 1100px) {
   .workspace,
   .grid.two {
@@ -425,26 +509,261 @@ details {
   }
 }
 
-@media (max-width: 720px) {
+/* ── Phone: full mobile layout ── */
+
+@media (max-width: 768px) {
   .app {
-    padding: 14px;
+    padding: 12px;
+    padding-bottom: calc(90px + env(safe-area-inset-bottom));
   }
 
   .hero {
     display: grid;
-    padding: 20px;
+    padding: 16px;
+    gap: 16px;
+    margin-bottom: 16px;
   }
 
   .hero h1 {
-    font-size: 1.8rem;
+    font-size: 1.7rem;
   }
 
-  .quick,
-  .ask {
-    grid-template-columns: 1fr;
+  .hero p {
+    font-size: 0.9rem;
+  }
+
+  .hero nav {
+    gap: 8px;
+  }
+
+  .hero nav button {
+    padding: 0.5rem 0.9rem;
+    font-size: 0.9rem;
+  }
+
+  /* Hide desktop sidebar and side column */
+  .workspace .sidebar {
+    display: none;
+  }
+
+  .workspace .sideColumn {
+    display: none;
+  }
+
+  /* Work panel adjustments */
+  .panel.work {
+    padding: 16px;
+  }
+
+  .answer {
+    min-height: 200px;
   }
 
   .termGrid {
     grid-template-columns: 1fr;
+  }
+
+  .quick {
+    grid-template-columns: 1fr;
+  }
+
+  /* ── Step strip (mobile) ── */
+
+  .stepStrip {
+    display: block;
+    background: #fff;
+    border: 1px solid #e2e7f0;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+
+  .stepStripTrack {
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    padding: 10px 10px 8px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+
+  .stepStripTrack::-webkit-scrollbar {
+    display: none;
+  }
+
+  .stepChip {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    min-width: 60px;
+    max-width: 84px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    min-height: 0;
+    scroll-snap-align: start;
+    transition: background 0.15s;
+  }
+
+  .stepChip:active {
+    background: #f0f4ff;
+  }
+
+  .chipBadge {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #e6eaf2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: #687386;
+    flex-shrink: 0;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .stepChip.active .chipBadge {
+    background: #ef5b2a;
+    color: #fff;
+  }
+
+  .stepChip.done .chipBadge {
+    background: #157347;
+    color: #fff;
+  }
+
+  .chipLabel {
+    font-size: 0.62rem;
+    color: #687386;
+    text-align: center;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    max-width: 76px;
+    line-height: 1.25;
+  }
+
+  .stepChip.active .chipLabel {
+    color: #ef5b2a;
+    font-weight: 700;
+  }
+
+  .stripBar {
+    height: 3px;
+    background: #e6eaf2;
+    overflow: hidden;
+  }
+
+  .stripBar > div {
+    height: 100%;
+    background: #ef5b2a;
+    transition: width 0.35s ease;
+  }
+
+  /* ── Case reference inline ── */
+
+  .mobileCase {
+    display: block;
+    margin: 12px 0;
+  }
+
+  /* ── Floating coach button ── */
+
+  .coachFloat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    right: 16px;
+    z-index: 100;
+    background: #162033;
+    color: #fff;
+    border-color: #162033;
+    border-radius: 50px;
+    padding: 12px 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+    font-size: 0.88rem;
+    font-weight: 700;
+    min-height: 48px;
+  }
+
+  /* ── Coach bottom sheet ── */
+
+  .coachOverlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 200;
+    align-items: flex-end;
+  }
+
+  .coachSheet {
+    background: #fff;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    max-height: 86vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sheetHandle {
+    width: 40px;
+    height: 4px;
+    background: #d7dce6;
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+
+  .sheetHead {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .sheetHead h3 {
+    margin: 0;
+    font-size: 1.15rem;
+  }
+
+  .sheetClose {
+    background: #f7f8fb;
+    border-color: #e2e7f0;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    min-height: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+}
+
+/* ── Small tweaks for narrow phones ── */
+
+@media (max-width: 480px) {
+  .ask {
+    grid-template-columns: 1fr;
+  }
+
+  .stepActions {
+    flex-direction: column;
+  }
+
+  .stepActions button {
+    width: 100%;
   }
 }

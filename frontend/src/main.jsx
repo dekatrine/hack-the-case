@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { askCoach, evaluateCase, fetchConfig, generateCase } from './api/client';
 import './styles.css';
@@ -183,6 +183,13 @@ function App() {
 
 function StartPage(props) {
   const difficultyKeys = Object.keys(props.config.difficultyLevels);
+  const casePanelRef = useRef(null);
+
+  useEffect(() => {
+    if (props.caseText) {
+      casePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [props.caseText]);
 
   return (
     <section className="grid two">
@@ -209,15 +216,17 @@ function StartPage(props) {
             placeholder="Например: международная экспансия, запуск продукта, оптимизация процессов"
           />
         </label>
-        <button className="primary" onClick={props.onGenerate} disabled={props.loading}>Сгенерировать кейс</button>
+        <button className="primary" onClick={props.onGenerate} disabled={props.loading}>
+          {props.loading ? 'Генерирую...' : 'Сгенерировать кейс'}
+        </button>
       </div>
 
-      <div className="panel">
+      <div className="panel" ref={casePanelRef}>
         <h2>Твой кейс</h2>
         {props.caseText ? (
           <>
             <MarkdownText text={props.caseText} />
-            <button className="primary" onClick={props.onStart}>Начать решение</button>
+            <button className="primary" onClick={props.onStart}>Начать решение →</button>
           </>
         ) : (
           <p className="muted">Выбери параметры и сгенерируй кейс.</p>
@@ -229,7 +238,18 @@ function StartPage(props) {
 
 function SolvePage(props) {
   const [coachInput, setCoachInput] = useState('');
+  const [coachOpen, setCoachOpen] = useState(false);
   const progress = props.steps.length ? Math.round((props.completedCount / props.steps.length) * 100) : 0;
+  const isLastStep = props.currentStepIndex === props.steps.length - 1;
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [props.currentStepIndex]);
+
+  useEffect(() => {
+    document.body.style.overflow = coachOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [coachOpen]);
 
   function sendCoachMessage(message) {
     props.onAskCoach(message);
@@ -237,85 +257,167 @@ function SolvePage(props) {
   }
 
   return (
-    <section className="workspace">
-      <aside className="sidebar">
-        <div className="progress">
-          <span>{props.completedCount}/{props.steps.length}</span>
-          <div><i style={{ width: `${progress}%` }} /></div>
+    <div className="solveContainer">
+      {/* Mobile: horizontal step navigation strip */}
+      <nav className="stepStrip">
+        <div className="stepStripTrack">
+          {props.steps.map((step, index) => {
+            const done = Boolean(props.answers[step.id]?.trim());
+            const active = index === props.currentStepIndex;
+            return (
+              <button
+                key={step.id}
+                className={`stepChip${active ? ' active' : ''}${done && !active ? ' done' : ''}`}
+                onClick={() => props.onStepChange(index)}
+              >
+                <div className="chipBadge">{done && !active ? '✓' : index + 1}</div>
+                <div className="chipLabel">{step.title}</div>
+              </button>
+            );
+          })}
         </div>
-        {props.steps.map((step, index) => (
-          <button
-            key={step.id}
-            className={index === props.currentStepIndex ? 'step active' : 'step'}
-            onClick={() => props.onStepChange(index)}
-          >
-            <span>{props.answers[step.id]?.trim() ? '✓' : index + 1}</span>
-            {step.title}
-          </button>
-        ))}
-        <button className="primary" onClick={props.onEvaluate}>К оценке</button>
-      </aside>
+        <div className="stripBar"><div style={{ width: `${progress}%` }} /></div>
+      </nav>
 
-      <div className="panel work">
-        <p className="eyebrow">Этап {props.currentStepIndex + 1} из {props.steps.length}</p>
-        <h2>{props.currentStep.title}</h2>
-        <p>{props.currentStep.description}</p>
-        <div className="hintBox">{props.currentStep.caseHint}</div>
-        <LearningBlock theory={props.currentStep.theory} />
-        <div className="tags">
-          {props.currentStep.frameworks.map((framework) => <span key={framework}>{framework}</span>)}
-        </div>
-        <textarea
-          className="answer"
-          value={props.answer}
-          onChange={(event) => props.onAnswerChange(event.target.value)}
-          placeholder="Опиши решение по этому блоку"
-        />
-        <button className="primary" onClick={props.onNext}>
-          {props.currentStepIndex < props.steps.length - 1 ? 'Следующий этап' : 'Завершить'}
-        </button>
-      </div>
-
-      <div className="sideColumn">
-        <CaseReference caseText={props.caseText} />
-
-        <div className="panel coach">
-          <h2>AI Coach</h2>
-          <div className="coachIntro">
-            <b>Можно спрашивать как у поисковика по кейсу.</b>
-            <p>Коуч объяснит термины, найдёт нужные данные в условии, подскажет фреймворк, проверит логику и поможет сформулировать следующий шаг.</p>
+      <section className="workspace">
+        {/* Desktop sidebar */}
+        <aside className="sidebar">
+          <div className="progress">
+            <span>{props.completedCount}/{props.steps.length}</span>
+            <div><i style={{ width: `${progress}%` }} /></div>
           </div>
-          <div className="chat">
-            {props.chat.length === 0 && (
-              <div className="emptyCoach">
-                <p>Напиши вопрос простыми словами: «что такое MECE?», «какие данные взять из кейса?», «как начать этот блок?».</p>
-              </div>
+          {props.steps.map((step, index) => (
+            <button
+              key={step.id}
+              className={index === props.currentStepIndex ? 'step active' : 'step'}
+              onClick={() => props.onStepChange(index)}
+            >
+              <span>{props.answers[step.id]?.trim() ? '✓' : index + 1}</span>
+              {step.title}
+            </button>
+          ))}
+          <button className="primary" onClick={props.onEvaluate}>К оценке</button>
+        </aside>
+
+        {/* Work panel */}
+        <div className="panel work">
+          <p className="eyebrow">Этап {props.currentStepIndex + 1} из {props.steps.length}</p>
+          <h2>{props.currentStep.title}</h2>
+          <p>{props.currentStep.description}</p>
+          <div className="hintBox">{props.currentStep.caseHint}</div>
+
+          {/* Case reference inline — mobile only */}
+          <div className="mobileCase">
+            <CaseReference caseText={props.caseText} />
+          </div>
+
+          <LearningBlock theory={props.currentStep.theory} />
+          <div className="tags">
+            {props.currentStep.frameworks.map((framework) => <span key={framework}>{framework}</span>)}
+          </div>
+          <textarea
+            className="answer"
+            value={props.answer}
+            onChange={(event) => props.onAnswerChange(event.target.value)}
+            placeholder="Опиши решение по этому блоку"
+          />
+          <div className="stepActions">
+            {props.currentStepIndex > 0 && (
+              <button onClick={() => props.onStepChange(props.currentStepIndex - 1)}>← Назад</button>
             )}
-            {props.chat.map((message, index) => (
-              <div key={`${message.role}-${index}`} className={`message ${message.role}`}>
-                <b>{message.role === 'coach' ? 'Coach' : 'Ты'}</b>
-                <p>{message.text}</p>
-              </div>
-            ))}
-          </div>
-          <div className="quick">
-            <button onClick={() => sendCoachMessage('Объясни простыми словами термины и фреймворки этого этапа.')}>Объясни термины</button>
-            <button onClick={() => sendCoachMessage('Какие данные из условия кейса полезны для этого этапа?')}>Найди данные</button>
-            <button onClick={() => sendCoachMessage('Задай 3 наводящих вопроса для этого этапа.')}>3 вопроса</button>
-            <button onClick={() => sendCoachMessage('Проверь логику и связь моего ответа с кейсом.')}>Проверить логику</button>
-            <button onClick={() => sendCoachMessage('Подскажи следующий шаг, не давая готового решения.')}>Следующий шаг</button>
-          </div>
-          <div className="ask">
-            <input
-              value={coachInput}
-              onChange={(event) => setCoachInput(event.target.value)}
-              placeholder="Спроси коуча"
-            />
-            <button onClick={() => coachInput.trim() && sendCoachMessage(coachInput)}>Отправить</button>
+            <button className="primary" onClick={props.onNext}>
+              {isLastStep ? 'Завершить' : 'Следующий этап →'}
+            </button>
           </div>
         </div>
+
+        {/* Desktop: side column */}
+        <div className="sideColumn">
+          <CaseReference caseText={props.caseText} />
+          <div className="panel coach">
+            <h2>AI Coach</h2>
+            <CoachContent
+              chat={props.chat}
+              coachInput={coachInput}
+              onInput={setCoachInput}
+              onSend={sendCoachMessage}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Mobile: floating coach button */}
+      <button className="coachFloat" onClick={() => setCoachOpen(true)}>
+        💬 AI Coach
+      </button>
+
+      {/* Mobile: coach bottom sheet */}
+      {coachOpen && (
+        <div className="coachOverlay" onClick={(e) => e.target === e.currentTarget && setCoachOpen(false)}>
+          <div className="coachSheet">
+            <div className="sheetHandle" />
+            <div className="sheetHead">
+              <h3>AI Coach</h3>
+              <button className="sheetClose" onClick={() => setCoachOpen(false)}>✕</button>
+            </div>
+            <CoachContent
+              chat={props.chat}
+              coachInput={coachInput}
+              onInput={setCoachInput}
+              onSend={sendCoachMessage}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CoachContent({ chat, coachInput, onInput, onSend }) {
+  const chatRef = useRef(null);
+
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [chat]);
+
+  return (
+    <>
+      <div className="coachIntro">
+        <b>Можно спрашивать как у поисковика по кейсу.</b>
+        <p>Коуч объяснит термины, найдёт нужные данные в условии, подскажет фреймворк, проверит логику и поможет сформулировать следующий шаг.</p>
       </div>
-    </section>
+      <div className="chat" ref={chatRef}>
+        {chat.length === 0 && (
+          <div className="emptyCoach">
+            <p>Напиши вопрос простыми словами: «что такое MECE?», «какие данные взять из кейса?», «как начать этот блок?».</p>
+          </div>
+        )}
+        {chat.map((message, index) => (
+          <div key={`${message.role}-${index}`} className={`message ${message.role}`}>
+            <b>{message.role === 'coach' ? 'Coach' : 'Ты'}</b>
+            <p>{message.text}</p>
+          </div>
+        ))}
+      </div>
+      <div className="quick">
+        <button onClick={() => onSend('Объясни простыми словами термины и фреймворки этого этапа.')}>Объясни термины</button>
+        <button onClick={() => onSend('Какие данные из условия кейса полезны для этого этапа?')}>Найди данные</button>
+        <button onClick={() => onSend('Задай 3 наводящих вопроса для этого этапа.')}>3 вопроса</button>
+        <button onClick={() => onSend('Проверь логику и связь моего ответа с кейсом.')}>Проверить логику</button>
+        <button onClick={() => onSend('Подскажи следующий шаг, не давая готового решения.')}>Следующий шаг</button>
+      </div>
+      <div className="ask">
+        <input
+          value={coachInput}
+          onChange={(event) => onInput(event.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && coachInput.trim() && onSend(coachInput)}
+          placeholder="Спроси коуча"
+        />
+        <button onClick={() => coachInput.trim() && onSend(coachInput)}>Отправить</button>
+      </div>
+    </>
   );
 }
 
@@ -399,39 +501,36 @@ function truncateSummary(value, maxLength) {
 }
 
 function LearningBlock({ theory }) {
+  const [open, setOpen] = useState(false);
   if (!theory) return null;
 
   return (
     <section className="learning">
-      <div>
-        <p className="sectionLabel">Теория блока</p>
-        <h3>Зачем нужен этот этап</h3>
-        <p>{theory.goal}</p>
-      </div>
-
-      <div className="termGrid">
-        {(theory.terms || []).map((term) => (
-          <article key={term.name} className="termItem">
-            <b>{term.name}</b>
-            <p>{term.meaning}</p>
-          </article>
-        ))}
-      </div>
-
-      <div className="exampleBox">
-        <div>
-          <span>Пример</span>
-          <p>{theory.example}</p>
+      <button className="learningToggle" onClick={() => setOpen((prev) => !prev)}>
+        <span className="sectionLabel">Теория блока</span>
+        <span className="toggleArrow">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="learningBody">
+          <div>
+            <h3>Зачем нужен этот этап</h3>
+            <p>{theory.goal}</p>
+          </div>
+          <div className="termGrid">
+            {(theory.terms || []).map((term) => (
+              <article key={term.name} className="termItem">
+                <b>{term.name}</b>
+                <p>{term.meaning}</p>
+              </article>
+            ))}
+          </div>
+          <div className="exampleBox">
+            <div><span>Пример</span><p>{theory.example}</p></div>
+            <div><span>Как оформить ответ</span><p>{theory.answerTemplate}</p></div>
+            <div><span>Типичная ошибка</span><p>{theory.commonMistake}</p></div>
+          </div>
         </div>
-        <div>
-          <span>Как оформить ответ</span>
-          <p>{theory.answerTemplate}</p>
-        </div>
-        <div>
-          <span>Типичная ошибка</span>
-          <p>{theory.commonMistake}</p>
-        </div>
-      </div>
+      )}
     </section>
   );
 }
