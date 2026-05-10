@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { api } from './api/client.js';
 import './styles.css';
@@ -270,10 +270,39 @@ const getVisualSteps = (chapter, step) => {
   ];
 };
 
+/* ──────────────────────────── Mobile step strip ─────────────────────── */
+const MobileStepStrip = ({ steps, activeIdx, answers, onPick }) => {
+  const doneCount = steps.filter((s) => (answers[s.id] || '').trim().length > 30).length;
+  const progress = steps.length ? Math.round((doneCount / steps.length) * 100) : 0;
+
+  return (
+    <nav className="stepStrip">
+      <div className="stepStripTrack">
+        {steps.map((s, i) => {
+          const done = (answers[s.id] || '').trim().length > 30;
+          const active = i === activeIdx;
+          return (
+            <button
+              key={s.id}
+              className={`stepChip${active ? ' active' : ''}${done && !active ? ' done' : ''}`}
+              onClick={() => onPick(i)}
+            >
+              <div className="chipBadge">{done && !active ? '✓' : i + 1}</div>
+              <div className="chipLabel">{s.title}</div>
+            </button>
+          );
+        })}
+      </div>
+      <div className="stripBar"><div style={{ width: `${progress}%` }} /></div>
+    </nav>
+  );
+};
+
 /* ──────────────────────────── Workspace ─────────────────────────────── */
 const Workspace = ({ caseText, steps, track, onEvaluate, evaluation, onBack }) => {
   const [activeIdx, setActiveIdx] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [coachOpen, setCoachOpen] = useState(false);
   const trackSteps = useMemo(() => getTrackSteps(track, steps), [track, steps]);
   const step = trackSteps[Math.min(activeIdx, trackSteps.length - 1)];
   const activeChapter = getActiveChapter(track, step);
@@ -281,6 +310,15 @@ const Workspace = ({ caseText, steps, track, onEvaluate, evaluation, onBack }) =
   useEffect(() => {
     if (activeIdx >= trackSteps.length) setActiveIdx(0);
   }, [activeIdx, trackSteps.length]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeIdx]);
+
+  useEffect(() => {
+    document.body.style.overflow = coachOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [coachOpen]);
 
   const setAnswer = useCallback((id, val) => {
     setAnswers((prev) => ({ ...prev, [id]: val }));
@@ -291,6 +329,9 @@ const Workspace = ({ caseText, steps, track, onEvaluate, evaluation, onBack }) =
       <button className="btn btn-ghost" onClick={onBack} style={{ marginBottom: 24 }}>
         ← Изменить параметры
       </button>
+
+      <MobileStepStrip steps={trackSteps} activeIdx={activeIdx} answers={answers} onPick={setActiveIdx} />
+
       <div className="workspace">
         <StepsRail steps={trackSteps} activeIdx={activeIdx} answers={answers} onPick={setActiveIdx} />
         <div>
@@ -308,16 +349,43 @@ const Workspace = ({ caseText, steps, track, onEvaluate, evaluation, onBack }) =
             isLast={activeIdx === trackSteps.length - 1}
             onEvaluate={() => onEvaluate(answers)}
           />
-          <CoachPanel
-            step={step}
-            caseText={caseText}
-            answer={answers[step.id] || ''}
-            previousAnswers={answers}
-            trackId={track?.id}
-          />
+          <div className="desktopCoach">
+            <CoachPanel
+              step={step}
+              caseText={caseText}
+              answer={answers[step.id] || ''}
+              previousAnswers={answers}
+              trackId={track?.id}
+            />
+          </div>
           {evaluation && <EvaluationCard evaluation={evaluation} />}
         </div>
       </div>
+
+      {/* Mobile: floating coach button */}
+      <button className="coachFloat" onClick={() => setCoachOpen(true)}>
+        💬 Coach
+      </button>
+
+      {/* Mobile: coach bottom sheet */}
+      {coachOpen && (
+        <div className="coachOverlay" onClick={(e) => e.target === e.currentTarget && setCoachOpen(false)}>
+          <div className="coachSheet">
+            <div className="sheetHandle" />
+            <div className="sheetHead">
+              <span>Case Coach</span>
+              <button className="sheetClose" onClick={() => setCoachOpen(false)}>✕</button>
+            </div>
+            <CoachPanel
+              step={step}
+              caseText={caseText}
+              answer={answers[step.id] || ''}
+              previousAnswers={answers}
+              trackId={track?.id}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
