@@ -27,6 +27,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  generateInterview: (payload) =>
+    request('/api/interviews/generate', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
   coach: (payload) =>
     request('/api/coach', {
       method: 'POST',

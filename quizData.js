@@ -47,6 +47,54 @@ export const QUIZ_CATEGORIES = [
     color: '#16a085',
     tag: 'Консалтинг · McKinsey, BCG',
   },
+  {
+    id: 'pm_cases',
+    title: 'PM-кейсы BigTech',
+    subtitle: 'Product sense, UX, growth, product strategy',
+    icon: '🧠',
+    color: '#5f9cff',
+    tag: 'PM · Яндекс, Авито, BigTech',
+  },
+  {
+    id: 'marketplace',
+    title: 'Маркетплейсы',
+    subtitle: 'Avito-like classifieds, liquidity, trust, supply/demand',
+    icon: '🏪',
+    color: '#b8ff5c',
+    tag: 'Авито · Ozon · Яндекс',
+  },
+  {
+    id: 'experiments',
+    title: 'A/B и причинность',
+    subtitle: 'p-value, power, MDE, causal traps',
+    icon: '🧪',
+    color: '#ffb86b',
+    tag: 'Product analytics',
+  },
+  {
+    id: 'consulting_cases',
+    title: 'MBB case types',
+    subtitle: 'Profitability, Market Entry, Pricing, M&A',
+    icon: '🏛️',
+    color: '#9fd6ff',
+    tag: 'McKinsey · BCG · Bain',
+  },
+  {
+    id: 'big4',
+    title: 'Big4 / Advisory',
+    subtitle: 'Written case, group case, transformation, client impact',
+    icon: '🗂️',
+    color: '#d7a6ff',
+    tag: 'Deloitte · PwC · EY · KPMG',
+  },
+  {
+    id: 'case_math',
+    title: 'Case math',
+    subtitle: 'Mental math, margin, ROI, breakeven, sensitivity',
+    icon: '🧮',
+    color: '#6ee7b7',
+    tag: 'Консалтинг · PM',
+  },
 ];
 
 export const QUIZ_QUESTIONS = {
@@ -755,6 +803,684 @@ export const QUIZ_QUESTIONS = {
       answer: 1,
       explanation:
         'GTM = как решение попадёт к клиенту. Включает: Who (сегмент), What (value proposition), How (каналы: прямые продажи, партнёры, digital), When (фазы запуска), With what (ресурсы и операционная модель). На консалтинг-интервью GTM описывают в конце кейса.',
+    },
+  ],
+
+  pm_cases: [
+    {
+      q: 'На PM-интервью просят: "Улучши Яндекс.Карты для туристов". С чего начать?',
+      options: [
+        'Сразу предложить AR-навигацию и AI-гид',
+        'Уточнить цель, сегмент туристов, контекст поездки и метрику успеха',
+        'Сравнить дизайн с Google Maps',
+        'Попросить команду провести UX-исследование после интервью',
+      ],
+      answer: 1,
+      explanation:
+        'Product design case начинается не с идей, а с framing: цель бизнеса, primary user, сценарий, pain point, метрика. Так интервьюер проверяет, умеешь ли ты сузить амбигуити.',
+      difficulty: 'easy',
+      skill: 'Product sense',
+    },
+    {
+      q: 'Какой ответ сильнее для вопроса "Как измерить успех новой фичи рекомендаций?"',
+      options: [
+        'Посмотреть, понравилась ли фича команде',
+        'Выбрать primary metric, guardrails и сегменты, где ожидаем эффект',
+        'Считать только DAU после релиза',
+        'Считать только revenue, потому что бизнесу важны деньги',
+      ],
+      answer: 1,
+      explanation:
+        'Зрелый PM называет primary metric, guardrails и сегменты. Например: CTR/конверсия в целевое действие, retention, жалобы, latency, маржа.',
+      difficulty: 'easy',
+      skill: 'Metrics design',
+    },
+    {
+      q: 'Вопрос: "Запустили доставку в новом городе, заказов мало". Какой порядок диагностики лучше?',
+      options: [
+        'Сразу увеличить скидки',
+        'Разложить supply/demand funnel: трафик → выбор → корзина → оплата → доставка',
+        'Поменять логотип и коммуникацию',
+        'Сделать deep research всех конкурентов перед любой аналитикой',
+      ],
+      answer: 1,
+      explanation:
+        'Для marketplace-кейсов важно мыслить воронкой и двусторонней ликвидностью: есть ли спрос, есть ли supply, где drop-off, хватает ли SLA/цены/ассортимента.',
+      difficulty: 'medium',
+      skill: 'Funnel RCA',
+    },
+    {
+      q: 'Что лучше всего характеризует product thinking в кейсе "улучшить onboarding"?',
+      options: [
+        'Список из 10 красивых экранов',
+        'Формулировка aha moment, сегмента новых пользователей и гипотезы drop-off',
+        'Просьба дать больше дизайнеров',
+        'Решение скопировать onboarding конкурента',
+      ],
+      answer: 1,
+      explanation:
+        'Onboarding оценивают через путь к первой ценности. Хороший ответ: кто новый пользователь, какой aha moment, где drop-off, какие данные это показывают.',
+      difficulty: 'medium',
+      skill: 'Activation',
+    },
+    {
+      q: 'В PM case "увеличить retention музыкального приложения" самая зрелая первая структура:',
+      options: [
+        'Добавить сторис, подписки и социальные механики',
+        'Разложить retention по когортам, use cases, частоте и моментам возвращения',
+        'Снизить цену подписки',
+        'Сделать больше push-уведомлений',
+      ],
+      answer: 1,
+      explanation:
+        'Retention не лечится списком фич. Сначала: какие когорты уходят, после какого момента, какой use case не закрыт, какая частота естественна.',
+      difficulty: 'medium',
+      skill: 'Retention',
+    },
+    {
+      q: 'Какой пример формулировки гипотезы лучше?',
+      options: [
+        'Нужно сделать новый экран профиля',
+        'Пользователи уходят, потому что не видят ценность после первого действия; если показать персональный next step, D7 retention вырастет',
+        'Дизайн устарел',
+        'Конкуренты делают лучше',
+      ],
+      answer: 1,
+      explanation:
+        'Хорошая гипотеза содержит сегмент, причину, изменение и метрику. Это проверяемое утверждение, а не мнение или решение.',
+      difficulty: 'easy',
+      skill: 'Hypothesis',
+    },
+    {
+      q: 'Вопрос BigTech: "Какой продукт вы бы закрыли?" Что важно показать?',
+      options: [
+        'Смелость закрывать непопулярные проекты',
+        'Критерии: ценность для пользователя, стратегический fit, экономика, opportunity cost',
+        'Личное мнение о том, какие продукты вам не нравятся',
+        'Только размер команды и бюджет',
+      ],
+      answer: 1,
+      explanation:
+        'Product strategy questions проверяют judgment. Нужны критерии и trade-offs: user value, business impact, strategy, cost, risk, alternatives.',
+      difficulty: 'hard',
+      skill: 'Product strategy',
+    },
+    {
+      q: 'PM спрашивают: "Как бы вы монетизировали бесплатный сервис?" С чего начать?',
+      options: [
+        'Сразу добавить платную подписку',
+        'Выделить сегменты, willingness to pay, value metric и риски ухудшения core experience',
+        'Поставить больше рекламы всем пользователям',
+        'Скопировать модель конкурента',
+      ],
+      answer: 1,
+      explanation:
+        'Монетизация — это не только paywall. Нужно понять, кто получает ценность, за что готов платить, какая value metric, какие guardrails.',
+      difficulty: 'medium',
+      skill: 'Monetization',
+    },
+    {
+      q: 'Что отличает хороший answer на product design case от среднего?',
+      options: [
+        'Больше идей',
+        'Ясный user segment → pain → options → trade-offs → MVP → metrics',
+        'Больше терминов на английском',
+        'Самая технологичная фича',
+      ],
+      answer: 1,
+      explanation:
+        'Интервьюер оценивает не количество идей, а структуру мышления: сегмент, боль, варианты, выбор, компромиссы, MVP и метрики проверки.',
+      difficulty: 'easy',
+      skill: 'CIRCLES',
+    },
+    {
+      q: 'Если интервьюер просит "придумать 3 идеи роста", чего не хватает в ответе "скидки, рефералка, реклама"?',
+      options: [
+        'Красивых названий инициатив',
+        'Связи с конкретным bottleneck, аудиторией и ожидаемым impact',
+        'Больше каналов performance',
+        'Упоминания AI',
+      ],
+      answer: 1,
+      explanation:
+        'Идеи роста должны быть привязаны к диагностике: acquisition, activation, retention, monetization или referral. Иначе это случайный список.',
+      difficulty: 'medium',
+      skill: 'Growth',
+    },
+  ],
+
+  marketplace: [
+    {
+      q: 'Главная метрика ликвидности для классифайда/маркетплейса:',
+      options: [
+        'Количество установок приложения',
+        'Доля запросов, которые приводят к релевантному контакту или сделке',
+        'Количество сотрудников sales-команды',
+        'Средний возраст пользователей',
+      ],
+      answer: 1,
+      explanation:
+        'Liquidity показывает, насколько быстро и качественно спрос встречается с предложением. Для классифайда это contact rate, reply rate, time to first response, successful transaction.',
+      difficulty: 'easy',
+      skill: 'Marketplace liquidity',
+    },
+    {
+      q: 'В Avito-like продукте продавцы жалуются, что мало откликов. Что проверить первым?',
+      options: [
+        'Качество и количество спроса в категории, позицию объявления, цену, фото и reply funnel',
+        'Только общий DAU приложения',
+        'Возраст продавца',
+        'Цвет кнопки публикации',
+      ],
+      answer: 0,
+      explanation:
+        'Проблема откликов может быть на стороне demand, ranking, цены, качества листинга или коммуникации. Нужна decomposition по категории и воронке объявления.',
+      difficulty: 'medium',
+      skill: 'Supply success',
+    },
+    {
+      q: 'Покупатели жалуются на мошенничество. Какая guardrail-метрика обязательна?',
+      options: [
+        'Количество новых объявлений',
+        'Fraud rate / complaint rate / share of blocked suspicious actions',
+        'Средняя длина описания объявления',
+        'Количество пушей в неделю',
+      ],
+      answer: 1,
+      explanation:
+        'Для trust & safety нельзя оптимизировать только сделки. Нужно держать guardrails: fraud, жалобы, false positives, скорость модерации, доверие пользователей.',
+      difficulty: 'easy',
+      skill: 'Trust & safety',
+    },
+    {
+      q: 'У маркетплейса падает GMV, но количество заказов стабильно. Что вероятнее всего изменилось?',
+      options: [
+        'Средний чек / mix категорий / скидки',
+        'Только число новых пользователей',
+        'Только скорость доставки',
+        'Только бренд компании',
+      ],
+      answer: 0,
+      explanation:
+        'GMV = Orders × AOV. Если заказы стабильны, ищем AOV: цена, mix категорий, скидки, количество items/order, сезонность.',
+      difficulty: 'easy',
+      skill: 'Metric tree',
+    },
+    {
+      q: 'Какой trade-off типичен для ranking в классифайде?',
+      options: [
+        'Скорость загрузки vs цвет иконок',
+        'Релевантность покупателю vs fairness/visibility для продавцов',
+        'Количество офисов vs количество серверов',
+        'Email vs push',
+      ],
+      answer: 1,
+      explanation:
+        'Ranking должен помогать покупателю найти лучшее, но не убивать supply: новые продавцы, long-tail, платные промо, fairness. Это зрелый marketplace trade-off.',
+      difficulty: 'hard',
+      skill: 'Ranking trade-off',
+    },
+    {
+      q: 'Что такое chicken-and-egg problem в marketplace?',
+      options: [
+        'Юридический риск торговли продуктами питания',
+        'Проблема запуска: без supply нет demand, без demand нет supply',
+        'Ошибка в A/B-тесте',
+        'Низкая маржа из-за логистики',
+      ],
+      answer: 1,
+      explanation:
+        'Двусторонний рынок сложно запустить, потому что каждая сторона ценна только при наличии другой. Поэтому выбирают beachhead: город, категория, узкий сегмент.',
+      difficulty: 'easy',
+      skill: 'Marketplace launch',
+    },
+    {
+      q: 'Для категории "недвижимость" важнее всего добавить в первое дерево метрик:',
+      options: [
+        'Только количество лайков',
+        'Lead quality, contact rate, time-to-deal, fraud/duplicates, supply freshness',
+        'Количество внутренних митингов',
+        'Температуру в городе',
+      ],
+      answer: 1,
+      explanation:
+        'В недвижимости длинный цикл сделки и высокий риск плохого supply. Метрики должны учитывать качество лида, актуальность объектов, дубли, доверие, скорость ответа.',
+      difficulty: 'medium',
+      skill: 'Vertical metrics',
+    },
+    {
+      q: 'Какая идея лучше проверяет ценность безопасной сделки?',
+      options: [
+        'Сразу включить безопасную сделку всем и убрать альтернативы',
+        'Пилот в рискованных категориях с метриками adoption, fraud, conversion, disputes',
+        'Сделать баннер на главной',
+        'Переименовать функцию',
+      ],
+      answer: 1,
+      explanation:
+        'Trust-фичи надо тестировать там, где боль сильна, и смотреть не только adoption, но и конверсию, fraud, споры, поддержку, маржу.',
+      difficulty: 'medium',
+      skill: 'Experiment design',
+    },
+  ],
+
+  experiments: [
+    {
+      q: 'A/B-тест показал +3% к CTR, p-value = 0.04. Что обязательно проверить перед rollout?',
+      options: [
+        'Только цвет кнопки в варианте B',
+        'Power/MDE, SRM, guardrails, сегменты и длительность теста',
+        'Мнение CEO',
+        'Количество лайков в соцсетях',
+      ],
+      answer: 1,
+      explanation:
+        'p-value сам по себе не гарантирует валидность. Проверь sample ratio mismatch, достаточную мощность, guardrails, сезонность, сегменты и practical significance.',
+      difficulty: 'medium',
+      skill: 'Experiment validity',
+    },
+    {
+      q: 'Что такое MDE?',
+      options: [
+        'Максимальная дневная ошибка',
+        'Минимальный детектируемый эффект, который тест способен надежно обнаружить',
+        'Метрика доверия эксперимента',
+        'Средний дневной engagement',
+      ],
+      answer: 1,
+      explanation:
+        'MDE нужен до запуска теста: какой минимальный эффект мы хотим уметь поймать при заданных alpha, power и sample size. Маленький MDE требует больше трафика.',
+      difficulty: 'easy',
+      skill: 'A/B basics',
+    },
+    {
+      q: 'Почему нельзя останавливать A/B-тест сразу после достижения p < 0.05?',
+      options: [
+        'Потому что p-value всегда неправильный',
+        'Это peeking: повышает false positive rate, если не использованы sequential methods',
+        'Потому что тесты должны идти ровно месяц',
+        'Потому что нужен дизайн-ревью',
+      ],
+      answer: 1,
+      explanation:
+        'Многократное подглядывание за p-value повышает шанс случайной победы. Нужен заранее заданный срок/объем или sequential testing.',
+      difficulty: 'hard',
+      skill: 'Peeking',
+    },
+    {
+      q: 'Что такое SRM в A/B-тесте?',
+      options: [
+        'Social response metric',
+        'Sample Ratio Mismatch: доли пользователей в группах не совпали с планом',
+        'Средняя revenue-метрика',
+        'Скорость релиза модели',
+      ],
+      answer: 1,
+      explanation:
+        'SRM означает, что рандомизация или логирование могли сломаться. Если ожидали 50/50, а получили 60/40 без причины, результат теста подозрителен.',
+      difficulty: 'medium',
+      skill: 'SRM',
+    },
+    {
+      q: 'В эксперименте вырос revenue, но вырос churn. Как интерпретировать?',
+      options: [
+        'Раскатывать, revenue важнее',
+        'Смотреть guardrails и долгосрочный LTV: возможно, краткосрочная монетизация ухудшает ценность',
+        'Игнорировать churn, если p-value хороший',
+        'Перезапустить тест без churn',
+      ],
+      answer: 1,
+      explanation:
+        'Guardrails нужны именно для таких случаев. Revenue может вырасти за счет давления на пользователя, но LTV и доверие ухудшатся.',
+      difficulty: 'medium',
+      skill: 'Guardrails',
+    },
+    {
+      q: 'Что лучше для оценки эффекта фичи, которую нельзя рандомизировать по пользователям?',
+      options: [
+        'Ничего нельзя сделать',
+        'Diff-in-diff, geo-test, synthetic control или matched cohorts',
+        'Опросить только команду продукта',
+        'Сравнить до/после без контроля и принять решение',
+      ],
+      answer: 1,
+      explanation:
+        'Когда A/B невозможен, используют quasi-experimental methods. Главное — контрольная группа или контрфактическая оценка, иначе before/after путает эффект с сезонностью.',
+      difficulty: 'hard',
+      skill: 'Causal inference',
+    },
+    {
+      q: 'Какая ошибка в формулировке H1?',
+      options: [
+        'Новая подсказка увеличит activation новых пользователей на 2% за 14 дней',
+        'Новая подсказка сделает продукт лучше',
+        'Новая подсказка снизит drop-off на шаге оплаты',
+        'Новая подсказка увеличит completion rate onboarding',
+      ],
+      answer: 1,
+      explanation:
+        'H1 должна быть измеримой: что меняем, у кого, какая метрика, на сколько/в каком направлении, за какой период. "Лучше" не тестируется.',
+      difficulty: 'easy',
+      skill: 'Hypothesis',
+    },
+    {
+      q: 'Если тест дал статистически значимый +0.1% к конверсии, что еще важно?',
+      options: [
+        'Practical significance: окупает ли эффект разработку, риски и сложность',
+        'Только p-value',
+        'Сколько людей видели макет',
+        'Название эксперимента',
+      ],
+      answer: 0,
+      explanation:
+        'Статистическая значимость не равна бизнес-значимости. Малый эффект может не окупить rollout или усложнить продукт.',
+      difficulty: 'medium',
+      skill: 'Practical significance',
+    },
+  ],
+
+  consulting_cases: [
+    {
+      q: 'Profitability case: прибыль упала, выручка выросла. Куда смотреть?',
+      options: [
+        'Только на цену',
+        'На cost side: COGS, fixed costs, variable costs, mix, one-off expenses',
+        'Только на конкурентов',
+        'На brand awareness',
+      ],
+      answer: 1,
+      explanation:
+        'Profit = Revenue − Costs. Если выручка выросла, а прибыль упала, вероятная проблема в затратах или маржинальном миксе. Начинай с cost decomposition.',
+      difficulty: 'easy',
+      skill: 'Profitability',
+    },
+    {
+      q: 'Market Entry case: какая структура наиболее полная?',
+      options: [
+        'Размер рынка и реклама',
+        'Market attractiveness, competition, right to win, economics, risks, entry mode',
+        'Цена и логотип',
+        'Количество сотрудников в стране',
+      ],
+      answer: 1,
+      explanation:
+        'Market Entry требует go/no-go логики: привлекательность, конкуренция, capabilities/right to win, экономика, риски и способ входа: organic, partnership, M&A.',
+      difficulty: 'easy',
+      skill: 'Market entry',
+    },
+    {
+      q: 'Pricing case: какие три угла нужно рассмотреть?',
+      options: [
+        'Цвет, упаковка, бренд',
+        'Cost-based, competitor-based, value-based pricing',
+        'HR, finance, legal',
+        'Desktop, mobile, tablet',
+      ],
+      answer: 1,
+      explanation:
+        'Классическая структура pricing: себестоимость и маржа, цены конкурентов, willingness to pay/value для клиента. Потом эластичность, сегменты и стратегическая цель.',
+      difficulty: 'easy',
+      skill: 'Pricing',
+    },
+    {
+      q: 'M&A case: что отличает сильный ответ?',
+      options: [
+        'Сказать "покупать", если рынок растет',
+        'Оценить target market, target quality, synergies, valuation, integration risks',
+        'Сфокусироваться только на бренде target',
+        'Сразу предложить цену покупки',
+      ],
+      answer: 1,
+      explanation:
+        'M&A — это не просто "рынок растет". Нужны рынок, качество target, синергии, valuation, риски интеграции и альтернативы.',
+      difficulty: 'medium',
+      skill: 'M&A',
+    },
+    {
+      q: 'Operations case: производительность склада низкая. Первый split?',
+      options: [
+        'Люди, процессы, технологии, layout/capacity, demand variability',
+        'Маркетинг и PR',
+        'CEO и CFO',
+        'Фирменный стиль',
+      ],
+      answer: 0,
+      explanation:
+        'Operations cases проверяют practical judgment: процесс, capacity, bottlenecks, labor, automation, layout, variability, quality/SLA.',
+      difficulty: 'medium',
+      skill: 'Operations',
+    },
+    {
+      q: 'Growth strategy: выручка должна вырасти в 2 раза. Какой split лучше?',
+      options: [
+        'Новые рынки, новые продукты, увеличение частоты/чека, pricing, retention, channels',
+        'Сделать больше встреч',
+        'Сменить офис',
+        'Снизить все цены',
+      ],
+      answer: 0,
+      explanation:
+        'Growth cases требуют дерева роста: больше клиентов, больше частота, больше чек, меньше churn, новые сегменты/каналы/географии/продукты.',
+      difficulty: 'medium',
+      skill: 'Growth strategy',
+    },
+    {
+      q: 'Что такое interviewer-led case?',
+      options: [
+        'Кейс, где кандидат сам полностью выбирает маршрут',
+        'Кейс, где интервьюер ведет по вопросам, а кандидат отвечает структурно на каждый блок',
+        'Кейс без чисел',
+        'Только behavioral interview',
+      ],
+      answer: 1,
+      explanation:
+        'McKinsey часто использует interviewer-led format: интервьюер задает последовательные вопросы. Нужно быть структурным в каждом ответе, а не пытаться полностью захватить маршрут.',
+      difficulty: 'easy',
+      skill: 'Case format',
+    },
+    {
+      q: 'Если в кейсе дали график, что делать сначала?',
+      options: [
+        'Сразу считать среднее',
+        'Прочитать заголовок, оси, единицы, период, затем назвать 2-3 инсайта',
+        'Игнорировать график, если он сложный',
+        'Спросить правильный ответ',
+      ],
+      answer: 1,
+      explanation:
+        'Exhibit analysis: заголовок → оси → единицы → тренд → аномалии → so what. Интервьюер оценивает не скорость чтения, а insight.',
+      difficulty: 'medium',
+      skill: 'Exhibit analysis',
+    },
+  ],
+
+  big4: [
+    {
+      q: 'Written case в Big4 чаще всего проверяет:',
+      options: [
+        'Только скорость печати',
+        'Умение синтезировать данные, выбрать приоритеты и оформить рекомендацию',
+        'Знание всех фреймворков наизусть',
+        'Только английский язык',
+      ],
+      answer: 1,
+      explanation:
+        'Written case симулирует клиентский deliverable: быстро прочитать материалы, выделить инсайты, структурировать рекомендацию и защитить логику.',
+      difficulty: 'easy',
+      skill: 'Written case',
+    },
+    {
+      q: 'Group case оценивает не только решение, но и:',
+      options: [
+        'Громкость голоса',
+        'Collaboration, listening, facilitation, ability to build on others',
+        'Способность спорить до победы',
+        'Количество терминов',
+      ],
+      answer: 1,
+      explanation:
+        'В групповых кейсах важно не доминировать, а помогать группе двигаться: структурировать, слушать, вовлекать, синтезировать, не терять цель клиента.',
+      difficulty: 'easy',
+      skill: 'Group case',
+    },
+    {
+      q: 'Для Deloitte/PwC transformation case какой блок почти всегда нужен?',
+      options: [
+        'Только TAM/SAM/SOM',
+        'Operating model: people, process, technology, governance, risks',
+        'Только конкурентная карта',
+        'Только дизайн продукта',
+      ],
+      answer: 1,
+      explanation:
+        'Big4 часто ближе к внедрению. Поэтому кроме стратегии нужно показать операционную модель: процессы, люди, systems, governance, change management.',
+      difficulty: 'medium',
+      skill: 'Transformation',
+    },
+    {
+      q: 'EY-Parthenon / deals case часто требует особого внимания к:',
+      options: [
+        'Commercial due diligence, market attractiveness, value creation, exit risks',
+        'Офисной культуре',
+        'Только UX-исследованиям',
+        'Только соцсетям компании',
+      ],
+      answer: 0,
+      explanation:
+        'Transaction strategy cases часто смотрят на инвестиционную логику: рынок, target, конкурентная позиция, value creation levers, downside risks.',
+      difficulty: 'medium',
+      skill: 'CDD',
+    },
+    {
+      q: 'KPMG/PwC case: клиент хочет снизить costs на 15%. Что добавить помимо идей сокращения?',
+      options: [
+        'Risk to service quality, implementation timeline, owners, change management',
+        'Только список увольнений',
+        'Только benchmark зарплат',
+        'Только новую оргструктуру',
+      ],
+      answer: 0,
+      explanation:
+        'Advisory cases оценивают practical implementation. Нужно показать, как сокращения повлияют на качество, риски, людей, сроки и governance.',
+      difficulty: 'medium',
+      skill: 'Cost transformation',
+    },
+    {
+      q: 'Digital transformation case: банк внедряет новую платформу. Что спросить первым?',
+      options: [
+        'Какой цвет интерфейса?',
+        'Какая бизнес-цель, pain текущей системы, users, constraints, success metrics?',
+        'Сколько разработчиков вендора?',
+        'Можно ли использовать самый модный стек?',
+      ],
+      answer: 1,
+      explanation:
+        'Технологический кейс не про стек ради стека. Начинай с бизнес-цели, процессов, пользователей, рисков миграции, KPI и ограничений.',
+      difficulty: 'medium',
+      skill: 'Digital transformation',
+    },
+    {
+      q: 'В Big4 финальной рекомендации особенно ценят:',
+      options: [
+        'Красивый, но абстрактный vision',
+        'Практичный plan: quick wins, roadmap, dependencies, risks, governance',
+        'Много академических терминов',
+        'Решение без ограничений',
+      ],
+      answer: 1,
+      explanation:
+        'Big4/Advisory сильно смотрят на implementability: что делать завтра, кто владелец, какие зависимости, риски и как измерить эффект.',
+      difficulty: 'easy',
+      skill: 'Implementation',
+    },
+    {
+      q: 'Если written case содержит 20 страниц данных, правильная стратегия:',
+      options: [
+        'Читать всё линейно до последней страницы',
+        'Сначала понять вопрос, затем сканировать данные под структуру и вывод',
+        'Сразу писать рекомендации без чтения',
+        'Искать только самые красивые графики',
+      ],
+      answer: 1,
+      explanation:
+        'Time-boxed written case требует top-down чтения: вопрос → структура → релевантные exhibits → инсайты → рекомендация. Не тонуть в деталях.',
+      difficulty: 'medium',
+      skill: 'Written synthesis',
+    },
+  ],
+
+  case_math: [
+    {
+      q: 'Выручка 100 млн, gross margin 40%, fixed costs 30 млн. EBIT?',
+      options: ['10 млн', '30 млн', '40 млн', '70 млн'],
+      answer: 0,
+      explanation:
+        'Gross profit = 100 × 40% = 40 млн. EBIT = gross profit − fixed costs = 40 − 30 = 10 млн.',
+      difficulty: 'easy',
+      skill: 'P&L',
+    },
+    {
+      q: 'Цена 1000, variable cost 600, fixed costs 2 млн. Break-even units?',
+      options: ['2 000', '3 333', '5 000', '10 000'],
+      answer: 2,
+      explanation:
+        'Contribution margin = 1000 − 600 = 400. Break-even units = 2 000 000 / 400 = 5 000 units.',
+      difficulty: 'easy',
+      skill: 'Break-even',
+    },
+    {
+      q: 'CAC = 3000, monthly gross profit per user = 500. Payback?',
+      options: ['3 месяца', '6 месяцев', '12 месяцев', '18 месяцев'],
+      answer: 1,
+      explanation:
+        'Payback = CAC / monthly gross profit = 3000 / 500 = 6 месяцев.',
+      difficulty: 'easy',
+      skill: 'Unit economics',
+    },
+    {
+      q: 'Retention упал с 40% до 32%. Это:',
+      options: ['−8%', '−20% relative или −8 п.п.', '+8 п.п.', '−32%'],
+      answer: 1,
+      explanation:
+        'Абсолютное изменение = −8 percentage points. Относительное = 8 / 40 = 20% decline. На интервью всегда уточняй п.п. vs %.',
+      difficulty: 'medium',
+      skill: 'Percent vs pp',
+    },
+    {
+      q: 'Маржа выросла с 20% до 25%, выручка 200 млн. Дополнительная gross profit?',
+      options: ['5 млн', '10 млн', '25 млн', '50 млн'],
+      answer: 1,
+      explanation:
+        'Рост маржи = +5 п.п. На выручку 200 млн это 200 × 5% = 10 млн дополнительной gross profit.',
+      difficulty: 'medium',
+      skill: 'Margin math',
+    },
+    {
+      q: 'Рынок 10 млрд, доля 5%, take rate 12%. Revenue платформы?',
+      options: ['50 млн', '60 млн', '500 млн', '1.2 млрд'],
+      answer: 1,
+      explanation:
+        'GMV платформы = 10 млрд × 5% = 500 млн. Revenue = GMV × take rate = 500 × 12% = 60 млн.',
+      difficulty: 'medium',
+      skill: 'Marketplace economics',
+    },
+    {
+      q: 'Если conversion выросла на 10% relative: с 5% до...',
+      options: ['5.1%', '5.5%', '10%', '15%'],
+      answer: 1,
+      explanation:
+        '10% relative от 5% = 0.5 п.п. Новая conversion = 5.5%. Не путать с +10 percentage points.',
+      difficulty: 'easy',
+      skill: 'Relative lift',
+    },
+    {
+      q: 'ROI: инвестиция 20 млн, годовой incremental profit 6 млн. ROI за год?',
+      options: ['15%', '30%', '60%', '300%'],
+      answer: 1,
+      explanation:
+        'ROI = incremental profit / investment = 6 / 20 = 30%. Payback примерно 3.3 года.',
+      difficulty: 'easy',
+      skill: 'ROI',
     },
   ],
 };

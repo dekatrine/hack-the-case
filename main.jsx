@@ -19,7 +19,7 @@ const Topbar = ({ onHome, screen }) => (
 );
 
 /* ──────────────────────────── Landing ─────────────────────────────── */
-const Landing = ({ tracks, onPickTrack, onOpenQuiz }) => (
+const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview }) => (
   <div className="fade-in">
     <div className="eyebrow"><span className="num">01 /</span> Choose your track</div>
     <h1 className="hero">
@@ -37,12 +37,25 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz }) => (
         <TrackCard key={t.id} track={t} idx={i + 1} onPick={() => onPickTrack(t)} />
       ))}
     </div>
+    <div className="interviewEntry">
+      <div>
+        <span className="interviewEntryKicker">Mock interview · AI interviewer</span>
+        <h2>Решаем собеседование вместе</h2>
+        <p>
+          Мобильный тренажёр продуктовых и консалтинговых интервью: вводная, уточняющие
+          вопросы, данные, pushback и финальная рекомендация в одном сценарии.
+        </p>
+      </div>
+      <button className="btn btn-primary" onClick={onOpenInterview}>
+        Открыть раздел <span className="arrow">→</span>
+      </button>
+    </div>
     <div className="quizBanner" onClick={onOpenQuiz} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpenQuiz()}>
       <div className="quizBannerLeft">
         <span className="quizBannerIcon">⚡</span>
         <div>
           <p className="quizBannerTitle">Практика в формате Duolingo</p>
-          <p className="quizBannerSub">60 вопросов по метрикам, фреймворкам, RCA, market sizing и бизнес-кейсам. Мгновенная проверка и объяснения.</p>
+          <p className="quizBannerSub">{getQuizQuestionCount()} вопросов по PM-кейсам, маркетплейсам, A/B, MBB, Big4 и case math. 10‑минутные спринты, XP, streak и объяснения.</p>
         </div>
       </div>
       <span className="quizBannerArrow">→</span>
@@ -279,6 +292,102 @@ const getVisualSteps = (chapter, step) => {
     'Проверь данными',
     'Запиши вывод',
   ];
+};
+
+const INTERVIEW_DIRECTIONS = [
+  {
+    id: 'product',
+    title: 'Product interview',
+    name: 'Продуктовое собеседование',
+    tag: 'PM · BigTech · Яндекс · Авито',
+    summary: 'От ambiguity к продуктовой гипотезе: пользователь, метрика, решение, эксперимент и trade-offs.',
+    accent: '#b8ff5c',
+    blocks: [
+      {
+        id: 'product_sense',
+        title: 'Product Sense / Design',
+        short: 'Design',
+        prompt: 'Улучши продукт или спроектируй новый сценарий для конкретного пользователя.',
+        pattern: ['Цель', 'Пользователь', 'JTBD', 'Боли', 'MVP', 'Метрики'],
+      },
+      {
+        id: 'product_execution',
+        title: 'Execution / Analytics',
+        short: 'RCA',
+        prompt: 'Разбери падение метрики, найди root cause и предложи действия.',
+        pattern: ['Метрика', 'Дерево', 'Сегменты', 'Причина', 'Actions', 'Guardrails'],
+      },
+      {
+        id: 'product_strategy',
+        title: 'Strategy / Monetization',
+        short: 'Strategy',
+        prompt: 'Выбери стратегию роста, монетизации или приоритет продукта.',
+        pattern: ['Сегменты', 'Value', 'Economics', 'Trade-offs', 'Roadmap'],
+      },
+    ],
+  },
+  {
+    id: 'consulting',
+    title: 'Consulting case',
+    name: 'Консалтинговое интервью',
+    tag: 'MBB · Big4 · case championships',
+    summary: 'От вопроса клиента к MECE-структуре, расчётам, инсайтам и top-down рекомендации.',
+    accent: '#ffb86b',
+    blocks: [
+      {
+        id: 'consulting_opening',
+        title: 'Opening & Structure',
+        short: 'Structure',
+        prompt: 'Пойми клиента, цель, ограничения и построй маршрут решения.',
+        pattern: ['Client', 'Objective', 'Clarify', 'MECE', 'Hypotheses'],
+      },
+      {
+        id: 'consulting_math',
+        title: 'Exhibit & Case Math',
+        short: 'Math',
+        prompt: 'Прочитай exhibit, посчитай экономику и вытащи so what.',
+        pattern: ['Exhibit', 'Formula', 'Assumptions', 'Math', 'Insight'],
+      },
+      {
+        id: 'consulting_recommendation',
+        title: 'Recommendation',
+        short: 'Land',
+        prompt: 'Собери рекомендацию, риски, условия и первый шаг внедрения.',
+        pattern: ['Answer', 'Evidence', 'Risks', 'Next step'],
+      },
+    ],
+  },
+];
+
+const INTERVIEW_DIFFICULTIES = [
+  { id: 'junior', label: 'Junior', text: 'меньше неоднозначности, больше явных данных' },
+  { id: 'middle', label: 'Middle', text: 'реалистичный баланс данных, допущений и pushback' },
+  { id: 'senior', label: 'Senior', text: 'больше ambiguity, trade-offs и executive judgment' },
+];
+
+const parseInterviewTask = (taskText = '') => {
+  const sections = [];
+  let current = null;
+
+  taskText.split(/\r?\n/).forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+    const heading = extractHeading(trimmed);
+    if (heading) {
+      current = { label: heading.label, lines: heading.value ? [heading.value] : [] };
+      sections.push(current);
+      return;
+    }
+    if (!current) {
+      current = { label: 'Задача', lines: [] };
+      sections.push(current);
+    }
+    current.lines.push(trimmed);
+  });
+
+  return sections
+    .map((section) => ({ ...section, text: section.lines.map(cleanMarkdown).filter(Boolean).join('\n') }))
+    .filter((section) => section.text);
 };
 
 /* ──────────────────────────── Mobile step strip ─────────────────────── */
@@ -725,11 +834,241 @@ const Section = ({ title, items, accent }) => (
   </div>
 );
 
+/* ──────────────────────────── Interview Together ─────────────────────────────── */
+const InterviewTogether = ({ onBack }) => {
+  const [directionId, setDirectionId] = useState('product');
+  const [blockId, setBlockId] = useState(INTERVIEW_DIRECTIONS[0].blocks[0].id);
+  const [difficulty, setDifficulty] = useState('middle');
+  const [companyContext, setCompanyContext] = useState('');
+  const [taskText, setTaskText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+
+  const direction = INTERVIEW_DIRECTIONS.find((item) => item.id === directionId) || INTERVIEW_DIRECTIONS[0];
+  const block = direction.blocks.find((item) => item.id === blockId) || direction.blocks[0];
+
+  useEffect(() => {
+    if (!direction.blocks.some((item) => item.id === blockId)) {
+      setBlockId(direction.blocks[0].id);
+    }
+  }, [direction, blockId]);
+
+  const generateTask = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await api.generateInterview({ directionId, blockId, difficulty, companyContext });
+      setTaskText(res.taskText);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="fade-in interviewPage">
+      <button className="btn btn-ghost" onClick={onBack} style={{ marginBottom: 28 }}>← На главную</button>
+
+      <section className="interviewHero">
+        <div className="interviewHeroCopy">
+          <div className="eyebrow"><span className="num">03 /</span> Mock interview lab</div>
+          <h1 className="hero" style={{ fontSize: 'clamp(38px, 6vw, 74px)' }}>
+            Решаем<br/><em>собеседование</em><br/>вместе
+          </h1>
+          <p className="hero-sub">
+            Паттерн из mock interviews: интервьюер даёт вводную, кандидат уточняет цель,
+            строит структуру, работает с данными, выдерживает pushback и приземляет рекомендацию.
+          </p>
+          <div className="directionSwitch" role="tablist" aria-label="Interview direction">
+            {INTERVIEW_DIRECTIONS.map((item) => (
+              <button
+                key={item.id}
+                className={item.id === directionId ? 'active' : ''}
+                onClick={() => setDirectionId(item.id)}
+              >
+                <span>{item.title}</span>
+                <em>{item.tag}</em>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="interviewPattern">
+        <div className="interviewSectionHead">
+          <span>Блоки направления</span>
+          <p>{direction.summary}</p>
+        </div>
+        <div className="interviewBlockGrid">
+          {direction.blocks.map((item) => (
+            <button
+              key={item.id}
+              className={`interviewBlock${item.id === block.id ? ' active' : ''}`}
+              onClick={() => setBlockId(item.id)}
+            >
+              <span>{item.short}</span>
+              <h3>{item.title}</h3>
+              <p>{item.prompt}</p>
+              <div>
+                {item.pattern.map((step) => <em key={step}>{step}</em>)}
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="interviewAgent">
+        <div>
+          <div className="interviewAgentBadge">AI агент</div>
+          <h2>Генератор интервью-задач</h2>
+          <p>
+            Промпт агента заставляет его выдавать задачу по реальному интервью-паттерну:
+            opening, уточнения, exhibit/data, ожидаемый маршрут, pushback и критерии сильного ответа.
+          </p>
+        </div>
+        <div className="interviewAgentForm">
+          <label>
+            Блок интервью
+            <select value={blockId} onChange={(e) => setBlockId(e.target.value)}>
+              {direction.blocks.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
+            </select>
+          </label>
+          <label>
+            Сложность
+            <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+              {INTERVIEW_DIFFICULTIES.map((item) => <option key={item.id} value={item.id}>{item.label} — {item.text}</option>)}
+            </select>
+          </label>
+          <label className="full">
+            Контекст компании или продукта
+            <textarea
+              value={companyContext}
+              onChange={(e) => setCompanyContext(e.target.value)}
+              placeholder="Например: маркетплейс услуг, падает конверсия из поиска в заказ; или ритейлер думает о выходе в новый регион"
+            />
+          </label>
+          {err && <div className="error full">{err}</div>}
+          <button className="btn btn-primary full" onClick={generateTask} disabled={busy}>
+            {busy ? <><span className="spinner" /> Генерирую…</> : <>Сгенерировать задачу <span className="arrow">→</span></>}
+          </button>
+        </div>
+      </section>
+
+      <InterviewTask taskText={taskText} direction={direction} block={block} />
+    </div>
+  );
+};
+
+const InterviewTask = ({ taskText, direction, block }) => {
+  const sections = useMemo(() => parseInterviewTask(taskText), [taskText]);
+  if (!taskText) {
+    return (
+      <section className="interviewEmpty">
+        <span>Готово к генерации</span>
+        <p>Выбран блок: {direction.name} · {block.title}. Добавь контекст и нажми “Сгенерировать задачу”.</p>
+      </section>
+    );
+  }
+
+  const getSection = (...names) => {
+    const lowerNames = names.map((name) => name.toLowerCase());
+    return sections.find((section) =>
+      lowerNames.some((name) => section.label.toLowerCase().includes(name))
+    );
+  };
+
+  const round = getSection('раунд');
+  const prompt = getSection('интервьюер говорит', 'задача');
+  const clarify = getSection('что должен уточнить', 'уточнить');
+  const data = getSection('данные');
+  const expected = getSection('ожидаемые блоки', 'маршрут', 'ответ');
+  const pushback = getSection('pushback');
+  const criteria = getSection('критерии');
+
+  return (
+    <section className="interviewTask">
+      <div className="interviewSectionHead">
+        <span>Интервью-тест</span>
+        <p>{direction.name} · {block.title}</p>
+      </div>
+
+      <div className="interviewTaskIntro">
+        <div>
+          <span>{round?.text || 'Mock interview'}</span>
+          <h3>Интервьюер говорит</h3>
+          <InterviewSectionBody section={prompt || sections[0]} />
+        </div>
+        {criteria && (
+          <aside>
+            <h4>Критерии сильного ответа</h4>
+            <InterviewSectionBody section={criteria} compact />
+          </aside>
+        )}
+      </div>
+
+      <div className="interviewTestGrid">
+        <InterviewTestCard title="Что должен уточнить кандидат" section={clarify} fallback="Сформулируй 4-6 уточняющих вопросов перед решением." />
+        <InterviewTestCard title="Данные" section={data} fallback="Используй числа из условия и попроси недостающие данные." data />
+        <InterviewTestCard title="Ожидаемые блоки ответа" section={expected} fallback="Покажи структуру: цель, гипотезы, анализ, вывод и следующий шаг." />
+        <InterviewTestCard title="Pushback интервьюера" section={pushback} fallback="Подготовься защитить гипотезы, метрики, риски и trade-offs." />
+      </div>
+    </section>
+  );
+};
+
+const InterviewTestCard = ({ title, section, fallback, data = false }) => (
+  <article className="interviewTestCard">
+    <h3>{title}</h3>
+    <InterviewSectionBody section={section || { text: fallback }} data={data} />
+  </article>
+);
+
+const InterviewSectionBody = ({ section, data = false, compact = false }) => {
+  const lines = (section?.text || '')
+    .split('\n')
+    .map(cleanMarkdown)
+    .filter(Boolean)
+    .filter((line) => !/^[-|:\s]+$/.test(line));
+
+  const tableRows = lines
+    .filter((line) => line.includes('|'))
+    .map((line) => line.split('|').map((cell) => cleanMarkdown(cell)).filter(Boolean))
+    .filter((row) => row.length >= 2);
+
+  if (data && tableRows.length > 0) {
+    const rows = tableRows.filter((row) => !row.every((cell) => /^-+$/.test(cell)));
+    const [head, ...body] = rows;
+    return (
+      <table className="interviewDataTable">
+        {head && (
+          <thead>
+            <tr>{head.map((cell) => <th key={cell}>{cell}</th>)}</tr>
+          </thead>
+        )}
+        <tbody>
+          {body.map((row) => (
+            <tr key={row.join('-')}>
+              {row.map((cell) => <td key={cell}>{cell}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+
+  return (
+    <ol className={compact ? 'interviewList compact' : 'interviewList'}>
+      {lines.map((line) => <li key={line}>{line.replace(/^\d+[.)]\s*/, '')}</li>)}
+    </ol>
+  );
+};
+
 /* ──────────────────────────── Root App ─────────────────────────────── */
 const App = () => {
   const [config, setConfig] = useState(null);
   const [err, setErr] = useState(null);
-  const [screen, setScreen] = useState('landing'); // landing | track | workspace | quiz
+  const [screen, setScreen] = useState('landing'); // landing | track | workspace | quiz | interview
   const [quizCategory, setQuizCategory] = useState(null);
   const [track, setTrack] = useState(null);
   const [caseText, setCaseText] = useState('');
@@ -772,7 +1111,7 @@ const App = () => {
   if (err && !config) return <FullErr msg={err} />;
   if (!config) return <Loading />;
 
-  const screenLabel = { landing: 'home / tracks', track: `track / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz' }[screen];
+  const screenLabel = { landing: 'home / tracks', track: `track / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz', interview: 'practice / interview' }[screen];
 
   return (
     <div className="shell">
@@ -785,6 +1124,7 @@ const App = () => {
             tracks={config.tracks}
             onPickTrack={(t) => { setTrack(t); setScreen('track'); }}
             onOpenQuiz={() => { setQuizCategory(null); setScreen('quiz'); }}
+            onOpenInterview={() => setScreen('interview')}
           />
         )}
         {screen === 'track' && track && (
@@ -802,6 +1142,9 @@ const App = () => {
             onSelectCategory={setQuizCategory}
             onBack={() => { setQuizCategory(null); setScreen('landing'); }}
           />
+        )}
+        {screen === 'interview' && (
+          <InterviewTogether onBack={() => setScreen('landing')} />
         )}
         {screen === 'workspace' && (
           <Workspace
@@ -854,12 +1197,76 @@ const BusyBanner = ({ screen }) => (
    QUIZ — Duolingo-style practice
    ───────────────────────────────────────────── */
 
+const QUIZ_STORAGE_KEY = 'hack-the-case-quiz-progress-v1';
+
+function getQuizQuestionCount() {
+  return Object.values(QUIZ_QUESTIONS).reduce((sum, list) => sum + list.length, 0);
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function yesterdayKey() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function loadQuizProgress() {
+  try {
+    const raw = localStorage.getItem(QUIZ_STORAGE_KEY);
+    if (!raw) return { xp: 0, streak: 0, lastDay: null, sessions: 0, mastery: {} };
+    return { xp: 0, streak: 0, lastDay: null, sessions: 0, mastery: {}, ...JSON.parse(raw) };
+  } catch {
+    return { xp: 0, streak: 0, lastDay: null, sessions: 0, mastery: {} };
+  }
+}
+
+function saveQuizProgress(next) {
+  try {
+    localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // localStorage can be unavailable in private windows; quiz still works.
+  }
+}
+
+function updateQuizProgress(categoryId, score, total) {
+  const current = loadQuizProgress();
+  const day = todayKey();
+  const streak =
+    current.lastDay === day ? current.streak :
+    current.lastDay === yesterdayKey() ? current.streak + 1 :
+    1;
+  const pct = Math.round((score / total) * 100);
+  const xpGain = score * 10 + (pct >= 80 ? 20 : 0) + (pct === 100 ? 30 : 0);
+  const previous = current.mastery?.[categoryId] || { bestPct: 0, attempts: 0 };
+  const next = {
+    ...current,
+    xp: current.xp + xpGain,
+    streak,
+    lastDay: day,
+    sessions: current.sessions + 1,
+    mastery: {
+      ...current.mastery,
+      [categoryId]: {
+        bestPct: Math.max(previous.bestPct || 0, pct),
+        attempts: (previous.attempts || 0) + 1,
+        lastPct: pct,
+      },
+    },
+  };
+  saveQuizProgress(next);
+  return { progress: next, xpGain };
+}
+
 function QuizPage({ category, onSelectCategory, onBack }) {
   if (!category) return <QuizCategoryPicker onSelect={onSelectCategory} onBack={onBack} />;
   return <QuizSession category={category} onBack={() => onSelectCategory(null)} />;
 }
 
 function QuizCategoryPicker({ onSelect, onBack }) {
+  const progress = loadQuizProgress();
   return (
     <div className="fade-in quizPicker">
       <button className="btn btn-ghost" onClick={onBack} style={{ marginBottom: 32 }}>← На главную</button>
@@ -867,21 +1274,33 @@ function QuizCategoryPicker({ onSelect, onBack }) {
       <h1 className="hero" style={{ fontSize: 'clamp(32px, 5vw, 56px)' }}>
         Практика в формате<br/><em>Duolingo</em>
       </h1>
-      <p className="hero-sub">10 вопросов из темы — 4 варианта ответа — мгновенное объяснение. Тренируй то, что спрашивают на интервью.</p>
+      <p className="hero-sub">10 вопросов из темы — 4 варианта ответа — мгновенное объяснение. Тренируй то, что спрашивают на интервью в продукте, BigTech и консалтинге.</p>
+      <div className="quizStats">
+        <div><span>{progress.xp}</span><p>XP</p></div>
+        <div><span>{progress.streak}</span><p>дней streak</p></div>
+        <div><span>{progress.sessions}</span><p>спринтов</p></div>
+        <div><span>{getQuizQuestionCount()}</span><p>вопросов</p></div>
+      </div>
       <div className="quizGrid">
-        {QUIZ_CATEGORIES.map((cat) => (
-          <button key={cat.id} className="quiz-cat-card" onClick={() => onSelect(cat)}>
-            <span className="quiz-cat-icon">{cat.icon}</span>
-            <div className="quiz-cat-body">
-              <span className="quiz-cat-title">{cat.title}</span>
-              <span className="quiz-cat-sub">{cat.subtitle}</span>
-            </div>
-            <div className="quiz-cat-foot">
-              <span className="quiz-cat-tag">{cat.tag}</span>
-              <span className="quiz-cat-count">{(QUIZ_QUESTIONS[cat.id] || []).length} вопр.</span>
-            </div>
-          </button>
-        ))}
+        {QUIZ_CATEGORIES.map((cat) => {
+          const mastery = progress.mastery?.[cat.id]?.bestPct || 0;
+          return (
+            <button key={cat.id} className="quiz-cat-card" onClick={() => onSelect(cat)}>
+              <span className="quiz-cat-icon">{cat.icon}</span>
+              <div className="quiz-cat-body">
+                <span className="quiz-cat-title">{cat.title}</span>
+                <span className="quiz-cat-sub">{cat.subtitle}</span>
+              </div>
+              <div className="quiz-cat-mastery">
+                <span style={{ width: `${mastery}%` }} />
+              </div>
+              <div className="quiz-cat-foot">
+                <span className="quiz-cat-tag">{cat.tag}</span>
+                <span className="quiz-cat-count">{mastery ? `${mastery}% · ` : ''}{(QUIZ_QUESTIONS[cat.id] || []).length} вопр.</span>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -893,20 +1312,28 @@ function QuizSession({ category, onBack }) {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState(null);
   const [score, setScore] = useState(0);
+  const [mistakes, setMistakes] = useState(0);
   const [done, setDone] = useState(false);
+  const [resultProgress, setResultProgress] = useState(null);
 
   const q = questions[index];
-  const progress = Math.round((index / questions.length) * 100);
+  const progress = Math.round(((index + (selected !== null ? 1 : 0)) / questions.length) * 100);
   const answered = selected !== null;
+  const hearts = Math.max(0, 3 - mistakes);
 
   function handleSelect(i) {
     if (answered) return;
     setSelected(i);
     if (i === q.answer) setScore((s) => s + 1);
+    else setMistakes((m) => m + 1);
   }
 
   function handleNext() {
-    if (index + 1 >= questions.length) { setDone(true); return; }
+    if (index + 1 >= questions.length) {
+      setResultProgress(updateQuizProgress(category.id, score, questions.length));
+      setDone(true);
+      return;
+    }
     setIndex((i) => i + 1);
     setSelected(null);
   }
@@ -917,7 +1344,10 @@ function QuizSession({ category, onBack }) {
         score={score}
         total={questions.length}
         category={category}
-        onRetry={() => { setIndex(0); setSelected(null); setScore(0); setDone(false); }}
+        mistakes={mistakes}
+        xpGain={resultProgress?.xpGain || 0}
+        streak={resultProgress?.progress?.streak || 0}
+        onRetry={() => { setIndex(0); setSelected(null); setScore(0); setMistakes(0); setResultProgress(null); setDone(false); }}
         onBack={onBack}
       />
     );
@@ -928,6 +1358,7 @@ function QuizSession({ category, onBack }) {
       <div className="quizSessionHead">
         <button className="btn btn-ghost" onClick={onBack}>← Темы</button>
         <span className="quizSessionMeta">{category.icon} {category.title}</span>
+        <span className="quizHearts">{'♥'.repeat(hearts)}{'♡'.repeat(3 - hearts)}</span>
         <span className="quizScoreBadge">{score} / {index + (answered ? 1 : 0)}</span>
       </div>
 
@@ -935,6 +1366,11 @@ function QuizSession({ category, onBack }) {
       <p className="quizCounter">{index + 1} / {questions.length}</p>
 
       <div className="quizCard">
+        <div className="quizQuestionMeta">
+          {q.difficulty && <span>{q.difficulty}</span>}
+          {q.skill && <span>{q.skill}</span>}
+          <span>10‑минутный спринт</span>
+        </div>
         <p className="quizQ">{q.q}</p>
         <div className="quizOptions">
           {q.options.map((opt, i) => {
@@ -973,7 +1409,7 @@ function QuizSession({ category, onBack }) {
   );
 }
 
-function QuizResult({ score, total, category, onRetry, onBack }) {
+function QuizResult({ score, total, category, mistakes, xpGain, streak, onRetry, onBack }) {
   const pct = Math.round((score / total) * 100);
   const medal = pct >= 90 ? '🏆' : pct >= 70 ? '🥈' : pct >= 50 ? '🥉' : '💪';
   const msg =
@@ -988,6 +1424,11 @@ function QuizResult({ score, total, category, onRetry, onBack }) {
         <span style={{ fontSize: '3rem' }}>{medal}</span>
         <h2 className="quizResultScore">{score}/{total}</h2>
         <p className="quizResultPct">{pct}% правильных ответов</p>
+        <div className="quizResultStats">
+          <span>+{xpGain} XP</span>
+          <span>{streak} day streak</span>
+          <span>{mistakes} ошибок</span>
+        </div>
         <p className="quizResultMsg">{msg}</p>
         <p style={{ color: 'var(--paper-dim)', fontSize: 14 }}>{category.icon} {category.title}</p>
         <div style={{ display: 'grid', gap: 10, marginTop: 24 }}>

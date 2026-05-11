@@ -8,8 +8,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import get_settings
 from .data import CASE_STEPS, COURSE_MODULES, DIFFICULTY_LEVELS, INDUSTRIES, SOURCE_NOTES
 from .llm import call_yandex_gpt
-from .prompts import CASE_GENERATION_SYSTEM, RUBRIC_SYSTEM, get_coach_system_prompt
-from .schemas import CoachRequest, CoachResponse, EvaluateRequest, EvaluateResponse, GenerateCaseRequest, GenerateCaseResponse
+from .prompts import CASE_GENERATION_SYSTEM, INTERVIEW_GENERATION_SYSTEM, RUBRIC_SYSTEM, get_coach_system_prompt
+from .schemas import (
+    CoachRequest,
+    CoachResponse,
+    EvaluateRequest,
+    EvaluateResponse,
+    GenerateCaseRequest,
+    GenerateCaseResponse,
+    GenerateInterviewRequest,
+    GenerateInterviewResponse,
+)
 
 
 def load_tracks() -> list[dict]:
@@ -96,6 +105,37 @@ def generate_case(payload: GenerateCaseRequest) -> GenerateCaseResponse:
     try:
         case_text = call_yandex_gpt(CASE_GENERATION_SYSTEM, prompt, temperature=0.8)
         return GenerateCaseResponse(caseText=case_text)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post("/api/interviews/generate", response_model=GenerateInterviewResponse)
+def generate_interview(payload: GenerateInterviewRequest) -> GenerateInterviewResponse:
+    direction = "product direction" if payload.directionId == "product" else "consulting direction"
+    block_labels = {
+        "product_sense": "Product sense / product design",
+        "product_execution": "Execution / analytics / root cause",
+        "product_strategy": "Product strategy / monetization / roadmap",
+        "consulting_opening": "Opening, clarifying questions and case structuring",
+        "consulting_math": "Exhibit, case math and unit economics",
+        "consulting_recommendation": "Recommendation, risks and implementation",
+    }
+    prompt = (
+        "Сгенерируй одну новую задачу для mock interview.\n"
+        f"Направление: {direction}\n"
+        f"Блок интервью: {block_labels.get(payload.blockId, payload.blockId)}\n"
+        f"Сложность: {payload.difficulty}\n"
+    )
+    if payload.companyContext.strip():
+        prompt += f"Контекст компании или продукта: {payload.companyContext.strip()}\n"
+    prompt += (
+        "Сделай задачу похожей на реальный live interview: интервьюер постепенно проверяет "
+        "структуру, аналитику, здравый смысл и финальный синтез."
+    )
+
+    try:
+        task_text = call_yandex_gpt(INTERVIEW_GENERATION_SYSTEM, prompt, temperature=0.75)
+        return GenerateInterviewResponse(taskText=task_text)
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 

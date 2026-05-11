@@ -13,6 +13,17 @@ class GenerateCaseResponse(BaseModel):
     caseText: str
 
 
+class GenerateInterviewRequest(BaseModel):
+    directionId: str
+    blockId: str
+    companyContext: str = ""
+    difficulty: str = "middle"
+
+
+class GenerateInterviewResponse(BaseModel):
+    taskText: str
+
+
 class ChatMessage(BaseModel):
     role: str
     text: str
