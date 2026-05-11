@@ -1,7 +1,7 @@
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
 const API_BASE_URL =
   configuredApiBaseUrl?.replace(/\/+$/, '') ||
-  (import.meta.env.DEV ? 'http://localhost:8000' : '');
+  (import.meta.env.DEV ? 'http://localhost:8000' : 'https://hack-the-case-api.onrender.com');
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
