@@ -390,6 +390,148 @@ const parseInterviewTask = (taskText = '') => {
     .filter((section) => section.text);
 };
 
+const getInterviewSection = (sections, ...names) => {
+  const lowerNames = names.map((name) => name.toLowerCase());
+  return sections.find((section) =>
+    lowerNames.some((name) => section.label.toLowerCase().includes(name))
+  );
+};
+
+const getInterviewLines = (section) =>
+  (section?.text || '')
+    .split('\n')
+    .map(cleanMarkdown)
+    .filter(Boolean)
+    .filter((line) => !/^[-|:\s]+$/.test(line))
+    .map((line) => line.replace(/^\d+[.)]\s*/, ''));
+
+const buildInterviewRounds = (sections, direction, block) => {
+  const prompt = getInterviewSection(sections, 'интервьюер говорит', 'задача');
+  const clarify = getInterviewSection(sections, 'что должен уточнить', 'уточнить');
+  const data = getInterviewSection(sections, 'данные');
+  const expected = getInterviewSection(sections, 'ожидаемые блоки', 'маршрут', 'ответ');
+  const pushback = getInterviewSection(sections, 'pushback');
+  const criteria = getInterviewSection(sections, 'критерии');
+  const isProduct = direction.id === 'product';
+  const clarifySignals = getInterviewLines(clarify).slice(0, 5);
+  const expectedSignals = getInterviewLines(expected).slice(0, 7);
+  const criteriaSignals = getInterviewLines(criteria).slice(0, 6);
+  const pushbackLines = getInterviewLines(pushback);
+
+  return [
+    {
+      id: 'opening_move',
+      title: 'Первый ход',
+      eyebrow: 'Раунд 1 · выбор',
+      mode: 'choice',
+      prompt: 'Интервьюер дал вводную. Что ты делаешь первым?',
+      context: prompt?.text || block.prompt,
+      options: isProduct
+        ? [
+            { id: 'feature', label: 'Сразу предлагаю 3 фичи и выбираю самую яркую', note: 'Слишком рано: нет цели, сегмента и метрики.' },
+            { id: 'clarify', label: 'Уточняю цель, primary user, сценарий и метрику успеха', note: 'Сильный PM-старт: сначала framing.' },
+            { id: 'research', label: 'Прошу UX-исследование и откладываю решение', note: 'Исследование может помочь, но на интервью нужен ход сейчас.' },
+          ]
+        : [
+            { id: 'ideas', label: 'Сразу даю список инициатив для клиента', note: 'Рано: сначала цель и структура.' },
+            { id: 'clarify', label: 'Переформулирую objective, ограничения и строю MECE-структуру', note: 'Сильный case-start.' },
+            { id: 'benchmark', label: 'Начинаю с бенчмарков конкурентов', note: 'Может быть веткой анализа, но не первым ходом.' },
+          ],
+      expectedSignals: [
+        'Нужно начать с уточнения цели, контекста, ограничений и критерия успеха.',
+        'Нельзя сразу прыгать к решению без структуры.',
+        isProduct ? 'Для product нужно назвать пользователя и метрику.' : 'Для consulting нужно зафиксировать client objective и issue tree.',
+      ],
+    },
+    {
+      id: 'clarifying_questions',
+      title: 'Уточняющие вопросы',
+      eyebrow: 'Раунд 2 · написать',
+      mode: 'text',
+      prompt: 'Напиши 4-6 уточняющих вопросов, которые реально помогут решить этот кейс.',
+      context: 'Хорошие вопросы сужают ambiguity и не звучат как анкета ради анкеты.',
+      expectedSignals: clarifySignals.length ? clarifySignals : [
+        'Цель и горизонт решения',
+        'Сегмент или клиент',
+        'Ограничения по срокам, бюджету, ресурсам',
+        'Метрика успеха',
+        'Какие данные уже есть и чему доверяем',
+      ],
+      minLength: 60,
+    },
+    {
+      id: 'solution_route',
+      title: 'Маршрут решения',
+      eyebrow: 'Раунд 3 · выбор',
+      mode: 'choice',
+      prompt: 'Какая структура ответа лучше всего подходит для этого блока?',
+      context: expected?.text || direction.summary,
+      options: isProduct
+        ? [
+            { id: 'feature_list', label: 'Список фич → любимая фича → релиз всем', note: 'Не хватает пользователя, проблемы, метрик и проверки.' },
+            { id: 'product_loop', label: 'Goal → user/JTBD → pain → options → MVP → metrics/experiment', note: 'Правильный продуктовый маршрут.' },
+            { id: 'finance_only', label: 'P&L → затраты → ROI → сокращение бюджета', note: 'Полезно для бизнеса, но не покрывает product sense.' },
+          ]
+        : [
+            { id: 'mece_route', label: 'Objective → issue tree → data/math → options → recommendation', note: 'Правильный case route.' },
+            { id: 'brainstorm', label: 'Brainstorm идей → голосование → финальный слайд', note: 'Слишком рыхло для case interview.' },
+            { id: 'ux_route', label: 'Persona → CJM → wireframes → usability', note: 'Может быть частью digital case, но не базовая консалтинговая структура.' },
+          ],
+      expectedSignals: expectedSignals.length ? expectedSignals : [
+        'Есть логичная top-down структура.',
+        'Структура покрывает цель кейса и не смешивает причины с решениями.',
+        'Есть место для данных, расчётов и финального синтеза.',
+      ],
+    },
+    {
+      id: 'data_move',
+      title: 'Работа с данными',
+      eyebrow: 'Раунд 4 · написать',
+      mode: 'text',
+      prompt: 'Посмотри на данные. Какой первый инсайт или расчёт ты озвучишь интервьюеру?',
+      context: data?.text || 'Данных мало: явно назови, каких чисел не хватает, и предложи proxy-допущение.',
+      expectedSignals: [
+        'Прочитать данные перед выводом: период, сегменты, единицы измерения.',
+        'Назвать один конкретный insight, а не пересказать таблицу.',
+        'Связать insight с гипотезой или следующим вопросом.',
+        isProduct ? 'Для product: метрика, сегмент, root cause или guardrail.' : 'Для consulting: формула, экономика, порядок величины или so what.',
+      ],
+      minLength: 70,
+      data: data?.text || '',
+    },
+    {
+      id: 'pushback_synthesis',
+      title: 'Pushback и синтез',
+      eyebrow: 'Раунд 5 · написать',
+      mode: 'text',
+      prompt: pushbackLines[0] || 'Интервьюер просит финальный ответ. Что рекомендуешь и почему?',
+      context: pushbackLines.slice(1).join('\n') || 'Ответ должен звучать top-down: рекомендация, 2-3 доказательства, риски и next step.',
+      expectedSignals: criteriaSignals.length ? criteriaSignals : [
+        'Начать с рекомендации, а не с истории анализа.',
+        'Дать 2-3 доказательства из структуры или данных.',
+        'Назвать риск/trade-off и способ проверки.',
+        'Завершить next step.',
+      ],
+      minLength: 90,
+    },
+  ];
+};
+
+const parseInterviewReview = (value = '') => {
+  try {
+    const cleaned = value.replace(/```json|```/g, '').trim();
+    return JSON.parse(cleaned);
+  } catch {
+    return {
+      score: null,
+      passed: false,
+      verdict: 'Ответ получен',
+      feedback: value,
+      nextPrompt: 'Попробуй усилить ответ и проверить ещё раз.',
+    };
+  }
+};
+
 /* ──────────────────────────── Mobile step strip ─────────────────────── */
 const MobileStepStrip = ({ steps, activeIdx, answers, onPick }) => {
   const doneCount = steps.filter((s) => (answers[s.id] || '').trim().length > 30).length;
@@ -962,6 +1104,22 @@ const InterviewTogether = ({ onBack }) => {
 
 const InterviewTask = ({ taskText, direction, block }) => {
   const sections = useMemo(() => parseInterviewTask(taskText), [taskText]);
+  const rounds = useMemo(() => buildInterviewRounds(sections, direction, block), [sections, direction, block]);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [selected, setSelected] = useState({});
+  const [reviews, setReviews] = useState({});
+  const [checking, setChecking] = useState(false);
+  const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    setActiveIdx(0);
+    setAnswers({});
+    setSelected({});
+    setReviews({});
+    setErr(null);
+  }, [taskText]);
+
   if (!taskText) {
     return (
       <section className="interviewEmpty">
@@ -971,57 +1129,171 @@ const InterviewTask = ({ taskText, direction, block }) => {
     );
   }
 
-  const getSection = (...names) => {
-    const lowerNames = names.map((name) => name.toLowerCase());
-    return sections.find((section) =>
-      lowerNames.some((name) => section.label.toLowerCase().includes(name))
-    );
+  const activeRound = rounds[activeIdx];
+  const review = reviews[activeRound.id];
+  const answerText = answers[activeRound.id] || '';
+  const selectedOption = activeRound.options?.find((option) => option.id === selected[activeRound.id]);
+  const progress = Math.round(((activeIdx + (review?.passed ? 1 : 0)) / rounds.length) * 100);
+  const canCheck =
+    activeRound.mode === 'choice'
+      ? Boolean(selectedOption)
+      : answerText.trim().length >= (activeRound.minLength || 20);
+
+  const acceptedAnswers = Object.fromEntries(
+    rounds
+      .slice(0, activeIdx)
+      .map((round) => [
+        round.title,
+        round.mode === 'choice'
+          ? rounds.find((item) => item.id === round.id)?.options?.find((option) => option.id === selected[round.id])?.label || ''
+          : answers[round.id] || '',
+      ])
+      .filter(([, value]) => value)
+  );
+
+  const checkRound = async () => {
+    if (!canCheck || checking) return;
+    setChecking(true);
+    setErr(null);
+    try {
+      const res = await api.checkInterview({
+        directionId: direction.id,
+        blockId: block.id,
+        taskText,
+        roundId: activeRound.id,
+        roundTitle: activeRound.title,
+        roundGoal: activeRound.prompt,
+        answerText,
+        selectedOption: selectedOption?.label || '',
+        expectedSignals: activeRound.expectedSignals || [],
+        previousAnswers: acceptedAnswers,
+      });
+      setReviews((prev) => ({ ...prev, [activeRound.id]: parseInterviewReview(res.result) }));
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setChecking(false);
+    }
   };
 
-  const round = getSection('раунд');
-  const prompt = getSection('интервьюер говорит', 'задача');
-  const clarify = getSection('что должен уточнить', 'уточнить');
-  const data = getSection('данные');
-  const expected = getSection('ожидаемые блоки', 'маршрут', 'ответ');
-  const pushback = getSection('pushback');
-  const criteria = getSection('критерии');
+  const goNext = () => {
+    setActiveIdx((idx) => Math.min(idx + 1, rounds.length - 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <section className="interviewTask">
       <div className="interviewSectionHead">
-        <span>Интервью-тест</span>
+        <span>Интервью-тренажёр</span>
         <p>{direction.name} · {block.title}</p>
       </div>
 
-      <div className="interviewTaskIntro">
-        <div>
-          <span>{round?.text || 'Mock interview'}</span>
-          <h3>Интервьюер говорит</h3>
-          <InterviewSectionBody section={prompt || sections[0]} />
-        </div>
-        {criteria && (
-          <aside>
-            <h4>Критерии сильного ответа</h4>
-            <InterviewSectionBody section={criteria} compact />
-          </aside>
-        )}
-      </div>
+      <div className="interviewMotionShell">
+        <aside className="interviewCasePanel">
+          <div className="interviewCaseSticky">
+            <div className="interviewCaseLabel">Условие кейса</div>
+            <InterviewSectionBody
+              section={getInterviewSection(sections, 'интервьюер говорит', 'задача') || sections[0]}
+              compact
+            />
+            <div className="interviewMiniData">
+              <span>Данные</span>
+              <InterviewSectionBody section={getInterviewSection(sections, 'данные') || { text: 'Данные появятся в ходе интервью.' }} data compact />
+            </div>
+          </div>
+        </aside>
 
-      <div className="interviewTestGrid">
-        <InterviewTestCard title="Что должен уточнить кандидат" section={clarify} fallback="Сформулируй 4-6 уточняющих вопросов перед решением." />
-        <InterviewTestCard title="Данные" section={data} fallback="Используй числа из условия и попроси недостающие данные." data />
-        <InterviewTestCard title="Ожидаемые блоки ответа" section={expected} fallback="Покажи структуру: цель, гипотезы, анализ, вывод и следующий шаг." />
-        <InterviewTestCard title="Pushback интервьюера" section={pushback} fallback="Подготовься защитить гипотезы, метрики, риски и trade-offs." />
+        <div className="interviewRoundArea">
+          <InterviewProgress rounds={rounds} activeIdx={activeIdx} reviews={reviews} progress={progress} onPick={setActiveIdx} />
+
+          <article className="interviewRoundCard">
+            <div className="interviewRoundTop">
+              <span>{activeRound.eyebrow}</span>
+              <em>{review?.passed ? 'принято' : 'ожидает ответа'}</em>
+            </div>
+            <h3>{activeRound.title}</h3>
+            <p className="interviewRoundPrompt">{activeRound.prompt}</p>
+            {activeRound.context && <div className="interviewRoundContext">{activeRound.context}</div>}
+
+            {activeRound.mode === 'choice' ? (
+              <div className="interviewChoiceList">
+                {activeRound.options.map((option) => (
+                  <button
+                    key={option.id}
+                    className={selected[activeRound.id] === option.id ? 'active' : ''}
+                    onClick={() => setSelected((prev) => ({ ...prev, [activeRound.id]: option.id }))}
+                  >
+                    <span>{option.label}</span>
+                    <em>{option.note}</em>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <textarea
+                className="interviewAnswerInput"
+                value={answerText}
+                onChange={(e) => setAnswers((prev) => ({ ...prev, [activeRound.id]: e.target.value }))}
+                placeholder="Напиши ответ так, как сказал бы интервьюеру вслух: структурно, коротко, с опорой на условие…"
+              />
+            )}
+
+            <div className="interviewExpected">
+              <span>Что проверяет AI</span>
+              <ul>
+                {activeRound.expectedSignals.slice(0, 4).map((signal) => <li key={signal}>{signal}</li>)}
+              </ul>
+            </div>
+
+            {err && <div className="error">{err}</div>}
+            {review && <InterviewReview review={review} />}
+
+            <div className="interviewRoundActions">
+              <button className="btn btn-ghost" onClick={() => setActiveIdx((idx) => Math.max(0, idx - 1))} disabled={activeIdx === 0}>
+                ← Назад
+              </button>
+              <button className="btn btn-primary" onClick={checkRound} disabled={!canCheck || checking}>
+                {checking ? <><span className="spinner" /> Проверяю…</> : <>Проверить AI <span className="arrow">→</span></>}
+              </button>
+              {review?.passed && activeIdx < rounds.length - 1 && (
+                <button className="btn btn-primary" onClick={goNext}>
+                  Следующий раунд <span className="arrow">→</span>
+                </button>
+              )}
+            </div>
+          </article>
+        </div>
       </div>
     </section>
   );
 };
 
-const InterviewTestCard = ({ title, section, fallback, data = false }) => (
-  <article className="interviewTestCard">
-    <h3>{title}</h3>
-    <InterviewSectionBody section={section || { text: fallback }} data={data} />
-  </article>
+const InterviewProgress = ({ rounds, activeIdx, reviews, progress, onPick }) => (
+  <div className="interviewProgress">
+    <div className="interviewProgressBar"><i style={{ width: `${progress}%` }} /></div>
+    <div className="interviewRoundTabs">
+      {rounds.map((round, index) => {
+        const status = reviews[round.id]?.passed ? 'done' : index === activeIdx ? 'active' : '';
+        return (
+          <button key={round.id} className={status} onClick={() => onPick(index)}>
+            <span>{reviews[round.id]?.passed ? '✓' : index + 1}</span>
+            <em>{round.title}</em>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+);
+
+const InterviewReview = ({ review }) => (
+  <div className={`interviewReview ${review.passed ? 'passed' : 'retry'}`}>
+    <div>
+      <span>{review.score ?? 'AI'}</span>
+      <em>{review.passed ? 'можно двигаться дальше' : 'нужно усилить'}</em>
+    </div>
+    <h4>{review.verdict}</h4>
+    <p>{review.feedback}</p>
+    {review.nextPrompt && <strong>{review.nextPrompt}</strong>}
+  </div>
 );
 
 const InterviewSectionBody = ({ section, data = false, compact = false }) => {

@@ -1004,6 +1004,327 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border-bottom: 0;
 }
 
+.interviewMotionShell {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.38fr) minmax(0, 0.62fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.interviewCasePanel,
+.interviewRoundCard {
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.interviewCasePanel {
+  padding: 18px;
+}
+
+.interviewCaseSticky {
+  position: sticky;
+  top: 96px;
+}
+
+.interviewCaseLabel,
+.interviewMiniData span,
+.interviewExpected span {
+  display: block;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mint);
+}
+
+.interviewMiniData {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--hair);
+}
+
+.interviewRoundArea {
+  min-width: 0;
+}
+
+.interviewProgress {
+  margin-bottom: 14px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.interviewProgressBar {
+  height: 4px;
+  background: var(--hair);
+}
+
+.interviewProgressBar i {
+  display: block;
+  height: 100%;
+  background: var(--mint);
+  transition: width 0.28s ease;
+}
+
+.interviewRoundTabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--hair);
+}
+
+.interviewRoundTabs button {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-height: 76px;
+  padding: 12px 8px 10px;
+  background: var(--ink-soft);
+}
+
+.interviewRoundTabs button.active {
+  background: rgba(184, 255, 92, 0.08);
+}
+
+.interviewRoundTabs button.done {
+  background: rgba(184, 255, 92, 0.13);
+}
+
+.interviewRoundTabs span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--hair-strong);
+  border-radius: 50%;
+  color: var(--paper-faint);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.interviewRoundTabs button.active span,
+.interviewRoundTabs button.done span {
+  border-color: var(--mint);
+  background: var(--mint);
+  color: var(--ink);
+}
+
+.interviewRoundTabs em {
+  color: var(--paper-faint);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.interviewRoundTabs button.active em {
+  color: var(--paper);
+}
+
+.interviewRoundCard {
+  position: relative;
+  padding: 28px;
+  overflow: hidden;
+}
+
+.interviewRoundCard::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: linear-gradient(90deg, var(--mint), var(--amber), var(--rust));
+  opacity: 0.65;
+}
+
+.interviewRoundTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.interviewRoundTop span {
+  color: var(--mint);
+}
+
+.interviewRoundTop em {
+  color: var(--paper-faint);
+  font-style: normal;
+}
+
+.interviewRoundCard h3 {
+  margin-bottom: 10px;
+  font-size: 34px;
+}
+
+.interviewRoundPrompt {
+  margin: 0 0 14px;
+  color: var(--paper);
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.interviewRoundContext {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-left: 2px solid var(--mint);
+  background: rgba(184, 255, 92, 0.04);
+  color: var(--paper-dim);
+  font-size: 14px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.interviewChoiceList {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.interviewChoiceList button {
+  display: grid;
+  gap: 6px;
+  padding: 15px 16px;
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.025);
+  text-align: left;
+  transition: border-color 0.16s, background 0.16s, transform 0.16s;
+}
+
+.interviewChoiceList button:hover,
+.interviewChoiceList button.active {
+  border-color: var(--mint);
+  background: rgba(184, 255, 92, 0.07);
+  transform: translateY(-1px);
+}
+
+.interviewChoiceList span {
+  color: var(--paper);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.interviewChoiceList em {
+  color: var(--paper-faint);
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1.45;
+}
+
+.interviewAnswerInput {
+  width: 100%;
+  min-height: 190px;
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
+  background: var(--ink-soft);
+  color: var(--paper);
+  font-size: 15px;
+  line-height: 1.65;
+  resize: vertical;
+}
+
+.interviewAnswerInput:focus {
+  outline: none;
+  border-color: var(--mint);
+}
+
+.interviewExpected {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px dashed var(--hair-strong);
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.interviewExpected ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--paper-dim);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.interviewExpected li {
+  margin-bottom: 6px;
+}
+
+.interviewReview {
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(255, 184, 107, 0.28);
+  background: rgba(255, 184, 107, 0.055);
+}
+
+.interviewReview.passed {
+  border-color: rgba(184, 255, 92, 0.3);
+  background: rgba(184, 255, 92, 0.06);
+}
+
+.interviewReview > div {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.interviewReview span {
+  font-family: var(--serif);
+  font-size: 42px;
+  color: var(--mint);
+  line-height: 1;
+}
+
+.interviewReview em {
+  color: var(--paper-faint);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-style: normal;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.interviewReview h4 {
+  margin: 0 0 8px;
+  color: var(--paper);
+  font-size: 17px;
+}
+
+.interviewReview p {
+  margin: 0 0 10px;
+  color: var(--paper-dim);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.interviewReview strong {
+  display: block;
+  color: var(--paper);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.interviewRoundActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
 /* ============================ Responsive ============================ */
 /* Touch targets */
 .btn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
@@ -1030,7 +1351,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   .interviewBlockGrid,
   .interviewTaskGrid,
   .interviewTestGrid,
-  .interviewTaskIntro {
+  .interviewTaskIntro,
+  .interviewMotionShell {
     grid-template-columns: 1fr;
   }
   .interviewTaskGrid article.wide {
@@ -1041,6 +1363,9 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
     padding-top: 16px;
     border-left: 0;
     border-top: 1px solid var(--hair-strong);
+  }
+  .interviewCaseSticky {
+    position: static;
   }
 }
 
@@ -1311,6 +1636,45 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
   .interviewAgent {
     padding: 22px 16px;
+  }
+
+  .interviewRoundTabs {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .interviewRoundTabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .interviewRoundTabs button {
+    min-width: 96px;
+  }
+
+  .interviewRoundCard {
+    padding: 24px 16px;
+  }
+
+  .interviewRoundCard h3 {
+    font-size: 28px;
+  }
+
+  .interviewRoundPrompt {
+    font-size: 16px;
+  }
+
+  .interviewReview {
+    grid-template-columns: 1fr;
+  }
+
+  .interviewRoundActions {
+    flex-direction: column;
+  }
+
+  .interviewRoundActions .btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 

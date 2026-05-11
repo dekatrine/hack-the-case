@@ -32,6 +32,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  checkInterview: (payload) =>
+    request('/api/interviews/check', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
   coach: (payload) =>
     request('/api/coach', {
       method: 'POST',

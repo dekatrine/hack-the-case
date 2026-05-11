@@ -8,8 +8,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import get_settings
 from .data import CASE_STEPS, COURSE_MODULES, DIFFICULTY_LEVELS, INDUSTRIES, SOURCE_NOTES
 from .llm import call_yandex_gpt
-from .prompts import CASE_GENERATION_SYSTEM, INTERVIEW_GENERATION_SYSTEM, RUBRIC_SYSTEM, get_coach_system_prompt
+from .prompts import (
+    CASE_GENERATION_SYSTEM,
+    INTERVIEW_CHECK_SYSTEM,
+    INTERVIEW_GENERATION_SYSTEM,
+    RUBRIC_SYSTEM,
+    get_coach_system_prompt,
+)
 from .schemas import (
+    CheckInterviewRequest,
+    CheckInterviewResponse,
     CoachRequest,
     CoachResponse,
     EvaluateRequest,
@@ -136,6 +144,49 @@ def generate_interview(payload: GenerateInterviewRequest) -> GenerateInterviewRe
     try:
         task_text = call_yandex_gpt(INTERVIEW_GENERATION_SYSTEM, prompt, temperature=0.75)
         return GenerateInterviewResponse(taskText=task_text)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post("/api/interviews/check", response_model=CheckInterviewResponse)
+def check_interview_answer(payload: CheckInterviewRequest) -> CheckInterviewResponse:
+    previous = [
+        f"- {key}: {value[:500]}"
+        for key, value in payload.previousAnswers.items()
+        if value.strip()
+    ]
+    prompt = f"""Проверь ответ кандидата на текущем шаге интервью.
+
+НАПРАВЛЕНИЕ:
+{payload.directionId}
+
+БЛОК:
+{payload.blockId}
+
+ИСХОДНЫЙ КЕЙС:
+{payload.taskText[:3500]}
+
+ТЕКУЩИЙ РАУНД:
+{payload.roundTitle}
+
+Цель раунда:
+{payload.roundGoal}
+
+Ожидаемые сигналы:
+{chr(10).join(f"- {item}" for item in payload.expectedSignals) if payload.expectedSignals else "(нет явного списка)"}
+
+Предыдущие принятые ответы:
+{chr(10).join(previous) if previous else "(пока нет)"}
+
+Выбранный вариант:
+{payload.selectedOption or "(не выбран)"}
+
+Письменный ответ:
+{payload.answerText.strip() or "(пусто)"}
+"""
+    try:
+        result = call_yandex_gpt(INTERVIEW_CHECK_SYSTEM, prompt, temperature=0.25, max_tokens=1200)
+        return CheckInterviewResponse(result=result)
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 

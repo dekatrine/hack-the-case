@@ -24,6 +24,23 @@ class GenerateInterviewResponse(BaseModel):
     taskText: str
 
 
+class CheckInterviewRequest(BaseModel):
+    directionId: str
+    blockId: str
+    taskText: str
+    roundId: str
+    roundTitle: str
+    roundGoal: str
+    answerText: str = ""
+    selectedOption: str = ""
+    expectedSignals: list[str] = Field(default_factory=list)
+    previousAnswers: dict[str, str] = Field(default_factory=dict)
+
+
+class CheckInterviewResponse(BaseModel):
+    result: str
+
+
 class ChatMessage(BaseModel):
     role: str
     text: str
