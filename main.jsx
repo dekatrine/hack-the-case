@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { api } from './api/client.js';
+import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from './quizData.js';
 import './styles.css';
 
 /* ───────────────────────────── Topbar ─────────────────────────────── */
@@ -18,7 +19,7 @@ const Topbar = ({ onHome, screen }) => (
 );
 
 /* ──────────────────────────── Landing ─────────────────────────────── */
-const Landing = ({ tracks, onPickTrack }) => (
+const Landing = ({ tracks, onPickTrack, onOpenQuiz }) => (
   <div className="fade-in">
     <div className="eyebrow"><span className="num">01 /</span> Choose your track</div>
     <h1 className="hero">
@@ -35,6 +36,16 @@ const Landing = ({ tracks, onPickTrack }) => (
       {tracks.map((t, i) => (
         <TrackCard key={t.id} track={t} idx={i + 1} onPick={() => onPickTrack(t)} />
       ))}
+    </div>
+    <div className="quizBanner" onClick={onOpenQuiz} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpenQuiz()}>
+      <div className="quizBannerLeft">
+        <span className="quizBannerIcon">⚡</span>
+        <div>
+          <p className="quizBannerTitle">Практика в формате Duolingo</p>
+          <p className="quizBannerSub">60 вопросов по метрикам, фреймворкам, RCA, market sizing и бизнес-кейсам. Мгновенная проверка и объяснения.</p>
+        </div>
+      </div>
+      <span className="quizBannerArrow">→</span>
     </div>
   </div>
 );
@@ -718,7 +729,8 @@ const Section = ({ title, items, accent }) => (
 const App = () => {
   const [config, setConfig] = useState(null);
   const [err, setErr] = useState(null);
-  const [screen, setScreen] = useState('landing'); // landing | track | workspace
+  const [screen, setScreen] = useState('landing'); // landing | track | workspace | quiz
+  const [quizCategory, setQuizCategory] = useState(null);
   const [track, setTrack] = useState(null);
   const [caseText, setCaseText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -760,7 +772,7 @@ const App = () => {
   if (err && !config) return <FullErr msg={err} />;
   if (!config) return <Loading />;
 
-  const screenLabel = { landing: 'home / tracks', track: `track / ${track?.id}`, workspace: 'workspace / live' }[screen];
+  const screenLabel = { landing: 'home / tracks', track: `track / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz' }[screen];
 
   return (
     <div className="shell">
@@ -772,6 +784,7 @@ const App = () => {
           <Landing
             tracks={config.tracks}
             onPickTrack={(t) => { setTrack(t); setScreen('track'); }}
+            onOpenQuiz={() => { setQuizCategory(null); setScreen('quiz'); }}
           />
         )}
         {screen === 'track' && track && (
@@ -781,6 +794,13 @@ const App = () => {
             difficulties={config.difficultyLevels}
             onStart={startSimulation}
             onBack={() => setScreen('landing')}
+          />
+        )}
+        {screen === 'quiz' && (
+          <QuizPage
+            category={quizCategory}
+            onSelectCategory={setQuizCategory}
+            onBack={() => { setQuizCategory(null); setScreen('landing'); }}
           />
         )}
         {screen === 'workspace' && (
@@ -829,5 +849,163 @@ const BusyBanner = ({ screen }) => (
     <span className="spinner" /> {screen === 'workspace' ? 'analyzing…' : 'generating case…'}
   </div>
 );
+
+/* ─────────────────────────────────────────────
+   QUIZ — Duolingo-style practice
+   ───────────────────────────────────────────── */
+
+function QuizPage({ category, onSelectCategory, onBack }) {
+  if (!category) return <QuizCategoryPicker onSelect={onSelectCategory} onBack={onBack} />;
+  return <QuizSession category={category} onBack={() => onSelectCategory(null)} />;
+}
+
+function QuizCategoryPicker({ onSelect, onBack }) {
+  return (
+    <div className="fade-in quizPicker">
+      <button className="btn btn-ghost" onClick={onBack} style={{ marginBottom: 32 }}>← На главную</button>
+      <div className="eyebrow"><span className="num">00 /</span> Выбери тему</div>
+      <h1 className="hero" style={{ fontSize: 'clamp(32px, 5vw, 56px)' }}>
+        Практика в формате<br/><em>Duolingo</em>
+      </h1>
+      <p className="hero-sub">10 вопросов из темы — 4 варианта ответа — мгновенное объяснение. Тренируй то, что спрашивают на интервью.</p>
+      <div className="quizGrid">
+        {QUIZ_CATEGORIES.map((cat) => (
+          <button key={cat.id} className="quiz-cat-card" onClick={() => onSelect(cat)}>
+            <span className="quiz-cat-icon">{cat.icon}</span>
+            <div className="quiz-cat-body">
+              <span className="quiz-cat-title">{cat.title}</span>
+              <span className="quiz-cat-sub">{cat.subtitle}</span>
+            </div>
+            <div className="quiz-cat-foot">
+              <span className="quiz-cat-tag">{cat.tag}</span>
+              <span className="quiz-cat-count">{(QUIZ_QUESTIONS[cat.id] || []).length} вопр.</span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function QuizSession({ category, onBack }) {
+  const allQ = QUIZ_QUESTIONS[category.id] || [];
+  const [questions] = useState(() => quizShuffle(allQ).slice(0, 10));
+  const [index, setIndex] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+
+  const q = questions[index];
+  const progress = Math.round((index / questions.length) * 100);
+  const answered = selected !== null;
+
+  function handleSelect(i) {
+    if (answered) return;
+    setSelected(i);
+    if (i === q.answer) setScore((s) => s + 1);
+  }
+
+  function handleNext() {
+    if (index + 1 >= questions.length) { setDone(true); return; }
+    setIndex((i) => i + 1);
+    setSelected(null);
+  }
+
+  if (done) {
+    return (
+      <QuizResult
+        score={score}
+        total={questions.length}
+        category={category}
+        onRetry={() => { setIndex(0); setSelected(null); setScore(0); setDone(false); }}
+        onBack={onBack}
+      />
+    );
+  }
+
+  return (
+    <div className="fade-in quizSession">
+      <div className="quizSessionHead">
+        <button className="btn btn-ghost" onClick={onBack}>← Темы</button>
+        <span className="quizSessionMeta">{category.icon} {category.title}</span>
+        <span className="quizScoreBadge">{score} / {index + (answered ? 1 : 0)}</span>
+      </div>
+
+      <div className="quizBar"><div className="quizBarFill" style={{ width: `${progress}%` }} /></div>
+      <p className="quizCounter">{index + 1} / {questions.length}</p>
+
+      <div className="quizCard">
+        <p className="quizQ">{q.q}</p>
+        <div className="quizOptions">
+          {q.options.map((opt, i) => {
+            let cls = 'quizOpt';
+            if (answered) {
+              if (i === q.answer) cls += ' correct';
+              else if (i === selected) cls += ' wrong';
+              else cls += ' dim';
+            }
+            return (
+              <button key={i} className={cls} onClick={() => handleSelect(i)} disabled={answered}>
+                <span className="quizLetter">{String.fromCharCode(65 + i)}</span>
+                <span>{opt}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {answered && (
+        <div className={`quizFeedback ${selected === q.answer ? 'ok' : 'err'}`}>
+          <span className="quizFeedIcon">{selected === q.answer ? '✓' : '✗'}</span>
+          <div>
+            <p className="quizFeedLabel">{selected === q.answer ? 'Правильно!' : `Ответ: ${q.options[q.answer]}`}</p>
+            <p className="quizFeedText">{q.explanation}</p>
+          </div>
+        </div>
+      )}
+
+      {answered && (
+        <button className="btn btn-primary" style={{ width: '100%', marginTop: 4 }} onClick={handleNext}>
+          {index + 1 >= questions.length ? 'Завершить' : 'Следующий →'}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function QuizResult({ score, total, category, onRetry, onBack }) {
+  const pct = Math.round((score / total) * 100);
+  const medal = pct >= 90 ? '🏆' : pct >= 70 ? '🥈' : pct >= 50 ? '🥉' : '💪';
+  const msg =
+    pct >= 90 ? 'Отлично! Тему знаешь на уровне сеньора.' :
+    pct >= 70 ? 'Хороший результат — ещё немного и тема закрыта.' :
+    pct >= 50 ? 'Неплохо. Перечитай объяснения к ошибкам.' :
+    'Тема требует проработки. Пройди ещё раз.';
+
+  return (
+    <div className="fade-in quizResult">
+      <div className="quizResultCard">
+        <span style={{ fontSize: '3rem' }}>{medal}</span>
+        <h2 className="quizResultScore">{score}/{total}</h2>
+        <p className="quizResultPct">{pct}% правильных ответов</p>
+        <p className="quizResultMsg">{msg}</p>
+        <p style={{ color: 'var(--paper-dim)', fontSize: 14 }}>{category.icon} {category.title}</p>
+        <div style={{ display: 'grid', gap: 10, marginTop: 24 }}>
+          <button className="btn btn-primary" onClick={onRetry}>Пройти ещё раз</button>
+          <button className="btn btn-ghost" onClick={onBack}>← Другая тема</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function quizShuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 createRoot(document.getElementById('root')).render(<App />);

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { askCoach, evaluateCase, fetchConfig, generateCase } from './api/client';
+import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from './quizData';
 import './styles.css';
 
 const fallbackConfig = {
@@ -13,6 +14,7 @@ const fallbackConfig = {
 function App() {
   const [config, setConfig] = useState(fallbackConfig);
   const [page, setPage] = useState('start');
+  const [quizCategory, setQuizCategory] = useState(null);
   const [caseText, setCaseText] = useState('');
   const [industry, setIndustry] = useState('');
   const [difficulty, setDifficulty] = useState('');
@@ -123,6 +125,7 @@ function App() {
           <button className={page === 'start' ? 'active' : ''} onClick={() => setPage('start')}>Кейс</button>
           <button className={page === 'solve' ? 'active' : ''} onClick={() => setPage('solve')} disabled={!caseText}>Решение</button>
           <button className={page === 'evaluate' ? 'active' : ''} onClick={() => setPage('evaluate')} disabled={!caseText}>Оценка</button>
+          <button className={page === 'quiz' ? 'active' : ''} onClick={() => { setPage('quiz'); setQuizCategory(null); }}>Практика</button>
         </nav>
       </header>
 
@@ -175,6 +178,14 @@ function App() {
           onEvaluate={handleEvaluate}
           onBack={() => setPage('solve')}
           loading={Boolean(loading)}
+        />
+      )}
+
+      {page === 'quiz' && (
+        <QuizPage
+          category={quizCategory}
+          onSelectCategory={setQuizCategory}
+          onBack={() => setQuizCategory(null)}
         />
       )}
     </main>
@@ -607,6 +618,191 @@ function renderInlineMarkdown(line) {
 
     return part;
   });
+}
+
+/* ─────────────────────────────────────────────
+   QUIZ — Duolingo-style practice
+   ───────────────────────────────────────────── */
+
+function QuizPage({ category, onSelectCategory, onBack }) {
+  if (!category) {
+    return <QuizCategoryPicker onSelect={onSelectCategory} />;
+  }
+  return <QuizSession category={category} onBack={onBack} />;
+}
+
+function QuizCategoryPicker({ onSelect }) {
+  return (
+    <section className="quizPicker">
+      <div className="quizPickerHead">
+        <h2>Практика</h2>
+        <p className="muted">Выбери тему — получишь 10 вопросов в формате карточек с мгновенной проверкой.</p>
+      </div>
+      <div className="quizGrid">
+        {QUIZ_CATEGORIES.map((cat) => (
+          <button key={cat.id} className="quizCatCard" onClick={() => onSelect(cat)}>
+            <span className="quizCatIcon">{cat.icon}</span>
+            <span className="quizCatTitle">{cat.title}</span>
+            <span className="quizCatSub">{cat.subtitle}</span>
+            <span className="quizCatTag" style={{ background: cat.color + '18', color: cat.color }}>{cat.tag}</span>
+            <span className="quizCatCount">{(QUIZ_QUESTIONS[cat.id] || []).length} вопросов</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function QuizSession({ category, onBack }) {
+  const allQuestions = QUIZ_QUESTIONS[category.id] || [];
+  const [questions] = useState(() => shuffle(allQuestions).slice(0, 10));
+  const [index, setIndex] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+  const [wrongIndexes, setWrongIndexes] = useState([]);
+
+  const q = questions[index];
+  const progress = Math.round(((index) / questions.length) * 100);
+  const isAnswered = selected !== null;
+
+  function handleSelect(optIndex) {
+    if (isAnswered) return;
+    setSelected(optIndex);
+    if (optIndex === q.answer) {
+      setScore((s) => s + 1);
+    } else {
+      setWrongIndexes((prev) => [...prev, index]);
+    }
+  }
+
+  function handleNext() {
+    if (index + 1 >= questions.length) {
+      setDone(true);
+    } else {
+      setIndex((i) => i + 1);
+      setSelected(null);
+    }
+  }
+
+  if (done) {
+    return (
+      <QuizResult
+        score={score}
+        total={questions.length}
+        category={category}
+        wrongCount={wrongIndexes.length}
+        onRetry={() => {
+          setIndex(0);
+          setSelected(null);
+          setScore(0);
+          setDone(false);
+          setWrongIndexes([]);
+        }}
+        onBack={onBack}
+      />
+    );
+  }
+
+  return (
+    <section className="quizSession">
+      <div className="quizSessionHead">
+        <button className="quizBackBtn" onClick={onBack}>← Темы</button>
+        <div className="quizSessionMeta">
+          <span className="quizCatIcon" style={{ fontSize: '1.1rem' }}>{category.icon}</span>
+          <span className="quizSessionTitle">{category.title}</span>
+        </div>
+        <span className="quizScoreBadge">{score}/{index + (isAnswered ? 1 : 0)}</span>
+      </div>
+
+      <div className="quizProgressBar">
+        <div className="quizProgressFill" style={{ width: `${progress}%` }} />
+      </div>
+      <p className="quizCounter">{index + 1} / {questions.length}</p>
+
+      <QuizCard
+        key={index}
+        question={q}
+        selected={selected}
+        onSelect={handleSelect}
+      />
+
+      {isAnswered && (
+        <div className={`quizFeedback ${selected === q.answer ? 'correct' : 'wrong'}`}>
+          <div className="quizFeedbackIcon">{selected === q.answer ? '✓' : '✗'}</div>
+          <div>
+            <p className="quizFeedbackLabel">{selected === q.answer ? 'Правильно!' : `Правильный ответ: ${q.options[q.answer]}`}</p>
+            <p className="quizFeedbackText">{q.explanation}</p>
+          </div>
+        </div>
+      )}
+
+      {isAnswered && (
+        <button className="primary quizNextBtn" onClick={handleNext}>
+          {index + 1 >= questions.length ? 'Завершить' : 'Следующий вопрос →'}
+        </button>
+      )}
+    </section>
+  );
+}
+
+function QuizCard({ question, selected, onSelect }) {
+  return (
+    <div className="quizCard">
+      <p className="quizQuestion">{question.q}</p>
+      <div className="quizOptions">
+        {question.options.map((opt, i) => {
+          let cls = 'quizOption';
+          if (selected !== null) {
+            if (i === question.answer) cls += ' quizOptionCorrect';
+            else if (i === selected) cls += ' quizOptionWrong';
+            else cls += ' quizOptionDim';
+          }
+          return (
+            <button key={i} className={cls} onClick={() => onSelect(i)} disabled={selected !== null}>
+              <span className="quizOptionLetter">{String.fromCharCode(65 + i)}</span>
+              <span>{opt}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function QuizResult({ score, total, category, wrongCount, onRetry, onBack }) {
+  const pct = Math.round((score / total) * 100);
+  const medal = pct >= 90 ? '🏆' : pct >= 70 ? '🥈' : pct >= 50 ? '🥉' : '💪';
+  const message =
+    pct >= 90 ? 'Отлично! Тему знаешь на уровне сеньора.' :
+    pct >= 70 ? 'Хороший результат! Ещё немного и тема закрыта.' :
+    pct >= 50 ? 'Неплохо. Повтори объяснения к ошибкам.' :
+    'Тема требует проработки. Рекомендуем пройти ещё раз.';
+
+  return (
+    <section className="quizResult">
+      <div className="quizResultCard">
+        <span className="quizResultMedal">{medal}</span>
+        <h2 className="quizResultScore">{score}/{total}</h2>
+        <p className="quizResultPct">{pct}% правильных ответов</p>
+        <p className="quizResultMsg">{message}</p>
+        <p className="quizResultCat">{category.icon} {category.title}</p>
+        <div className="quizResultActions">
+          <button className="primary" onClick={onRetry}>Пройти ещё раз</button>
+          <button onClick={onBack}>← Другая тема</button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 createRoot(document.getElementById('root')).render(<App />);
