@@ -1259,6 +1259,39 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   margin-bottom: 6px;
 }
 
+.interviewFollowups {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.interviewFollowups > span {
+  display: block;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.interviewFollowups div {
+  display: grid;
+  gap: 8px;
+}
+
+.interviewFollowups em {
+  display: block;
+  padding-left: 12px;
+  border-left: 2px solid rgba(255, 184, 107, 0.42);
+  color: var(--paper-dim);
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1.45;
+}
+
 .interviewReview {
   display: grid;
   grid-template-columns: 86px 1fr;

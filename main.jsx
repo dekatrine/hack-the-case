@@ -285,13 +285,18 @@ const getVisualSteps = (chapter, step) => {
   if (chapter?.visualSteps?.length) return chapter.visualSteps;
   const fromTemplate = splitTemplate(step?.theory?.answerTemplate || '');
   if (fromTemplate.length > 1) return fromTemplate;
-  return [
+  const baseRounds = [
     'Прочитай вводную',
     'Выдели факты',
     'Сформулируй гипотезу',
     'Проверь данными',
     'Запиши вывод',
   ];
+
+  return baseRounds.map((round) => ({
+    ...round,
+    followups: getInterviewFollowups(block.id, round.id, direction.id),
+  }));
 };
 
 const INTERVIEW_DIRECTIONS = [
@@ -364,6 +369,98 @@ const INTERVIEW_DIFFICULTIES = [
   { id: 'middle', label: 'Middle', text: 'реалистичный баланс данных, допущений и pushback' },
   { id: 'senior', label: 'Senior', text: 'больше ambiguity, trade-offs и executive judgment' },
 ];
+
+const INTERVIEW_FOLLOW_UP_BANK = {
+  product_sense: [
+    'Кого ты выберешь primary user и почему не другой сегмент?',
+    'Какой pain point самый частотный, а какой самый болезненный?',
+    'Что будет MVP без лишнего scope?',
+    'Какая primary metric покажет, что пользователь получил ценность?',
+    'Какие guardrails защитят core experience?',
+    'Что ты выкинешь из решения, если engineering capacity ограничена?',
+    'Как изменится решение для новых и power users?',
+    'Какой быстрый qualitative signal проверит проблему?',
+    'Что может пойти не так после релиза?',
+    'Как объяснишь trade-off между engagement и trust?',
+  ],
+  product_execution: [
+    'Где именно упала метрика: платформа, гео, когорта, канал или версия?',
+    'Какая метрика является input, а какая output?',
+    'Что проверишь в change log за 7 дней до падения?',
+    'Как отделишь сезонность от продуктовой причины?',
+    'Когда нужно rollback, а когда достаточно mitigation?',
+    'Какие guardrails нельзя ухудшить ради восстановления метрики?',
+    'Какой dashboard нужен в первые 24 часа?',
+    'Что сделаешь, если данные противоречат user research?',
+    'Какой эксперимент докажет root cause?',
+    'Как приоритизируешь 3 гипотезы при нехватке аналитиков?',
+  ],
+  product_strategy: [
+    'Почему этот рынок или сегмент важен именно сейчас?',
+    'Что будет главным источником defensibility?',
+    'Какой bet ты сделаешь первым и почему?',
+    'Как монетизация может ухудшить retention или trust?',
+    'Какие capabilities уже есть у компании?',
+    'Что сделает конкурент, если мы успешно запустимся?',
+    'Как оценишь opportunity size без точных данных?',
+    'Какая стратегия будет неверной для enterprise и SMB одновременно?',
+    'Какой north-star outcome важнее revenue в первые месяцы?',
+    'Что должно случиться, чтобы ты отменил стратегию?',
+  ],
+  consulting_opening: [
+    'Какой exact decision question должен быть в конце рекомендации?',
+    'Какие ограничения могут полностью изменить маршрут решения?',
+    'Какие 3 ветки issue tree первого уровня будут MECE?',
+    'Как объяснишь, почему эта структура является action plan?',
+    'Какие данные попросишь первыми и зачем?',
+    'Что является фактом, а что допущением?',
+    'Как не потерять основную цель клиента в середине кейса?',
+    'Какая гипотеза будет первой рабочей гипотезой?',
+    'Что исключишь из scope?',
+    'Какой критерий успеха сделает ответ управленческим?',
+  ],
+  consulting_math: [
+    'Какая формула связывает данные exhibit с вопросом клиента?',
+    'Что является самой чувствительной переменной?',
+    'Как проверишь порядок величины результата?',
+    'Что значит этот расчёт для go/no-go решения?',
+    'Где риск перепутать проценты и процентные пункты?',
+    'Какие данные из таблицы нерелевантны для вывода?',
+    'Какой quick calculation можно сделать вслух за 30 секунд?',
+    'Что делать, если расчёт даёт неожиданный результат?',
+    'Какая unit economics метрика важнее средней выручки?',
+    'Как объяснишь insight, не пересказывая таблицу?',
+  ],
+  consulting_recommendation: [
+    'Как звучит ответ в первом предложении?',
+    'Какие 2-3 доказательства сильнее всего поддерживают рекомендацию?',
+    'Какой риск может перевернуть рекомендацию?',
+    'Что клиент должен сделать в первые 2 недели?',
+    'Какие условия должны быть выполнены перед масштабированием?',
+    'Как отделишь рекомендацию от списка инициатив?',
+    'Какой downside нужно честно назвать партнёру?',
+    'Что бы ты проверил, если появится ещё один день анализа?',
+    'Как показать финансовый эффект без лишней точности?',
+    'Какой executive trade-off должен принять клиент?',
+  ],
+};
+
+const getInterviewFollowups = (blockId, roundId, directionId) => {
+  const base = INTERVIEW_FOLLOW_UP_BANK[blockId] || [];
+  const offsetByRound = {
+    opening_move: 0,
+    clarifying_questions: 2,
+    solution_route: 4,
+    data_move: 6,
+    pushback_synthesis: 8,
+  };
+  const fallback = directionId === 'product'
+    ? INTERVIEW_FOLLOW_UP_BANK.product_sense
+    : INTERVIEW_FOLLOW_UP_BANK.consulting_opening;
+  const source = base.length ? base : fallback;
+  const start = offsetByRound[roundId] || 0;
+  return [...source.slice(start, start + 3), ...source.slice(0, Math.max(0, start + 3 - source.length))].slice(0, 3);
+};
 
 const parseInterviewTask = (taskText = '') => {
   const sections = [];
@@ -1242,6 +1339,13 @@ const InterviewTask = ({ taskText, direction, block }) => {
               <ul>
                 {activeRound.expectedSignals.slice(0, 4).map((signal) => <li key={signal}>{signal}</li>)}
               </ul>
+            </div>
+
+            <div className="interviewFollowups">
+              <span>Вопросы, как в live mock</span>
+              <div>
+                {activeRound.followups.map((question) => <em key={question}>{question}</em>)}
+              </div>
             </div>
 
             {err && <div className="error">{err}</div>}
