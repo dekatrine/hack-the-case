@@ -1,90 +1,77 @@
-# Запуск Hack the Case на другом Mac
+# Запуск Hack the Case на другом компьютере
 
-Для запуска нужны:
+Нужны: Git, Node.js 18+, Python 3.11+, файл `Secrets.toml` с ключами YandexGPT.
 
-- доступ к репозиторию GitHub
-- файл `Secrets.toml` или значения API-ключей
-- Node.js и Python 3
+---
 
-## 1. Забрать проект
+## 1. Клонировать репозиторий
 
 ```bash
-cd ~/Desktop
 git clone https://github.com/dekatrine/hack-the-case.git
 cd hack-the-case
 ```
 
-Если у человека настроен SSH-доступ к GitHub, можно использовать:
-
-```bash
-git clone git@github.com:dekatrine/hack-the-case.git
-```
+---
 
 ## 2. Создать файл с секретами
 
-В корне проекта создать файл `Secrets.toml`:
+В корне проекта создать файл `Secrets.toml` (не добавлять в git — он в `.gitignore`):
 
 ```toml
 YANDEX_API_KEY = "..."
 YANDEX_FOLDER_ID = "..."
 YANDEX_MODEL = "yandexgpt-lite"
+ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
 ```
 
-Можно вместо этого передать готовый файл `Secrets.toml`. Не добавляйте этот файл в git.
+---
 
 ## 3. Запустить backend
 
 ```bash
-cd ~/Desktop/hack-the-case/backend
+cd backend
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173 .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Backend будет доступен на:
+Backend доступен на `http://127.0.0.1:8000`. Проверить: `http://127.0.0.1:8000/health`
 
-```text
-http://127.0.0.1:8000
-```
+---
 
-## 4. Запустить старый интерфейс
-
-В новом окне терминала:
+## 4. Запустить frontend (в новом окне терминала)
 
 ```bash
-cd ~/Desktop/hack-the-case/frontend
+cd ..                 # вернуться в корень hack-the-case
 npm install
-npm run dev -- --host 127.0.0.1 --port 5173
+npm run dev
 ```
 
-Старый UI откроется на:
+Откроется на `http://localhost:5173`
 
-```text
-http://127.0.0.1:5173/
+---
+
+## Структура проекта
+
+```
+hack-the-case/
+├── main.jsx          # React-приложение (основной UI)
+├── styles.css        # стили
+├── api/client.js     # API-клиент
+├── quizData.js       # вопросы для практики
+├── tracks.py         # учебные направления и главы
+├── backend/          # FastAPI + YandexGPT
+│   ├── app/main.py   # API endpoints
+│   └── requirements.txt
+├── Secrets.toml      # НЕ в git — создать вручную из Secrets.example.toml
+└── render.yaml       # конфиг деплоя на Render
 ```
 
-## 5. Запустить новый интерфейс v0.2
+---
 
-Еще в одном окне терминала:
+## Что передать другому человеку
 
-```bash
-cd ~/Desktop/hack-the-case
-npm install
-npm run dev -- --host 127.0.0.1 --port 4173
-```
-
-Новый UI откроется на:
-
-```text
-http://127.0.0.1:4173/
-```
-
-Если нужен только один интерфейс, второй можно не запускать.
-
-## Что передать человеку
-
-- репозиторий: `https://github.com/dekatrine/hack-the-case.git`
-- или SSH: `git@github.com:dekatrine/hack-the-case.git`
-- файл `Secrets.toml` или отдельно значения `YANDEX_API_KEY`, `YANDEX_FOLDER_ID`, `YANDEX_MODEL`
-- эту инструкцию
+- ссылка на репо: `https://github.com/dekatrine/hack-the-case`
+- файл `Secrets.toml` с рабочими ключами YandexGPT (передать отдельно, не через git)
+- эта инструкция
