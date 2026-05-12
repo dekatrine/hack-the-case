@@ -148,7 +148,7 @@ const ChapterCard = ({ chapter }) => (
     <p>{chapter.summary}</p>
     {chapter.definition && <p className="definition">{chapter.definition}</p>}
     <div className="skills">
-      {chapter.skills.map((s) => <span key={s} className="skill">{s}</span>)}
+      {(chapter.skills || []).map((s) => <span key={s} className="skill">{s}</span>)}
     </div>
     {chapter.methodMaterials?.length > 0 && (
       <ul className="chapter-methods">
@@ -1824,4 +1824,28 @@ function quizShuffle(arr) {
   return a;
 }
 
-createRoot(document.getElementById('root')).render(<App />);
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 40, fontFamily: 'monospace', color: '#f4f1ea', background: '#0b0d0c', minHeight: '100vh' }}>
+          <h2 style={{ color: '#ff6b6b' }}>Ошибка рендера</h2>
+          <pre style={{ color: '#ffb86b', whiteSpace: 'pre-wrap', fontSize: 13 }}>{String(this.state.error)}</pre>
+          <button onClick={() => this.setState({ error: null })} style={{ marginTop: 24, padding: '10px 20px', background: '#b8ff5c', color: '#0b0d0c', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
+            Перезагрузить
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>);
