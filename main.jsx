@@ -285,18 +285,13 @@ const getVisualSteps = (chapter, step) => {
   if (chapter?.visualSteps?.length) return chapter.visualSteps;
   const fromTemplate = splitTemplate(step?.theory?.answerTemplate || '');
   if (fromTemplate.length > 1) return fromTemplate;
-  const baseRounds = [
+  return [
     'Прочитай вводную',
     'Выдели факты',
     'Сформулируй гипотезу',
     'Проверь данными',
     'Запиши вывод',
   ];
-
-  return baseRounds.map((round) => ({
-    ...round,
-    followups: getInterviewFollowups(block.id, round.id, direction.id),
-  }));
 };
 
 const INTERVIEW_DIRECTIONS = [
@@ -515,7 +510,7 @@ const buildInterviewRounds = (sections, direction, block) => {
   const criteriaSignals = getInterviewLines(criteria).slice(0, 6);
   const pushbackLines = getInterviewLines(pushback);
 
-  return [
+  const rounds = [
     {
       id: 'opening_move',
       title: 'Первый ход',
@@ -612,6 +607,10 @@ const buildInterviewRounds = (sections, direction, block) => {
       minLength: 90,
     },
   ];
+  return rounds.map((round) => ({
+    ...round,
+    followups: getInterviewFollowups(block.id, round.id, direction.id),
+  }));
 };
 
 const parseInterviewReview = (value = '') => {
