@@ -9,70 +9,134 @@ import './styles.css';
 const Topbar = ({ onHome, screen }) => (
   <header className="topbar">
     <div className="brand" onClick={onHome} style={{ cursor: 'pointer' }}>
-      <span className="brand-mark">hack the <em>case</em></span>
-      <span className="brand-tag">v0.2 · ai sim</span>
+      <span className="brand-mark">case <em>dojo</em></span>
+      <span className="brand-tag">ai case club</span>
     </div>
     <div className="topbar-meta">
-      <span><span className="dot" />yandex gpt online</span>
+      <span><span className="dot" />ai mentor online</span>
       <span>{screen}</span>
     </div>
   </header>
 );
 
 /* ──────────────────────────── Landing ─────────────────────────────── */
-const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn }) => (
-  <div className="fade-in">
-    <div className="eyebrow"><span className="num">01 /</span> Choose your track</div>
-    <h1 className="hero">
-      Симулятор кейсов,<br/>
-      который <em>учит думать</em>,<br/>
-      а не угадывать.
-    </h1>
-    <p className="hero-sub">
-      AI-репетитор и встроенный коуч в стиле McKinsey, BCG и FAANG. Два направления —
-      продуктовые кейсы для собеседований и бизнес-кейсы для консалтинга. Главы основаны
-      на фреймворке CIRCLES и классической консалтинговой воронке.
-    </p>
-    <div className="tracks">
-      {tracks.map((t, i) => (
-        <TrackCard key={t.id} track={t} idx={i + 1} onPick={() => onPickTrack(t)} />
-      ))}
-    </div>
-    <div className="interviewEntry">
-      <div>
-        <span className="interviewEntryKicker">Mock interview · AI interviewer</span>
-        <h2>Решаем собеседование вместе</h2>
-        <p>
-          Мобильный тренажёр продуктовых и консалтинговых интервью: вводная, уточняющие
-          вопросы, данные, pushback и финальная рекомендация в одном сценарии.
-        </p>
-      </div>
-      <button className="btn btn-primary" onClick={onOpenInterview}>
-        Открыть раздел <span className="arrow">→</span>
-      </button>
-    </div>
-    <div className="quizBanner" onClick={onOpenQuiz} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpenQuiz()}>
-      <div className="quizBannerLeft">
-        <span className="quizBannerIcon">⚡</span>
+const getLearningStats = () => ({
+  chapters: PM_CHAPTERS.length,
+  cards: Object.values(FLASHCARDS).reduce((sum, cards) => sum + cards.length, 0),
+  questions: PRACTICE_QUESTIONS.length,
+  definitions: KEY_DEFINITIONS.length,
+});
+
+const RESOURCE_TABS = [
+  { label: 'All Resources', tab: 'All Resources' },
+  { label: 'Lessons', tab: 'Lessons' },
+  { label: 'Notes', tab: 'Notes' },
+  { label: 'Questionbank', tab: 'Questionbank' },
+  { label: 'Flashcards', tab: 'Flashcards' },
+  { label: 'Key Definitions', tab: 'Key Definitions' },
+];
+
+const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn }) => {
+  const stats = getLearningStats();
+  const featured = PM_CHAPTERS.slice(0, 6);
+
+  return (
+    <div className="dojoHome fade-in">
+      <section className="dojoHero">
         <div>
-          <p className="quizBannerTitle">Практика в формате Duolingo</p>
-          <p className="quizBannerSub">{getQuizQuestionCount()} вопросов по PM-кейсам, маркетплейсам, A/B, MBB, Big4 и case math. 10‑минутные спринты, XP, streak и объяснения.</p>
+          <div className="eyebrow"><span className="num">01 /</span> AI case club resources</div>
+          <h1 className="dojoHeroTitle">Product & business case prep, all in one place</h1>
+          <p className="dojoHeroSub">
+            Уроки, конспекты, questionbank, flashcards, определения, mock interview и AI-проверка решений собраны
+            в один кабинет для подготовки к PM-собеседованиям, консалтингу и кейс-чемпионатам.
+          </p>
         </div>
-      </div>
-      <span className="quizBannerArrow">→</span>
-    </div>
-    <div className="learnBanner" onClick={onOpenLearn} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpenLearn()}>
-      <div className="learnBannerLeft">
-        <span className="learnBannerIcon">📚</span>
-        <div>
-          <p className="learnBannerTitle">Учебные материалы — полный курс PM</p>
-          <p className="learnBannerSub">{PM_CHAPTERS.length} разделов · Flash Cards с интервальными повторениями · Банк вопросов с AI-объяснениями · Адаптивные сессии в стиле Alice.tech</p>
+        <div className="dojoHeroPanel">
+          <span>Progress stack</span>
+          <strong>{stats.chapters} модулей</strong>
+          <p>{stats.questions} вопросов · {stats.cards} карточек · {stats.definitions} терминов</p>
+          <button className="btn btn-primary" onClick={() => onOpenLearn('All Resources')}>
+            Начать подготовку <span className="arrow">→</span>
+          </button>
         </div>
+      </section>
+
+      <nav className="dojoResourceTabs" aria-label="Resource shortcuts">
+        {RESOURCE_TABS.map((item) => (
+          <button key={item.tab} onClick={() => onOpenLearn(item.tab)}>
+            {item.label}
+          </button>
+        ))}
+      </nav>
+
+      <div className="dojoTrustBanner">
+        <span className="dojoTrustIcon">✓</span>
+        <strong>Built for case interviews and case championships</strong>
+        <p>AI-коуч не выдаёт готовое решение сразу: он проверяет структуру, подталкивает вопросами и объясняет ошибки по рубрике.</p>
       </div>
-      <span className="learnBannerArrow">→</span>
+
+      <section className="dojoGrid">
+        <article className="dojoPrimaryCard">
+          <div className="dojoCardHead">
+            <span>Lessons</span>
+            <button onClick={() => onOpenLearn('Lessons')}>Open →</button>
+          </div>
+          <h2>Учись короткими сессиями</h2>
+          <p>Объяснения, мини-проверки, упрощение сложных тем и переход к практике сразу после теории.</p>
+          <div className="dojoModuleList">
+            {featured.map((chapter) => (
+              <button key={chapter.id} onClick={() => onOpenLearn('Lessons')} style={{ '--col': chapter.color }}>
+                <span>{chapter.icon}</span>
+                <div>
+                  <strong>{chapter.number}. {chapter.title}</strong>
+                  <small>{chapter.subtopics.length} подтем</small>
+                </div>
+              </button>
+            ))}
+          </div>
+        </article>
+
+        <div className="dojoSideStack">
+          <button className="dojoActionCard" onClick={() => onOpenLearn('Questionbank')}>
+            <span>Questionbank</span>
+            <strong>{stats.questions} вопросов с AI-разбором</strong>
+            <small>Фильтры по сложности, сохранённые вопросы и объяснения после ошибки.</small>
+          </button>
+          <button className="dojoActionCard" onClick={() => onOpenLearn('Flashcards')}>
+            <span>Flashcards</span>
+            <strong>Spaced repetition</strong>
+            <small>Карточки в стиле RevisionDojo/Anki: again, hard, good, easy.</small>
+          </button>
+          <button className="dojoActionCard" onClick={onOpenInterview}>
+            <span>Mock interview</span>
+            <strong>AI interviewer</strong>
+            <small>Раунды с уточнениями, exhibit, pushback и критерием сильного ответа.</small>
+          </button>
+          <button className="dojoActionCard" onClick={onOpenQuiz}>
+            <span>Sprints</span>
+            <strong>{getQuizQuestionCount()} быстрых вопросов</strong>
+            <small>XP, streak и короткие 10-минутные тренировки.</small>
+          </button>
+        </div>
+      </section>
+
+      <section className="dojoTracks">
+        <div className="dojoSectionHead">
+          <div>
+            <span>Exam Mode</span>
+            <h2>Сгенерируй полный кейс и защити решение</h2>
+          </div>
+          <p>Выбери направление, отрасль и сложность: сервис создаст условие, рабочую тетрадь, коуча и финальную оценку по рубрике.</p>
+        </div>
+        <div className="tracks">
+          {tracks.map((t, i) => (
+            <TrackCard key={t.id} track={t} idx={i + 1} onPick={() => onPickTrack(t)} />
+          ))}
+        </div>
+      </section>
     </div>
-  </div>
-);
+  );
+};
 
 const TrackCard = ({ track, idx, onPick }) => {
   const onMove = (e) => {
@@ -1456,6 +1520,7 @@ const App = () => {
   const [err, setErr] = useState(null);
   const [screen, setScreen] = useState('landing'); // landing | track | workspace | quiz | interview | learn
   const [quizCategory, setQuizCategory] = useState(null);
+  const [learnInitialTab, setLearnInitialTab] = useState('All Resources');
   const [track, setTrack] = useState(null);
   const [caseText, setCaseText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -1497,7 +1562,12 @@ const App = () => {
   if (err && !config) return <FullErr msg={err} />;
   if (!config) return <Loading />;
 
-  const screenLabel = { landing: 'home / tracks', track: `track / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz', interview: 'practice / interview', learn: 'learn / pm course' }[screen];
+  const openLearn = (tab = 'All Resources') => {
+    setLearnInitialTab(tab);
+    setScreen('learn');
+  };
+
+  const screenLabel = { landing: 'dojo / resources', track: `exam mode / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz', interview: 'mock interview', learn: `resources / ${learnInitialTab}` }[screen];
 
   return (
     <div className="shell">
@@ -1511,7 +1581,7 @@ const App = () => {
             onPickTrack={(t) => { setTrack(t); setScreen('track'); }}
             onOpenQuiz={() => { setQuizCategory(null); setScreen('quiz'); }}
             onOpenInterview={() => setScreen('interview')}
-            onOpenLearn={() => setScreen('learn')}
+            onOpenLearn={openLearn}
           />
         )}
         {screen === 'track' && track && (
@@ -1544,7 +1614,7 @@ const App = () => {
           />
         )}
         {screen === 'learn' && (
-          <LearningScreen onBack={() => setScreen('landing')} />
+          <LearningScreen onBack={() => setScreen('landing')} initialTab={learnInitialTab} />
         )}
       </main>
     </div>
@@ -1843,32 +1913,37 @@ function quizShuffle(arr) {
    LEARNING SCREEN — RevisionDojo layout + Alice.tech explanations
    ═══════════════════════════════════════════════════════════════════════ */
 
-const LEARN_TABS = ['Уроки', 'Flash Cards', 'Банк вопросов', 'Термины'];
+const LEARN_TABS = ['All Resources', 'Lessons', 'Notes', 'Questionbank', 'Flashcards', 'Key Definitions'];
 
-const LearningScreen = ({ onBack }) => {
-  const [activeTab, setActiveTab] = useState('Уроки');
+const LearningScreen = ({ onBack, initialTab = 'All Resources' }) => {
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedChapter, setSelectedChapter] = useState(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   return (
     <div className="learnScreen fade-in">
-      {/* Header */}
       <div className="learnScreenHeader">
         <button className="btn btn-ghost" onClick={onBack}>← Главная</button>
         <div>
-          <div className="eyebrow"><span className="num">04 /</span> Учебные материалы</div>
-          <h1 className="learnScreenTitle">Полный курс <em>Product Manager</em></h1>
-          <p className="learnScreenSub">{PM_CHAPTERS.length} разделов · {Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0)} карточек · {PRACTICE_QUESTIONS.length} вопросов · {KEY_DEFINITIONS.length} терминов</p>
+          <div className="eyebrow"><span className="num">02 /</span> Resource dojo</div>
+          <h1 className="learnScreenTitle">Case prep <em>resources</em></h1>
+          <p className="learnScreenSub">{PM_CHAPTERS.length} lessons · {Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0)} flashcards · {PRACTICE_QUESTIONS.length} questionbank items · {KEY_DEFINITIONS.length} definitions</p>
         </div>
+        <button className="btn btn-primary" onClick={() => setReviewOpen(true)}>
+          AI Review Session <span className="arrow">→</span>
+        </button>
       </div>
 
-      {/* Tab bar */}
       <div className="learnTabBar">
         {LEARN_TABS.map((t) => (
           <button key={t} className={`learnTab${activeTab === t ? ' active' : ''}`} onClick={() => { setActiveTab(t); setSelectedChapter(null); }}>{t}</button>
         ))}
       </div>
 
-      {/* Layout: sidebar + content */}
       <div className="learnLayout">
         <LearnSidebar
           activeTab={activeTab}
@@ -1876,15 +1951,60 @@ const LearningScreen = ({ onBack }) => {
           onSelect={setSelectedChapter}
         />
         <div className="learnMain">
-          {activeTab === 'Уроки' && <LessonsContent chapter={selectedChapter} onSelectChapter={setSelectedChapter} />}
-          {activeTab === 'Flash Cards' && <FlashCardsContent chapter={selectedChapter} />}
-          {activeTab === 'Банк вопросов' && <QuestionBankContent chapter={selectedChapter} />}
-          {activeTab === 'Термины' && <DefinitionsContent />}
+          {activeTab === 'All Resources' && <ResourcesOverview onSelectChapter={setSelectedChapter} onOpenTab={setActiveTab} onOpenReview={() => setReviewOpen(true)} />}
+          {activeTab === 'Lessons' && <LessonsContent chapter={selectedChapter} onSelectChapter={setSelectedChapter} />}
+          {activeTab === 'Notes' && <NotesContent chapter={selectedChapter} onSelectChapter={setSelectedChapter} />}
+          {activeTab === 'Questionbank' && <QuestionBankContent chapter={selectedChapter} />}
+          {activeTab === 'Flashcards' && <FlashCardsContent chapter={selectedChapter} />}
+          {activeTab === 'Key Definitions' && <DefinitionsContent />}
         </div>
       </div>
+      {reviewOpen && <ReviewSessionModal onClose={() => setReviewOpen(false)} />}
     </div>
   );
 };
+
+function ResourcesOverview({ onSelectChapter, onOpenTab, onOpenReview }) {
+  const stats = getLearningStats();
+  const resources = [
+    { tab: 'Lessons', title: 'Lessons', meta: `${stats.chapters} модулей`, text: 'Короткие объяснения, интерактивные проверки и адаптация сложности.' },
+    { tab: 'Notes', title: 'Notes', meta: 'Конспекты по темам', text: 'Определения, примеры, ошибки и аналогии из каждого раздела.' },
+    { tab: 'Questionbank', title: 'Questionbank', meta: `${stats.questions} вопросов`, text: 'Практика по сложности, сохранение вопросов и AI-объяснения.' },
+    { tab: 'Flashcards', title: 'Flashcards', meta: `${stats.cards} карточек`, text: 'Интервальные повторения с оценкой again / hard / good / easy.' },
+    { tab: 'Key Definitions', title: 'Key Definitions', meta: `${stats.definitions} терминов`, text: 'Быстрый поиск по словарю PM и case-интервью.' },
+  ];
+
+  return (
+    <div className="resourcesOverview">
+      <div className="resourcesHero">
+        <div>
+          <span className="resourcesKicker">All Resources</span>
+          <h2>Один кабинет для цикла learn → practice → feedback → review</h2>
+          <p>Выбирай тему, учи теорию, закрепляй карточками, решай вопросы и запускай AI-review по слабым местам.</p>
+        </div>
+        <button className="btn btn-primary" onClick={onOpenReview}>Start AI Review</button>
+      </div>
+      <div className="resourceCards">
+        {resources.map((resource) => (
+          <button key={resource.tab} className="resourceCard" onClick={() => onOpenTab(resource.tab)}>
+            <span>{resource.title}</span>
+            <strong>{resource.meta}</strong>
+            <p>{resource.text}</p>
+          </button>
+        ))}
+      </div>
+      <div className="resourceChapterStrip">
+        {PM_CHAPTERS.slice(0, 8).map((chapter) => (
+          <button key={chapter.id} onClick={() => { onSelectChapter(chapter); onOpenTab('Lessons'); }} style={{ '--col': chapter.color }}>
+            <span>{chapter.icon}</span>
+            <strong>{chapter.number}. {chapter.title}</strong>
+            <small>{chapter.subtopics.length} подтем</small>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /* ── Sidebar — RevisionDojo style chapter tree ── */
 function LearnSidebar({ activeTab, selectedChapter, onSelect }) {
@@ -2133,6 +2253,210 @@ function LessonsContent({ chapter, onSelectChapter }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function NotesContent({ chapter, onSelectChapter }) {
+  const chapters = chapter ? [chapter] : PM_CHAPTERS;
+
+  if (!chapter) {
+    return (
+      <div className="notesHome">
+        <div className="notesHomeHead">
+          <span>Notes</span>
+          <h2>Конспекты по всем темам</h2>
+          <p>Как в RevisionDojo: короткие экспертные блоки, которые можно читать отдельно от уроков и сразу превращать в практику.</p>
+        </div>
+        <div className="notesChapterGrid">
+          {PM_CHAPTERS.map((item) => (
+            <button key={item.id} onClick={() => onSelectChapter(item)} style={{ '--col': item.color }}>
+              <span>{item.icon}</span>
+              <strong>{item.number}. {item.title}</strong>
+              <small>{item.notes.length} заметок · {item.subtopics.length} подтем</small>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="notesContent">
+      {chapters.map((item) => (
+        <section key={item.id} className="notesChapter">
+          <div className="learnChapterViewHeader" style={{ '--ch-color': item.color }}>
+            <span className="learnChapterViewIcon">{item.icon}</span>
+            <div>
+              <h2>{item.number}. {item.title}</h2>
+              <p className="learnChapterViewDesc">{item.description}</p>
+            </div>
+          </div>
+          <div className="learnNotesSection">
+            {item.notes.map((note, i) => (
+              <div key={`${item.id}-${i}`} className={`learnNoteBlock learnNoteBlock--${note.type}`}>
+                <div className="learnNoteBlockLabel">
+                  {{ definition: 'Определение', example: 'Пример', note: 'Заметка', analogy: 'Аналогия' }[note.type]}
+                </div>
+                <h4 className="learnNoteBlockTitle">{note.title}</h4>
+                <p className="learnNoteBlockText">{note.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function ReviewSessionModal({ onClose }) {
+  const [step, setStep] = useState(1);
+  const [subject, setSubject] = useState('product');
+  const [topics, setTopics] = useState([]);
+  const [level, setLevel] = useState('knows_a_bit');
+  const [length, setLength] = useState('quick');
+  const [started, setStarted] = useState(false);
+  const [helper, setHelper] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const subjects = [
+    { id: 'product', title: 'Product Case Track', sub: 'PM interviews, metrics, discovery, strategy' },
+    { id: 'business', title: 'Business Case Track', sub: 'Consulting, market sizing, economics, recommendation' },
+  ];
+  const availableTopics = PM_CHAPTERS.slice(0, 12);
+  const selectedTopics = availableTopics.filter((topic) => topics.includes(topic.id));
+
+  function toggleTopic(id) {
+    setTopics((prev) => {
+      if (prev.includes(id)) return prev.filter((item) => item !== id);
+      if (prev.length >= 3) return prev;
+      return [...prev, id];
+    });
+  }
+
+  async function askForHelp() {
+    setLoading(true);
+    try {
+      const topic = selectedTopics[0] || availableTopics[0];
+      const data = await api.learnSession({
+        chapterId: topic?.id || '',
+        subtopicId: topic?.subtopics?.[0]?.id || '',
+        userLevel: level === 'clueless' ? 'beginner' : level === 'pretty_familiar' ? 'advanced' : 'normal',
+      });
+      setHelper(data.exposition);
+    } catch {
+      setHelper('Подсказка сейчас недоступна. Начни с формулы: цель → структура → данные → вывод → риск.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const sessionPrompt = selectedTopics.length
+    ? `Разбери ${selectedTopics.map((topic) => topic.title).join(', ')} через простой кейсовый пример.`
+    : 'Выбери 1-3 темы для персональной review-сессии.';
+
+  return (
+    <div className="reviewOverlay" role="dialog" aria-modal="true">
+      <div className="reviewModal">
+        <button className="reviewClose" onClick={onClose} aria-label="Close">×</button>
+        {!started ? (
+          <>
+            <div className="reviewStepMeta">Step {step} of 3</div>
+            {step === 1 && (
+              <div className="reviewStep">
+                <h2>Choose your track</h2>
+                <p>Pick the case direction you want to review with AI.</p>
+                <div className="reviewChoiceGrid">
+                  {subjects.map((item) => (
+                    <button key={item.id} className={subject === item.id ? 'active' : ''} onClick={() => setSubject(item.id)}>
+                      <strong>{item.title}</strong>
+                      <small>{item.sub}</small>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {step === 2 && (
+              <div className="reviewStep">
+                <h2>Choose what to review</h2>
+                <p>Select up to 3 topics for a focused session.</p>
+                <div className="reviewTopicList">
+                  {availableTopics.map((topic) => (
+                    <label key={topic.id}>
+                      <input type="checkbox" checked={topics.includes(topic.id)} onChange={() => toggleTopic(topic.id)} />
+                      <span>{topic.icon} {topic.title}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+            {step === 3 && (
+              <div className="reviewStep">
+                <h2>Configure your session</h2>
+                <p>Set how much the AI mentor should assume you already know.</p>
+                <div className="reviewConfig">
+                  {[
+                    ['clueless', 'С нуля', 'Нужно объяснять максимально просто.'],
+                    ['knows_a_bit', 'Знаю немного', 'Есть база, но нужна связная логика.'],
+                    ['pretty_familiar', 'Уверенно', 'Фокус на нюансах и tricky parts.'],
+                  ].map(([id, title, sub]) => (
+                    <button key={id} className={level === id ? 'active' : ''} onClick={() => setLevel(id)}>
+                      <strong>{title}</strong>
+                      <small>{sub}</small>
+                    </button>
+                  ))}
+                </div>
+                <div className="reviewConfig two">
+                  {[
+                    ['quick', 'Quick Review', 'Короткая сессия для повторения.'],
+                    ['deep', 'In-Depth', 'Длиннее, с большим количеством объяснений.'],
+                  ].map(([id, title, sub]) => (
+                    <button key={id} className={length === id ? 'active' : ''} onClick={() => setLength(id)}>
+                      <strong>{title}</strong>
+                      <small>{sub}</small>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="reviewFooter">
+              <button className="btn btn-ghost" onClick={() => step === 1 ? onClose() : setStep((s) => s - 1)}>Back</button>
+              {step < 3 ? (
+                <button className="btn btn-primary" onClick={() => setStep((s) => s + 1)} disabled={step === 2 && topics.length === 0}>Next</button>
+              ) : (
+                <button className="btn btn-primary" onClick={() => setStarted(true)} disabled={topics.length === 0}>Start Review Session</button>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="reviewSession">
+            <div className="reviewSessionHead">
+              <button onClick={() => setStarted(false)}>← Back</button>
+              <span>Progress 1/3 · {length === 'quick' ? 'Quick Review' : 'In-Depth'}</span>
+              <button onClick={onClose}>End Session</button>
+            </div>
+            <div className="reviewChat">
+              <div className="reviewBubble ai">
+                <strong>Case Dojo AI</strong>
+                <p>{sessionPrompt}</p>
+              </div>
+              <div className="reviewBubble user">
+                <p>Начни с простого примера и проверь, где я путаюсь.</p>
+              </div>
+              {helper && (
+                <div className="reviewBubble ai">
+                  <strong>Hint</strong>
+                  <p>{helper}</p>
+                </div>
+              )}
+            </div>
+            <div className="reviewInputRow">
+              <button onClick={askForHelp} disabled={loading}>{loading ? 'Thinking…' : 'Give me a hint'}</button>
+              <input readOnly value="Ask AI mentor for help..." />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -132,6 +132,161 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .btn .arrow { transition: transform .18s ease; }
 .btn:hover .arrow { transform: translateX(4px); }
 
+/* ============================ Dojo resource home ============================ */
+.dojoHome { display: grid; gap: 28px; }
+.dojoHero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 28px;
+  align-items: stretch;
+}
+.dojoHeroTitle {
+  max-width: 820px;
+  margin: 0 0 18px;
+  font-family: var(--serif);
+  font-size: clamp(44px, 6vw, 82px);
+  line-height: 0.98;
+  font-weight: 350;
+  letter-spacing: -0.03em;
+}
+.dojoHeroSub {
+  max-width: 760px;
+  margin: 0;
+  color: var(--paper-dim);
+  font-size: 17px;
+}
+.dojoHeroPanel {
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-md);
+  padding: 24px;
+  background:
+    linear-gradient(140deg, rgba(184,255,92,0.12), rgba(59,130,246,0.08)),
+    rgba(255,255,255,0.035);
+  display: grid;
+  align-content: center;
+  gap: 12px;
+}
+.dojoHeroPanel span,
+.dojoSectionHead span,
+.dojoCardHead span,
+.dojoActionCard span,
+.resourcesKicker,
+.notesHomeHead span {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mint);
+}
+.dojoHeroPanel strong { display: block; font-size: 30px; line-height: 1.1; }
+.dojoHeroPanel p { margin: 0 0 8px; color: var(--paper-dim); }
+.dojoResourceTabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.dojoResourceTabs::-webkit-scrollbar { display: none; }
+.dojoResourceTabs button {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.035);
+  color: var(--paper-dim);
+  font-size: 13px;
+}
+.dojoResourceTabs button:hover {
+  color: var(--paper);
+  border-color: var(--hair-strong);
+  background: rgba(255,255,255,0.065);
+}
+.dojoTrustBanner {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: rgba(96,165,250,0.11);
+  border: 1px solid rgba(96,165,250,0.22);
+}
+.dojoTrustIcon {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #60a5fa;
+  color: var(--ink);
+  font-weight: 700;
+}
+.dojoTrustBanner p { margin: 0; color: var(--paper-dim); font-size: 13px; }
+.dojoGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap: 20px;
+}
+.dojoPrimaryCard,
+.dojoActionCard {
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  background: rgba(255,255,255,0.035);
+}
+.dojoPrimaryCard { padding: 22px; }
+.dojoCardHead,
+.dojoSectionHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.dojoCardHead button {
+  color: var(--mint);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.dojoPrimaryCard h2 { margin-top: 14px; }
+.dojoPrimaryCard > p,
+.dojoSectionHead p { color: var(--paper-dim); margin: 0 0 18px; max-width: 520px; }
+.dojoModuleList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.dojoModuleList button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 74px;
+  padding: 12px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  background: rgba(255,255,255,0.03);
+  text-align: left;
+}
+.dojoModuleList button:hover { border-color: var(--col); background: rgba(255,255,255,0.055); }
+.dojoModuleList button > span { font-size: 22px; }
+.dojoModuleList strong { display: block; font-size: 13px; line-height: 1.25; }
+.dojoModuleList small { color: var(--paper-faint); }
+.dojoSideStack { display: grid; gap: 10px; }
+.dojoActionCard {
+  padding: 18px;
+  text-align: left;
+  display: grid;
+  gap: 6px;
+}
+.dojoActionCard:hover {
+  border-color: var(--hair-strong);
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.055);
+}
+.dojoActionCard strong { font-size: 18px; }
+.dojoActionCard small { color: var(--paper-dim); line-height: 1.45; }
+.dojoTracks { display: grid; gap: 12px; }
+
 /* ============================ Track cards (landing) ============================ */
 .tracks {
   display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
@@ -2196,7 +2351,13 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
 /* Screen layout */
 .learnScreen { padding-bottom: 80px; }
-.learnScreenHeader { margin-bottom: 32px; }
+.learnScreenHeader {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 18px;
+  align-items: start;
+  margin-bottom: 32px;
+}
 .learnScreenTitle { font-family: var(--serif); font-size: clamp(28px, 4vw, 44px); font-weight: 400; line-height: 1.15; margin: 8px 0 4px; }
 .learnScreenTitle em { color: var(--mint); font-style: italic; }
 .learnScreenSub { color: var(--paper-dim); font-size: 0.87rem; margin: 0; }
@@ -2239,6 +2400,247 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
 /* Main content area */
 .learnMain { min-height: 600px; }
+
+.resourcesOverview,
+.notesHome,
+.notesContent {
+  display: grid;
+  gap: 18px;
+}
+.resourcesHero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, rgba(184,255,92,0.08), rgba(96,165,250,0.07));
+}
+.resourcesHero h2,
+.notesHomeHead h2 {
+  margin: 8px 0;
+  font-size: 30px;
+}
+.resourcesHero p,
+.notesHomeHead p {
+  margin: 0;
+  color: var(--paper-dim);
+  max-width: 620px;
+}
+.resourceCards {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+.resourceCard {
+  min-height: 150px;
+  padding: 15px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  background: rgba(255,255,255,0.035);
+  text-align: left;
+}
+.resourceCard:hover {
+  border-color: var(--hair-strong);
+  background: rgba(255,255,255,0.06);
+}
+.resourceCard span {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--mint);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.resourceCard strong { display: block; font-size: 17px; line-height: 1.25; }
+.resourceCard p { margin: 10px 0 0; color: var(--paper-dim); font-size: 13px; line-height: 1.45; }
+.resourceChapterStrip,
+.notesChapterGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.resourceChapterStrip button,
+.notesChapterGrid button {
+  min-height: 94px;
+  padding: 14px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  background: rgba(255,255,255,0.03);
+  text-align: left;
+}
+.resourceChapterStrip button:hover,
+.notesChapterGrid button:hover {
+  border-color: var(--col);
+  background: rgba(255,255,255,0.055);
+}
+.resourceChapterStrip span,
+.notesChapterGrid span { display: block; font-size: 22px; margin-bottom: 8px; }
+.resourceChapterStrip strong,
+.notesChapterGrid strong { display: block; font-size: 13px; line-height: 1.25; }
+.resourceChapterStrip small,
+.notesChapterGrid small { color: var(--paper-faint); }
+.notesHomeHead {
+  padding: 22px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  background: rgba(255,255,255,0.035);
+}
+.notesChapter {
+  display: grid;
+  gap: 14px;
+}
+
+.reviewOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0,0,0,0.58);
+  backdrop-filter: blur(8px);
+}
+.reviewModal {
+  position: relative;
+  width: min(920px, 100%);
+  max-height: min(760px, calc(100vh - 48px));
+  overflow: auto;
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-md);
+  background: #f8f7f3;
+  color: #161814;
+  box-shadow: 0 24px 90px rgba(0,0,0,0.42);
+}
+.reviewClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #3a3f38;
+  font-size: 24px;
+}
+.reviewClose:hover { background: rgba(0,0,0,0.06); }
+.reviewStepMeta {
+  padding: 28px 32px 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+.reviewStep { padding: 12px 32px 24px; }
+.reviewStep h2 {
+  color: #161814;
+  font-family: var(--sans);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0;
+  margin-bottom: 6px;
+}
+.reviewStep p { margin-top: 0; color: #6b7280; }
+.reviewChoiceGrid,
+.reviewConfig {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+.reviewChoiceGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.reviewConfig.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.reviewChoiceGrid button,
+.reviewConfig button {
+  min-height: 94px;
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  text-align: left;
+  color: #161814;
+}
+.reviewChoiceGrid button.active,
+.reviewConfig button.active {
+  border-color: #161814;
+  box-shadow: inset 0 0 0 1px #161814;
+}
+.reviewChoiceGrid strong,
+.reviewConfig strong { display: block; font-size: 16px; }
+.reviewChoiceGrid small,
+.reviewConfig small { display: block; margin-top: 6px; color: #6b7280; line-height: 1.35; }
+.reviewTopicList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  max-height: 360px;
+  overflow: auto;
+  padding-right: 8px;
+}
+.reviewTopicList label {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+.reviewTopicList input { accent-color: #0ea5e9; }
+.reviewFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 32px;
+  border-top: 1px solid #e5e7eb;
+}
+.reviewModal .btn-ghost {
+  color: #161814;
+  border-color: #e5e7eb;
+}
+.reviewSession { padding: 24px; }
+.reviewSessionHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0 18px;
+  color: #6b7280;
+  font-size: 13px;
+}
+.reviewSessionHead button { color: #b91c1c; }
+.reviewChat {
+  min-height: 360px;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 20px 0;
+}
+.reviewBubble {
+  max-width: 640px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  line-height: 1.5;
+}
+.reviewBubble.ai { background: #fff; border: 1px solid #e5e7eb; }
+.reviewBubble.user { margin-left: auto; background: #eef2ff; }
+.reviewBubble p { margin: 6px 0 0; white-space: pre-wrap; }
+.reviewInputRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  position: sticky;
+  bottom: 0;
+  padding-top: 12px;
+  background: #f8f7f3;
+}
+.reviewInputRow button,
+.reviewInputRow input {
+  min-height: 44px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #fff;
+  color: #161814;
+  padding: 0 16px;
+}
+.reviewInputRow button { background: #161814; color: #fff; }
 
 /* Placeholder */
 .learnPlaceholder { text-align: center; padding: 60px 20px; }
@@ -2477,6 +2879,43 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
 /* Responsive */
 @media (max-width: 700px) {
+  .dojoHero,
+  .dojoGrid,
+  .dojoCardHead,
+  .dojoSectionHead {
+    grid-template-columns: 1fr;
+  }
+  .dojoHeroPanel { padding: 18px; }
+  .dojoTrustBanner {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+  .dojoModuleList,
+  .resourceCards,
+  .resourceChapterStrip,
+  .notesChapterGrid,
+  .reviewChoiceGrid,
+  .reviewConfig.two,
+  .reviewTopicList {
+    grid-template-columns: 1fr;
+  }
+  .resourcesHero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .reviewOverlay { padding: 10px; }
+  .reviewStep,
+  .reviewStepMeta,
+  .reviewFooter,
+  .reviewSession {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .reviewFooter { flex-direction: column; }
+  .reviewInputRow { grid-template-columns: 1fr; }
+  .learnScreenHeader {
+    grid-template-columns: 1fr;
+  }
   .learnLayout { grid-template-columns: 1fr; }
   .learnSidebar { position: static; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
   .learnSidebarTitle { display: none; }
