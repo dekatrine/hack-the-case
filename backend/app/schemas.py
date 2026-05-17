@@ -74,3 +74,27 @@ class EvaluateRequest(BaseModel):
 
 class EvaluateResponse(BaseModel):
     evaluation: str
+
+
+class LearnExplainRequest(BaseModel):
+    topic: str
+    subtopic: str
+    question: str = ""
+    wrongAnswer: str = ""
+    correctAnswer: str = ""
+    difficulty: str = "normal"  # 'simplified' | 'normal' | 'advanced'
+
+
+class LearnExplainResponse(BaseModel):
+    explanation: str
+    tip: str
+
+
+class LearnSessionRequest(BaseModel):
+    chapterId: str
+    subtopicId: str
+    userLevel: str = "normal"  # 'beginner' | 'normal' | 'advanced'
+
+
+class LearnSessionResponse(BaseModel):
+    exposition: str

@@ -26,6 +26,10 @@ from .schemas import (
     GenerateCaseResponse,
     GenerateInterviewRequest,
     GenerateInterviewResponse,
+    LearnExplainRequest,
+    LearnExplainResponse,
+    LearnSessionRequest,
+    LearnSessionResponse,
 )
 
 
@@ -223,6 +227,52 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
     try:
         evaluation = call_yandex_gpt(RUBRIC_SYSTEM, prompt, temperature=0.3)
         return EvaluateResponse(evaluation=evaluation)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post("/api/learn/explain", response_model=LearnExplainResponse)
+def learn_explain(payload: LearnExplainRequest) -> LearnExplainResponse:
+    difficulty_label = {"simplified": "очень простыми словами, как будто объясняешь школьнику", "normal": "чётко и понятно", "advanced": "с глубокими деталями и нюансами"}.get(payload.difficulty, "чётко и понятно")
+    prompt = f"""Объясни концепцию продуктового менеджмента.
+
+Тема: {payload.topic}
+Подтема: {payload.subtopic}
+Уровень объяснения: {difficulty_label}
+"""
+    if payload.question:
+        prompt += f"\nВопрос, на котором пользователь ошибся: {payload.question}"
+    if payload.wrongAnswer:
+        prompt += f"\nНеправильный ответ пользователя: {payload.wrongAnswer}"
+    if payload.correctAnswer:
+        prompt += f"\nПравильный ответ: {payload.correctAnswer}"
+
+    prompt += "\n\nДай объяснение (3-5 предложений) и один практический совет (tip). Отвечай строго в формате JSON: {\"explanation\": \"...\", \"tip\": \"...\"}"
+
+    system = "Ты опытный PM-ментор. Объясняй ясно, с примерами. Давай практические советы. Отвечай только валидным JSON без markdown-блоков."
+    try:
+        raw = call_yandex_gpt(system, prompt, temperature=0.4, max_tokens=600)
+        import json as _json
+        parsed = _json.loads(raw)
+        return LearnExplainResponse(explanation=parsed.get("explanation", raw), tip=parsed.get("tip", ""))
+    except Exception:
+        return LearnExplainResponse(explanation=raw, tip="")
+
+
+@app.post("/api/learn/session", response_model=LearnSessionResponse)
+def learn_session(payload: LearnSessionRequest) -> LearnSessionResponse:
+    level_label = {"beginner": "максимально просто и доступно", "normal": "понятно с примерами", "advanced": "подробно с нюансами"}.get(payload.userLevel, "понятно с примерами")
+    prompt = f"""Напиши обучающее объяснение для студента, изучающего продуктовый менеджмент.
+
+Раздел курса: {payload.chapterId}
+Подтема: {payload.subtopicId}
+Стиль: {level_label}
+
+Напиши 2-3 абзаца, объясняющих эту тему. Включи конкретный пример. Не используй markdown, только чистый текст.
+"""
+    try:
+        exposition = call_yandex_gpt("Ты опытный PM-преподаватель. Объясняй ясно, с примерами из реального мира.", prompt, temperature=0.5, max_tokens=800)
+        return LearnSessionResponse(exposition=exposition)
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 

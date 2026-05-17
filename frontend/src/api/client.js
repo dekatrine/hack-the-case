@@ -44,3 +44,17 @@ export function evaluateCase(payload) {
     body: JSON.stringify(payload),
   });
 }
+
+export function learnExplain(payload) {
+  return request('/api/learn/explain', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function learnSession(payload) {
+  return request('/api/learn/session', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}

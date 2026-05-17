@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { askCoach, evaluateCase, fetchConfig, generateCase } from './api/client';
+import { askCoach, evaluateCase, fetchConfig, generateCase, learnExplain, learnSession } from './api/client';
 import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from './quizData';
+import { FLASHCARDS, KEY_DEFINITIONS, LEARN_TOGETHER_CONTENT, PM_CHAPTERS, PRACTICE_QUESTIONS } from './courseData';
 import './styles.css';
 
 const fallbackConfig = {
@@ -125,6 +126,7 @@ function App() {
           <button className={page === 'start' ? 'active' : ''} onClick={() => setPage('start')}>Кейс</button>
           <button className={page === 'solve' ? 'active' : ''} onClick={() => setPage('solve')} disabled={!caseText}>Решение</button>
           <button className={page === 'evaluate' ? 'active' : ''} onClick={() => setPage('evaluate')} disabled={!caseText}>Оценка</button>
+          <button className={page === 'learn' ? 'active' : ''} onClick={() => setPage('learn')}>Учебные материалы</button>
           <button className={page === 'quiz' ? 'active' : ''} onClick={() => { setPage('quiz'); setQuizCategory(null); }}>Практика</button>
         </nav>
       </header>
@@ -188,6 +190,8 @@ function App() {
           onBack={() => setQuizCategory(null)}
         />
       )}
+
+      {page === 'learn' && <LearningPage />}
     </main>
   );
 }
@@ -803,6 +807,877 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+/* ═══════════════════════════════════════════════
+   LEARNING MATERIALS PAGE — PRD Implementation
+   ═══════════════════════════════════════════════ */
+
+const LEARN_TABS = [
+  { id: 'all', label: 'Все ресурсы', icon: '⊞' },
+  { id: 'lessons', label: 'Уроки', icon: '📖' },
+  { id: 'notes', label: 'Конспекты', icon: '📝' },
+  { id: 'questionbank', label: 'Банк вопросов', icon: '❓' },
+  { id: 'flashcards', label: 'Flash Cards', icon: '🃏' },
+  { id: 'definitions', label: 'Ключевые термины', icon: 'Aa' },
+  { id: 'together', label: 'Обучаемся вместе', icon: '🤝' },
+];
+
+function LearningPage() {
+  const [activeTab, setActiveTab] = useState('all');
+
+  return (
+    <div className="learnPage">
+      <div className="learnTabBar">
+        {LEARN_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            className={`learnTab${activeTab === tab.id ? ' active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            <span className="learnTabIcon">{tab.icon}</span>
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="learnContent">
+        {activeTab === 'all' && <AllResourcesTab onTabChange={setActiveTab} />}
+        {activeTab === 'lessons' && <LessonsTab />}
+        {activeTab === 'notes' && <NotesTab />}
+        {activeTab === 'questionbank' && <QuestionBankTab />}
+        {activeTab === 'flashcards' && <FlashCardsTab />}
+        {activeTab === 'definitions' && <KeyDefinitionsTab />}
+        {activeTab === 'together' && <LearnTogetherTab />}
+      </div>
+    </div>
+  );
+}
+
+/* ── All Resources ── */
+function AllResourcesTab({ onTabChange }) {
+  return (
+    <div className="allResourcesGrid">
+      <h2 className="learnSectionTitle">Полный курс по продуктовому менеджменту</h2>
+      <p className="learnSectionSub">8 разделов · 45 подтем · 50+ карточек · 20 вопросов · 35 терминов</p>
+      <div className="resourceCards">
+        {[
+          { tab: 'lessons', icon: '📖', title: 'Уроки', desc: 'Структурированные учебные материалы по 8 разделам PM-курса', count: `${PM_CHAPTERS.length} разделов` },
+          { tab: 'notes', icon: '📝', title: 'Конспекты', desc: 'Краткие конспекты с ключевыми концепциями и примерами', count: `${PM_CHAPTERS.reduce((s, c) => s + c.notes.length, 0)} блоков` },
+          { tab: 'questionbank', icon: '❓', title: 'Банк вопросов', desc: 'Вопросы с вариантами ответов для самопроверки', count: `${PRACTICE_QUESTIONS.length} вопросов` },
+          { tab: 'flashcards', icon: '🃏', title: 'Flash Cards', desc: 'Карточки с интервальными повторениями по системе Anki', count: `${Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0)} карточек` },
+          { tab: 'definitions', icon: 'Aa', title: 'Ключевые термины', desc: 'Глоссарий PM-терминов с определениями и примерами', count: `${KEY_DEFINITIONS.length} терминов` },
+          { tab: 'together', icon: '🤝', title: 'Обучаемся вместе', desc: 'Адаптивные учебные сессии с AI-ментором', count: 'AI-powered' },
+        ].map((item) => (
+          <button key={item.tab} className="resourceCard" onClick={() => onTabChange(item.tab)}>
+            <span className="resourceCardIcon">{item.icon}</span>
+            <div>
+              <div className="resourceCardTitle">{item.title}</div>
+              <div className="resourceCardDesc">{item.desc}</div>
+              <div className="resourceCardCount">{item.count}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+      <h3 className="learnSectionTitle" style={{ marginTop: '2rem' }}>Содержание курса</h3>
+      <div className="chapterList">
+        {PM_CHAPTERS.map((ch) => (
+          <div key={ch.id} className="chapterRow">
+            <span className="chapterRowIcon" style={{ background: ch.color + '20', color: ch.color }}>{ch.icon}</span>
+            <div>
+              <div className="chapterRowTitle">{ch.number}. {ch.title}</div>
+              <div className="chapterRowSub">{ch.subtopics.length} подтем · {ch.subtopics.map((s) => s.title).join(', ')}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Lessons Tab ── */
+function LessonsTab() {
+  const [selectedChapter, setSelectedChapter] = useState(null);
+  const [selectedSubtopic, setSelectedSubtopic] = useState(null);
+
+  if (!selectedChapter) {
+    return (
+      <div className="lessonsView">
+        <h2 className="learnSectionTitle">Уроки</h2>
+        <p className="learnSectionSub">Выбери раздел для изучения</p>
+        {PM_CHAPTERS.map((ch) => (
+          <div key={ch.id} className="lessonChapter">
+            <button className="lessonChapterHead" onClick={() => setSelectedChapter(ch)}>
+              <span className="lessonChapterIcon" style={{ background: ch.color + '20', color: ch.color }}>{ch.icon}</span>
+              <div>
+                <div className="lessonChapterTitle">{ch.number}. {ch.title}</div>
+                <div className="lessonChapterDesc">{ch.description}</div>
+              </div>
+              <span className="lessonChapterCount">{ch.subtopics.length} подтем</span>
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!selectedSubtopic) {
+    return (
+      <div className="lessonsView">
+        <button className="learnBack" onClick={() => setSelectedChapter(null)}>← Все разделы</button>
+        <div className="lessonChapterHeader">
+          <span className="lessonChapterBigIcon" style={{ background: selectedChapter.color + '20', color: selectedChapter.color }}>{selectedChapter.icon}</span>
+          <div>
+            <h2>{selectedChapter.number}. {selectedChapter.title}</h2>
+            <p className="muted">{selectedChapter.description}</p>
+          </div>
+        </div>
+        <div className="subtopicList">
+          {selectedChapter.subtopics.map((sub, idx) => (
+            <button key={sub.id} className="subtopicRow" onClick={() => setSelectedSubtopic(sub)}>
+              <span className="subtopicNum">{idx + 1}</span>
+              <div>
+                <div className="subtopicTitle">{sub.title}</div>
+                <div className="subtopicDuration">⏱ {sub.duration}</div>
+              </div>
+              <span className="subtopicArrow">›</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <LessonViewer
+      chapter={selectedChapter}
+      subtopic={selectedSubtopic}
+      onBack={() => setSelectedSubtopic(null)}
+    />
+  );
+}
+
+function LessonViewer({ chapter, subtopic, onBack }) {
+  const chapterFlashcards = (FLASHCARDS[chapter.id] || []).slice(0, 3);
+  const chapterQuestions = PRACTICE_QUESTIONS.filter((q) => q.chapter === chapter.id).slice(0, 2);
+  const [showFlashcard, setShowFlashcard] = useState(false);
+  const [fcIndex, setFcIndex] = useState(0);
+  const [fcFlipped, setFcFlipped] = useState(false);
+  const [answeredQ, setAnsweredQ] = useState({});
+
+  return (
+    <div className="lessonViewer">
+      <button className="learnBack" onClick={onBack}>← {chapter.title}</button>
+      <div className="lessonViewerHeader">
+        <h2>{subtopic.title}</h2>
+        <span className="subtopicDuration">⏱ {subtopic.duration}</span>
+      </div>
+
+      {/* Notes from chapter */}
+      {chapter.notes.map((note, idx) => (
+        <div key={idx} className={`noteBlock noteBlock--${note.type}`}>
+          <div className="noteBlockLabel">
+            {{ definition: '📘 Определение', example: '💡 Пример', note: '📌 Заметка', analogy: '🔗 Аналогия' }[note.type] || note.type}
+          </div>
+          <h4 className="noteBlockTitle">{note.title}</h4>
+          <p className="noteBlockText">{note.text}</p>
+        </div>
+      ))}
+
+      {/* Inline Flashcards */}
+      {chapterFlashcards.length > 0 && (
+        <div className="lessonSection">
+          <div className="lessonSectionHead">
+            <span>🃏 Flash Cards</span>
+            <button className="lessonSectionToggle" onClick={() => { setShowFlashcard(!showFlashcard); setFcIndex(0); setFcFlipped(false); }}>
+              {showFlashcard ? 'Скрыть' : 'Показать карточки'}
+            </button>
+          </div>
+          {showFlashcard && chapterFlashcards[fcIndex] && (
+            <div className="inlineFcWrapper">
+              <div className={`fcCard${fcFlipped ? ' flipped' : ''}`} onClick={() => setFcFlipped(!fcFlipped)}>
+                <div className="fcFront"><p>{chapterFlashcards[fcIndex].front}</p><span className="fcHint">Нажми чтобы перевернуть</span></div>
+                <div className="fcBack"><p>{chapterFlashcards[fcIndex].back}</p></div>
+              </div>
+              <div className="fcNav">
+                <button onClick={() => { setFcIndex((i) => Math.max(0, i - 1)); setFcFlipped(false); }} disabled={fcIndex === 0}>← Назад</button>
+                <span>{fcIndex + 1}/{chapterFlashcards.length}</span>
+                <button onClick={() => { setFcIndex((i) => Math.min(chapterFlashcards.length - 1, i + 1)); setFcFlipped(false); }} disabled={fcIndex === chapterFlashcards.length - 1}>Следующая →</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Mini quiz */}
+      {chapterQuestions.length > 0 && (
+        <div className="lessonSection">
+          <div className="lessonSectionHead"><span>✅ Проверь себя</span></div>
+          {chapterQuestions.map((q) => (
+            <MiniQuizCard key={q.id} question={q} answered={answeredQ[q.id]} onAnswer={(idx) => setAnsweredQ((prev) => ({ ...prev, [q.id]: idx }))} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MiniQuizCard({ question, answered, onAnswer }) {
+  return (
+    <div className="miniQuizCard">
+      <p className="miniQuizQ">{question.q}</p>
+      <div className="miniQuizOptions">
+        {question.options.map((opt, i) => {
+          let cls = 'miniQuizOpt';
+          if (answered !== undefined) {
+            if (i === question.answer) cls += ' correct';
+            else if (i === answered) cls += ' wrong';
+            else cls += ' dim';
+          }
+          return (
+            <button key={i} className={cls} onClick={() => onAnswer(i)} disabled={answered !== undefined}>
+              <span className="miniQuizLetter">{String.fromCharCode(65 + i)}</span>
+              <span>{opt}</span>
+            </button>
+          );
+        })}
+      </div>
+      {answered !== undefined && (
+        <div className={`miniQuizFeedback ${answered === question.answer ? 'correct' : 'wrong'}`}>
+          <strong>{answered === question.answer ? '✓ Правильно!' : `✗ Правильный ответ: ${question.options[question.answer]}`}</strong>
+          <p>{question.explanation}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Notes Tab ── */
+function NotesTab() {
+  const [selectedChapter, setSelectedChapter] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filtered = searchQuery
+    ? PM_CHAPTERS.filter((ch) =>
+        ch.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ch.notes.some((n) => n.text.toLowerCase().includes(searchQuery.toLowerCase()) || n.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : PM_CHAPTERS;
+
+  if (selectedChapter) {
+    return (
+      <div className="notesView">
+        <button className="learnBack" onClick={() => setSelectedChapter(null)}>← Все конспекты</button>
+        <div className="notesHeader">
+          <span className="lessonChapterBigIcon" style={{ background: selectedChapter.color + '20', color: selectedChapter.color }}>{selectedChapter.icon}</span>
+          <h2>{selectedChapter.number}. {selectedChapter.title}</h2>
+        </div>
+        {selectedChapter.notes.map((note, idx) => (
+          <div key={idx} className={`noteBlock noteBlock--${note.type}`}>
+            <div className="noteBlockLabel">
+              {{ definition: '📘 Определение', example: '💡 Пример', note: '📌 Заметка', analogy: '🔗 Аналогия' }[note.type] || note.type}
+            </div>
+            <h4 className="noteBlockTitle">{note.title}</h4>
+            <p className="noteBlockText">{note.text}</p>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="notesView">
+      <h2 className="learnSectionTitle">Конспекты</h2>
+      <input
+        className="learnSearch"
+        placeholder="Поиск по конспектам..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+      {filtered.map((ch) => (
+        <button key={ch.id} className="notesChapterRow" onClick={() => setSelectedChapter(ch)}>
+          <span className="lessonChapterIcon" style={{ background: ch.color + '20', color: ch.color }}>{ch.icon}</span>
+          <div>
+            <div className="lessonChapterTitle">{ch.number}. {ch.title}</div>
+            <div className="lessonChapterDesc">{ch.notes.length} блоков · {ch.subtopics.length} подтем</div>
+          </div>
+          <span className="subtopicArrow">›</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ── Question Bank Tab ── */
+function QuestionBankTab() {
+  const [filters, setFilters] = useState({ chapter: 'all', difficulty: 'all', type: 'all' });
+  const [answered, setAnswered] = useState({});
+  const [saved, setSaved] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('hc_saved_questions') || '[]')); } catch { return new Set(); }
+  });
+  const [aiExplanation, setAiExplanation] = useState({});
+  const [aiLoading, setAiLoading] = useState({});
+  const [expandedQ, setExpandedQ] = useState(null);
+
+  const questions = PRACTICE_QUESTIONS.filter((q) => {
+    if (filters.chapter !== 'all' && q.chapter !== filters.chapter) return false;
+    if (filters.difficulty !== 'all' && q.difficulty !== filters.difficulty) return false;
+    if (filters.type !== 'all' && q.type !== filters.type) return false;
+    return true;
+  });
+
+  function toggleSave(id) {
+    setSaved((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      localStorage.setItem('hc_saved_questions', JSON.stringify([...next]));
+      return next;
+    });
+  }
+
+  async function fetchAiExplanation(q) {
+    if (aiExplanation[q.id]) return;
+    setAiLoading((prev) => ({ ...prev, [q.id]: true }));
+    try {
+      const chapterObj = PM_CHAPTERS.find((c) => c.id === q.chapter);
+      const data = await learnExplain({
+        topic: chapterObj?.title || q.chapter,
+        subtopic: q.subtopic || '',
+        question: q.q,
+        wrongAnswer: q.options[answered[q.id]] || '',
+        correctAnswer: q.options[q.answer],
+        difficulty: 'normal',
+      });
+      setAiExplanation((prev) => ({ ...prev, [q.id]: data }));
+    } catch {
+      setAiExplanation((prev) => ({ ...prev, [q.id]: { explanation: 'Не удалось загрузить объяснение.', tip: '' } }));
+    } finally {
+      setAiLoading((prev) => ({ ...prev, [q.id]: false }));
+    }
+  }
+
+  return (
+    <div className="questionBankView">
+      <h2 className="learnSectionTitle">Банк вопросов</h2>
+
+      {/* Filters */}
+      <div className="qbFilters">
+        <select value={filters.chapter} onChange={(e) => setFilters((f) => ({ ...f, chapter: e.target.value }))}>
+          <option value="all">Все разделы</option>
+          {PM_CHAPTERS.map((ch) => <option key={ch.id} value={ch.id}>{ch.icon} {ch.title}</option>)}
+        </select>
+        <select value={filters.difficulty} onChange={(e) => setFilters((f) => ({ ...f, difficulty: e.target.value }))}>
+          <option value="all">Любая сложность</option>
+          <option value="easy">Лёгкие</option>
+          <option value="medium">Средние</option>
+          <option value="hard">Сложные</option>
+        </select>
+        <select value={filters.type} onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value }))}>
+          <option value="all">Все типы</option>
+          <option value="concept">Концепция</option>
+          <option value="scenario">Сценарий</option>
+          <option value="calculation">Расчёт</option>
+        </select>
+        <span className="qbCount">{questions.length} вопросов</span>
+      </div>
+
+      {/* Questions */}
+      {questions.map((q) => {
+        const chapterObj = PM_CHAPTERS.find((c) => c.id === q.chapter);
+        const isAnswered = answered[q.id] !== undefined;
+        const isCorrect = answered[q.id] === q.answer;
+        const isSaved = saved.has(q.id);
+        const isExpanded = expandedQ === q.id;
+        const ai = aiExplanation[q.id];
+
+        return (
+          <div key={q.id} className={`qbCard${isAnswered ? (isCorrect ? ' correct' : ' wrong') : ''}`}>
+            <div className="qbCardHead">
+              <div className="qbCardMeta">
+                <span className="qbCardChapter" style={{ background: chapterObj?.color + '20', color: chapterObj?.color }}>{chapterObj?.icon} {chapterObj?.title}</span>
+                <span className={`qbCardDiff qbCardDiff--${q.difficulty}`}>{q.difficulty === 'easy' ? 'Лёгкий' : q.difficulty === 'medium' ? 'Средний' : 'Сложный'}</span>
+              </div>
+              <div className="qbCardActions">
+                {isAnswered && <span className="qbCardStatus">{isCorrect ? '✓ Решено' : '✗ Ошибка'}</span>}
+                <button className={`qbActionBtn${isSaved ? ' saved' : ''}`} title={isSaved ? 'Убрать из сохранённых' : 'Сохранить'} onClick={() => toggleSave(q.id)}>
+                  {isSaved ? '🔖' : '📄'}
+                </button>
+                <button className="qbActionBtn" title="Развернуть" onClick={() => setExpandedQ(isExpanded ? null : q.id)}>
+                  {isExpanded ? '⊡' : '⊠'}
+                </button>
+              </div>
+            </div>
+
+            <p className="qbQuestion">{q.q}</p>
+
+            {isExpanded && (
+              <>
+                <div className="qbOptions">
+                  {q.options.map((opt, i) => {
+                    let cls = 'qbOption';
+                    if (isAnswered) {
+                      if (i === q.answer) cls += ' correct';
+                      else if (i === answered[q.id]) cls += ' wrong';
+                      else cls += ' dim';
+                    }
+                    return (
+                      <button key={i} className={cls} onClick={() => !isAnswered && setAnswered((prev) => ({ ...prev, [q.id]: i }))} disabled={isAnswered}>
+                        <span className="qbOptionLetter">{String.fromCharCode(65 + i)}</span>
+                        <span>{opt}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {isAnswered && (
+                  <div className={`qbFeedback${isCorrect ? ' correct' : ' wrong'}`}>
+                    <strong>{isCorrect ? '✓ Правильно!' : `✗ Правильный ответ: ${q.options[q.answer]}`}</strong>
+                    <p>{q.explanation}</p>
+                    {!isCorrect && !ai && (
+                      <button className="qbAiBtn" onClick={() => fetchAiExplanation(q)} disabled={aiLoading[q.id]}>
+                        {aiLoading[q.id] ? 'Загружаю объяснение...' : '🤖 Объяснить подробнее'}
+                      </button>
+                    )}
+                    {ai && (
+                      <div className="qbAiExplain">
+                        <div className="qbAiExplainHead">🤖 AI-объяснение</div>
+                        <p>{ai.explanation}</p>
+                        {ai.tip && <div className="qbAiTip">💡 <strong>Совет:</strong> {ai.tip}</div>}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
+            {!isExpanded && !isAnswered && (
+              <button className="qbShowBtn" onClick={() => setExpandedQ(q.id)}>Открыть вопрос</button>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Flash Cards Tab ── */
+
+const SRS_INTERVALS = { again: 10 / (60 * 24), hard: 45 / (60 * 24), good: 1, easy: 4 };
+
+function loadFcProgress() {
+  try { return JSON.parse(localStorage.getItem('hc_fc_progress') || '{}'); } catch { return {}; }
+}
+
+function saveFcProgress(progress) {
+  localStorage.setItem('hc_fc_progress', JSON.stringify(progress));
+}
+
+function FlashCardsTab() {
+  const [selectedChapter, setSelectedChapter] = useState(null);
+  const [cardIndex, setCardIndex] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [progress, setProgress] = useState(loadFcProgress);
+  const [sessionDone, setSessionDone] = useState(false);
+
+  const cards = selectedChapter ? (FLASHCARDS[selectedChapter.id] || []) : [];
+
+  // Calculate total stats
+  const totalCards = Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0);
+  const reviewedCards = Object.keys(progress).length;
+  const confidence = totalCards > 0 ? Math.round((reviewedCards / totalCards) * 100) : 0;
+
+  useEffect(() => {
+    setCardIndex(0);
+    setFlipped(false);
+    setSessionDone(false);
+  }, [selectedChapter]);
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.code === 'Space' && selectedChapter) { e.preventDefault(); setFlipped((f) => !f); }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedChapter]);
+
+  function rateCard(rating) {
+    const card = cards[cardIndex];
+    const nextInterval = SRS_INTERVALS[rating];
+    const nextReview = Date.now() + nextInterval * 24 * 60 * 60 * 1000;
+    const nextProgress = { ...progress, [card.id]: { rating, nextReview, reviewedAt: Date.now() } };
+    setProgress(nextProgress);
+    saveFcProgress(nextProgress);
+
+    if (cardIndex + 1 >= cards.length) {
+      setSessionDone(true);
+    } else {
+      setCardIndex((i) => i + 1);
+      setFlipped(false);
+    }
+  }
+
+  if (!selectedChapter) {
+    return (
+      <div className="fcView">
+        <h2 className="learnSectionTitle">Flash Cards</h2>
+        <div className="fcProgressOverall">
+          <div className="fcProgressRing">
+            <svg viewBox="0 0 60 60">
+              <circle cx="30" cy="30" r="26" fill="none" stroke="#e5e7eb" strokeWidth="4" />
+              <circle cx="30" cy="30" r="26" fill="none" stroke="#6366f1" strokeWidth="4"
+                strokeDasharray={`${2 * Math.PI * 26}`}
+                strokeDashoffset={`${2 * Math.PI * 26 * (1 - confidence / 100)}`}
+                strokeLinecap="round" transform="rotate(-90 30 30)" />
+            </svg>
+            <span className="fcProgressPct">{confidence}%</span>
+          </div>
+          <div>
+            <div className="fcProgressLabel">Spaced Repetition Progress</div>
+            <div className="fcProgressSub">{reviewedCards}/{totalCards} карточек изучено</div>
+          </div>
+        </div>
+        <p className="learnSectionSub">Выбери раздел для изучения карточек</p>
+        <div className="fcChapterGrid">
+          {PM_CHAPTERS.map((ch) => {
+            const chCards = FLASHCARDS[ch.id] || [];
+            const chReviewed = chCards.filter((c) => progress[c.id]).length;
+            const pct = chCards.length > 0 ? Math.round((chReviewed / chCards.length) * 100) : 0;
+            return (
+              <button key={ch.id} className="fcChapterCard" onClick={() => setSelectedChapter(ch)} style={{ borderColor: ch.color + '40' }}>
+                <span className="fcChapterCardIcon" style={{ color: ch.color }}>{ch.icon}</span>
+                <div className="fcChapterCardTitle">{ch.number}. {ch.title}</div>
+                <div className="fcChapterCardCount">{chCards.length} карточек</div>
+                <div className="fcChapterCardBar">
+                  <div style={{ width: `${pct}%`, background: ch.color }} />
+                </div>
+                <div className="fcChapterCardPct">{pct}%</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (sessionDone) {
+    return (
+      <div className="fcView">
+        <button className="learnBack" onClick={() => setSelectedChapter(null)}>← Все разделы</button>
+        <div className="fcDone">
+          <span className="fcDoneEmoji">🎉</span>
+          <h3>Сессия завершена!</h3>
+          <p>Ты прошёл все {cards.length} карточек раздела «{selectedChapter.title}»</p>
+          <div className="fcDoneActions">
+            <button className="primary" onClick={() => { setCardIndex(0); setFlipped(false); setSessionDone(false); }}>Повторить ещё раз</button>
+            <button onClick={() => setSelectedChapter(null)}>← Все разделы</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const card = cards[cardIndex];
+  const cardProgress = progress[card?.id];
+
+  return (
+    <div className="fcView">
+      <div className="fcSessionHead">
+        <button className="learnBack" onClick={() => setSelectedChapter(null)}>← Разделы</button>
+        <span className="fcSessionTitle">{selectedChapter.icon} {selectedChapter.title}</span>
+        <span className="fcSessionCounter">{cardIndex + 1}/{cards.length}</span>
+      </div>
+
+      <div className="fcProgressBar">
+        <div style={{ width: `${((cardIndex) / cards.length) * 100}%` }} />
+      </div>
+
+      {card && (
+        <>
+          <div className={`fcCard${flipped ? ' flipped' : ''}`} onClick={() => setFlipped((f) => !f)}>
+            <div className="fcFront">
+              <p>{card.front}</p>
+              <span className="fcHint">Flip · Spacebar</span>
+            </div>
+            <div className="fcBack">
+              <p>{card.back}</p>
+            </div>
+          </div>
+
+          {!flipped && <p className="fcFlipPrompt">Нажми на карточку или Spacebar чтобы увидеть ответ</p>}
+
+          {flipped && (
+            <div className="fcRating">
+              <p className="fcRatingLabel">Оцени насколько хорошо ты знал ответ:</p>
+              <div className="fcRatingBtns">
+                {[
+                  { key: 'again', label: 'Снова', sub: '10 мин', color: '#ef4444' },
+                  { key: 'hard', label: 'Сложно', sub: '45 мин', color: '#f59e0b' },
+                  { key: 'good', label: 'Хорошо', sub: '1 день', color: '#3b82f6' },
+                  { key: 'easy', label: 'Легко', sub: '4 дня', color: '#10b981' },
+                ].map((r) => (
+                  <button key={r.key} className="fcRatingBtn" style={{ '--fc-color': r.color }} onClick={() => rateCard(r.key)}>
+                    <span className="fcRatingName">{r.label}</span>
+                    <span className="fcRatingInterval">{r.sub}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Overall progress */}
+      <div className="fcProgressBox">
+        <div className="fcProgressBoxHead">Spaced Repetition Progress</div>
+        <div className="fcProgressBoxBar">
+          <div style={{ width: `${confidence}%` }} />
+        </div>
+        <div className="fcProgressBoxPct">{confidence}% confidence · {reviewedCards}/{totalCards} карточек</div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Key Definitions Tab ── */
+function KeyDefinitionsTab() {
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const categories = ['all', ...new Set(KEY_DEFINITIONS.map((d) => d.category))];
+
+  const filtered = KEY_DEFINITIONS.filter((d) => {
+    if (selectedCategory !== 'all' && d.category !== selectedCategory) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return d.term.toLowerCase().includes(q) || d.definition.toLowerCase().includes(q);
+    }
+    return true;
+  }).sort((a, b) => a.term.localeCompare(b.term));
+
+  return (
+    <div className="definitionsView">
+      <h2 className="learnSectionTitle">Ключевые термины</h2>
+      <div className="definitionsFilters">
+        <input className="learnSearch" placeholder="Поиск термина..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+          <option value="all">Все категории</option>
+          {categories.slice(1).map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
+      <div className="definitionsList">
+        {filtered.map((def) => {
+          const chapter = PM_CHAPTERS.find((c) => c.id === def.chapter);
+          return (
+            <div key={def.term} className="definitionCard">
+              <div className="definitionCardHead">
+                <strong className="definitionTerm">{def.term}</strong>
+                <span className="definitionCategory">{def.category}</span>
+              </div>
+              <p className="definitionText">{def.definition}</p>
+              {chapter && <div className="definitionChapter" style={{ color: chapter.color }}>{chapter.icon} {chapter.title}</div>}
+            </div>
+          );
+        })}
+        {filtered.length === 0 && <p className="muted">Нет результатов для «{search}»</p>}
+      </div>
+    </div>
+  );
+}
+
+/* ── Learn Together Tab ── */
+function LearnTogetherTab() {
+  const [phase, setPhase] = useState('pick'); // pick | session
+  const [selectedContent, setSelectedContent] = useState(null);
+
+  if (phase === 'pick') {
+    const contentKeys = Object.keys(LEARN_TOGETHER_CONTENT);
+    return (
+      <div className="togetherView">
+        <h2 className="learnSectionTitle">Обучаемся вместе</h2>
+        <p className="learnSectionSub">Адаптивная учебная сессия: получи объяснение, ответь на вопрос, получи персональный фидбек</p>
+        <div className="togetherTopicList">
+          {contentKeys.map((key) => {
+            const content = LEARN_TOGETHER_CONTENT[key];
+            const chapterId = key.split('_')[0];
+            const chapter = PM_CHAPTERS.find((c) => c.id === chapterId);
+            return (
+              <button key={key} className="togetherTopicCard" onClick={() => { setSelectedContent({ key, content, chapter }); setPhase('session'); }}>
+                <span className="togetherTopicIcon" style={{ background: chapter?.color + '20', color: chapter?.color }}>{chapter?.icon}</span>
+                <div>
+                  <div className="togetherTopicTitle">{content.title}</div>
+                  <div className="togetherTopicChapter">{chapter?.title}</div>
+                </div>
+                <span className="subtopicArrow">›</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <LearnTogetherSession
+      contentKey={selectedContent.key}
+      content={selectedContent.content}
+      chapter={selectedContent.chapter}
+      onBack={() => { setPhase('pick'); setSelectedContent(null); }}
+    />
+  );
+}
+
+function LearnTogetherSession({ contentKey, content, chapter, onBack }) {
+  const [step, setStep] = useState('expo'); // expo | mcq | trueFalse | done
+  const [health, setHealth] = useState(3);
+  const [xp, setXp] = useState(0);
+  const [mode, setMode] = useState('normal'); // normal | simplified
+  const [mcqAnswered, setMcqAnswered] = useState(null);
+  const [tfAnswered, setTfAnswered] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiExpo, setAiExpo] = useState(null);
+
+  async function handleTooHard() {
+    setAiLoading(true);
+    try {
+      const data = await learnSession({ chapterId: chapter?.id || '', subtopicId: contentKey, userLevel: 'beginner' });
+      setAiExpo(data.exposition);
+    } catch {
+      setAiExpo(content.simplifiedExposition);
+    } finally {
+      setAiLoading(false);
+      setMode('simplified');
+    }
+  }
+
+  function handleMcqAnswer(idx) {
+    if (mcqAnswered !== null) return;
+    setMcqAnswered(idx);
+    if (idx === content.mcq.correct) {
+      setXp((x) => x + 10);
+    } else {
+      setHealth((h) => Math.max(0, h - 1));
+    }
+  }
+
+  function handleTfAnswer(answer) {
+    if (tfAnswered !== null) return;
+    setTfAnswered(answer);
+    if (answer === content.trueFalse.correct) {
+      setXp((x) => x + 5);
+    } else {
+      setHealth((h) => Math.max(0, h - 1));
+    }
+  }
+
+  const exposition = mode === 'simplified' ? (aiExpo || content.simplifiedExposition) : content.exposition;
+
+  return (
+    <div className="togetherSession">
+      <div className="togetherSessionHead">
+        <button className="learnBack" onClick={onBack}>← Темы</button>
+        <div className="togetherStats">
+          <span className="togetherHealth">{'❤️'.repeat(health)}{'🖤'.repeat(Math.max(0, 3 - health))}</span>
+          <span className="togetherXp">⚡ {xp} XP</span>
+        </div>
+      </div>
+
+      {/* Topic roadmap */}
+      <div className="togetherRoadmap">
+        <div className={`togetherRoadmapStep active`}>📍 {content.title}</div>
+      </div>
+
+      {step === 'expo' && (
+        <div className="togetherExpo">
+          <div className="togetherExpoBlock">
+            <div className="togetherExpoLabel">📖 Объяснение</div>
+            {aiLoading ? (
+              <p className="muted">Генерирую упрощённое объяснение...</p>
+            ) : (
+              exposition.split('\n\n').map((para, i) => <p key={i}>{para}</p>)
+            )}
+          </div>
+          <div className="togetherExpoActions">
+            <button className="togetherActionBtn togetherEasy" onClick={() => { setXp((x) => x + 5); setStep('mcq'); }}>🌟 Мне легко</button>
+            <button className="togetherActionBtn togetherHard" onClick={handleTooHard} disabled={aiLoading}>🤔 Мне сложно</button>
+            <button className="primary togetherContinue" onClick={() => setStep('mcq')}>Продолжить →</button>
+          </div>
+        </div>
+      )}
+
+      {step === 'mcq' && (
+        <div className="togetherMcq">
+          <div className="togetherMcqLabel">🔵 Вопрос с вариантами ответов</div>
+          <p className="togetherMcqQ">{content.mcq.question}</p>
+          <div className="togetherMcqOptions">
+            {content.mcq.options.map((opt, i) => {
+              let cls = 'togetherMcqOpt';
+              if (mcqAnswered !== null) {
+                if (i === content.mcq.correct) cls += ' correct';
+                else if (i === mcqAnswered) cls += ' wrong';
+                else cls += ' dim';
+              }
+              return (
+                <button key={i} className={cls} onClick={() => handleMcqAnswer(i)} disabled={mcqAnswered !== null}>
+                  <span className="togetherMcqLetter">{String.fromCharCode(65 + i)}</span>
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
+          {mcqAnswered !== null && (
+            <div className={`togetherFeedback${mcqAnswered === content.mcq.correct ? ' correct' : ' wrong'}`}>
+              <strong>{mcqAnswered === content.mcq.correct ? '✓ Отлично!' : '✗ Не совсем...'}</strong>
+              <p>{content.mcq.explanation}</p>
+              <button className="primary" onClick={() => {
+                if (mcqAnswered !== content.mcq.correct && health > 0) {
+                  setStep('trueFalse');
+                } else {
+                  setStep('done');
+                }
+              }}>
+                {mcqAnswered === content.mcq.correct ? 'Завершить тему →' : 'Попробуем ещё раз →'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {step === 'trueFalse' && (
+        <div className="togetherTf">
+          <div className="togetherTfLabel">☑️ Верно / Неверно</div>
+          <p className="togetherTfQ">{content.trueFalse.statement}</p>
+          <div className="togetherTfBtns">
+            <button className={`togetherTfBtn${tfAnswered !== null ? (false === content.trueFalse.correct ? ' wrong' : ' dim') : ''}`} onClick={() => handleTfAnswer(false)} disabled={tfAnswered !== null}>
+              👎 Неверно
+            </button>
+            <button className={`togetherTfBtn${tfAnswered !== null ? (true === content.trueFalse.correct ? ' correct' : (tfAnswered === true ? ' wrong' : ' dim')) : ''}`} onClick={() => handleTfAnswer(true)} disabled={tfAnswered !== null}>
+              👍 Верно
+            </button>
+          </div>
+          {tfAnswered !== null && (
+            <div className={`togetherFeedback${tfAnswered === content.trueFalse.correct ? ' correct' : ' wrong'}`}>
+              <strong>{tfAnswered === content.trueFalse.correct ? '✓ Правильно!' : '✗ Не совсем...'}</strong>
+              <p>{content.trueFalse.explanation}</p>
+              <button className="primary" onClick={() => setStep('done')}>Завершить тему →</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {step === 'done' && (
+        <div className="togetherDone">
+          <span className="togetherDoneEmoji">🎓</span>
+          <h3>Тема завершена!</h3>
+          <p>«{content.title}»</p>
+          <div className="togetherDoneStats">
+            <div>❤️ Здоровье: {health}/3</div>
+            <div>⚡ Очки: {xp} XP</div>
+          </div>
+          <button className="primary" onClick={onBack}>← Выбрать другую тему</button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 createRoot(document.getElementById('root')).render(<App />);
