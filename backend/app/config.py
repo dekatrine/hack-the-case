@@ -19,10 +19,14 @@ class Settings:
             origin.strip()
             for origin in self._get(
                 "ALLOWED_ORIGINS",
-                "http://localhost:5173,http://127.0.0.1:5173",
+                "http://localhost:5173,http://127.0.0.1:5173,https://hack-the-case-web.onrender.com",
             ).split(",")
             if origin.strip()
         ]
+        self.allowed_origin_regex = self._get(
+            "ALLOWED_ORIGIN_REGEX",
+            r"https://hack-the-case-web(-[a-z0-9]+)?\.onrender\.com",
+        )
 
     def _get(self, key: str, default: str) -> str:
         env_value = os.getenv(key)

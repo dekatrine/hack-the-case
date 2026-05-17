@@ -49,6 +49,7 @@ TRACKS = load_tracks()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
+    allow_origin_regex=settings.allowed_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -70,6 +71,7 @@ def debug_settings() -> dict[str, Union[str, bool]]:
         "folderId": settings.yandex_folder_id,
         "model": settings.yandex_model,
         "modelUri": f"gpt://{settings.yandex_folder_id}/{settings.yandex_model}/latest",
+        "allowedOriginRegex": settings.allowed_origin_regex,
     }
 
 

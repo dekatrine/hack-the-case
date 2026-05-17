@@ -28,11 +28,13 @@
 - `YANDEX_FOLDER_ID` — folder id
 - `YANDEX_MODEL` — например `yandexgpt-lite`
 - `ALLOWED_ORIGINS` — адрес фронтенда через запятую
+- `ALLOWED_ORIGIN_REGEX` — regex для Render-доменов фронтенда, если у сервиса URL с суффиксом
 
 Пример:
 
 ```env
 ALLOWED_ORIGINS=https://hack-the-case-web.onrender.com,https://your-domain.com
+ALLOWED_ORIGIN_REGEX=https://hack-the-case-web(-[a-z0-9]+)?\.onrender\.com
 ```
 
 ### Frontend: `hack-the-case-web`
@@ -59,13 +61,14 @@ VITE_API_BASE_URL=https://hack-the-case-api.onrender.com
 ```env
 VITE_API_BASE_URL=https://api.your-domain.com
 ALLOWED_ORIGINS=https://your-domain.com
+ALLOWED_ORIGIN_REGEX=
 ```
 
 ## Что уже настроено
 
 - backend стартует через `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 - backend healthcheck: `/health`
-- frontend собирается через `npm ci && npm run build`
+- frontend собирается из корня репозитория через `npm ci && npm run build`
 - для SPA добавлен rewrite `/* -> /index.html`
 
 ## Локальная проверка перед деплоем
@@ -83,7 +86,8 @@ uvicorn app.main:app --reload --port 8000
 Frontend:
 
 ```bash
-cd frontend
 npm ci
 VITE_API_BASE_URL=http://localhost:8000 npm run dev
 ```
+
+Важно: `render.yaml` собирает frontend из корня репозитория. Папка `frontend/` сейчас является старой копией и не участвует в деплое на Render.

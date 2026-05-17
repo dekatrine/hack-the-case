@@ -3,7 +3,9 @@
 AI-симулятор решения бизнес-кейсов. Проект состоит из двух сервисов:
 
 - `backend/` — Python FastAPI API с интеграцией YandexGPT;
-- `frontend/` — React + Vite интерфейс.
+- корень репозитория — актуальный React + Vite frontend, который деплоится на Render.
+
+Папка `frontend/` осталась как старая копия интерфейса и сейчас не используется в `render.yaml`.
 
 ## Backend
 
@@ -26,7 +28,6 @@ API:
 ## Frontend
 
 ```bash
-cd frontend
 npm install
 npm run dev
 ```
@@ -37,7 +38,7 @@ npm run dev
 VITE_API_BASE_URL=http://localhost:8000 npm run dev
 ```
 
-Для production frontend тоже использует `VITE_API_BASE_URL`. Пример есть в [frontend/.env.example](/Users/deevakatya/Desktop/hack-the-case/frontend/.env.example).
+Для production frontend тоже использует `VITE_API_BASE_URL`. Для локальной разработки можно создать `.env.local` в корне проекта.
 
 ## Secrets
 
@@ -53,7 +54,7 @@ YANDEX_MODEL = "yandexgpt-lite"
 
 Важно: `YANDEX_MODEL` указывай без `/latest`, backend добавляет `/latest` сам.
 
-Для production через env-переменные также нужен `ALLOWED_ORIGINS` со списком разрешённых origin через запятую.
+Для production через env-переменные также нужен `ALLOWED_ORIGINS` со списком разрешённых origin через запятую. Для Render-доменов с автоматическим суффиксом backend поддерживает `ALLOWED_ORIGIN_REGEX`.
 
 ## Структура
 
@@ -65,11 +66,11 @@ backend/
     data.py       # этапы, отрасли, уровни сложности
     prompts.py    # промпты генерации, коуча и жюри
     schemas.py    # Pydantic DTO
+api/client.js      # HTTP-клиент актуального frontend
+main.jsx           # React-приложение актуального frontend
+styles.css         # стили актуального frontend
 frontend/
-  src/
-    api/client.js # HTTP-клиент
-    main.jsx      # React-приложение
-    styles.css    # стили
+  src/             # старая копия frontend, Render ее не собирает
 ```
 
 ## Deploy
@@ -88,3 +89,4 @@ frontend/
 
 - `VITE_API_BASE_URL=https://api.your-domain.com`
 - `ALLOWED_ORIGINS=https://your-domain.com`
+- `ALLOWED_ORIGIN_REGEX=` если Render-regex больше не нужен
