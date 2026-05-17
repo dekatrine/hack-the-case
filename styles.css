@@ -78,7 +78,8 @@ a { color: var(--mint); text-decoration: none; }
   --amber: #f97316;
   --rust: #ef4444;
   background:
-    linear-gradient(130deg, rgba(191,219,254,0.78) 0%, rgba(245,243,255,0.70) 34%, rgba(255,228,230,0.62) 70%, #ffffff 100%);
+    linear-gradient(130deg, rgba(191,219,254,0.78) 0%, rgba(245,243,255,0.70) 34%, rgba(255,228,230,0.62) 70%, #ffffff 100%),
+    #ffffff;
   color: var(--paper);
 }
 
