@@ -3308,40 +3308,68 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 .reviewSessionHead button { color: #b91c1c; }
 .reviewChat {
-  min-height: 360px;
-  display: grid;
-  align-content: start;
+  min-height: 320px;
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   padding: 20px 0;
+  scrollbar-width: thin;
 }
 .reviewBubble {
-  max-width: 640px;
+  max-width: 84%;
   padding: 14px 16px;
   border-radius: 12px;
-  line-height: 1.5;
+  line-height: 1.55;
 }
-.reviewBubble.ai { background: #fff; border: 1px solid #e5e7eb; }
-.reviewBubble.user { margin-left: auto; background: #eef2ff; }
-.reviewBubble p { margin: 6px 0 0; white-space: pre-wrap; }
+.reviewBubble.ai { background: #fff; border: 1px solid #e5e7eb; align-self: flex-start; }
+.reviewBubble.user { align-self: flex-end; background: #eef2ff; border: 1px solid #c7d2fe; }
+.reviewBubble strong { display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; margin-bottom: 6px; }
+.reviewBubble p { margin: 4px 0 0; white-space: pre-wrap; font-size: 0.9rem; color: #17202f; }
+.reviewThinking { color: #9ca3af !important; display: flex; align-items: center; gap: 8px; }
 .reviewInputRow {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 1fr auto;
   gap: 10px;
   position: sticky;
   bottom: 0;
   padding-top: 12px;
   background: #f8f7f3;
+  align-items: end;
 }
-.reviewInputRow button,
-.reviewInputRow input {
+.reviewInput {
   min-height: 44px;
-  border: 1px solid #e5e7eb;
-  border-radius: 999px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
   background: #fff;
   color: #161814;
-  padding: 0 16px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: none;
+  line-height: 1.5;
+  transition: border-color 0.15s;
 }
-.reviewInputRow button { background: #161814; color: #fff; }
+.reviewInput:focus { outline: none; border-color: #6366f1; }
+.reviewInput:disabled { opacity: 0.6; }
+.reviewSendBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #161814;
+  color: #b8ff5c;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.reviewSendBtn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* Placeholder */
 .learnPlaceholder { text-align: center; padding: 60px 20px; }
@@ -3461,6 +3489,46 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .aliceDoneEmoji { font-size: 3rem; display: block; margin-bottom: 16px; }
 .aliceDone h3 { font-size: 1.5rem; font-family: var(--serif); font-weight: 400; color: var(--mint); margin: 0 0 8px; }
 .aliceDoneStats { display: flex; gap: 24px; justify-content: center; margin: 20px 0 28px; font-family: var(--mono); font-size: 14px; color: var(--paper-dim); }
+
+/* ── Alice AI Chat Step ── */
+.aliceAiChat {}
+.aliceAnswerInput {
+  width: 100%;
+  min-height: 110px;
+  border: 1.5px solid var(--hair-strong);
+  border-radius: var(--r-md);
+  background: rgba(255,255,255,0.04);
+  color: var(--paper);
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.55;
+  margin-top: 14px;
+  margin-bottom: 4px;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.aliceAnswerInput:focus { outline: none; border-color: var(--mint); }
+.aliceAnswerInput:disabled { opacity: 0.55; }
+.aliceAiFeedback {
+  margin-top: 16px;
+  padding: 18px 20px;
+  border-radius: var(--r-lg);
+  background: rgba(184,255,92,0.07);
+  border: 1px solid rgba(184,255,92,0.25);
+}
+.aliceAiFeedback p { font-size: 0.9rem; line-height: 1.65; color: var(--paper); margin: 8px 0 0; }
+.aliceAiFeedbackTip {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(255,184,107,0.1);
+  border: 1px solid rgba(255,184,107,0.25);
+  border-radius: var(--r-sm);
+  font-size: 0.85rem;
+  color: var(--amber);
+  line-height: 1.5;
+}
 
 /* ── Flash Cards ── */
 .fcHome { }

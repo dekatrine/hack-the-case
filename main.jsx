@@ -2146,18 +2146,23 @@ function LearnSidebar({ activeTab, selectedChapter, onSelect }) {
 /* ── Lessons — Alice.tech style adaptive explanations ── */
 function LessonsContent({ chapter, onSelectChapter }) {
   const [subtopic, setSubtopic] = useState(null);
-  const [sessionStep, setSessionStep] = useState('intro'); // intro | expo | mcq | done
+  const [sessionStep, setSessionStep] = useState('intro'); // intro | expo | mcq | aiChat | done
   const [mcqAnswered, setMcqAnswered] = useState(null);
   const [health, setHealth] = useState(3);
   const [xp, setXp] = useState(0);
   const [aiExpo, setAiExpo] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [userAnswer, setUserAnswer] = useState('');
+  const [aiFeedback, setAiFeedback] = useState(null);
+  const [aiFeedbackLoading, setAiFeedbackLoading] = useState(false);
   const contentRef = useRef(null);
 
   useEffect(() => {
     setSubtopic(null);
     setSessionStep('intro');
     setMcqAnswered(null);
+    setUserAnswer('');
+    setAiFeedback(null);
   }, [chapter]);
 
   useEffect(() => {
@@ -2173,6 +2178,32 @@ function LessonsContent({ chapter, onSelectChapter }) {
       setAiExpo(null);
     } finally {
       setAiLoading(false);
+    }
+  }
+
+  async function handleGetAiFeedback() {
+    if (!userAnswer.trim() || aiFeedbackLoading) return;
+    setAiFeedbackLoading(true);
+    try {
+      const content = LEARN_TOGETHER_CONTENT[subtopic?.id];
+      const data = await api.learnExplain({
+        topic: chapter?.title || '',
+        subtopic: subtopic?.title || '',
+        question: 'Студент объясняет концепцию своими словами',
+        wrongAnswer: userAnswer,
+        correctAnswer: '',
+        difficulty: 'normal',
+      });
+      setAiFeedback(data);
+      setXp((x) => x + 15);
+    } catch {
+      setAiFeedback({
+        explanation: 'Отличная попытка! Объяснение концепций своими словами — лучший способ проверить понимание.',
+        tip: 'Перед интервью попробуй объяснить ключевые концепции вслух за 30 секунд.',
+      });
+      setXp((x) => x + 10);
+    } finally {
+      setAiFeedbackLoading(false);
     }
   }
 
@@ -2335,12 +2366,57 @@ function LessonsContent({ chapter, onSelectChapter }) {
               statement={content.trueFalse.statement}
               correct={content.trueFalse.correct}
               explanation={content.trueFalse.explanation}
-              onDone={(ok) => { if (ok) setXp((x) => x + 5); else setHealth((h) => Math.max(0, h - 1)); setSessionStep('done'); }}
+              onDone={(ok) => { if (ok) setXp((x) => x + 5); else setHealth((h) => Math.max(0, h - 1)); setSessionStep('aiChat'); }}
             />
           )}
           {mcqAnswered === content.mcq.correct && (
-            <button className="aliceBtn aliceBtnContinue" style={{ marginTop: 16 }} onClick={() => setSessionStep('done')}>Завершить тему →</button>
+            <button className="aliceBtn aliceBtnContinue" style={{ marginTop: 16 }} onClick={() => setSessionStep('aiChat')}>Перейти к AI-разбору →</button>
           )}
+          {mcqAnswered !== null && mcqAnswered !== content.mcq.correct && (
+            <button className="aliceBtn aliceBtnContinue" style={{ marginTop: 16 }} onClick={() => setSessionStep('aiChat')}>Разбор с AI-ментором →</button>
+          )}
+        </div>
+      )}
+
+      {/* AI Chat Step */}
+      {sessionStep === 'aiChat' && (
+        <div className="aliceAiChat">
+          <div className="aliceExpoCard">
+            <div className="aliceExpoLabel">💬 AI-ментор</div>
+            <p className="aliceMcqQ">
+              Закрепи тему: <strong>объясни своими словами, что такое «{subtopic.title}» и как бы ты применил это в реальном PM-кейсе или собеседовании?</strong>
+            </p>
+            <textarea
+              className="aliceAnswerInput"
+              value={userAnswer}
+              onChange={(e) => setUserAnswer(e.target.value)}
+              placeholder="Напиши 3–5 предложений своими словами. AI-ментор даст персональный фидбек."
+              disabled={!!aiFeedback}
+              rows={4}
+            />
+            {!aiFeedback && (
+              <button
+                className="aliceBtn aliceBtnContinue"
+                onClick={handleGetAiFeedback}
+                disabled={!userAnswer.trim() || aiFeedbackLoading}
+                style={{ marginTop: 12 }}
+              >
+                {aiFeedbackLoading ? '🤖 Анализирую…' : 'Получить фидбек от AI →'}
+              </button>
+            )}
+            {aiFeedback && (
+              <div className="aliceAiFeedback">
+                <div className="aliceExpoLabel">🤖 Фидбек AI-ментора</div>
+                <p>{aiFeedback.explanation}</p>
+                {aiFeedback.tip && (
+                  <div className="aliceAiFeedbackTip">💡 <strong>Совет:</strong> {aiFeedback.tip}</div>
+                )}
+                <button className="aliceBtn aliceBtnContinue" style={{ marginTop: 14 }} onClick={() => setSessionStep('done')}>
+                  Завершить тему → +{xp} XP
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -2671,8 +2747,10 @@ function ReviewSessionModal({ onClose }) {
   const [level, setLevel] = useState('knows_a_bit');
   const [length, setLength] = useState('quick');
   const [started, setStarted] = useState(false);
-  const [helper, setHelper] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [userInput, setUserInput] = useState('');
+  const [sending, setSending] = useState(false);
+  const chatRef = useRef(null);
 
   const subjects = [
     { id: 'product', title: 'Product Case Track', sub: 'PM interviews, metrics, discovery, strategy' },
@@ -2689,26 +2767,57 @@ function ReviewSessionModal({ onClose }) {
     });
   }
 
-  async function askForHelp() {
-    setLoading(true);
+  function startSession() {
+    const topicNames = selectedTopics.map((t) => t.title).join(', ');
+    const intro = `Привет! Я AI-ментор Case Dojo. Сегодня разбираем: **${topicNames}**.
+
+Уровень сессии: ${level === 'clueless' ? 'с нуля' : level === 'pretty_familiar' ? 'продвинутый' : 'базовый'}. Формат: ${length === 'quick' ? 'короткий разбор' : 'глубокая проработка'}.
+
+Задай вопрос по теме, попроси объяснить концепцию, проверь своё понимание — я здесь чтобы помочь разобраться. С чего начнём?`;
+    setMessages([{ role: 'ai', text: intro }]);
+    setStarted(true);
+  }
+
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  async function sendMessage() {
+    const text = userInput.trim();
+    if (!text || sending) return;
+    const userMsg = { role: 'user', text };
+    const nextMessages = [...messages, userMsg];
+    setMessages(nextMessages);
+    setUserInput('');
+    setSending(true);
     try {
       const topic = selectedTopics[0] || availableTopics[0];
-      const data = await api.learnSession({
-        chapterId: topic?.id || '',
-        subtopicId: topic?.subtopics?.[0]?.id || '',
-        userLevel: level === 'clueless' ? 'beginner' : level === 'pretty_familiar' ? 'advanced' : 'normal',
+      const userLevel = level === 'clueless' ? 'simplified' : level === 'pretty_familiar' ? 'advanced' : 'normal';
+      const data = await api.learnExplain({
+        topic: topic?.title || 'Product Management',
+        subtopic: selectedTopics.map((t) => t.title).join(', '),
+        question: text,
+        wrongAnswer: text,
+        correctAnswer: '',
+        difficulty: userLevel,
       });
-      setHelper(data.exposition);
+      const aiText = data.explanation + (data.tip ? `\n\n💡 **Совет:** ${data.tip}` : '');
+      setMessages([...nextMessages, { role: 'ai', text: aiText }]);
     } catch {
-      setHelper('Подсказка сейчас недоступна. Начни с формулы: цель → структура → данные → вывод → риск.');
+      setMessages([...nextMessages, { role: 'ai', text: 'Не удалось получить ответ от AI. Проверь подключение и попробуй ещё раз.' }]);
     } finally {
-      setLoading(false);
+      setSending(false);
     }
   }
 
-  const sessionPrompt = selectedTopics.length
-    ? `Разбери ${selectedTopics.map((topic) => topic.title).join(', ')} через простой кейсовый пример.`
-    : 'Выбери 1-3 темы для персональной review-сессии.';
+  function handleInputKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
 
   return (
     <div className="reviewOverlay" role="dialog" aria-modal="true">
@@ -2779,35 +2888,46 @@ function ReviewSessionModal({ onClose }) {
               {step < 3 ? (
                 <button className="btn btn-primary" onClick={() => setStep((s) => s + 1)} disabled={step === 2 && topics.length === 0}>Next</button>
               ) : (
-                <button className="btn btn-primary" onClick={() => setStarted(true)} disabled={topics.length === 0}>Start Review Session</button>
+                <button className="btn btn-primary" onClick={startSession} disabled={topics.length === 0}>Start Review Session</button>
               )}
             </div>
           </>
         ) : (
           <div className="reviewSession">
             <div className="reviewSessionHead">
-              <button onClick={() => setStarted(false)}>← Back</button>
-              <span>Progress 1/3 · {length === 'quick' ? 'Quick Review' : 'In-Depth'}</span>
+              <button onClick={() => { setStarted(false); setMessages([]); }}>← Back</button>
+              <span>{selectedTopics.map((t) => t.icon).join(' ')} {length === 'quick' ? 'Quick Review' : 'In-Depth'}</span>
               <button onClick={onClose}>End Session</button>
             </div>
-            <div className="reviewChat">
-              <div className="reviewBubble ai">
-                <strong>Case Dojo AI</strong>
-                <p>{sessionPrompt}</p>
-              </div>
-              <div className="reviewBubble user">
-                <p>Начни с простого примера и проверь, где я путаюсь.</p>
-              </div>
-              {helper && (
+            <div className="reviewChat" ref={chatRef}>
+              {messages.map((msg, i) => (
+                <div key={i} className={`reviewBubble ${msg.role}`}>
+                  {msg.role === 'ai' && <strong>Case Dojo AI</strong>}
+                  {msg.text.split('\n').map((line, j) => (
+                    line ? <p key={j}>{line.replace(/\*\*([^*]+)\*\*/g, '$1')}</p> : <br key={j} />
+                  ))}
+                </div>
+              ))}
+              {sending && (
                 <div className="reviewBubble ai">
-                  <strong>Hint</strong>
-                  <p>{helper}</p>
+                  <strong>Case Dojo AI</strong>
+                  <p className="reviewThinking"><span className="spinner" /> думаю…</p>
                 </div>
               )}
             </div>
             <div className="reviewInputRow">
-              <button onClick={askForHelp} disabled={loading}>{loading ? 'Thinking…' : 'Give me a hint'}</button>
-              <input readOnly value="Ask AI mentor for help..." />
+              <textarea
+                className="reviewInput"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                onKeyDown={handleInputKey}
+                placeholder="Задай вопрос или объясни концепт своими словами…"
+                rows={2}
+                disabled={sending}
+              />
+              <button className="reviewSendBtn" onClick={sendMessage} disabled={!userInput.trim() || sending}>
+                {sending ? '…' : '↑'}
+              </button>
             </div>
           </div>
         )}
