@@ -133,245 +133,6 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .btn:hover .arrow { transform: translateX(4px); }
 
 /* ============================ Dojo resource home ============================ */
-.courseMenuPage {
-  width: min(1120px, 100%);
-  margin: -18px auto 0;
-  padding: 0 0 48px;
-  color: #080b15;
-  background:
-    radial-gradient(680px 260px at 100% 0%, rgba(255, 165, 177, 0.42), transparent 70%),
-    radial-gradient(760px 300px at 0% 0%, rgba(159, 190, 255, 0.42), transparent 72%),
-    #fbfbfd;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 0 0 28px 28px;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
-  overflow: hidden;
-}
-.courseMenuHero {
-  padding: 0 72px 34px;
-}
-.courseCrumbs {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding-top: 8px;
-  margin-bottom: 18px;
-  font-size: 21px;
-  font-weight: 700;
-}
-.courseCrumbs span,
-.courseCrumbs b { color: #707782; }
-.courseCrumbs strong { color: #080b15; }
-.courseMenuHero h1 {
-  margin: 0 0 64px;
-  font-family: var(--sans);
-  font-size: clamp(42px, 5vw, 58px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  font-weight: 700;
-}
-.courseAuthorBanner {
-  min-height: 58px;
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 28px;
-  align-items: center;
-  padding: 10px 18px;
-  border-radius: 19px;
-  background: #dbeafe;
-  border: 2px solid #c7ddfb;
-  color: #185df5;
-}
-.courseAuthorBanner > div:first-child {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-}
-.courseCheck {
-  width: 25px;
-  height: 25px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: #1d5ff4;
-  color: #fff;
-  font-weight: 800;
-}
-.courseAuthorBanner strong {
-  font-size: 17px;
-  white-space: nowrap;
-}
-.courseExperts {
-  display: flex;
-  align-items: center;
-}
-.courseExperts i {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  margin-left: -9px;
-  border-radius: 50%;
-  border: 3px solid #fff;
-  background: linear-gradient(135deg, #7c3aed, #60a5fa);
-  color: #fff;
-  font-style: normal;
-  font-weight: 800;
-  font-size: 11px;
-}
-.courseAuthorBanner button {
-  color: #185df5;
-  font-weight: 700;
-  font-size: 17px;
-  white-space: nowrap;
-}
-.courseResourceMenu,
-.courseContentPreview {
-  padding: 0 72px;
-}
-.courseMenuGroup { margin-top: 34px; }
-.courseMenuGroup h2,
-.courseContentHead h2 {
-  margin: 0 0 22px;
-  color: #52545a;
-  font-family: var(--sans);
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-.courseMenuGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 112px;
-  row-gap: 34px;
-}
-.courseMenuItem {
-  min-height: 94px;
-  display: grid;
-  grid-template-columns: 96px 1fr;
-  gap: 28px;
-  align-items: center;
-  text-align: left;
-}
-.courseMenuItem:hover .courseMenuIcon {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
-}
-.courseMenuIcon {
-  position: relative;
-  width: 96px;
-  height: 96px;
-  display: grid;
-  place-items: center;
-  border-radius: 20px;
-  border: 3px solid;
-  transition: transform .18s ease, box-shadow .18s ease;
-}
-.courseMenuIcon > span {
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  border-radius: 15px;
-  background: #fff;
-  color: var(--tile-accent);
-  font-weight: 900;
-  font-size: 20px;
-  box-shadow: 0 7px 18px rgba(15, 23, 42, 0.08);
-}
-.courseMenuIcon.blue { --tile-accent: #6578ff; background: #e5e9ff; border-color: #d3dafe; }
-.courseMenuIcon.gray { --tile-accent: #94a3b8; background: #f6f7f9; border-color: #e7e7e8; }
-.courseMenuIcon.yellow { --tile-accent: #f7c600; background: #fff8b8; border-color: #f3e99c; }
-.courseMenuIcon.purple { --tile-accent: #a855f7; background: #f3d7ff; border-color: #e9c4f7; }
-.courseMenuIcon.orange { --tile-accent: #ff8a1f; background: #ffead0; border-color: #f8dcb8; }
-.courseMenuIcon.cyan { --tile-accent: #0ea5e9; background: #dff3ff; border-color: #c9e5f5; }
-.courseMenuIcon.pink { --tile-accent: #ec5caf; background: #fde2f3; border-color: #f4cfe5; }
-.courseMenuIcon em {
-  position: absolute;
-  right: -14px;
-  bottom: -11px;
-  padding: 2px 12px 4px;
-  border-radius: 999px;
-  background: #8b18f0;
-  color: #fff;
-  font-style: normal;
-  font-weight: 800;
-  font-size: 15px;
-  line-height: 1.1;
-}
-.courseMenuText {
-  display: grid;
-  gap: 2px;
-}
-.courseMenuText strong {
-  color: #090b12;
-  font-size: 20px;
-  line-height: 1.2;
-}
-.courseMenuText span {
-  color: #696d73;
-  font-size: 19px;
-  line-height: 1.28;
-}
-.courseMenuText small {
-  color: #9a9da3;
-  font-size: 18px;
-  line-height: 1.25;
-}
-.courseContentPreview {
-  margin-top: 48px;
-}
-.courseContentHead {
-  max-width: 780px;
-  margin-bottom: 14px;
-}
-.courseContentHead h2 { color: #090b12; margin-bottom: 8px; }
-.courseContentHead p {
-  margin: 0 0 18px;
-  color: #6b7280;
-  font-size: 16px;
-}
-.courseContentRow {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 44px 1fr auto;
-  gap: 16px;
-  align-items: center;
-  padding: 16px 0;
-  border-bottom: 1px solid #e5e7eb;
-  text-align: left;
-}
-.courseContentRow > span {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--col) 18%, white);
-  color: var(--col);
-  font-weight: 800;
-}
-.courseContentRow strong {
-  display: block;
-  color: #090b12;
-  font-size: 17px;
-  line-height: 1.25;
-}
-.courseContentRow small {
-  display: block;
-  color: #6b7280;
-  font-size: 14px;
-  line-height: 1.35;
-  margin-top: 2px;
-}
-.courseContentRow em {
-  color: #9a9da3;
-  font-style: normal;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
 .dojoHome { display: grid; gap: 28px; }
 .dojoHero {
   display: grid;
@@ -2672,6 +2433,168 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
 }
+.casePrepMenu {
+  display: grid;
+  gap: 28px;
+}
+.casePrepMenuGroup h2,
+.caseCourseContentHead h2 {
+  margin: 0 0 16px;
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--paper);
+  letter-spacing: -0.02em;
+}
+.casePrepMenuGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 28px;
+}
+.casePrepMenuItem {
+  min-height: 108px;
+  display: grid;
+  grid-template-columns: 82px 1fr;
+  gap: 18px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  background: rgba(255,255,255,0.028);
+  text-align: left;
+}
+.casePrepMenuItem:hover {
+  border-color: var(--hair-strong);
+  background: rgba(255,255,255,0.055);
+  transform: translateY(-1px);
+}
+.casePrepMenuIcon {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  border: 1px solid var(--tile-border);
+  background: var(--tile-bg);
+}
+.casePrepMenuIcon > span {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: rgba(255,255,255,0.92);
+  color: var(--tile-accent);
+  font-weight: 900;
+  font-size: 16px;
+}
+.casePrepMenuIcon.blue { --tile-accent: #7ea1ff; --tile-bg: rgba(96,165,250,0.12); --tile-border: rgba(96,165,250,0.28); }
+.casePrepMenuIcon.gray { --tile-accent: #94a3b8; --tile-bg: rgba(148,163,184,0.10); --tile-border: rgba(148,163,184,0.22); }
+.casePrepMenuIcon.yellow { --tile-accent: #facc15; --tile-bg: rgba(250,204,21,0.12); --tile-border: rgba(250,204,21,0.28); }
+.casePrepMenuIcon.purple { --tile-accent: #d946ef; --tile-bg: rgba(217,70,239,0.12); --tile-border: rgba(217,70,239,0.28); }
+.casePrepMenuIcon.orange { --tile-accent: #fb923c; --tile-bg: rgba(251,146,60,0.12); --tile-border: rgba(251,146,60,0.28); }
+.casePrepMenuIcon.cyan { --tile-accent: #38bdf8; --tile-bg: rgba(56,189,248,0.12); --tile-border: rgba(56,189,248,0.28); }
+.casePrepMenuIcon.pink { --tile-accent: #f472b6; --tile-bg: rgba(244,114,182,0.12); --tile-border: rgba(244,114,182,0.28); }
+.casePrepMenuIcon em {
+  position: absolute;
+  right: -10px;
+  bottom: -8px;
+  padding: 2px 9px 3px;
+  border-radius: 999px;
+  background: #a855f7;
+  color: #fff;
+  font-style: normal;
+  font-weight: 800;
+  font-size: 12px;
+}
+.casePrepMenuText {
+  display: grid;
+  gap: 3px;
+}
+.casePrepMenuText strong {
+  color: var(--paper);
+  font-size: 18px;
+  line-height: 1.2;
+}
+.casePrepMenuText span {
+  color: var(--paper-dim);
+  font-size: 14px;
+  line-height: 1.35;
+}
+.casePrepMenuText small {
+  color: var(--paper-faint);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.caseCourseContent {
+  display: grid;
+  gap: 14px;
+  padding-top: 8px;
+}
+.caseCourseContentHead span,
+.noteArticleHero .noteArticleCrumbs,
+.noteArticleCalloutLabel {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.caseCourseContentHead span { color: var(--mint); }
+.caseCourseContentHead p {
+  margin: -8px 0 4px;
+  color: var(--paper-dim);
+  max-width: 720px;
+}
+.caseCourseRows {
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: rgba(255,255,255,0.025);
+}
+.caseCourseRow {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--hair);
+  text-align: left;
+}
+.caseCourseRow:last-child { border-bottom: 0; }
+.caseCourseRow:hover { background: rgba(255,255,255,0.045); }
+.caseCourseRow > span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--col) 24%, transparent);
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+.caseCourseRow strong {
+  display: block;
+  color: var(--paper);
+  font-size: 15px;
+}
+.caseCourseRow small {
+  display: block;
+  margin-top: 2px;
+  color: var(--paper-dim);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.caseCourseRow em {
+  color: var(--paper-faint);
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
 .resourceCard {
   min-height: 150px;
   padding: 15px;
@@ -2730,6 +2653,242 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .notesChapter {
   display: grid;
   gap: 14px;
+}
+.noteArticle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 22px;
+  align-items: start;
+}
+.noteArticleHero {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 26px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--ch-color) 22%, transparent), rgba(255,255,255,0.02)),
+    rgba(255,255,255,0.025);
+}
+.noteArticleCrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--paper-faint);
+  margin-bottom: 14px;
+}
+.noteArticleCrumbs strong { color: var(--paper); }
+.noteArticleHero h2 {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-size: clamp(32px, 4vw, 52px);
+  line-height: 1.02;
+  font-weight: 400;
+}
+.noteArticleHero p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--paper-dim);
+}
+.noteArticleSources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.noteArticleSources a {
+  padding: 6px 10px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  color: var(--paper-dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+.noteArticleSources a:hover {
+  border-color: rgba(184,255,92,0.32);
+  color: var(--mint);
+}
+.noteArticleBody {
+  display: grid;
+  gap: 24px;
+  max-width: 820px;
+  padding: 10px 0 48px;
+}
+.noteArticleBody h3 {
+  margin: 12px 0 -4px;
+  font-family: var(--sans);
+  font-size: 25px;
+  font-weight: 700;
+  color: var(--paper);
+  letter-spacing: -0.01em;
+}
+.noteArticleDefinition,
+.noteArticleCallout {
+  padding: 22px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(236,72,153,0.18);
+  background: rgba(236,72,153,0.07);
+}
+.noteArticleDefinition span {
+  display: block;
+  margin-bottom: 12px;
+  color: #f472b6;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.noteArticleDefinition strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--paper);
+  font-size: 24px;
+}
+.noteArticleDefinition p,
+.noteArticleCallout p,
+.noteArticlePractice p {
+  margin: 0;
+  color: var(--paper-dim);
+  line-height: 1.7;
+  font-size: 16px;
+}
+.noteArticleList {
+  display: grid;
+  gap: 13px;
+  margin: 0;
+  padding-left: 30px;
+  color: var(--paper-dim);
+  font-size: 16px;
+  line-height: 1.65;
+}
+.noteArticleList li::marker {
+  color: var(--paper-faint);
+  font-family: var(--mono);
+}
+.noteArticleSection {
+  display: grid;
+  gap: 16px;
+}
+.noteArticleDiagram {
+  padding: 18px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  background: rgba(255,255,255,0.025);
+}
+.noteArticleDiagram > span {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--mint);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.noteArticleDiagram div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.noteArticleDiagram strong {
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(184,255,92,0.24);
+  color: var(--paper);
+  background: rgba(184,255,92,0.05);
+  font-size: 13px;
+}
+.noteArticleCallout {
+  border-color: var(--hair);
+}
+.noteArticleCallout.analogy {
+  background: rgba(255,184,107,0.08);
+  border-color: rgba(255,184,107,0.2);
+}
+.noteArticleCallout.note {
+  background: rgba(16,185,129,0.08);
+  border-color: rgba(16,185,129,0.2);
+}
+.noteArticleCallout.mistake {
+  background: rgba(255,122,89,0.08);
+  border-color: rgba(255,122,89,0.22);
+}
+.noteArticleCallout.example {
+  background: rgba(96,165,250,0.08);
+  border-color: rgba(96,165,250,0.22);
+}
+.noteArticleCalloutLabel {
+  color: var(--mint);
+  margin-bottom: 10px;
+}
+.noteArticleCallout.mistake .noteArticleCalloutLabel { color: var(--rust); }
+.noteArticleCallout.analogy .noteArticleCalloutLabel { color: var(--amber); }
+.noteArticleCallout ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--paper-dim);
+  line-height: 1.7;
+}
+.noteArticlePractice {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid rgba(184,255,92,0.2);
+  border-radius: var(--r-md);
+  background: rgba(184,255,92,0.055);
+}
+.noteArticlePractice h3 { margin: 0; }
+.noteArticleTopicRail {
+  position: sticky;
+  top: 96px;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  background: rgba(255,255,255,0.025);
+}
+.noteArticleTopicRail > span {
+  margin-bottom: 6px;
+  color: var(--paper-faint);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.noteArticleTopicRail button {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 9px;
+  border-radius: var(--r-sm);
+  text-align: left;
+}
+.noteArticleTopicRail button:hover,
+.noteArticleTopicRail button.active {
+  background: rgba(255,255,255,0.055);
+}
+.noteArticleTopicRail button > span {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--col) 20%, transparent);
+}
+.noteArticleTopicRail strong {
+  display: block;
+  color: var(--paper);
+  font-size: 12px;
+  line-height: 1.25;
+}
+.noteArticleTopicRail small {
+  color: var(--paper-faint);
+  font-size: 11px;
 }
 
 .reviewOverlay {
@@ -3118,63 +3277,34 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
 /* Responsive */
 @media (max-width: 700px) {
-  .courseMenuPage {
-    width: 100%;
-    margin-top: -32px;
-    border-radius: 0 0 20px 20px;
-  }
-  .courseMenuHero,
-  .courseResourceMenu,
-  .courseContentPreview {
-    padding-left: 18px;
-    padding-right: 18px;
-  }
-  .courseCrumbs {
-    font-size: 16px;
-    gap: 9px;
-  }
-  .courseMenuHero h1 {
-    margin-bottom: 32px;
-  }
-  .courseAuthorBanner {
+  .casePrepMenuGrid,
+  .noteArticle {
     grid-template-columns: 1fr;
-    gap: 12px;
-    align-items: start;
   }
-  .courseAuthorBanner strong {
-    white-space: normal;
+  .casePrepMenuItem {
+    grid-template-columns: 70px 1fr;
+    gap: 14px;
+    min-height: 88px;
   }
-  .courseExperts i {
-    margin-left: 0;
-    margin-right: -8px;
+  .casePrepMenuIcon {
+    width: 64px;
+    height: 64px;
   }
-  .courseMenuGrid {
-    grid-template-columns: 1fr;
-    row-gap: 18px;
+  .casePrepMenuIcon > span {
+    width: 36px;
+    height: 36px;
   }
-  .courseMenuItem {
-    grid-template-columns: 76px 1fr;
-    gap: 18px;
-    min-height: 76px;
-  }
-  .courseMenuIcon {
-    width: 76px;
-    height: 76px;
-    border-radius: 18px;
-  }
-  .courseMenuIcon > span {
-    width: 40px;
-    height: 40px;
-    font-size: 17px;
-  }
-  .courseMenuText strong { font-size: 18px; }
-  .courseMenuText span { font-size: 15px; }
-  .courseMenuText small { font-size: 14px; }
-  .courseContentRow {
+  .caseCourseRow {
     grid-template-columns: 38px 1fr;
   }
-  .courseContentRow em {
-    grid-column: 2;
+  .caseCourseRow em { grid-column: 2; }
+  .noteArticleHero {
+    flex-direction: column;
+    padding: 20px;
+  }
+  .noteArticleTopicRail {
+    position: static;
+    order: -1;
   }
   .dojoHero,
   .dojoGrid,

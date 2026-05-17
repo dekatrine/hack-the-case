@@ -27,9 +27,7 @@ const getLearningStats = () => ({
   definitions: KEY_DEFINITIONS.length,
 });
 
-const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn }) => {
-  const stats = getLearningStats();
-  const businessTrack = tracks.find((item) => item.id === 'business') || tracks[0];
+const CasePrepMenu = ({ stats, onOpenTab, onOpenReview, onOpenExam }) => {
   const menuItems = [
     {
       group: 'Practice',
@@ -40,15 +38,15 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
           meta: `${stats.questions} questions`,
           tone: 'blue',
           icon: '?',
-          onClick: () => onOpenLearn('Questionbank'),
+          onClick: () => onOpenTab('Questionbank'),
         },
         {
           title: 'Exam builder',
           subtitle: 'Build your own mock case exam',
           meta: 'AI-generated case',
           tone: 'gray',
-          icon: '⏱',
-          onClick: () => businessTrack && onPickTrack(businessTrack),
+          icon: '↗',
+          onClick: onOpenExam,
         },
       ],
     },
@@ -58,10 +56,10 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
         {
           title: 'Notes',
           subtitle: 'Study guides with frameworks and examples',
-          meta: `${PM_CHAPTERS.length} chapters`,
+          meta: `${stats.chapters} chapters`,
           tone: 'yellow',
           icon: '≡',
-          onClick: () => onOpenLearn('Notes'),
+          onClick: () => onOpenTab('Notes'),
         },
         {
           title: 'Teach Jojo',
@@ -70,15 +68,15 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
           tone: 'purple',
           icon: 'AI',
           badge: 'New',
-          onClick: () => onOpenLearn('All Resources', { review: true }),
+          onClick: onOpenReview,
         },
         {
           title: 'Lessons',
           subtitle: 'Step-by-step lessons and quizzes',
-          meta: `${PM_CHAPTERS.length} lessons`,
+          meta: `${stats.chapters} lessons`,
           tone: 'orange',
           icon: '▤',
-          onClick: () => onOpenLearn('Lessons'),
+          onClick: () => onOpenTab('Lessons'),
         },
         {
           title: 'Flashcards',
@@ -86,7 +84,7 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
           meta: `${stats.cards} flashcard decks`,
           tone: 'cyan',
           icon: '▰',
-          onClick: () => onOpenLearn('Flashcards'),
+          onClick: () => onOpenTab('Flashcards'),
         },
         {
           title: 'Key Definitions',
@@ -94,73 +92,117 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
           meta: `${stats.definitions} definitions`,
           tone: 'pink',
           icon: '“',
-          onClick: () => onOpenLearn('Key Definitions'),
+          onClick: () => onOpenTab('Key Definitions'),
         },
       ],
     },
   ];
 
   return (
-    <div className="courseMenuPage fade-in">
-      <section className="courseMenuHero">
-        <div className="courseCrumbs">
-          <span>AI Case Club</span>
-          <b>›</b>
-          <strong>Product & Business Cases</strong>
+    <section className="casePrepMenu">
+      {menuItems.map((group) => (
+        <div key={group.group} className="casePrepMenuGroup">
+          <h2>{group.group}</h2>
+          <div className="casePrepMenuGrid">
+            {group.items.map((item) => (
+              <button key={item.title} className="casePrepMenuItem" onClick={item.onClick}>
+                <span className={`casePrepMenuIcon ${item.tone}`}>
+                  <span>{item.icon}</span>
+                  {item.badge && <em>{item.badge}</em>}
+                </span>
+                <span className="casePrepMenuText">
+                  <strong>{item.title}</strong>
+                  <span>{item.subtitle}</span>
+                  <small>{item.meta}</small>
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
-        <h1>Product & Business Cases</h1>
-        <div className="courseAuthorBanner">
+      ))}
+    </section>
+  );
+};
+
+const CourseContentPreview = ({ onSelectChapter, onOpenTab }) => (
+  <section className="caseCourseContent">
+    <div className="caseCourseContentHead">
+      <span>Course contents</span>
+      <h2>Содержание курса</h2>
+      <p>Меню сверху даёт быстрый вход в формат занятия, а ниже — карта курса. Выбери модуль, чтобы открыть его в Lessons.</p>
+    </div>
+    <div className="caseCourseRows">
+      {PM_CHAPTERS.map((chapter) => (
+        <button key={chapter.id} className="caseCourseRow" onClick={() => { onSelectChapter(chapter); onOpenTab('Lessons'); }} style={{ '--col': chapter.color }}>
+          <span>{chapter.number}</span>
           <div>
-            <span className="courseCheck">✓</span>
-            <strong>Written with case interview frameworks</strong>
+            <strong>{chapter.title}</strong>
+            <small>{chapter.description}</small>
           </div>
-          <div className="courseExperts" aria-hidden="true">
-            <i>PM</i><i>BCG</i><i>MBB</i><i>AI</i><i>UX</i>
-          </div>
-          <button onClick={() => onOpenLearn('All Resources')}>
-            Learn more ↗
+          <em>{chapter.subtopics.length} тем</em>
+        </button>
+      ))}
+    </div>
+  </section>
+);
+
+const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn }) => {
+  const stats = getLearningStats();
+  const businessTrack = tracks.find((item) => item.id === 'business') || tracks[0];
+
+  return (
+    <div className="dojoHome fade-in">
+      <section className="dojoHero">
+        <div>
+          <div className="eyebrow"><span className="num">01 /</span> AI case club resources</div>
+          <h1 className="dojoHeroTitle">Case prep resources</h1>
+          <p className="dojoHeroSub">
+            Учебный кабинет в стиле RevisionDojo, но в визуальном языке Hack the Case:
+            notes, lessons, questionbank, flashcards, definitions и AI review собраны рядом.
+          </p>
+        </div>
+        <div className="dojoHeroPanel">
+          <span>Resource stack</span>
+          <strong>{stats.chapters} модулей</strong>
+          <p>{stats.questions} вопросов · {stats.cards} карточек · {stats.definitions} терминов</p>
+          <button className="btn btn-primary" onClick={() => onOpenLearn('All Resources')}>
+            Открыть ресурсы <span className="arrow">→</span>
           </button>
         </div>
       </section>
 
-      <section className="courseResourceMenu">
-        {menuItems.map((group) => (
-          <div key={group.group} className="courseMenuGroup">
-            <h2>{group.group}</h2>
-            <div className="courseMenuGrid">
-              {group.items.map((item) => (
-                <button key={item.title} className="courseMenuItem" onClick={item.onClick}>
-                  <span className={`courseMenuIcon ${item.tone}`}>
-                    <span>{item.icon}</span>
-                    {item.badge && <em>{item.badge}</em>}
-                  </span>
-                  <span className="courseMenuText">
-                    <strong>{item.title}</strong>
-                    <span>{item.subtitle}</span>
-                    <small>{item.meta}</small>
-                  </span>
-                </button>
-              ))}
-            </div>
+      <section className="dojoGrid">
+        <article className="dojoPrimaryCard">
+          <div className="dojoCardHead">
+            <span>Start here</span>
+            <button onClick={() => onOpenLearn('Notes')}>Open notes →</button>
           </div>
-        ))}
-      </section>
-
-      <section className="courseContentPreview">
-        <div className="courseContentHead">
-          <h2>Содержание курса</h2>
-          <p>После меню можно сразу перейти в нужный модуль: урок откроется в разделе Lessons, а конспекты, вопросы и карточки останутся рядом.</p>
-        </div>
-        {PM_CHAPTERS.map((chapter) => (
-          <button key={chapter.id} className="courseContentRow" onClick={() => onOpenLearn('Lessons')} style={{ '--col': chapter.color }}>
-            <span>{chapter.number}</span>
-            <div>
-              <strong>{chapter.title}</strong>
-              <small>{chapter.description}</small>
-            </div>
-            <em>{chapter.subtopics.length} тем</em>
+          <h2>Сначала конспект, потом практика</h2>
+          <p>Открой `Case prep resources`: там будет меню Practice/Learn и сразу содержание курса. Это больше не отдельная белая страница.</p>
+          <button className="btn btn-primary" onClick={() => onOpenLearn('All Resources')}>Перейти к ресурсам</button>
+        </article>
+        <div className="dojoSideStack">
+          <button className="dojoActionCard" onClick={() => onOpenLearn('Questionbank')}>
+            <span>Questionbank</span>
+            <strong>{stats.questions} вопросов</strong>
+            <small>Проверка и AI-разбор после ошибки.</small>
           </button>
-        ))}
+          <button className="dojoActionCard" onClick={() => businessTrack && onPickTrack(businessTrack)}>
+            <span>Exam builder</span>
+            <strong>Полный кейс</strong>
+            <small>Сгенерировать условие и защитить решение.</small>
+          </button>
+          <button className="dojoActionCard" onClick={onOpenInterview}>
+            <span>Mock interview</span>
+            <strong>Раунды интервью</strong>
+            <small>Уточнение, exhibit, pushback, финальный синтез.</small>
+          </button>
+          <button className="dojoActionCard" onClick={onOpenQuiz}>
+            <span>Sprints</span>
+            <strong>{getQuizQuestionCount()} быстрых вопросов</strong>
+            <small>Короткие тренировки с XP и streak.</small>
+          </button>
+        </div>
       </section>
     </div>
   );
@@ -1644,7 +1686,16 @@ const App = () => {
           />
         )}
         {screen === 'learn' && (
-          <LearningScreen onBack={() => setScreen('landing')} initialTab={learnInitialTab} autoOpenReview={learnAutoReview} />
+          <LearningScreen
+            onBack={() => setScreen('landing')}
+            initialTab={learnInitialTab}
+            autoOpenReview={learnAutoReview}
+            onOpenExam={() => {
+              const nextTrack = config.tracks.find((item) => item.id === 'business') || config.tracks[0];
+              setTrack(nextTrack);
+              setScreen('track');
+            }}
+          />
         )}
       </main>
     </div>
@@ -1945,7 +1996,7 @@ function quizShuffle(arr) {
 
 const LEARN_TABS = ['All Resources', 'Lessons', 'Notes', 'Questionbank', 'Flashcards', 'Key Definitions'];
 
-const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview = false }) => {
+const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview = false, onOpenExam }) => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -1985,7 +2036,7 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
           onSelect={setSelectedChapter}
         />
         <div className="learnMain">
-          {activeTab === 'All Resources' && <ResourcesOverview onSelectChapter={setSelectedChapter} onOpenTab={setActiveTab} onOpenReview={() => setReviewOpen(true)} />}
+          {activeTab === 'All Resources' && <ResourcesOverview onSelectChapter={setSelectedChapter} onOpenTab={setActiveTab} onOpenReview={() => setReviewOpen(true)} onOpenExam={onOpenExam} />}
           {activeTab === 'Lessons' && <LessonsContent chapter={selectedChapter} onSelectChapter={setSelectedChapter} />}
           {activeTab === 'Notes' && <NotesContent chapter={selectedChapter} onSelectChapter={setSelectedChapter} />}
           {activeTab === 'Questionbank' && <QuestionBankContent chapter={selectedChapter} />}
@@ -1998,44 +2049,25 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
   );
 };
 
-function ResourcesOverview({ onSelectChapter, onOpenTab, onOpenReview }) {
+function ResourcesOverview({ onSelectChapter, onOpenTab, onOpenReview, onOpenExam }) {
   const stats = getLearningStats();
-  const resources = [
-    { tab: 'Lessons', title: 'Lessons', meta: `${stats.chapters} модулей`, text: 'Короткие объяснения, интерактивные проверки и адаптация сложности.' },
-    { tab: 'Notes', title: 'Notes', meta: 'Конспекты по темам', text: 'Определения, примеры, ошибки и аналогии из каждого раздела.' },
-    { tab: 'Questionbank', title: 'Questionbank', meta: `${stats.questions} вопросов`, text: 'Практика по сложности, сохранение вопросов и AI-объяснения.' },
-    { tab: 'Flashcards', title: 'Flashcards', meta: `${stats.cards} карточек`, text: 'Интервальные повторения с оценкой again / hard / good / easy.' },
-    { tab: 'Key Definitions', title: 'Key Definitions', meta: `${stats.definitions} терминов`, text: 'Быстрый поиск по словарю PM и case-интервью.' },
-  ];
-
   return (
     <div className="resourcesOverview">
       <div className="resourcesHero">
         <div>
           <span className="resourcesKicker">All Resources</span>
-          <h2>Один кабинет для цикла learn → practice → feedback → review</h2>
-          <p>Выбирай тему, учи теорию, закрепляй карточками, решай вопросы и запускай AI-review по слабым местам.</p>
+          <h2>Case prep resources</h2>
+          <p>Меню Practice/Learn как в RevisionDojo, но без смены визуального языка: тёмный workspace, плотная навигация и фокус на подготовке к кейсам.</p>
         </div>
         <button className="btn btn-primary" onClick={onOpenReview}>Start AI Review</button>
       </div>
-      <div className="resourceCards">
-        {resources.map((resource) => (
-          <button key={resource.tab} className="resourceCard" onClick={() => onOpenTab(resource.tab)}>
-            <span>{resource.title}</span>
-            <strong>{resource.meta}</strong>
-            <p>{resource.text}</p>
-          </button>
-        ))}
-      </div>
-      <div className="resourceChapterStrip">
-        {PM_CHAPTERS.slice(0, 8).map((chapter) => (
-          <button key={chapter.id} onClick={() => { onSelectChapter(chapter); onOpenTab('Lessons'); }} style={{ '--col': chapter.color }}>
-            <span>{chapter.icon}</span>
-            <strong>{chapter.number}. {chapter.title}</strong>
-            <small>{chapter.subtopics.length} подтем</small>
-          </button>
-        ))}
-      </div>
+      <CasePrepMenu
+        stats={stats}
+        onOpenTab={onOpenTab}
+        onOpenReview={onOpenReview}
+        onOpenExam={onOpenExam}
+      />
+      <CourseContentPreview onSelectChapter={onSelectChapter} onOpenTab={onOpenTab} />
     </div>
   );
 }
@@ -2291,54 +2323,221 @@ function LessonsContent({ chapter, onSelectChapter }) {
   );
 }
 
-function NotesContent({ chapter, onSelectChapter }) {
-  const chapters = chapter ? [chapter] : PM_CHAPTERS;
+const NOTE_SOURCE_LINKS = [
+  { label: 'SVPG: Discovery / Delivery', href: 'https://www.svpg.com/discovery-delivery/' },
+  { label: 'HBR: Jobs To Be Done', href: 'https://hbr.org/2016/09/know-your-customers-jobs-to-be-done' },
+  { label: 'ProductTalk: Continuous Discovery', href: 'https://learn.producttalk.org/' },
+  { label: 'The Lean Startup', href: 'https://theleanstartup.com/' },
+];
 
-  if (!chapter) {
-    return (
-      <div className="notesHome">
-        <div className="notesHomeHead">
-          <span>Notes</span>
-          <h2>Конспекты по всем темам</h2>
-          <p>Как в RevisionDojo: короткие экспертные блоки, которые можно читать отдельно от уроков и сразу превращать в практику.</p>
-        </div>
-        <div className="notesChapterGrid">
-          {PM_CHAPTERS.map((item) => (
-            <button key={item.id} onClick={() => onSelectChapter(item)} style={{ '--col': item.color }}>
-              <span>{item.icon}</span>
-              <strong>{item.number}. {item.title}</strong>
-              <small>{item.notes.length} заметок · {item.subtopics.length} подтем</small>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
+const PRODUCT_THINKING_NOTE = {
+  title: 'Product Thinking Notes',
+  eyebrow: 'PM foundations',
+  subtitle: 'Как думать проблемами, пользователями и бизнес-результатом, а не списком фич.',
+  introTitle: 'What is product thinking?',
+  definitionTitle: 'Product thinking',
+  definition:
+    'Product thinking is the habit of connecting user problems, business outcomes, constraints and evidence before choosing a solution.',
+  bullets: [
+    'A product is not a feature list. It is a system for creating user value and business value at the same time.',
+    'Start from the user job, context and pain, then translate it into a measurable product outcome.',
+    'Good PM answers move through problem -> evidence -> options -> trade-offs -> metric -> next test.',
+    'Discovery and delivery are not separate worlds: discovery reduces uncertainty, delivery turns the validated bet into product.',
+    'A strong case answer makes assumptions explicit and names what evidence would change the recommendation.',
+  ],
+  sections: [
+    {
+      title: 'Problem Space Before Solution Space',
+      bullets: [
+        'Problem space describes who struggles, in what situation, what progress they want and why the current workaround fails.',
+        'Solution space is the set of possible product changes: feature, workflow, pricing, policy, content, operation or AI intervention.',
+        'Jumping straight to solution space creates feature theater: lots of output, weak evidence, unclear impact.',
+        'A useful interview answer keeps asking: what user segment, what behavior, what friction, what metric?',
+      ],
+    },
+    {
+      title: 'Jobs To Be Done',
+      bullets: [
+        'JTBD says users "hire" products to make progress in a specific circumstance.',
+        'The job is not a demographic segment. It is the situation, motivation, desired progress and constraints around a behavior.',
+        'For case interviews, JTBD helps avoid generic personas and focus on why a user would switch from the status quo.',
+        'Good JTBD statement: When [situation], user wants to [progress], but [barrier], so success means [observable outcome].',
+      ],
+    },
+    {
+      title: 'Opportunity Solution Tree',
+      bullets: [
+        'Start with an outcome, map opportunities from research, then connect candidate solutions and experiments.',
+        'This keeps roadmap ideas tied to evidence instead of stakeholder preference.',
+        'Use it in cases when you need to prioritize: choose opportunities by severity, frequency, reach and strategic fit.',
+      ],
+    },
+    {
+      title: 'Metrics and Validation',
+      bullets: [
+        'Pick one primary success metric, then add guardrails so the team cannot win by damaging trust, margin or retention.',
+        'Validation is not only A/B testing. It can be interview evidence, concierge MVP, fake door, prototype test, cohort read or manual pilot.',
+        'The strongest answers say what would prove the idea wrong.',
+      ],
+    },
+  ],
+  callouts: [
+    {
+      type: 'analogy',
+      title: 'Analogy',
+      text: 'A PM is not a waiter taking feature orders. A PM is closer to a diagnostician: understand symptoms, locate the cause, test treatment, then measure recovery.',
+    },
+    {
+      type: 'note',
+      title: 'Interview move',
+      text: 'When the prompt asks for a feature, first reframe it: "I will start by clarifying the target user and success metric, because the right feature depends on the problem we are solving."',
+    },
+    {
+      type: 'mistake',
+      title: 'Common mistake',
+      items: [
+        'Listing five features without choosing a user segment.',
+        'Using "improve UX" as a cause instead of naming the exact friction.',
+        'Optimizing one metric without guardrails.',
+        'Calling every validation method an A/B test.',
+      ],
+    },
+  ],
+};
+
+const getNotesArticle = (chapter) => {
+  if (!chapter || chapter.id === 'ch1') return PRODUCT_THINKING_NOTE;
+  return {
+    title: `${chapter.title} Notes`,
+    eyebrow: `Module ${chapter.number}`,
+    subtitle: chapter.description,
+    introTitle: chapter.title,
+    definitionTitle: chapter.notes?.[0]?.title || chapter.title,
+    definition: chapter.notes?.[0]?.text || chapter.description,
+    bullets: [
+      chapter.description,
+      'Use this module as a case-interview lens: state the objective, name the user or business driver, then connect evidence to a decision.',
+      'A strong answer separates facts, assumptions and recommendations.',
+      'Before moving to solutions, write the metric that would prove the analysis worked.',
+    ],
+    sections: [
+      {
+        title: 'How to use this in a case',
+        bullets: [
+          'Restate the problem in one sentence.',
+          'Choose the most relevant framework, not every framework you know.',
+          'Name the first data cut you would ask for.',
+          'End with a decision criterion and next step.',
+        ],
+      },
+    ],
+    callouts: (chapter.notes || []).slice(1, 4).map((note) => ({
+      type: note.type === 'example' ? 'example' : note.type === 'analogy' ? 'analogy' : 'note',
+      title: note.title,
+      text: note.text,
+    })),
+  };
+};
+
+function NoteCallout({ callout }) {
+  return (
+    <div className={`noteArticleCallout ${callout.type}`}>
+      <div className="noteArticleCalloutLabel">{callout.title}</div>
+      {callout.items ? (
+        <ul>
+          {callout.items.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+      ) : (
+        <p>{callout.text}</p>
+      )}
+    </div>
+  );
+}
+
+function NotesContent({ chapter, onSelectChapter }) {
+  const activeChapter = chapter || PM_CHAPTERS.find((item) => item.id === 'ch1') || PM_CHAPTERS[0];
+  const article = getNotesArticle(activeChapter);
 
   return (
-    <div className="notesContent">
-      {chapters.map((item) => (
-        <section key={item.id} className="notesChapter">
-          <div className="learnChapterViewHeader" style={{ '--ch-color': item.color }}>
-            <span className="learnChapterViewIcon">{item.icon}</span>
-            <div>
-              <h2>{item.number}. {item.title}</h2>
-              <p className="learnChapterViewDesc">{item.description}</p>
-            </div>
+    <div className="noteArticle">
+      <div className="noteArticleHero" style={{ '--ch-color': activeChapter.color }}>
+        <div>
+          <div className="noteArticleCrumbs">
+            <span>Case prep resources</span>
+            <b>›</b>
+            <span>Notes</span>
+            <b>›</b>
+            <strong>{activeChapter.title}</strong>
           </div>
-          <div className="learnNotesSection">
-            {item.notes.map((note, i) => (
-              <div key={`${item.id}-${i}`} className={`learnNoteBlock learnNoteBlock--${note.type}`}>
-                <div className="learnNoteBlockLabel">
-                  {{ definition: 'Определение', example: 'Пример', note: 'Заметка', analogy: 'Аналогия' }[note.type]}
-                </div>
-                <h4 className="learnNoteBlockTitle">{note.title}</h4>
-                <p className="learnNoteBlockText">{note.text}</p>
-              </div>
+          <h2>{article.title}</h2>
+          <p>{article.subtitle}</p>
+          <div className="noteArticleSources">
+            {NOTE_SOURCE_LINKS.map((source) => (
+              <a key={source.href} href={source.href} target="_blank" rel="noreferrer">{source.label}</a>
             ))}
           </div>
+        </div>
+        <button className="btn btn-ghost" onClick={() => onSelectChapter(null)}>Сбросить тему</button>
+      </div>
+
+      <article className="noteArticleBody">
+        <h3>{article.introTitle}</h3>
+        <div className="noteArticleDefinition">
+          <span>Definition</span>
+          <strong>{article.definitionTitle}</strong>
+          <p>{article.definition}</p>
+        </div>
+
+        <ol className="noteArticleList">
+          {article.bullets.map((item) => <li key={item}>{item}</li>)}
+        </ol>
+
+        {article.sections.map((section) => (
+          <section key={section.title} className="noteArticleSection">
+            <h3>{section.title}</h3>
+            <ol className="noteArticleList">
+              {section.bullets.map((item) => <li key={item}>{item}</li>)}
+            </ol>
+          </section>
+        ))}
+
+        <div className="noteArticleDiagram">
+          <span>Case answer flow</span>
+          <div>
+            {['User', 'Problem', 'Evidence', 'Options', 'Trade-off', 'Metric', 'Next test'].map((item) => (
+              <strong key={item}>{item}</strong>
+            ))}
+          </div>
+        </div>
+
+        {article.callouts.map((callout) => <NoteCallout key={callout.title} callout={callout} />)}
+
+        <section className="noteArticlePractice">
+          <h3>How to practice this note</h3>
+          <p>Take any product prompt and write a 90-second answer using the flow above. Then open Questionbank and check whether your answer names user, problem, evidence, trade-off and metric.</p>
+          <div>
+            <button className="btn btn-primary" onClick={() => onSelectChapter(activeChapter)}>Оставить эту тему</button>
+          </div>
         </section>
-      ))}
+      </article>
+
+      <aside className="noteArticleTopicRail">
+        <span>Other notes</span>
+        {PM_CHAPTERS.slice(0, 8).map((item) => (
+          <button
+            key={item.id}
+            className={item.id === activeChapter.id ? 'active' : ''}
+            onClick={() => onSelectChapter(item)}
+            style={{ '--col': item.color }}
+          >
+            <span>{item.icon}</span>
+            <div>
+              <strong>{item.title}</strong>
+              <small>{item.subtopics.length} подтем</small>
+            </div>
+          </button>
+        ))}
+      </aside>
     </div>
   );
 }
