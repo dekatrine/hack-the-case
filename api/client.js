@@ -47,4 +47,14 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  learnExplain: (payload) =>
+    request('/api/learn/explain', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  learnSession: (payload) =>
+    request('/api/learn/session', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 };

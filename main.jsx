@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { createRoot } from 'react-dom/client';
 import { api } from './api/client.js';
 import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from './quizData.js';
+import { PM_CHAPTERS, FLASHCARDS, PRACTICE_QUESTIONS, KEY_DEFINITIONS, LEARN_TOGETHER_CONTENT } from './courseData.js';
 import './styles.css';
 
 /* ───────────────────────────── Topbar ─────────────────────────────── */
@@ -19,7 +20,7 @@ const Topbar = ({ onHome, screen }) => (
 );
 
 /* ──────────────────────────── Landing ─────────────────────────────── */
-const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview }) => (
+const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn }) => (
   <div className="fade-in">
     <div className="eyebrow"><span className="num">01 /</span> Choose your track</div>
     <h1 className="hero">
@@ -59,6 +60,16 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview }) => (
         </div>
       </div>
       <span className="quizBannerArrow">→</span>
+    </div>
+    <div className="learnBanner" onClick={onOpenLearn} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpenLearn()}>
+      <div className="learnBannerLeft">
+        <span className="learnBannerIcon">📚</span>
+        <div>
+          <p className="learnBannerTitle">Учебные материалы — полный курс PM</p>
+          <p className="learnBannerSub">{PM_CHAPTERS.length} разделов · Flash Cards с интервальными повторениями · Банк вопросов с AI-объяснениями · Адаптивные сессии в стиле Alice.tech</p>
+        </div>
+      </div>
+      <span className="learnBannerArrow">→</span>
     </div>
   </div>
 );
@@ -1443,7 +1454,7 @@ const InterviewSectionBody = ({ section, data = false, compact = false }) => {
 const App = () => {
   const [config, setConfig] = useState(null);
   const [err, setErr] = useState(null);
-  const [screen, setScreen] = useState('landing'); // landing | track | workspace | quiz | interview
+  const [screen, setScreen] = useState('landing'); // landing | track | workspace | quiz | interview | learn
   const [quizCategory, setQuizCategory] = useState(null);
   const [track, setTrack] = useState(null);
   const [caseText, setCaseText] = useState('');
@@ -1486,7 +1497,7 @@ const App = () => {
   if (err && !config) return <FullErr msg={err} />;
   if (!config) return <Loading />;
 
-  const screenLabel = { landing: 'home / tracks', track: `track / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz', interview: 'practice / interview' }[screen];
+  const screenLabel = { landing: 'home / tracks', track: `track / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz', interview: 'practice / interview', learn: 'learn / pm course' }[screen];
 
   return (
     <div className="shell">
@@ -1500,6 +1511,7 @@ const App = () => {
             onPickTrack={(t) => { setTrack(t); setScreen('track'); }}
             onOpenQuiz={() => { setQuizCategory(null); setScreen('quiz'); }}
             onOpenInterview={() => setScreen('interview')}
+            onOpenLearn={() => setScreen('learn')}
           />
         )}
         {screen === 'track' && track && (
@@ -1530,6 +1542,9 @@ const App = () => {
             evaluation={evaluation}
             onBack={() => setScreen('track')}
           />
+        )}
+        {screen === 'learn' && (
+          <LearningScreen onBack={() => setScreen('landing')} />
         )}
       </main>
     </div>
@@ -1822,6 +1837,630 @@ function quizShuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LEARNING SCREEN — RevisionDojo layout + Alice.tech explanations
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const LEARN_TABS = ['Уроки', 'Flash Cards', 'Банк вопросов', 'Термины'];
+
+const LearningScreen = ({ onBack }) => {
+  const [activeTab, setActiveTab] = useState('Уроки');
+  const [selectedChapter, setSelectedChapter] = useState(null);
+
+  return (
+    <div className="learnScreen fade-in">
+      {/* Header */}
+      <div className="learnScreenHeader">
+        <button className="btn btn-ghost" onClick={onBack}>← Главная</button>
+        <div>
+          <div className="eyebrow"><span className="num">04 /</span> Учебные материалы</div>
+          <h1 className="learnScreenTitle">Полный курс <em>Product Manager</em></h1>
+          <p className="learnScreenSub">{PM_CHAPTERS.length} разделов · {Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0)} карточек · {PRACTICE_QUESTIONS.length} вопросов · {KEY_DEFINITIONS.length} терминов</p>
+        </div>
+      </div>
+
+      {/* Tab bar */}
+      <div className="learnTabBar">
+        {LEARN_TABS.map((t) => (
+          <button key={t} className={`learnTab${activeTab === t ? ' active' : ''}`} onClick={() => { setActiveTab(t); setSelectedChapter(null); }}>{t}</button>
+        ))}
+      </div>
+
+      {/* Layout: sidebar + content */}
+      <div className="learnLayout">
+        <LearnSidebar
+          activeTab={activeTab}
+          selectedChapter={selectedChapter}
+          onSelect={setSelectedChapter}
+        />
+        <div className="learnMain">
+          {activeTab === 'Уроки' && <LessonsContent chapter={selectedChapter} onSelectChapter={setSelectedChapter} />}
+          {activeTab === 'Flash Cards' && <FlashCardsContent chapter={selectedChapter} />}
+          {activeTab === 'Банк вопросов' && <QuestionBankContent chapter={selectedChapter} />}
+          {activeTab === 'Термины' && <DefinitionsContent />}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ── Sidebar — RevisionDojo style chapter tree ── */
+function LearnSidebar({ activeTab, selectedChapter, onSelect }) {
+  const fcProgress = loadFcProgress();
+  return (
+    <aside className="learnSidebar">
+      <div className="learnSidebarTitle">Разделы курса</div>
+      {PM_CHAPTERS.map((ch) => {
+        const cards = FLASHCARDS[ch.id] || [];
+        const reviewed = cards.filter((c) => fcProgress[c.id]).length;
+        const pct = cards.length > 0 ? Math.round((reviewed / cards.length) * 100) : 0;
+        const isSelected = selectedChapter?.id === ch.id;
+        return (
+          <button
+            key={ch.id}
+            className={`learnSidebarItem${isSelected ? ' active' : ''}`}
+            onClick={() => onSelect(ch)}
+          >
+            <div className="learnSidebarProgress" style={{ '--pct': pct + '%', '--col': ch.color }}>
+              <span>{ch.icon}</span>
+            </div>
+            <div className="learnSidebarText">
+              <div className="learnSidebarName">{ch.number}. {ch.title}</div>
+              <div className="learnSidebarMeta">{ch.subtopics.length} подтем · {pct}%</div>
+            </div>
+          </button>
+        );
+      })}
+    </aside>
+  );
+}
+
+/* ── Lessons — Alice.tech style adaptive explanations ── */
+function LessonsContent({ chapter, onSelectChapter }) {
+  const [subtopic, setSubtopic] = useState(null);
+  const [sessionStep, setSessionStep] = useState('intro'); // intro | expo | mcq | done
+  const [mcqAnswered, setMcqAnswered] = useState(null);
+  const [health, setHealth] = useState(3);
+  const [xp, setXp] = useState(0);
+  const [aiExpo, setAiExpo] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    setSubtopic(null);
+    setSessionStep('intro');
+    setMcqAnswered(null);
+  }, [chapter]);
+
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [sessionStep, subtopic]);
+
+  async function handleTooHard() {
+    setAiLoading(true);
+    try {
+      const data = await api.learnSession({ chapterId: chapter?.id || '', subtopicId: subtopic?.id || '', userLevel: 'beginner' });
+      setAiExpo(data.exposition);
+    } catch {
+      setAiExpo(null);
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  if (!chapter) {
+    return (
+      <div className="learnPlaceholder">
+        <div className="learnPlaceholderIcon">📖</div>
+        <p>Выбери раздел из списка слева чтобы начать изучение</p>
+        <div className="learnChapterCards">
+          {PM_CHAPTERS.slice(0, 4).map((ch) => (
+            <button key={ch.id} className="learnChapterCard" onClick={() => onSelectChapter(ch)} style={{ '--ch-color': ch.color }}>
+              <span className="learnChapterCardIcon">{ch.icon}</span>
+              <span className="learnChapterCardTitle">{ch.number}. {ch.title}</span>
+              <span className="learnChapterCardSub">{ch.subtopics.length} подтем</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!subtopic) {
+    return (
+      <div className="learnChapterView" ref={contentRef}>
+        <div className="learnChapterViewHeader" style={{ '--ch-color': chapter.color }}>
+          <span className="learnChapterViewIcon">{chapter.icon}</span>
+          <div>
+            <h2>{chapter.number}. {chapter.title}</h2>
+            <p className="learnChapterViewDesc">{chapter.description}</p>
+          </div>
+        </div>
+
+        {/* Notes blocks */}
+        <div className="learnNotesSection">
+          <div className="learnNotesSectionTitle">Ключевые концепции</div>
+          {chapter.notes.map((note, i) => (
+            <div key={i} className={`learnNoteBlock learnNoteBlock--${note.type}`}>
+              <div className="learnNoteBlockLabel">
+                {{ definition: '📘 Определение', example: '💡 Пример', note: '📌 Заметка', analogy: '🔗 Аналогия' }[note.type]}
+              </div>
+              <h4 className="learnNoteBlockTitle">{note.title}</h4>
+              <p className="learnNoteBlockText">{note.text}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Subtopics */}
+        <div className="learnSubtopicList">
+          <div className="learnNotesSectionTitle">Подтемы для изучения</div>
+          {chapter.subtopics.map((sub, idx) => {
+            const content = LEARN_TOGETHER_CONTENT[sub.id];
+            return (
+              <button key={sub.id} className="learnSubtopicRow" onClick={() => { setSubtopic(sub); setSessionStep('expo'); setMcqAnswered(null); setAiExpo(null); }}>
+                <span className="learnSubtopicNum">{idx + 1}</span>
+                <div>
+                  <div className="learnSubtopicTitle">{sub.title}</div>
+                  <div className="learnSubtopicMeta">⏱ {sub.duration}{content ? ' · Интерактивное объяснение' : ''}</div>
+                </div>
+                <span className="learnSubtopicArrow">→</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  const content = LEARN_TOGETHER_CONTENT[subtopic.id];
+  const exposition = aiExpo || content?.exposition;
+
+  return (
+    <div className="aliceSession" ref={contentRef}>
+      {/* Alice.tech-style session header */}
+      <div className="aliceSessionHead">
+        <button className="btn btn-ghost" style={{ fontSize: 13 }} onClick={() => setSubtopic(null)}>← {chapter.title}</button>
+        <div className="aliceStats">
+          <span className="aliceHealth">{Array.from({ length: 3 }, (_, i) => i < health ? '♥' : '♡').join('')}</span>
+          <span className="aliceXp">⚡ {xp} XP</span>
+        </div>
+      </div>
+
+      {/* Progress road */}
+      <div className="aliceRoad">
+        <div className={`aliceRoadStep${sessionStep !== 'done' ? ' active' : ' done'}`}>
+          <span className="aliceRoadDot" />
+          <span>{subtopic.title}</span>
+        </div>
+      </div>
+
+      {/* Step: Exposition */}
+      {sessionStep === 'expo' && (
+        <div className="aliceExpo">
+          {content ? (
+            <>
+              <div className="aliceExpoCard">
+                <div className="aliceExpoLabel">📖 Объяснение</div>
+                {aiLoading
+                  ? <p className="aliceDim">Генерирую упрощённое объяснение…</p>
+                  : exposition?.split('\n\n').map((para, i) => <p key={i} className="aliceExpoText">{para}</p>)
+                }
+              </div>
+              <div className="aliceActions">
+                <button className="aliceBtn aliceBtnHard" onClick={handleTooHard} disabled={aiLoading}>🤔 Сложно — объясни проще</button>
+                <button className="aliceBtn aliceBtnEasy" onClick={() => { setXp((x) => x + 5); setSessionStep('mcq'); }}>🌟 Понятно, дальше</button>
+                <button className="aliceBtn aliceBtnContinue" onClick={() => setSessionStep('mcq')}>Продолжить →</button>
+              </div>
+            </>
+          ) : (
+            <div className="aliceExpoCard">
+              <div className="aliceExpoLabel">📖 Подтема</div>
+              <p className="aliceExpoText">Эта подтема входит в раздел «{chapter.title}». Изучи ключевые концепции раздела выше, затем проверь себя с помощью Flash Cards и Банка вопросов.</p>
+              <div className="aliceActions" style={{ marginTop: 20 }}>
+                <button className="aliceBtn aliceBtnContinue" onClick={() => setSubtopic(null)}>← К подтемам</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Step: MCQ */}
+      {sessionStep === 'mcq' && content && (
+        <div className="aliceMcq">
+          <div className="aliceMcqCard">
+            <div className="aliceExpoLabel">🔵 Вопрос</div>
+            <p className="aliceMcqQ">{content.mcq.question}</p>
+            <div className="aliceMcqOptions">
+              {content.mcq.options.map((opt, i) => {
+                let cls = 'aliceMcqOpt';
+                if (mcqAnswered !== null) {
+                  if (i === content.mcq.correct) cls += ' correct';
+                  else if (i === mcqAnswered) cls += ' wrong';
+                  else cls += ' dim';
+                }
+                return (
+                  <button key={i} className={cls} onClick={() => {
+                    if (mcqAnswered !== null) return;
+                    setMcqAnswered(i);
+                    if (i === content.mcq.correct) setXp((x) => x + 10);
+                    else setHealth((h) => Math.max(0, h - 1));
+                  }} disabled={mcqAnswered !== null}>
+                    <span className="aliceMcqLetter">{String.fromCharCode(65 + i)}</span>
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+            {mcqAnswered !== null && (
+              <div className={`aliceFeedback${mcqAnswered === content.mcq.correct ? ' correct' : ' wrong'}`}>
+                <div className="aliceFeedbackIcon">{mcqAnswered === content.mcq.correct ? '✓' : '✗'}</div>
+                <div>
+                  <strong>{mcqAnswered === content.mcq.correct ? 'Правильно!' : `Правильный ответ: ${content.mcq.options[content.mcq.correct]}`}</strong>
+                  <p>{content.mcq.explanation}</p>
+                </div>
+              </div>
+            )}
+          </div>
+          {/* True/False after wrong */}
+          {mcqAnswered !== null && mcqAnswered !== content.mcq.correct && (
+            <AliceTrueFalse
+              statement={content.trueFalse.statement}
+              correct={content.trueFalse.correct}
+              explanation={content.trueFalse.explanation}
+              onDone={(ok) => { if (ok) setXp((x) => x + 5); else setHealth((h) => Math.max(0, h - 1)); setSessionStep('done'); }}
+            />
+          )}
+          {mcqAnswered === content.mcq.correct && (
+            <button className="aliceBtn aliceBtnContinue" style={{ marginTop: 16 }} onClick={() => setSessionStep('done')}>Завершить тему →</button>
+          )}
+        </div>
+      )}
+
+      {/* Done */}
+      {sessionStep === 'done' && (
+        <div className="aliceDone">
+          <div className="aliceDoneEmoji">🎓</div>
+          <h3>Тема завершена!</h3>
+          <p className="aliceDim">{subtopic.title}</p>
+          <div className="aliceDoneStats">
+            <span>❤ {health}/3</span>
+            <span>⚡ {xp} XP</span>
+          </div>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button className="btn btn-primary" onClick={() => { setSubtopic(null); setSessionStep('intro'); setMcqAnswered(null); setHealth(3); setXp(0); setAiExpo(null); }}>← Другая подтема</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AliceTrueFalse({ statement, correct, explanation, onDone }) {
+  const [answered, setAnswered] = useState(null);
+  return (
+    <div className="aliceTf">
+      <div className="aliceExpoLabel" style={{ marginBottom: 10 }}>☑️ Верно или нет?</div>
+      <p className="aliceTfStatement">{statement}</p>
+      <div className="aliceTfBtns">
+        <button className={`aliceTfBtn${answered !== null ? (false === correct ? ' wrong' : answered === false ? ' dim' : '') : ''}`}
+          onClick={() => { if (answered !== null) return; setAnswered(false); }}
+          disabled={answered !== null}>
+          ✗ Неверно
+        </button>
+        <button className={`aliceTfBtn${answered !== null ? (true === correct ? ' correct' : answered === true ? ' wrong' : ' dim') : ''}`}
+          onClick={() => { if (answered !== null) return; setAnswered(true); }}
+          disabled={answered !== null}>
+          ✓ Верно
+        </button>
+      </div>
+      {answered !== null && (
+        <div className={`aliceFeedback${answered === correct ? ' correct' : ' wrong'}`} style={{ marginTop: 12 }}>
+          <div className="aliceFeedbackIcon">{answered === correct ? '✓' : '✗'}</div>
+          <div><strong>{answered === correct ? 'Правильно!' : 'Не совсем...'}</strong><p>{explanation}</p></div>
+        </div>
+      )}
+      {answered !== null && (
+        <button className="aliceBtn aliceBtnContinue" style={{ marginTop: 14 }} onClick={() => onDone(answered === correct)}>Завершить →</button>
+      )}
+    </div>
+  );
+}
+
+/* ── Flash Cards — Anki-style SRS with dark theme ── */
+
+const SRS_INTERVALS = { again: 10 / (60 * 24), hard: 45 / (60 * 24), good: 1, easy: 4 };
+
+function loadFcProgress() {
+  try { return JSON.parse(localStorage.getItem('hc_fc_v2') || '{}'); } catch { return {}; }
+}
+function saveFcProgress(p) { localStorage.setItem('hc_fc_v2', JSON.stringify(p)); }
+
+function FlashCardsContent({ chapter }) {
+  const [progress, setProgress] = useState(loadFcProgress);
+  const [cardIndex, setCardIndex] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [done, setDone] = useState(false);
+  const cards = chapter ? (FLASHCARDS[chapter.id] || []) : [];
+
+  const totalAll = Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0);
+  const reviewedAll = Object.keys(progress).length;
+  const confAll = totalAll > 0 ? Math.round((reviewedAll / totalAll) * 100) : 0;
+
+  useEffect(() => { setCardIndex(0); setFlipped(false); setDone(false); }, [chapter]);
+
+  useEffect(() => {
+    const fn = (e) => { if (e.code === 'Space' && chapter) { e.preventDefault(); setFlipped((f) => !f); } };
+    window.addEventListener('keydown', fn);
+    return () => window.removeEventListener('keydown', fn);
+  }, [chapter]);
+
+  function rate(r) {
+    const card = cards[cardIndex];
+    const interval = SRS_INTERVALS[r];
+    const nextReview = Date.now() + interval * 86400000;
+    const next = { ...progress, [card.id]: { rating: r, nextReview, reviewedAt: Date.now() } };
+    setProgress(next);
+    saveFcProgress(next);
+    if (cardIndex + 1 >= cards.length) setDone(true);
+    else { setCardIndex((i) => i + 1); setFlipped(false); }
+  }
+
+  if (!chapter) {
+    return (
+      <div className="fcHome">
+        <div className="fcHomeStats">
+          <div className="fcRingWrap">
+            <svg viewBox="0 0 64 64" className="fcRingSvg">
+              <circle cx="32" cy="32" r="28" fill="none" stroke="var(--hair-strong)" strokeWidth="4" />
+              <circle cx="32" cy="32" r="28" fill="none" stroke="var(--mint)" strokeWidth="4"
+                strokeDasharray={`${2 * Math.PI * 28}`}
+                strokeDashoffset={`${2 * Math.PI * 28 * (1 - confAll / 100)}`}
+                strokeLinecap="round" transform="rotate(-90 32 32)" />
+            </svg>
+            <span className="fcRingPct">{confAll}%</span>
+          </div>
+          <div>
+            <div className="fcHomeStatsLabel">Общий прогресс</div>
+            <div className="fcHomeStatsSub">{reviewedAll}/{totalAll} карточек изучено</div>
+          </div>
+        </div>
+        <div className="fcHomeHint">Выбери раздел слева чтобы начать сессию</div>
+        <div className="fcChapterGrid">
+          {PM_CHAPTERS.map((ch) => {
+            const chs = FLASHCARDS[ch.id] || [];
+            const chRev = chs.filter((c) => progress[c.id]).length;
+            const chPct = chs.length > 0 ? Math.round((chRev / chs.length) * 100) : 0;
+            return (
+              <div key={ch.id} className="fcChapterTile" style={{ '--col': ch.color }}>
+                <span className="fcChapterTileIcon">{ch.icon}</span>
+                <div className="fcChapterTileName">{ch.number}. {ch.title}</div>
+                <div className="fcChapterTileBar"><div style={{ width: `${chPct}%` }} /></div>
+                <div className="fcChapterTilePct">{chPct}% · {chs.length} карточек</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (done) return (
+    <div className="fcDone">
+      <div className="fcDoneEmoji">🎉</div>
+      <h3>Сессия завершена!</h3>
+      <p className="aliceDim">{cards.length} карточек по разделу «{chapter.title}»</p>
+      <button className="btn btn-primary" onClick={() => { setCardIndex(0); setFlipped(false); setDone(false); }}>Повторить</button>
+    </div>
+  );
+
+  const card = cards[cardIndex];
+  const chPct = cards.length > 0 ? Math.round((cardIndex / cards.length) * 100) : 0;
+
+  return (
+    <div className="fcSession">
+      <div className="fcSessionMeta">
+        <span className="fcSessionChapter">{chapter.icon} {chapter.title}</span>
+        <span className="fcSessionCounter">{cardIndex + 1} / {cards.length}</span>
+      </div>
+      <div className="fcSessionBar"><div style={{ width: `${chPct}%` }} /></div>
+
+      <div className={`fcCard${flipped ? ' flipped' : ''}`} onClick={() => setFlipped((f) => !f)}>
+        <div className="fcFront">
+          <p className="fcCardText">{card.front}</p>
+          <span className="fcHint">Spacebar / нажми чтобы перевернуть</span>
+        </div>
+        <div className="fcBack">
+          <p className="fcCardText">{card.back}</p>
+        </div>
+      </div>
+
+      {flipped && (
+        <div className="fcRating">
+          <p className="fcRatingHint">Насколько хорошо ты знал ответ?</p>
+          <div className="fcRatingRow">
+            {[['again', '✗ Снова', '10 мин', 'var(--rust)'], ['hard', '~ Сложно', '45 мин', 'var(--amber)'], ['good', '✓ Хорошо', '1 день', '#60a5fa'], ['easy', '★ Легко', '4 дня', 'var(--mint)']].map(([key, label, sub, col]) => (
+              <button key={key} className="fcRatingBtn" style={{ '--col': col }} onClick={() => rate(key)}>
+                <span className="fcRatingLabel">{label}</span>
+                <span className="fcRatingInterval">{sub}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {!flipped && <p className="aliceDim" style={{ textAlign: 'center', marginTop: 16 }}>Нажми на карточку или Spacebar чтобы увидеть ответ</p>}
+
+      <div className="fcProgressBox">
+        <div className="fcProgressBoxLabel">Spaced Repetition Progress</div>
+        <div className="fcProgressBoxBar"><div style={{ width: `${confAll}%` }} /></div>
+        <div className="fcProgressBoxSub">{confAll}% confidence · {reviewedAll}/{totalAll} карточек</div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Question Bank ── */
+function QuestionBankContent({ chapter }) {
+  const questions = chapter
+    ? PRACTICE_QUESTIONS.filter((q) => q.chapter === chapter.id)
+    : PRACTICE_QUESTIONS;
+  const [diffFilter, setDiffFilter] = useState('all');
+  const [answered, setAnswered] = useState({});
+  const [expanded, setExpanded] = useState({});
+  const [saved, setSaved] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem('hc_saved_q_v2') || '[]')); } catch { return new Set(); } });
+  const [aiExp, setAiExp] = useState({});
+  const [aiLoading, setAiLoading] = useState({});
+
+  const filtered = questions.filter((q) => diffFilter === 'all' || q.difficulty === diffFilter);
+
+  function toggleSave(id) {
+    setSaved((prev) => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      localStorage.setItem('hc_saved_q_v2', JSON.stringify([...n]));
+      return n;
+    });
+  }
+
+  async function fetchAi(q) {
+    if (aiExp[q.id]) return;
+    setAiLoading((p) => ({ ...p, [q.id]: true }));
+    try {
+      const ch = PM_CHAPTERS.find((c) => c.id === q.chapter);
+      const data = await api.learnExplain({ topic: ch?.title || q.chapter, subtopic: q.subtopic || '', question: q.q, wrongAnswer: q.options[answered[q.id]] || '', correctAnswer: q.options[q.answer], difficulty: 'normal' });
+      setAiExp((p) => ({ ...p, [q.id]: data }));
+    } catch {
+      setAiExp((p) => ({ ...p, [q.id]: { explanation: 'Ошибка загрузки объяснения.', tip: '' } }));
+    } finally {
+      setAiLoading((p) => ({ ...p, [q.id]: false }));
+    }
+  }
+
+  return (
+    <div className="qbContent">
+      <div className="qbHeader">
+        <div className="qbHeaderTitle">
+          {chapter ? `${chapter.icon} ${chapter.title}` : 'Все вопросы'}
+          <span className="qbCount"> · {filtered.length}</span>
+        </div>
+        <div className="qbFilters">
+          {['all', 'easy', 'medium', 'hard'].map((d) => (
+            <button key={d} className={`qbFilterBtn${diffFilter === d ? ' active' : ''}`} onClick={() => setDiffFilter(d)}>
+              {d === 'all' ? 'Все' : d === 'easy' ? 'Лёгкие' : d === 'medium' ? 'Средние' : 'Сложные'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filtered.map((q) => {
+        const ch = PM_CHAPTERS.find((c) => c.id === q.chapter);
+        const isAns = answered[q.id] !== undefined;
+        const isOk = answered[q.id] === q.answer;
+        const isExp = expanded[q.id];
+        const ai = aiExp[q.id];
+
+        return (
+          <div key={q.id} className={`qbCard${isAns ? (isOk ? ' correct' : ' wrong') : ''}`}>
+            <div className="qbCardTop">
+              <div className="qbCardMeta">
+                <span className="qbChapterTag" style={{ color: ch?.color }}>
+                  {ch?.icon} {ch?.title}
+                </span>
+                <span className={`qbDiffTag qbDiff-${q.difficulty}`}>
+                  {q.difficulty === 'easy' ? 'Лёгкий' : q.difficulty === 'medium' ? 'Средний' : 'Сложный'}
+                </span>
+              </div>
+              <div className="qbCardActions">
+                {isAns && <span className="qbStatus">{isOk ? '✓' : '✗'}</span>}
+                <button className={`qbIconBtn${saved.has(q.id) ? ' saved' : ''}`} onClick={() => toggleSave(q.id)} title="Сохранить">🔖</button>
+                <button className="qbIconBtn" onClick={() => setExpanded((p) => ({ ...p, [q.id]: !p[q.id] }))} title="Открыть">
+                  {isExp ? '▲' : '▼'}
+                </button>
+              </div>
+            </div>
+
+            <p className="qbQuestion">{q.q}</p>
+
+            {isExp && (
+              <>
+                <div className="qbOptions">
+                  {q.options.map((opt, i) => {
+                    let cls = 'qbOpt';
+                    if (isAns) { if (i === q.answer) cls += ' correct'; else if (i === answered[q.id]) cls += ' wrong'; else cls += ' dim'; }
+                    return (
+                      <button key={i} className={cls} onClick={() => !isAns && setAnswered((p) => ({ ...p, [q.id]: i }))} disabled={isAns}>
+                        <span className="qbOptLetter">{String.fromCharCode(65 + i)}</span>
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+                {isAns && (
+                  <div className={`qbFeedback${isOk ? ' correct' : ' wrong'}`}>
+                    <strong>{isOk ? '✓ Правильно!' : `✗ ${q.options[q.answer]}`}</strong>
+                    <p>{q.explanation}</p>
+                    {!isOk && !ai && (
+                      <button className="qbAiBtn" onClick={() => fetchAi(q)} disabled={aiLoading[q.id]}>
+                        {aiLoading[q.id] ? 'Загружаю…' : '🤖 Объяснить подробнее'}
+                      </button>
+                    )}
+                    {ai && (
+                      <div className="qbAiBlock">
+                        <div className="qbAiBlockLabel">🤖 AI-объяснение</div>
+                        <p>{ai.explanation}</p>
+                        {ai.tip && <div className="qbAiTip">💡 {ai.tip}</div>}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+            {!isExp && !isAns && (
+              <button className="qbOpenBtn" onClick={() => setExpanded((p) => ({ ...p, [q.id]: true }))}>Открыть вопрос</button>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Key Definitions ── */
+function DefinitionsContent() {
+  const [search, setSearch] = useState('');
+  const [cat, setCat] = useState('all');
+  const cats = ['all', ...new Set(KEY_DEFINITIONS.map((d) => d.category))];
+  const filtered = KEY_DEFINITIONS
+    .filter((d) => (cat === 'all' || d.category === cat) && (!search || d.term.toLowerCase().includes(search.toLowerCase()) || d.definition.toLowerCase().includes(search.toLowerCase())))
+    .sort((a, b) => a.term.localeCompare(b.term));
+
+  return (
+    <div className="defsContent">
+      <div className="defsHeader">
+        <input className="defsSearch" placeholder="Поиск термина…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <select className="defsSelect" value={cat} onChange={(e) => setCat(e.target.value)}>
+          {cats.map((c) => <option key={c} value={c}>{c === 'all' ? 'Все категории' : c}</option>)}
+        </select>
+      </div>
+      <div className="defsList">
+        {filtered.map((def) => {
+          const ch = PM_CHAPTERS.find((c) => c.id === def.chapter);
+          return (
+            <div key={def.term} className="defCard">
+              <div className="defCardTop">
+                <strong className="defTerm">{def.term}</strong>
+                <span className="defCat">{def.category}</span>
+              </div>
+              <p className="defText">{def.definition}</p>
+              {ch && <div className="defChapter" style={{ color: ch.color }}>{ch.icon} {ch.title}</div>}
+            </div>
+          );
+        })}
+        {filtered.length === 0 && <p className="aliceDim">Ничего не найдено для «{search}»</p>}
+      </div>
+    </div>
+  );
 }
 
 class ErrorBoundary extends React.Component {
