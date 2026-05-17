@@ -33,17 +33,17 @@ const CasePrepMenu = ({ stats, onOpenTab, onOpenReview, onOpenExam }) => {
       group: 'Practice',
       items: [
         {
-          title: 'Questionbank',
-          subtitle: 'Practice questions with AI feedback',
-          meta: `${stats.questions} questions`,
+          title: 'Банк вопросов',
+          subtitle: 'Практика с вариантами ответа и AI-разбором',
+          meta: `${stats.questions} вопросов`,
           tone: 'blue',
           icon: '?',
           onClick: () => onOpenTab('Questionbank'),
         },
         {
-          title: 'Exam builder',
-          subtitle: 'Build your own mock case exam',
-          meta: 'AI-generated case',
+          title: 'Конструктор кейса',
+          subtitle: 'Собери пробный кейс под интервью',
+          meta: 'AI-сценарий',
           tone: 'gray',
           icon: '↗',
           onClick: onOpenExam,
@@ -54,42 +54,34 @@ const CasePrepMenu = ({ stats, onOpenTab, onOpenReview, onOpenExam }) => {
       group: 'Learn',
       items: [
         {
-          title: 'Notes',
-          subtitle: 'Study guides with frameworks and examples',
-          meta: `${stats.chapters} chapters`,
+          title: 'Конспекты',
+          subtitle: 'Теория, фреймворки и примеры ответов',
+          meta: `${stats.chapters} модулей`,
           tone: 'yellow',
           icon: '≡',
           onClick: () => onOpenTab('Notes'),
         },
         {
-          title: 'Teach Jojo',
-          subtitle: 'Practice teaching by topic and track what you covered',
-          meta: 'AI review session',
+          title: 'AI-наставник',
+          subtitle: 'Объясни тему своими словами и получи проверку',
+          meta: 'review-сессия',
           tone: 'purple',
           icon: 'AI',
           badge: 'New',
           onClick: onOpenReview,
         },
         {
-          title: 'Lessons',
-          subtitle: 'Step-by-step lessons and quizzes',
-          meta: `${stats.chapters} lessons`,
-          tone: 'orange',
-          icon: '▤',
-          onClick: () => onOpenTab('Lessons'),
-        },
-        {
-          title: 'Flashcards',
-          subtitle: 'Remember concepts with active recall',
-          meta: `${stats.cards} flashcard decks`,
+          title: 'Карточки',
+          subtitle: 'Активное вспоминание и интервальное повторение',
+          meta: `${stats.cards} карточек`,
           tone: 'cyan',
           icon: '▰',
           onClick: () => onOpenTab('Flashcards'),
         },
         {
-          title: 'Key Definitions',
-          subtitle: 'Essential terms and concepts explained',
-          meta: `${stats.definitions} definitions`,
+          title: 'Ключевые термины',
+          subtitle: 'Короткие определения для быстрого повторения',
+          meta: `${stats.definitions} терминов`,
           tone: 'pink',
           icon: '“',
           onClick: () => onOpenTab('Key Definitions'),
@@ -127,13 +119,13 @@ const CasePrepMenu = ({ stats, onOpenTab, onOpenReview, onOpenExam }) => {
 const CourseContentPreview = ({ onSelectChapter, onOpenTab }) => (
   <section className="caseCourseContent">
     <div className="caseCourseContentHead">
-      <span>Course contents</span>
+      <span>Содержание курса</span>
       <h2>Содержание курса</h2>
-      <p>Меню сверху даёт быстрый вход в формат занятия, а ниже — карта курса. Выбери модуль, чтобы открыть его в Lessons.</p>
+      <p>Выбери модуль, чтобы открыть конспект по теме. Оттуда можно перейти к вопросам, карточкам и терминам.</p>
     </div>
     <div className="caseCourseRows">
       {PM_CHAPTERS.map((chapter) => (
-        <button key={chapter.id} className="caseCourseRow" onClick={() => { onSelectChapter(chapter); onOpenTab('Lessons'); }} style={{ '--col': chapter.color }}>
+        <button key={chapter.id} className="caseCourseRow" onClick={() => { onSelectChapter(chapter); onOpenTab('Notes'); }} style={{ '--col': chapter.color }}>
           <span>{chapter.number}</span>
           <div>
             <strong>{chapter.title}</strong>
@@ -157,8 +149,8 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
           <div className="eyebrow"><span className="num">01 /</span> AI case club resources</div>
           <h1 className="dojoHeroTitle">Case prep resources</h1>
           <p className="dojoHeroSub">
-            Учебный кабинет в стиле RevisionDojo, но в визуальном языке Hack the Case:
-            notes, lessons, questionbank, flashcards, definitions и AI review собраны рядом.
+            Учебный кабинет в стиле RevisionDojo: конспекты, банк вопросов,
+            карточки, термины и AI-наставник собраны рядом.
           </p>
         </div>
         <div className="dojoHeroPanel">
@@ -175,7 +167,7 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
         <article className="dojoPrimaryCard">
           <div className="dojoCardHead">
             <span>Start here</span>
-            <button onClick={() => onOpenLearn('Notes')}>Open notes →</button>
+            <button onClick={() => onOpenLearn('Notes')}>Открыть конспекты →</button>
           </div>
           <h2>Сначала конспект, потом практика</h2>
           <p>Открой `Case prep resources`: там будет меню Practice/Learn и сразу содержание курса. Это больше не отдельная белая страница.</p>
@@ -183,7 +175,7 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
         </article>
         <div className="dojoSideStack">
           <button className="dojoActionCard" onClick={() => onOpenLearn('Questionbank')}>
-            <span>Questionbank</span>
+            <span>Банк вопросов</span>
             <strong>{stats.questions} вопросов</strong>
             <small>Проверка и AI-разбор после ошибки.</small>
           </button>
@@ -1642,7 +1634,7 @@ const App = () => {
   const screenLabel = { landing: 'dojo / resources', track: `exam mode / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz', interview: 'mock interview', learn: `resources / ${learnInitialTab}` }[screen];
 
   return (
-    <div className="shell">
+    <div className={`shell${screen === 'learn' ? ' shell--learnLight' : ''}`}>
       <Topbar onHome={() => setScreen('landing')} screen={screenLabel} />
       <main className="main">
         {busy && <BusyBanner screen={screen} />}
@@ -1994,15 +1986,23 @@ function quizShuffle(arr) {
    LEARNING SCREEN — RevisionDojo layout + Alice.tech explanations
    ═══════════════════════════════════════════════════════════════════════ */
 
-const LEARN_TABS = ['All Resources', 'Lessons', 'Notes', 'Questionbank', 'Flashcards', 'Key Definitions'];
+const LEARN_TABS = ['All Resources', 'Notes', 'Questionbank', 'Flashcards', 'Key Definitions'];
+const LEARN_TAB_LABELS = {
+  'All Resources': 'Все ресурсы',
+  Notes: 'Конспекты',
+  Questionbank: 'Банк вопросов',
+  Flashcards: 'Карточки',
+  'Key Definitions': 'Термины',
+};
 
 const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview = false, onOpenExam }) => {
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const normalizeTab = (tab) => tab === 'Lessons' ? 'Notes' : tab;
+  const [activeTab, setActiveTab] = useState(normalizeTab(initialTab));
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [reviewOpen, setReviewOpen] = useState(false);
 
   useEffect(() => {
-    setActiveTab(initialTab);
+    setActiveTab(normalizeTab(initialTab));
   }, [initialTab]);
 
   useEffect(() => {
@@ -2016,7 +2016,7 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
         <div>
           <div className="eyebrow"><span className="num">02 /</span> Resource dojo</div>
           <h1 className="learnScreenTitle">Case prep <em>resources</em></h1>
-          <p className="learnScreenSub">{PM_CHAPTERS.length} lessons · {Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0)} flashcards · {PRACTICE_QUESTIONS.length} questionbank items · {KEY_DEFINITIONS.length} definitions</p>
+          <p className="learnScreenSub">{PM_CHAPTERS.length} модулей · {Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0)} карточек · {PRACTICE_QUESTIONS.length} вопросов · {KEY_DEFINITIONS.length} терминов</p>
         </div>
         <button className="btn btn-primary" onClick={() => setReviewOpen(true)}>
           AI Review Session <span className="arrow">→</span>
@@ -2025,7 +2025,7 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
 
       <div className="learnTabBar">
         {LEARN_TABS.map((t) => (
-          <button key={t} className={`learnTab${activeTab === t ? ' active' : ''}`} onClick={() => { setActiveTab(t); setSelectedChapter(null); }}>{t}</button>
+          <button key={t} className={`learnTab${activeTab === t ? ' active' : ''}`} onClick={() => { setActiveTab(t); setSelectedChapter(null); }}>{LEARN_TAB_LABELS[t] || t}</button>
         ))}
       </div>
 
@@ -2037,10 +2037,9 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
         />
         <div className="learnMain">
           {activeTab === 'All Resources' && <ResourcesOverview onSelectChapter={setSelectedChapter} onOpenTab={setActiveTab} onOpenReview={() => setReviewOpen(true)} onOpenExam={onOpenExam} />}
-          {activeTab === 'Lessons' && <LessonsContent chapter={selectedChapter} onSelectChapter={setSelectedChapter} />}
           {activeTab === 'Notes' && <NotesContent chapter={selectedChapter} onSelectChapter={setSelectedChapter} />}
           {activeTab === 'Questionbank' && <QuestionBankContent chapter={selectedChapter} />}
-          {activeTab === 'Flashcards' && <FlashCardsContent chapter={selectedChapter} />}
+          {activeTab === 'Flashcards' && <FlashCardsContent chapter={selectedChapter} onSelectChapter={setSelectedChapter} />}
           {activeTab === 'Key Definitions' && <DefinitionsContent />}
         </div>
       </div>
@@ -2055,11 +2054,11 @@ function ResourcesOverview({ onSelectChapter, onOpenTab, onOpenReview, onOpenExa
     <div className="resourcesOverview">
       <div className="resourcesHero">
         <div>
-          <span className="resourcesKicker">All Resources</span>
+          <span className="resourcesKicker">Все ресурсы</span>
           <h2>Case prep resources</h2>
-          <p>Меню Practice/Learn как в RevisionDojo, но без смены визуального языка: тёмный workspace, плотная навигация и фокус на подготовке к кейсам.</p>
+          <p>Меню Practice/Learn как в RevisionDojo: быстрый вход в вопросы, конспекты, карточки, термины и AI-повторение.</p>
         </div>
-        <button className="btn btn-primary" onClick={onOpenReview}>Start AI Review</button>
+        <button className="btn btn-primary" onClick={onOpenReview}>AI-повторение</button>
       </div>
       <CasePrepMenu
         stats={stats}
@@ -2331,75 +2330,75 @@ const NOTE_SOURCE_LINKS = [
 ];
 
 const PRODUCT_THINKING_NOTE = {
-  title: 'Product Thinking Notes',
-  eyebrow: 'PM foundations',
+  title: 'Конспект: продуктовое мышление',
+  eyebrow: 'База PM',
   subtitle: 'Как думать проблемами, пользователями и бизнес-результатом, а не списком фич.',
-  introTitle: 'What is product thinking?',
-  definitionTitle: 'Product thinking',
+  introTitle: 'Что такое продуктовое мышление?',
+  definitionTitle: 'Продуктовое мышление',
   definition:
-    'Product thinking is the habit of connecting user problems, business outcomes, constraints and evidence before choosing a solution.',
+    'Продуктовое мышление — это привычка связывать проблему пользователя, бизнес-результат, ограничения и доказательства до выбора решения.',
   bullets: [
-    'A product is not a feature list. It is a system for creating user value and business value at the same time.',
-    'Start from the user job, context and pain, then translate it into a measurable product outcome.',
-    'Good PM answers move through problem -> evidence -> options -> trade-offs -> metric -> next test.',
-    'Discovery and delivery are not separate worlds: discovery reduces uncertainty, delivery turns the validated bet into product.',
-    'A strong case answer makes assumptions explicit and names what evidence would change the recommendation.',
+    'Продукт — это не список функций. Это система, которая одновременно создаёт ценность для пользователя и результат для бизнеса.',
+    'Начинай с задачи пользователя, контекста и боли, а затем переводи это в измеримый продуктовый результат.',
+    'Сильный PM-ответ идёт по цепочке: проблема → доказательства → варианты → компромиссы → метрика → следующий тест.',
+    'Discovery и delivery не живут отдельно: discovery снижает неопределённость, delivery превращает проверенную ставку в продукт.',
+    'Хороший ответ на кейс явно называет допущения и объясняет, какие данные могут изменить рекомендацию.',
   ],
   sections: [
     {
-      title: 'Problem Space Before Solution Space',
+      title: 'Сначала problem space, потом solution space',
       bullets: [
-        'Problem space describes who struggles, in what situation, what progress they want and why the current workaround fails.',
-        'Solution space is the set of possible product changes: feature, workflow, pricing, policy, content, operation or AI intervention.',
-        'Jumping straight to solution space creates feature theater: lots of output, weak evidence, unclear impact.',
-        'A useful interview answer keeps asking: what user segment, what behavior, what friction, what metric?',
+        'Problem space описывает, у кого есть сложность, в какой ситуации она возникает, какого прогресса хочет пользователь и почему текущее решение не работает.',
+        'Solution space — это набор возможных изменений: фича, сценарий, цена, правило, контент, операция или AI-инструмент.',
+        'Прыжок сразу в решение создаёт feature theater: много активности, мало доказательств и непонятный эффект.',
+        'Полезный ответ на интервью постоянно уточняет: какой сегмент, какое поведение, какое трение, какая метрика?',
       ],
     },
     {
       title: 'Jobs To Be Done',
       bullets: [
-        'JTBD says users "hire" products to make progress in a specific circumstance.',
-        'The job is not a demographic segment. It is the situation, motivation, desired progress and constraints around a behavior.',
-        'For case interviews, JTBD helps avoid generic personas and focus on why a user would switch from the status quo.',
-        'Good JTBD statement: When [situation], user wants to [progress], but [barrier], so success means [observable outcome].',
+        'JTBD говорит, что пользователи «нанимают» продукт, чтобы добиться прогресса в конкретной ситуации.',
+        'Job — это не демографический сегмент. Это ситуация, мотивация, желаемый прогресс и ограничения вокруг поведения.',
+        'В кейс-интервью JTBD помогает уйти от общих персон и сфокусироваться на том, почему пользователь переключится со status quo.',
+        'Шаблон хорошего JTBD: когда [ситуация], пользователь хочет [прогресс], но [барьер], поэтому успех выглядит как [наблюдаемый результат].',
       ],
     },
     {
       title: 'Opportunity Solution Tree',
       bullets: [
-        'Start with an outcome, map opportunities from research, then connect candidate solutions and experiments.',
-        'This keeps roadmap ideas tied to evidence instead of stakeholder preference.',
-        'Use it in cases when you need to prioritize: choose opportunities by severity, frequency, reach and strategic fit.',
+        'Начни с outcome, разложи возможности из исследований, затем свяжи их с решениями и экспериментами.',
+        'Так roadmap остаётся привязанным к доказательствам, а не к предпочтениям стейкхолдеров.',
+        'В кейсах используй OST для приоритизации: выбирай возможности по серьёзности боли, частоте, охвату и стратегическому соответствию.',
       ],
     },
     {
-      title: 'Metrics and Validation',
+      title: 'Метрики и проверка гипотез',
       bullets: [
-        'Pick one primary success metric, then add guardrails so the team cannot win by damaging trust, margin or retention.',
-        'Validation is not only A/B testing. It can be interview evidence, concierge MVP, fake door, prototype test, cohort read or manual pilot.',
-        'The strongest answers say what would prove the idea wrong.',
+        'Выбери одну главную метрику успеха и добавь guardrails, чтобы команда не «выиграла» ценой доверия, маржи или retention.',
+        'Валидация — это не только A/B-тест. Это могут быть интервью, concierge MVP, fake door, тест прототипа, когортный анализ или ручной пилот.',
+        'Самые сильные ответы говорят, что именно опровергнет идею.',
       ],
     },
   ],
   callouts: [
     {
       type: 'analogy',
-      title: 'Analogy',
-      text: 'A PM is not a waiter taking feature orders. A PM is closer to a diagnostician: understand symptoms, locate the cause, test treatment, then measure recovery.',
+      title: 'Аналогия',
+      text: 'PM — не официант, который принимает заказы на фичи. PM ближе к диагносту: понять симптомы, найти причину, проверить лечение и измерить восстановление.',
     },
     {
       type: 'note',
-      title: 'Interview move',
-      text: 'When the prompt asks for a feature, first reframe it: "I will start by clarifying the target user and success metric, because the right feature depends on the problem we are solving."',
+      title: 'Ход на интервью',
+      text: 'Если в условии просят фичу, сначала переформулируй: «Я начну с целевого пользователя и метрики успеха, потому что правильная фича зависит от проблемы, которую мы решаем».',
     },
     {
       type: 'mistake',
-      title: 'Common mistake',
+      title: 'Типичная ошибка',
       items: [
-        'Listing five features without choosing a user segment.',
-        'Using "improve UX" as a cause instead of naming the exact friction.',
-        'Optimizing one metric without guardrails.',
-        'Calling every validation method an A/B test.',
+        'Перечислить пять фич, не выбрав пользовательский сегмент.',
+        'Сказать «улучшить UX» вместо точного трения в сценарии.',
+        'Оптимизировать одну метрику без guardrails.',
+        'Называть любой способ проверки A/B-тестом.',
       ],
     },
   ],
@@ -2408,7 +2407,7 @@ const PRODUCT_THINKING_NOTE = {
 const getNotesArticle = (chapter) => {
   if (!chapter || chapter.id === 'ch1') return PRODUCT_THINKING_NOTE;
   return {
-    title: `${chapter.title} Notes`,
+    title: `Конспект: ${chapter.title}`,
     eyebrow: `Module ${chapter.number}`,
     subtitle: chapter.description,
     introTitle: chapter.title,
@@ -2416,18 +2415,18 @@ const getNotesArticle = (chapter) => {
     definition: chapter.notes?.[0]?.text || chapter.description,
     bullets: [
       chapter.description,
-      'Use this module as a case-interview lens: state the objective, name the user or business driver, then connect evidence to a decision.',
-      'A strong answer separates facts, assumptions and recommendations.',
-      'Before moving to solutions, write the metric that would prove the analysis worked.',
+      'Используй этот модуль как линзу для кейс-интервью: сформулируй цель, назови пользователя или бизнес-драйвер, затем свяжи доказательства с решением.',
+      'Сильный ответ разделяет факты, допущения и рекомендации.',
+      'Перед переходом к решениям зафиксируй метрику, которая покажет, что анализ сработал.',
     ],
     sections: [
       {
-        title: 'How to use this in a case',
+        title: 'Как использовать это в кейсе',
         bullets: [
-          'Restate the problem in one sentence.',
-          'Choose the most relevant framework, not every framework you know.',
-          'Name the first data cut you would ask for.',
-          'End with a decision criterion and next step.',
+          'Переформулируй проблему в одном предложении.',
+          'Выбери самый релевантный фреймворк, а не все фреймворки подряд.',
+          'Назови первый срез данных, который запросишь.',
+          'Заверши критерием решения и следующим шагом.',
         ],
       },
     ],
@@ -2465,7 +2464,7 @@ function NotesContent({ chapter, onSelectChapter }) {
           <div className="noteArticleCrumbs">
             <span>Case prep resources</span>
             <b>›</b>
-            <span>Notes</span>
+            <span>Конспекты</span>
             <b>›</b>
             <strong>{activeChapter.title}</strong>
           </div>
@@ -2483,7 +2482,7 @@ function NotesContent({ chapter, onSelectChapter }) {
       <article className="noteArticleBody">
         <h3>{article.introTitle}</h3>
         <div className="noteArticleDefinition">
-          <span>Definition</span>
+          <span>Определение</span>
           <strong>{article.definitionTitle}</strong>
           <p>{article.definition}</p>
         </div>
@@ -2502,9 +2501,9 @@ function NotesContent({ chapter, onSelectChapter }) {
         ))}
 
         <div className="noteArticleDiagram">
-          <span>Case answer flow</span>
+          <span>Логика ответа на кейс</span>
           <div>
-            {['User', 'Problem', 'Evidence', 'Options', 'Trade-off', 'Metric', 'Next test'].map((item) => (
+            {['Пользователь', 'Проблема', 'Данные', 'Варианты', 'Компромисс', 'Метрика', 'Следующий тест'].map((item) => (
               <strong key={item}>{item}</strong>
             ))}
           </div>
@@ -2513,8 +2512,8 @@ function NotesContent({ chapter, onSelectChapter }) {
         {article.callouts.map((callout) => <NoteCallout key={callout.title} callout={callout} />)}
 
         <section className="noteArticlePractice">
-          <h3>How to practice this note</h3>
-          <p>Take any product prompt and write a 90-second answer using the flow above. Then open Questionbank and check whether your answer names user, problem, evidence, trade-off and metric.</p>
+          <h3>Как отработать конспект</h3>
+          <p>Возьми любой продуктовый prompt и напиши ответ на 90 секунд по схеме выше. Затем открой банк вопросов и проверь, есть ли в ответе пользователь, проблема, данные, компромисс и метрика.</p>
           <div>
             <button className="btn btn-primary" onClick={() => onSelectChapter(activeChapter)}>Оставить эту тему</button>
           </div>
@@ -2522,7 +2521,7 @@ function NotesContent({ chapter, onSelectChapter }) {
       </article>
 
       <aside className="noteArticleTopicRail">
-        <span>Other notes</span>
+        <span>Другие конспекты</span>
         {PM_CHAPTERS.slice(0, 8).map((item) => (
           <button
             key={item.id}
@@ -2734,7 +2733,7 @@ function loadFcProgress() {
 }
 function saveFcProgress(p) { localStorage.setItem('hc_fc_v2', JSON.stringify(p)); }
 
-function FlashCardsContent({ chapter }) {
+function FlashCardsContent({ chapter, onSelectChapter }) {
   const [progress, setProgress] = useState(loadFcProgress);
   const [cardIndex, setCardIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -2748,10 +2747,10 @@ function FlashCardsContent({ chapter }) {
   useEffect(() => { setCardIndex(0); setFlipped(false); setDone(false); }, [chapter]);
 
   useEffect(() => {
-    const fn = (e) => { if (e.code === 'Space' && chapter) { e.preventDefault(); setFlipped((f) => !f); } };
+    const fn = (e) => { if (e.code === 'Space' && chapter && cards.length) { e.preventDefault(); setFlipped((f) => !f); } };
     window.addEventListener('keydown', fn);
     return () => window.removeEventListener('keydown', fn);
-  }, [chapter]);
+  }, [chapter, cards.length]);
 
   function rate(r) {
     const card = cards[cardIndex];
@@ -2790,18 +2789,27 @@ function FlashCardsContent({ chapter }) {
             const chRev = chs.filter((c) => progress[c.id]).length;
             const chPct = chs.length > 0 ? Math.round((chRev / chs.length) * 100) : 0;
             return (
-              <div key={ch.id} className="fcChapterTile" style={{ '--col': ch.color }}>
+              <button key={ch.id} className="fcChapterTile" style={{ '--col': ch.color }} onClick={() => onSelectChapter(ch)}>
                 <span className="fcChapterTileIcon">{ch.icon}</span>
                 <div className="fcChapterTileName">{ch.number}. {ch.title}</div>
                 <div className="fcChapterTileBar"><div style={{ width: `${chPct}%` }} /></div>
                 <div className="fcChapterTilePct">{chPct}% · {chs.length} карточек</div>
-              </div>
+              </button>
             );
           })}
         </div>
       </div>
     );
   }
+
+  if (!cards.length) return (
+    <div className="fcDone">
+      <div className="fcDoneEmoji">▰</div>
+      <h3>В этом разделе пока нет карточек</h3>
+      <p className="aliceDim">Выбери другой модуль слева или вернись к списку карточек.</p>
+      <button className="btn btn-primary" onClick={() => onSelectChapter(null)}>К списку модулей</button>
+    </div>
+  );
 
   if (done) return (
     <div className="fcDone">
