@@ -30,7 +30,7 @@ const getLearningStats = () => ({
 const CasePrepMenu = ({ stats, onOpenTab, onOpenReview, onOpenExam }) => {
   const menuItems = [
     {
-      group: 'Practice',
+      group: 'Практика',
       items: [
         {
           title: 'Банк вопросов',
@@ -51,7 +51,7 @@ const CasePrepMenu = ({ stats, onOpenTab, onOpenReview, onOpenExam }) => {
       ],
     },
     {
-      group: 'Learn',
+      group: 'Учёба',
       items: [
         {
           title: 'Конспекты',
@@ -1996,7 +1996,7 @@ const LEARN_TAB_LABELS = {
 };
 
 const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview = false, onOpenExam }) => {
-  const normalizeTab = (tab) => tab === 'Lessons' ? 'Notes' : tab;
+  const normalizeTab = (tab) => LEARN_TABS.includes(tab) ? tab : 'Notes';
   const [activeTab, setActiveTab] = useState(normalizeTab(initialTab));
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -2019,7 +2019,7 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
           <p className="learnScreenSub">{PM_CHAPTERS.length} модулей · {Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0)} карточек · {PRACTICE_QUESTIONS.length} вопросов · {KEY_DEFINITIONS.length} терминов</p>
         </div>
         <button className="btn btn-primary" onClick={() => setReviewOpen(true)}>
-          AI Review Session <span className="arrow">→</span>
+          AI-повторение <span className="arrow">→</span>
         </button>
       </div>
 
