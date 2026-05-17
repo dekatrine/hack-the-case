@@ -149,8 +149,8 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
           <div className="eyebrow"><span className="num">01 /</span> AI case club resources</div>
           <h1 className="dojoHeroTitle">Case prep resources</h1>
           <p className="dojoHeroSub">
-            Учебный кабинет в стиле RevisionDojo: конспекты, банк вопросов,
-            карточки, термины и AI-наставник собраны рядом.
+            Структурированный учебный кабинет: конспекты с визуализациями, банк вопросов,
+            карточки с интервальными повторениями, термины и AI-наставник — всё в одном месте.
           </p>
         </div>
         <div className="dojoHeroPanel">
@@ -170,7 +170,7 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
             <button onClick={() => onOpenLearn('Notes')}>Открыть конспекты →</button>
           </div>
           <h2>Сначала конспект, потом практика</h2>
-          <p>Открой `Case prep resources`: там будет меню Practice/Learn и сразу содержание курса. Это больше не отдельная белая страница.</p>
+          <p>Открой «Все ресурсы» — там конспект по теме, банк вопросов с AI-разбором ошибок и карточки с интервальными повторениями. Начни с конспекта, потом проверь себя.</p>
           <button className="btn btn-primary" onClick={() => onOpenLearn('All Resources')}>Перейти к ресурсам</button>
         </article>
         <div className="dojoSideStack">
@@ -1983,7 +1983,7 @@ function quizShuffle(arr) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   LEARNING SCREEN — RevisionDojo layout + Alice.tech explanations
+   LEARNING SCREEN — adaptive study interface
    ═══════════════════════════════════════════════════════════════════════ */
 
 const LEARN_TABS = ['All Resources', 'Notes', 'Questionbank', 'Flashcards', 'Key Definitions'];
@@ -2056,7 +2056,7 @@ function ResourcesOverview({ onSelectChapter, onOpenTab, onOpenReview, onOpenExa
         <div>
           <span className="resourcesKicker">Все ресурсы</span>
           <h2>Case prep resources</h2>
-          <p>Меню Practice/Learn как в RevisionDojo: быстрый вход в вопросы, конспекты, карточки, термины и AI-повторение.</p>
+          <p>Полный учебный кабинет по Product Management: быстрый вход в вопросы, конспекты, карточки, термины и AI-повторение.</p>
         </div>
         <button className="btn btn-primary" onClick={onOpenReview}>AI-повторение</button>
       </div>
@@ -2071,9 +2071,24 @@ function ResourcesOverview({ onSelectChapter, onOpenTab, onOpenReview, onOpenExa
   );
 }
 
-/* ── Sidebar — RevisionDojo style chapter tree ── */
+/* ── Sidebar — expandable chapter + subtopic tree ── */
 function LearnSidebar({ activeTab, selectedChapter, onSelect }) {
+  const [expanded, setExpanded] = useState(() => new Set(selectedChapter ? [selectedChapter.id] : []));
   const fcProgress = loadFcProgress();
+
+  useEffect(() => {
+    if (selectedChapter) setExpanded((prev) => new Set([...prev, selectedChapter.id]));
+  }, [selectedChapter]);
+
+  function toggleExpand(chId, e) {
+    e.stopPropagation();
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(chId) ? next.delete(chId) : next.add(chId);
+      return next;
+    });
+  }
+
   return (
     <aside className="learnSidebar">
       <div className="learnSidebarTitle">Разделы курса</div>
@@ -2082,20 +2097,46 @@ function LearnSidebar({ activeTab, selectedChapter, onSelect }) {
         const reviewed = cards.filter((c) => fcProgress[c.id]).length;
         const pct = cards.length > 0 ? Math.round((reviewed / cards.length) * 100) : 0;
         const isSelected = selectedChapter?.id === ch.id;
+        const isExpanded = expanded.has(ch.id);
+
         return (
-          <button
-            key={ch.id}
-            className={`learnSidebarItem${isSelected ? ' active' : ''}`}
-            onClick={() => onSelect(ch)}
-          >
-            <div className="learnSidebarProgress" style={{ '--pct': pct + '%', '--col': ch.color }}>
-              <span>{ch.icon}</span>
-            </div>
-            <div className="learnSidebarText">
-              <div className="learnSidebarName">{ch.number}. {ch.title}</div>
-              <div className="learnSidebarMeta">{ch.subtopics.length} подтем · {pct}%</div>
-            </div>
-          </button>
+          <div key={ch.id} className="sidebarChapterGroup">
+            <button
+              className={`sidebarChapterHead${isSelected ? ' active' : ''}`}
+              onClick={() => { onSelect(ch); setExpanded((prev) => new Set([...prev, ch.id])); }}
+            >
+              <div className="sidebarCircle" style={{ '--col': ch.color }}>
+                {pct >= 100
+                  ? <span className="sidebarCircleFull">✓</span>
+                  : pct > 0
+                    ? <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--col)" strokeWidth="2.5" strokeDasharray={`${2 * Math.PI * 10 * pct / 100} ${2 * Math.PI * 10}`} strokeLinecap="round" transform="rotate(-90 12 12)" /></svg>
+                    : null}
+              </div>
+              <div className="sidebarChapterText">
+                <div className="sidebarChapterName">{ch.number}. {ch.title}</div>
+                <div className="sidebarChapterMeta">{ch.subtopics.length} подтем{pct > 0 ? ` · ${pct}%` : ''}</div>
+              </div>
+              <button className="sidebarExpandBtn" onClick={(e) => toggleExpand(ch.id, e)} aria-label="expand">
+                {isExpanded ? '▲' : '▼'}
+              </button>
+            </button>
+
+            {isExpanded && (
+              <div className="sidebarSubtopics">
+                {ch.subtopics.map((sub) => (
+                  <button
+                    key={sub.id}
+                    className="sidebarSubtopic"
+                    onClick={() => onSelect(ch)}
+                  >
+                    <span className="sidebarSubDot" />
+                    <span className="sidebarSubName">{sub.title}</span>
+                    <span className="sidebarSubDuration">{sub.duration}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         );
       })}
     </aside>
@@ -2404,48 +2445,130 @@ const PRODUCT_THINKING_NOTE = {
   ],
 };
 
+const CHAPTER_DIAGRAM_STEPS = {
+  ch0: ['Пойми бизнес-контекст', 'Определи пользователя', 'Найди проблему', 'Спроектируй решение', 'Измерь результат'],
+  ch1: ['Проблема', 'Аудитория', 'Решение', 'Бизнес-модель', 'Канал доставки'],
+  ch2: ['Ситуация', 'Job (задача)', 'Барьер', 'Желаемый прогресс', 'Переключение'],
+  ch3: ['Цель исследования', 'Выбор метода', 'Проведение', 'Синтез', 'Решение'],
+  ch4: ['TAM (весь рынок)', 'SAM (реализуемый)', 'SOM (достижимый)', 'Ваша ставка'],
+  ch5: ['Диагностика', 'Guiding Policy', 'Coherent Actions', 'North Star', 'Метрики'],
+  ch6: ['Business Goal', 'Product Goal', 'NSM', 'Input Metrics', 'Experiments'],
+  ch7: ['Acquisition', 'Activation', 'Retention', 'Referral', 'Revenue'],
+  ch8: ['Гипотеза', 'Дизайн теста', 'Запуск', 'Измерение', 'Решение'],
+  ch9: ['Проблема', 'Backlog идей', 'Приоритизация', 'Roadmap', 'Delivery'],
+  ch10: ['Revenue', '− COGS', '= Gross Profit', '− CAC', '= Contribution Margin'],
+  ch11: ['Цель', 'Пользователь', 'Боль', 'Варианты', 'Выбор', 'Метрика', 'Риски'],
+};
+
 const getNotesArticle = (chapter) => {
   if (!chapter || chapter.id === 'ch1') return PRODUCT_THINKING_NOTE;
+  const definitionNote = chapter.notes?.find((n) => n.type === 'definition') || chapter.notes?.[0];
+  const exampleNote = chapter.notes?.find((n) => n.type === 'example');
+  const analogyNote = chapter.notes?.find((n) => n.type === 'analogy');
+  const noteNote = chapter.notes?.find((n) => n.type === 'note');
+  const visualNotes = (chapter.notes || []).filter((n) => ['table', 'flow', 'comparison', 'formula'].includes(n.type));
+
+  const callouts = [
+    ...(analogyNote ? [{ type: 'analogy', title: analogyNote.title, text: analogyNote.text }] : []),
+    ...(noteNote ? [{ type: 'note', title: noteNote.title, text: noteNote.text }] : []),
+    ...(exampleNote ? [{ type: 'example', title: exampleNote.title, text: exampleNote.text }] : []),
+    ...visualNotes.map((n) => ({ ...n })),
+  ];
+
   return {
     title: `Конспект: ${chapter.title}`,
-    eyebrow: `Module ${chapter.number}`,
+    eyebrow: `Модуль ${chapter.number}`,
     subtitle: chapter.description,
     introTitle: chapter.title,
-    definitionTitle: chapter.notes?.[0]?.title || chapter.title,
-    definition: chapter.notes?.[0]?.text || chapter.description,
+    definitionTitle: definitionNote?.title || chapter.title,
+    definition: definitionNote?.text || chapter.description,
     bullets: [
       chapter.description,
-      'Используй этот модуль как линзу для кейс-интервью: сформулируй цель, назови пользователя или бизнес-драйвер, затем свяжи доказательства с решением.',
-      'Сильный ответ разделяет факты, допущения и рекомендации.',
-      'Перед переходом к решениям зафиксируй метрику, которая покажет, что анализ сработал.',
+      'Используй этот раздел как фреймворк для кейс-ответа: сначала цель и пользователь, потом инструмент, потом метрика.',
+      'Сильный ответ называет допущения и объясняет, что именно изменит рекомендацию.',
+      'После изучения теории — проверь себя через банк вопросов и карточки этого раздела.',
     ],
     sections: [
       {
-        title: 'Как использовать это в кейсе',
+        title: 'Применение в кейсе',
         bullets: [
-          'Переформулируй проблему в одном предложении.',
-          'Выбери самый релевантный фреймворк, а не все фреймворки подряд.',
-          'Назови первый срез данных, который запросишь.',
-          'Заверши критерием решения и следующим шагом.',
+          'Переформулируй проблему в одном предложении с пользователем и метрикой.',
+          'Выбери один фреймворк из раздела — самый подходящий, а не все подряд.',
+          'Назови первый срез данных, который запросишь у интервьюера.',
+          'Заверши criteria for success: когда мы поймём, что решение сработало?',
         ],
       },
     ],
-    callouts: (chapter.notes || []).slice(1, 4).map((note) => ({
-      type: note.type === 'example' ? 'example' : note.type === 'analogy' ? 'analogy' : 'note',
-      title: note.title,
-      text: note.text,
-    })),
+    callouts,
+    diagramSteps: CHAPTER_DIAGRAM_STEPS[chapter.id],
+    diagramLabel: `Логика: ${chapter.title}`,
   };
 };
 
 function NoteCallout({ callout }) {
+  if (callout.type === 'table') {
+    return (
+      <div className="noteCalloutTable">
+        <div className="noteCalloutTableTitle">{callout.title}</div>
+        <div className="noteCalloutTableWrap">
+          <table>
+            <thead><tr>{callout.headers.map((h) => <th key={h}>{h}</th>)}</tr></thead>
+            <tbody>{callout.rows.map((row, i) => <tr key={i}>{row.map((cell, j) => <td key={j}>{cell}</td>)}</tr>)}</tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+  if (callout.type === 'flow') {
+    return (
+      <div className="noteCalloutFlow">
+        <div className="noteCalloutFlowTitle">{callout.title}</div>
+        <div className="noteCalloutFlowSteps">
+          {callout.steps.map((step, i) => (
+            <React.Fragment key={i}>
+              <div className="noteCalloutFlowStep">{step}</div>
+              {i < callout.steps.length - 1 && <div className="noteCalloutFlowArrow">→</div>}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (callout.type === 'comparison') {
+    return (
+      <div className="noteCalloutComparison">
+        <div className="noteCalloutComparisonTitle">{callout.title}</div>
+        <div className="noteCalloutComparisonCols">
+          <div className="noteCalloutComparisonCol noteCalloutComparisonLeft">
+            <div className="noteCalloutComparisonLabel">{callout.left.label}</div>
+            <ul>{callout.left.items.map((item) => <li key={item}>{item}</li>)}</ul>
+          </div>
+          <div className="noteCalloutComparisonCol noteCalloutComparisonRight">
+            <div className="noteCalloutComparisonLabel">{callout.right.label}</div>
+            <ul>{callout.right.items.map((item) => <li key={item}>{item}</li>)}</ul>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (callout.type === 'formula') {
+    return (
+      <div className="noteCalloutFormula">
+        <div className="noteCalloutFormulaTitle">{callout.title}</div>
+        {callout.items.map((item) => (
+          <div key={item.label} className="noteCalloutFormulaRow">
+            <span className="noteCalloutFormulaLabel">{item.label}</span>
+            <code className="noteCalloutFormulaCode">{item.formula}</code>
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
     <div className={`noteArticleCallout ${callout.type}`}>
       <div className="noteArticleCalloutLabel">{callout.title}</div>
       {callout.items ? (
-        <ul>
-          {callout.items.map((item) => <li key={item}>{item}</li>)}
-        </ul>
+        <ul>{callout.items.map((item) => <li key={item}>{item}</li>)}</ul>
       ) : (
         <p>{callout.text}</p>
       )}
@@ -2501,15 +2624,15 @@ function NotesContent({ chapter, onSelectChapter }) {
         ))}
 
         <div className="noteArticleDiagram">
-          <span>Логика ответа на кейс</span>
+          <span>{article.diagramLabel || 'Логика ответа на кейс'}</span>
           <div>
-            {['Пользователь', 'Проблема', 'Данные', 'Варианты', 'Компромисс', 'Метрика', 'Следующий тест'].map((item) => (
+            {(article.diagramSteps || ['Пользователь', 'Проблема', 'Данные', 'Варианты', 'Компромисс', 'Метрика', 'Следующий тест']).map((item) => (
               <strong key={item}>{item}</strong>
             ))}
           </div>
         </div>
 
-        {article.callouts.map((callout) => <NoteCallout key={callout.title} callout={callout} />)}
+        {article.callouts.map((callout) => <NoteCallout key={callout.title || callout.type + Math.random()} callout={callout} />)}
 
         <section className="noteArticlePractice">
           <h3>Как отработать конспект</h3>
