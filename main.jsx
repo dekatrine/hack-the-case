@@ -2864,7 +2864,6 @@ function QuestionBankContent({ chapter }) {
     : PRACTICE_QUESTIONS;
   const [diffFilter, setDiffFilter] = useState('all');
   const [answered, setAnswered] = useState({});
-  const [expanded, setExpanded] = useState({});
   const [saved, setSaved] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem('hc_saved_q_v2') || '[]')); } catch { return new Set(); } });
   const [aiExp, setAiExp] = useState({});
   const [aiLoading, setAiLoading] = useState({});
@@ -2914,7 +2913,6 @@ function QuestionBankContent({ chapter }) {
         const ch = PM_CHAPTERS.find((c) => c.id === q.chapter);
         const isAns = answered[q.id] !== undefined;
         const isOk = answered[q.id] === q.answer;
-        const isExp = expanded[q.id];
         const ai = aiExp[q.id];
 
         return (
@@ -2931,50 +2929,40 @@ function QuestionBankContent({ chapter }) {
               <div className="qbCardActions">
                 {isAns && <span className="qbStatus">{isOk ? '✓' : '✗'}</span>}
                 <button className={`qbIconBtn${saved.has(q.id) ? ' saved' : ''}`} onClick={() => toggleSave(q.id)} title="Сохранить">🔖</button>
-                <button className="qbIconBtn" onClick={() => setExpanded((p) => ({ ...p, [q.id]: !p[q.id] }))} title="Открыть">
-                  {isExp ? '▲' : '▼'}
-                </button>
               </div>
             </div>
 
             <p className="qbQuestion">{q.q}</p>
 
-            {isExp && (
-              <>
-                <div className="qbOptions">
-                  {q.options.map((opt, i) => {
-                    let cls = 'qbOpt';
-                    if (isAns) { if (i === q.answer) cls += ' correct'; else if (i === answered[q.id]) cls += ' wrong'; else cls += ' dim'; }
-                    return (
-                      <button key={i} className={cls} onClick={() => !isAns && setAnswered((p) => ({ ...p, [q.id]: i }))} disabled={isAns}>
-                        <span className="qbOptLetter">{String.fromCharCode(65 + i)}</span>
-                        {opt}
-                      </button>
-                    );
-                  })}
-                </div>
-                {isAns && (
-                  <div className={`qbFeedback${isOk ? ' correct' : ' wrong'}`}>
-                    <strong>{isOk ? '✓ Правильно!' : `✗ ${q.options[q.answer]}`}</strong>
-                    <p>{q.explanation}</p>
-                    {!isOk && !ai && (
-                      <button className="qbAiBtn" onClick={() => fetchAi(q)} disabled={aiLoading[q.id]}>
-                        {aiLoading[q.id] ? 'Загружаю…' : '🤖 Объяснить подробнее'}
-                      </button>
-                    )}
-                    {ai && (
-                      <div className="qbAiBlock">
-                        <div className="qbAiBlockLabel">🤖 AI-объяснение</div>
-                        <p>{ai.explanation}</p>
-                        {ai.tip && <div className="qbAiTip">💡 {ai.tip}</div>}
-                      </div>
-                    )}
+            <div className="qbOptions">
+              {q.options.map((opt, i) => {
+                let cls = 'qbOpt';
+                if (isAns) { if (i === q.answer) cls += ' correct'; else if (i === answered[q.id]) cls += ' wrong'; else cls += ' dim'; }
+                return (
+                  <button key={i} className={cls} onClick={() => !isAns && setAnswered((p) => ({ ...p, [q.id]: i }))} disabled={isAns}>
+                    <span className="qbOptLetter">{String.fromCharCode(65 + i)}</span>
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+            {isAns && (
+              <div className={`qbFeedback${isOk ? ' correct' : ' wrong'}`}>
+                <strong>{isOk ? '✓ Правильно!' : `✗ ${q.options[q.answer]}`}</strong>
+                <p>{q.explanation}</p>
+                {!isOk && !ai && (
+                  <button className="qbAiBtn" onClick={() => fetchAi(q)} disabled={aiLoading[q.id]}>
+                    {aiLoading[q.id] ? 'Загружаю…' : '🤖 Объяснить подробнее'}
+                  </button>
+                )}
+                {ai && (
+                  <div className="qbAiBlock">
+                    <div className="qbAiBlockLabel">🤖 AI-объяснение</div>
+                    <p>{ai.explanation}</p>
+                    {ai.tip && <div className="qbAiTip">💡 {ai.tip}</div>}
                   </div>
                 )}
-              </>
-            )}
-            {!isExp && !isAns && (
-              <button className="qbOpenBtn" onClick={() => setExpanded((p) => ({ ...p, [q.id]: true }))}>Открыть вопрос</button>
+              </div>
             )}
           </div>
         );
