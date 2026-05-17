@@ -27,112 +27,140 @@ const getLearningStats = () => ({
   definitions: KEY_DEFINITIONS.length,
 });
 
-const RESOURCE_TABS = [
-  { label: 'All Resources', tab: 'All Resources' },
-  { label: 'Lessons', tab: 'Lessons' },
-  { label: 'Notes', tab: 'Notes' },
-  { label: 'Questionbank', tab: 'Questionbank' },
-  { label: 'Flashcards', tab: 'Flashcards' },
-  { label: 'Key Definitions', tab: 'Key Definitions' },
-];
-
 const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn }) => {
   const stats = getLearningStats();
-  const featured = PM_CHAPTERS.slice(0, 6);
+  const businessTrack = tracks.find((item) => item.id === 'business') || tracks[0];
+  const menuItems = [
+    {
+      group: 'Practice',
+      items: [
+        {
+          title: 'Questionbank',
+          subtitle: 'Practice questions with AI feedback',
+          meta: `${stats.questions} questions`,
+          tone: 'blue',
+          icon: '?',
+          onClick: () => onOpenLearn('Questionbank'),
+        },
+        {
+          title: 'Exam builder',
+          subtitle: 'Build your own mock case exam',
+          meta: 'AI-generated case',
+          tone: 'gray',
+          icon: '⏱',
+          onClick: () => businessTrack && onPickTrack(businessTrack),
+        },
+      ],
+    },
+    {
+      group: 'Learn',
+      items: [
+        {
+          title: 'Notes',
+          subtitle: 'Study guides with frameworks and examples',
+          meta: `${PM_CHAPTERS.length} chapters`,
+          tone: 'yellow',
+          icon: '≡',
+          onClick: () => onOpenLearn('Notes'),
+        },
+        {
+          title: 'Teach Jojo',
+          subtitle: 'Practice teaching by topic and track what you covered',
+          meta: 'AI review session',
+          tone: 'purple',
+          icon: 'AI',
+          badge: 'New',
+          onClick: () => onOpenLearn('All Resources', { review: true }),
+        },
+        {
+          title: 'Lessons',
+          subtitle: 'Step-by-step lessons and quizzes',
+          meta: `${PM_CHAPTERS.length} lessons`,
+          tone: 'orange',
+          icon: '▤',
+          onClick: () => onOpenLearn('Lessons'),
+        },
+        {
+          title: 'Flashcards',
+          subtitle: 'Remember concepts with active recall',
+          meta: `${stats.cards} flashcard decks`,
+          tone: 'cyan',
+          icon: '▰',
+          onClick: () => onOpenLearn('Flashcards'),
+        },
+        {
+          title: 'Key Definitions',
+          subtitle: 'Essential terms and concepts explained',
+          meta: `${stats.definitions} definitions`,
+          tone: 'pink',
+          icon: '“',
+          onClick: () => onOpenLearn('Key Definitions'),
+        },
+      ],
+    },
+  ];
 
   return (
-    <div className="dojoHome fade-in">
-      <section className="dojoHero">
-        <div>
-          <div className="eyebrow"><span className="num">01 /</span> AI case club resources</div>
-          <h1 className="dojoHeroTitle">Product & business case prep, all in one place</h1>
-          <p className="dojoHeroSub">
-            Уроки, конспекты, questionbank, flashcards, определения, mock interview и AI-проверка решений собраны
-            в один кабинет для подготовки к PM-собеседованиям, консалтингу и кейс-чемпионатам.
-          </p>
+    <div className="courseMenuPage fade-in">
+      <section className="courseMenuHero">
+        <div className="courseCrumbs">
+          <span>AI Case Club</span>
+          <b>›</b>
+          <strong>Product & Business Cases</strong>
         </div>
-        <div className="dojoHeroPanel">
-          <span>Progress stack</span>
-          <strong>{stats.chapters} модулей</strong>
-          <p>{stats.questions} вопросов · {stats.cards} карточек · {stats.definitions} терминов</p>
-          <button className="btn btn-primary" onClick={() => onOpenLearn('All Resources')}>
-            Начать подготовку <span className="arrow">→</span>
+        <h1>Product & Business Cases</h1>
+        <div className="courseAuthorBanner">
+          <div>
+            <span className="courseCheck">✓</span>
+            <strong>Written with case interview frameworks</strong>
+          </div>
+          <div className="courseExperts" aria-hidden="true">
+            <i>PM</i><i>BCG</i><i>MBB</i><i>AI</i><i>UX</i>
+          </div>
+          <button onClick={() => onOpenLearn('All Resources')}>
+            Learn more ↗
           </button>
         </div>
       </section>
 
-      <nav className="dojoResourceTabs" aria-label="Resource shortcuts">
-        {RESOURCE_TABS.map((item) => (
-          <button key={item.tab} onClick={() => onOpenLearn(item.tab)}>
-            {item.label}
+      <section className="courseResourceMenu">
+        {menuItems.map((group) => (
+          <div key={group.group} className="courseMenuGroup">
+            <h2>{group.group}</h2>
+            <div className="courseMenuGrid">
+              {group.items.map((item) => (
+                <button key={item.title} className="courseMenuItem" onClick={item.onClick}>
+                  <span className={`courseMenuIcon ${item.tone}`}>
+                    <span>{item.icon}</span>
+                    {item.badge && <em>{item.badge}</em>}
+                  </span>
+                  <span className="courseMenuText">
+                    <strong>{item.title}</strong>
+                    <span>{item.subtitle}</span>
+                    <small>{item.meta}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <section className="courseContentPreview">
+        <div className="courseContentHead">
+          <h2>Содержание курса</h2>
+          <p>После меню можно сразу перейти в нужный модуль: урок откроется в разделе Lessons, а конспекты, вопросы и карточки останутся рядом.</p>
+        </div>
+        {PM_CHAPTERS.map((chapter) => (
+          <button key={chapter.id} className="courseContentRow" onClick={() => onOpenLearn('Lessons')} style={{ '--col': chapter.color }}>
+            <span>{chapter.number}</span>
+            <div>
+              <strong>{chapter.title}</strong>
+              <small>{chapter.description}</small>
+            </div>
+            <em>{chapter.subtopics.length} тем</em>
           </button>
         ))}
-      </nav>
-
-      <div className="dojoTrustBanner">
-        <span className="dojoTrustIcon">✓</span>
-        <strong>Built for case interviews and case championships</strong>
-        <p>AI-коуч не выдаёт готовое решение сразу: он проверяет структуру, подталкивает вопросами и объясняет ошибки по рубрике.</p>
-      </div>
-
-      <section className="dojoGrid">
-        <article className="dojoPrimaryCard">
-          <div className="dojoCardHead">
-            <span>Lessons</span>
-            <button onClick={() => onOpenLearn('Lessons')}>Open →</button>
-          </div>
-          <h2>Учись короткими сессиями</h2>
-          <p>Объяснения, мини-проверки, упрощение сложных тем и переход к практике сразу после теории.</p>
-          <div className="dojoModuleList">
-            {featured.map((chapter) => (
-              <button key={chapter.id} onClick={() => onOpenLearn('Lessons')} style={{ '--col': chapter.color }}>
-                <span>{chapter.icon}</span>
-                <div>
-                  <strong>{chapter.number}. {chapter.title}</strong>
-                  <small>{chapter.subtopics.length} подтем</small>
-                </div>
-              </button>
-            ))}
-          </div>
-        </article>
-
-        <div className="dojoSideStack">
-          <button className="dojoActionCard" onClick={() => onOpenLearn('Questionbank')}>
-            <span>Questionbank</span>
-            <strong>{stats.questions} вопросов с AI-разбором</strong>
-            <small>Фильтры по сложности, сохранённые вопросы и объяснения после ошибки.</small>
-          </button>
-          <button className="dojoActionCard" onClick={() => onOpenLearn('Flashcards')}>
-            <span>Flashcards</span>
-            <strong>Spaced repetition</strong>
-            <small>Карточки в стиле RevisionDojo/Anki: again, hard, good, easy.</small>
-          </button>
-          <button className="dojoActionCard" onClick={onOpenInterview}>
-            <span>Mock interview</span>
-            <strong>AI interviewer</strong>
-            <small>Раунды с уточнениями, exhibit, pushback и критерием сильного ответа.</small>
-          </button>
-          <button className="dojoActionCard" onClick={onOpenQuiz}>
-            <span>Sprints</span>
-            <strong>{getQuizQuestionCount()} быстрых вопросов</strong>
-            <small>XP, streak и короткие 10-минутные тренировки.</small>
-          </button>
-        </div>
-      </section>
-
-      <section className="dojoTracks">
-        <div className="dojoSectionHead">
-          <div>
-            <span>Exam Mode</span>
-            <h2>Сгенерируй полный кейс и защити решение</h2>
-          </div>
-          <p>Выбери направление, отрасль и сложность: сервис создаст условие, рабочую тетрадь, коуча и финальную оценку по рубрике.</p>
-        </div>
-        <div className="tracks">
-          {tracks.map((t, i) => (
-            <TrackCard key={t.id} track={t} idx={i + 1} onPick={() => onPickTrack(t)} />
-          ))}
-        </div>
       </section>
     </div>
   );
@@ -1521,6 +1549,7 @@ const App = () => {
   const [screen, setScreen] = useState('landing'); // landing | track | workspace | quiz | interview | learn
   const [quizCategory, setQuizCategory] = useState(null);
   const [learnInitialTab, setLearnInitialTab] = useState('All Resources');
+  const [learnAutoReview, setLearnAutoReview] = useState(false);
   const [track, setTrack] = useState(null);
   const [caseText, setCaseText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -1562,8 +1591,9 @@ const App = () => {
   if (err && !config) return <FullErr msg={err} />;
   if (!config) return <Loading />;
 
-  const openLearn = (tab = 'All Resources') => {
+  const openLearn = (tab = 'All Resources', options = {}) => {
     setLearnInitialTab(tab);
+    setLearnAutoReview(Boolean(options.review));
     setScreen('learn');
   };
 
@@ -1614,7 +1644,7 @@ const App = () => {
           />
         )}
         {screen === 'learn' && (
-          <LearningScreen onBack={() => setScreen('landing')} initialTab={learnInitialTab} />
+          <LearningScreen onBack={() => setScreen('landing')} initialTab={learnInitialTab} autoOpenReview={learnAutoReview} />
         )}
       </main>
     </div>
@@ -1915,7 +1945,7 @@ function quizShuffle(arr) {
 
 const LEARN_TABS = ['All Resources', 'Lessons', 'Notes', 'Questionbank', 'Flashcards', 'Key Definitions'];
 
-const LearningScreen = ({ onBack, initialTab = 'All Resources' }) => {
+const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview = false }) => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -1923,6 +1953,10 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources' }) => {
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
+
+  useEffect(() => {
+    if (autoOpenReview) setReviewOpen(true);
+  }, [autoOpenReview]);
 
   return (
     <div className="learnScreen fade-in">
