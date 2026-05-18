@@ -143,58 +143,100 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
   const businessTrack = tracks.find((item) => item.id === 'business') || tracks[0];
 
   return (
-    <div className="dojoHome fade-in">
-      <section className="dojoHero">
-        <div>
-          <div className="eyebrow"><span className="num">01 /</span> AI case club resources</div>
-          <h1 className="dojoHeroTitle">Case prep resources</h1>
-          <p className="dojoHeroSub">
-            Структурированный учебный кабинет: конспекты с визуализациями, банк вопросов,
-            карточки с интервальными повторениями, термины и AI-наставник — всё в одном месте.
-          </p>
-        </div>
-        <div className="dojoHeroPanel">
-          <span>Resource stack</span>
-          <strong>{stats.chapters} модулей</strong>
-          <p>{stats.questions} вопросов · {stats.cards} карточек · {stats.definitions} терминов</p>
-          <button className="btn btn-primary" onClick={() => onOpenLearn('All Resources')}>
-            Открыть ресурсы <span className="arrow">→</span>
-          </button>
-        </div>
-      </section>
-
-      <section className="dojoGrid">
-        <article className="dojoPrimaryCard">
-          <div className="dojoCardHead">
-            <span>Start here</span>
-            <button onClick={() => onOpenLearn('Notes')}>Открыть конспекты →</button>
+    <div className="home-dashboard fade-in">
+      <aside className="home-sidebar">
+        <div className="workspace-pill">
+          <span className="user-dot">PM</span>
+          <div>
+            <strong>Product Academy</strong>
+            <span>free track</span>
           </div>
-          <h2>Сначала конспект, потом практика</h2>
-          <p>Открой «Все ресурсы» — там конспект по теме, банк вопросов с AI-разбором ошибок и карточки с интервальными повторениями. Начни с конспекта, потом проверь себя.</p>
-          <button className="btn btn-primary" onClick={() => onOpenLearn('All Resources')}>Перейти к ресурсам</button>
-        </article>
-        <div className="dojoSideStack">
-          <button className="dojoActionCard" onClick={() => onOpenLearn('Questionbank')}>
-            <span>Банк вопросов</span>
-            <strong>{stats.questions} вопросов</strong>
-            <small>Проверка и AI-разбор после ошибки.</small>
-          </button>
-          <button className="dojoActionCard" onClick={() => businessTrack && onPickTrack(businessTrack)}>
-            <span>Exam builder</span>
-            <strong>Полный кейс</strong>
-            <small>Сгенерировать условие и защитить решение.</small>
-          </button>
-          <button className="dojoActionCard" onClick={onOpenInterview}>
-            <span>Mock interview</span>
-            <strong>Раунды интервью</strong>
-            <small>Уточнение, exhibit, pushback, финальный синтез.</small>
-          </button>
-          <button className="dojoActionCard" onClick={onOpenQuiz}>
-            <span>Sprints</span>
-            <strong>{getQuizQuestionCount()} быстрых вопросов</strong>
-            <small>Короткие тренировки с XP и streak.</small>
-          </button>
         </div>
+        <nav className="home-menu" aria-label="Учебная навигация">
+          <button className="active">Home</button>
+          <button onClick={() => onOpenLearn('Notes')}>Lessons</button>
+          <button onClick={() => onOpenLearn('Questionbank')}>Question Bank</button>
+          <button onClick={() => onOpenLearn('Flashcards')}>Flashcards</button>
+          <button onClick={() => onOpenLearn('Key Definitions')}>Glossary</button>
+        </nav>
+        <div className="home-menu-group">
+          <span>Tools</span>
+          <button onClick={onOpenInterview}>Mock interview</button>
+          <button onClick={onOpenQuiz}>Sprint quiz</button>
+          <button onClick={() => onOpenLearn('All Resources')}>All resources</button>
+        </div>
+        <div className="profile-row">
+          <span className="avatar-mini">E</span>
+          <strong>Ekaterina</strong>
+        </div>
+      </aside>
+
+      <section className="home-main">
+        <div className="home-toolbar">
+          <label className="home-search">
+            <span>⌕</span>
+            <input placeholder="Найти урок, термин или кейс..." />
+          </label>
+          <div className="home-xp">
+            <span>3 cases</span>
+            <span>22 XP</span>
+            <span>{stats.cards} cards</span>
+          </div>
+        </div>
+
+        <section className="home-hero-panel">
+          <div>
+            <p className="eyebrow"><span className="num">home /</span> case prep resources</p>
+            <h1>Добрый вечер,<br/><em>Ekaterina</em></h1>
+            <p>Учись как в LMS: уроки, банк вопросов, карточки, термины, mock interview и полноценный кейс собраны в одном рабочем столе.</p>
+          </div>
+          <div className="hero-progress">
+            <strong>{stats.chapters}</strong>
+            <span>модулей академии</span>
+          </div>
+        </section>
+
+        <section className="home-sale">
+          <strong>PM Interview Sprint</strong>
+          <span>Начни с конспекта, проверь себя в question bank и закрепи карточками.</span>
+          <button onClick={() => onOpenLearn('All Resources')}>Открыть LMS <span className="arrow">→</span></button>
+        </section>
+
+        <div className="home-section-head">
+          <h2>Мои треки</h2>
+          <button onClick={() => onOpenLearn('Notes')}>Учебный курс <span className="arrow">→</span></button>
+        </div>
+        <div className="home-subjects">
+          {tracks.map((track, idx) => (
+            <button
+              key={track.id}
+              className={`subject-card ${track.id}`}
+              onClick={() => onPickTrack(track)}
+            >
+              <span>{idx + 1 < 10 ? `0${idx + 1}` : idx + 1}</span>
+              <h3>{track.name}</h3>
+              <p>{track.tagline}</p>
+              <em>Open →</em>
+            </button>
+          ))}
+        </div>
+
+        <section className="home-info-card">
+          <div>
+            <h2>Добро пожаловать в Hack the Case</h2>
+            <p>Если ты новичок, начни с Lessons. Если уже готова к практике, открой трек и сгенерируй кейс.</p>
+          </div>
+          <button className="btn btn-primary" onClick={() => onOpenLearn('Notes')}>Начать обучение</button>
+        </section>
+
+        <section className="home-study-plan">
+          <div>
+            <span>Study plan</span>
+            <h2>Собери недельный маршрут и не теряй прогресс</h2>
+            <p>{stats.questions} вопросов, {stats.cards} карточек, {stats.definitions} терминов и mock interview связаны в один путь.</p>
+          </div>
+          <button className="btn btn-ghost" onClick={() => businessTrack && onPickTrack(businessTrack)}>Собрать кейс</button>
+        </section>
       </section>
     </div>
   );
