@@ -198,7 +198,7 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
 
         <section className="home-sale">
           <strong>PM Interview Sprint</strong>
-          <span>Начни с конспекта, проверь себя в question bank и закрепи карточками.</span>
+          <span>Маршрут: конспект, question bank и карточки для закрепления.</span>
           <button onClick={() => onOpenLearn('All Resources')}>Открыть LMS <span className="arrow">→</span></button>
         </section>
 
@@ -224,7 +224,7 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
         <section className="home-info-card">
           <div>
             <h2>Добро пожаловать в Hack the Case</h2>
-            <p>Если ты новичок, начни с Lessons. Если уже готова к практике, открой трек и сгенерируй кейс.</p>
+            <p>Для старта подходит раздел Lessons. Для практики доступны треки с генерацией кейсов.</p>
           </div>
           <button className="btn btn-primary" onClick={() => onOpenLearn('Notes')}>Начать обучение</button>
         </section>
@@ -2263,7 +2263,7 @@ function LessonsContent({ chapter, onSelectChapter }) {
     return (
       <div className="learnPlaceholder">
         <div className="learnPlaceholderIcon">📖</div>
-        <p>Выбери раздел из списка слева чтобы начать изучение</p>
+        <p>Раздел курса открывается из списка слева.</p>
         <div className="learnChapterCards">
           {PM_CHAPTERS.slice(0, 4).map((ch) => (
             <button key={ch.id} className="learnChapterCard" onClick={() => onSelectChapter(ch)} style={{ '--ch-color': ch.color }}>
@@ -2366,7 +2366,7 @@ function LessonsContent({ chapter, onSelectChapter }) {
           ) : (
             <div className="aliceExpoCard">
               <div className="aliceExpoLabel">📖 Подтема</div>
-              <p className="aliceExpoText">Эта подтема входит в раздел «{chapter.title}». Изучи ключевые концепции раздела выше, затем проверь себя с помощью Flash Cards и Банка вопросов.</p>
+              <p className="aliceExpoText">Эта подтема входит в раздел «{chapter.title}». Ключевые концепции представлены в конспекте раздела, а закрепление доступно через Flash Cards и Банк вопросов.</p>
               <div className="aliceActions" style={{ marginTop: 20 }}>
                 <button className="aliceBtn aliceBtnContinue" onClick={() => setSubtopic(null)}>← К подтемам</button>
               </div>
@@ -2436,7 +2436,7 @@ function LessonsContent({ chapter, onSelectChapter }) {
           <div className="aliceExpoCard">
             <div className="aliceExpoLabel">💬 AI-ментор</div>
             <p className="aliceMcqQ">
-              Закрепи тему: <strong>объясни своими словами, что такое «{subtopic.title}» и как бы ты применил это в реальном PM-кейсе или собеседовании?</strong>
+              Контроль понимания: <strong>что означает «{subtopic.title}» и как эта концепция применяется в реальном PM-кейсе или собеседовании?</strong>
             </p>
             <textarea
               className="aliceAnswerInput"
@@ -2499,53 +2499,55 @@ const NOTE_SOURCE_LINKS = [
 ];
 
 const PRODUCT_THINKING_NOTE = {
-  title: 'Конспект: продуктовое мышление',
+  title: 'Учебник: продуктовое мышление',
   eyebrow: 'База PM',
-  subtitle: 'Как думать проблемами, пользователями и бизнес-результатом, а не списком фич.',
-  introTitle: 'Что такое продуктовое мышление?',
+  subtitle: 'Раздел объясняет связь между пользовательской задачей, бизнес-результатом, доказательствами и продуктовым решением.',
+  introTitle: 'Продуктовое мышление как система принятия решений',
   definitionTitle: 'Продуктовое мышление',
   definition:
-    'Продуктовое мышление — это привычка связывать проблему пользователя, бизнес-результат, ограничения и доказательства до выбора решения.',
+    '**Продуктовое мышление** — способ анализа, при котором каждое продуктовое решение связывается с пользовательской проблемой, целевым сегментом, бизнес-результатом, ограничениями реализации и доказательствами из данных или исследований. Такой подход помогает отличать полезное изменение продукта от простой активности команды.',
   bullets: [
-    'Продукт — это не список функций. Это система, которая одновременно создаёт ценность для пользователя и результат для бизнеса.',
-    'Начинай с задачи пользователя, контекста и боли, а затем переводи это в измеримый продуктовый результат.',
-    'Сильный PM-ответ идёт по цепочке: проблема → доказательства → варианты → компромиссы → метрика → следующий тест.',
-    'Discovery и delivery не живут отдельно: discovery снижает неопределённость, delivery превращает проверенную ставку в продукт.',
-    'Хороший ответ на кейс явно называет допущения и объясняет, какие данные могут изменить рекомендацию.',
+    '**Продукт** рассматривается как система: проблема пользователя, аудитория, решение, бизнес-модель и канал доставки ценности.',
+    '**Пользовательская ценность** показывает, какой прогресс получает человек или компания при использовании продукта.',
+    '**Бизнес-ценность** показывает, как продукт влияет на выручку, удержание, маржу, снижение затрат или стратегическое преимущество.',
+    '**Доказательства** включают интервью, аналитику, эксперименты, рыночные данные и наблюдения за поведением пользователей.',
+    '**Метрика успеха** переводит качественную идею в измеримый результат, который можно проверить после запуска.',
   ],
   sections: [
     {
-      title: 'Сначала problem space, потом solution space',
+      title: 'Problem space и solution space',
       bullets: [
-        'Problem space описывает, у кого есть сложность, в какой ситуации она возникает, какого прогресса хочет пользователь и почему текущее решение не работает.',
-        'Solution space — это набор возможных изменений: фича, сценарий, цена, правило, контент, операция или AI-инструмент.',
-        'Прыжок сразу в решение создаёт feature theater: много активности, мало доказательств и непонятный эффект.',
-        'Полезный ответ на интервью постоянно уточняет: какой сегмент, какое поведение, какое трение, какая метрика?',
+        '**Problem space** описывает пользователя, ситуацию, задачу, боль, текущие альтернативы и критерий успешного прогресса.',
+        '**Solution space** включает возможные способы изменить продукт: сценарий, интерфейс, правило, цену, операцию, контент, алгоритм или AI-функцию.',
+        '**Связь между пространствами** строится через гипотезу: если у выбранного сегмента есть конкретная проблема, то предложенное решение должно изменить наблюдаемое поведение.',
+        '**Продуктовый риск** возникает, когда команда выбирает решение до того, как понятны пользовательская задача, масштаб проблемы и метрика успеха.',
       ],
     },
     {
       title: 'Jobs To Be Done',
       bullets: [
-        'JTBD говорит, что пользователи «нанимают» продукт, чтобы добиться прогресса в конкретной ситуации.',
-        'Job — это не демографический сегмент. Это ситуация, мотивация, желаемый прогресс и ограничения вокруг поведения.',
-        'В кейс-интервью JTBD помогает уйти от общих персон и сфокусироваться на том, почему пользователь переключится со status quo.',
-        'Шаблон хорошего JTBD: когда [ситуация], пользователь хочет [прогресс], но [барьер], поэтому успех выглядит как [наблюдаемый результат].',
+        '**Jobs To Be Done** — подход, согласно которому пользователь выбирает продукт для достижения прогресса в конкретной жизненной или рабочей ситуации.',
+        '**Job** включает контекст, мотивацию, функциональный результат, эмоциональный результат, социальный результат и ограничения поведения.',
+        '**Status quo** является текущим способом решения задачи: ручной процесс, конкурентный продукт, таблица, звонок, привычка или полное бездействие.',
+        '**Сила JTBD** проявляется в объяснении переключения: продукт должен дать достаточно прогресса, чтобы преодолеть тревогу, привычку и стоимость изменения поведения.',
       ],
     },
     {
       title: 'Opportunity Solution Tree',
       bullets: [
-        'Начни с outcome, разложи возможности из исследований, затем свяжи их с решениями и экспериментами.',
-        'Так roadmap остаётся привязанным к доказательствам, а не к предпочтениям стейкхолдеров.',
-        'В кейсах используй OST для приоритизации: выбирай возможности по серьёзности боли, частоте, охвату и стратегическому соответствию.',
+        '**Opportunity Solution Tree** — дерево связи между целевым результатом, возможностями из исследований, решениями и экспериментами.',
+        '**Outcome** находится наверху дерева и задаёт измеримый продуктовый результат, например рост активации или удержания.',
+        '**Opportunities** описывают пользовательские боли, потребности и моменты трения, обнаруженные в исследованиях или данных.',
+        '**Solutions** связываются с конкретными opportunities, поэтому roadmap остаётся привязанным к доказательствам, а не к отдельным запросам стейкхолдеров.',
       ],
     },
     {
       title: 'Метрики и проверка гипотез',
       bullets: [
-        'Выбери одну главную метрику успеха и добавь guardrails, чтобы команда не «выиграла» ценой доверия, маржи или retention.',
-        'Валидация — это не только A/B-тест. Это могут быть интервью, concierge MVP, fake door, тест прототипа, когортный анализ или ручной пилот.',
-        'Самые сильные ответы говорят, что именно опровергнет идею.',
+        '**Главная метрика** фиксирует желаемое изменение поведения пользователя или бизнес-результата.',
+        '**Guardrail-метрики** защищают продукт от локальной оптимизации, которая ухудшает качество, доверие, маржу или удержание.',
+        '**Валидация гипотезы** может проходить через интервью, fake door, concierge MVP, тест прототипа, когортный анализ, A/B-тест или ручной пилот.',
+        '**Критерий опровержения** заранее показывает, какие данные будут достаточными для остановки или изменения инициативы.',
       ],
     },
   ],
@@ -2553,12 +2555,12 @@ const PRODUCT_THINKING_NOTE = {
     {
       type: 'analogy',
       title: 'Аналогия',
-      text: 'PM — не официант, который принимает заказы на фичи. PM ближе к диагносту: понять симптомы, найти причину, проверить лечение и измерить восстановление.',
+      text: '**Аналогия с диагностикой.** Продуктовое мышление похоже на медицинский разбор: сначала фиксируются симптомы, затем ищется причина, после этого выбирается лечение и измеряется восстановление.',
     },
     {
       type: 'note',
-      title: 'Ход на интервью',
-      text: 'Если в условии просят фичу, сначала переформулируй: «Я начну с целевого пользователя и метрики успеха, потому что правильная фича зависит от проблемы, которую мы решаем».',
+      title: 'Важно',
+      text: '**Качественное продуктовое решение** содержит связь между сегментом, проблемой, доказательством, решением, метрикой и риском. Отсутствие любой части делает вывод менее проверяемым.',
     },
     {
       type: 'mistake',
@@ -2574,7 +2576,7 @@ const PRODUCT_THINKING_NOTE = {
 };
 
 const CHAPTER_DIAGRAM_STEPS = {
-  ch0: ['Пойми бизнес-контекст', 'Определи пользователя', 'Найди проблему', 'Спроектируй решение', 'Измерь результат'],
+  ch0: ['Бизнес-контекст', 'Пользователь', 'Проблема', 'Решение', 'Результат'],
   ch1: ['Проблема', 'Аудитория', 'Решение', 'Бизнес-модель', 'Канал доставки'],
   ch2: ['Ситуация', 'Job (задача)', 'Барьер', 'Желаемый прогресс', 'Переключение'],
   ch3: ['Цель исследования', 'Выбор метода', 'Проведение', 'Синтез', 'Решение'],
@@ -2588,8 +2590,35 @@ const CHAPTER_DIAGRAM_STEPS = {
   ch11: ['Цель', 'Пользователь', 'Боль', 'Варианты', 'Выбор', 'Метрика', 'Риски'],
 };
 
+const PRODUCT_THINKING_VISUALS = [
+  {
+    type: 'venn',
+    title: 'Три области продуктового решения',
+    items: [
+      { label: 'Пользовательская ценность', detail: 'решается значимая задача' },
+      { label: 'Бизнес-результат', detail: 'создаётся измеримый эффект' },
+      { label: 'Реализуемость', detail: 'решение доступно команде' },
+    ],
+  },
+  {
+    type: 'jtbd',
+    title: 'Модель Jobs To Be Done',
+    items: ['Ситуация', 'Мотивация', 'Прогресс', 'Барьер', 'Наблюдаемый результат'],
+  },
+  {
+    type: 'tree',
+    title: 'Opportunity Solution Tree',
+    root: 'Outcome',
+    branches: [
+      { label: 'Opportunity A', children: ['Solution A1', 'Experiment A1'] },
+      { label: 'Opportunity B', children: ['Solution B1', 'Experiment B1'] },
+      { label: 'Opportunity C', children: ['Solution C1', 'Experiment C1'] },
+    ],
+  },
+];
+
 const getNotesArticle = (chapter) => {
-  if (!chapter || chapter.id === 'ch1') return PRODUCT_THINKING_NOTE;
+  if (!chapter || chapter.id === 'ch1') return { ...PRODUCT_THINKING_NOTE, visuals: PRODUCT_THINKING_VISUALS };
   const definitionNote = chapter.notes?.find((n) => n.type === 'definition') || chapter.notes?.[0];
   const exampleNote = chapter.notes?.find((n) => n.type === 'example');
   const analogyNote = chapter.notes?.find((n) => n.type === 'analogy');
@@ -2612,29 +2641,33 @@ const getNotesArticle = (chapter) => {
     definition: definitionNote?.text || chapter.description,
     bullets: [
       chapter.description,
-      'Используй этот раздел как фреймворк для кейс-ответа: сначала цель и пользователь, потом инструмент, потом метрика.',
-      'Сильный ответ называет допущения и объясняет, что именно изменит рекомендацию.',
-      'После изучения теории — проверь себя через банк вопросов и карточки этого раздела.',
+      '**Фреймворк раздела** связывает цель, пользователя, инструмент анализа, метрику и критерий принятия решения.',
+      '**Качественный кейс-ответ** содержит допущения и показывает, какие данные способны изменить рекомендацию.',
+      '**Закрепление темы** строится через вопросы, карточки, примеры и применение концепции к продуктовому сценарию.',
     ],
     sections: [
       {
         title: 'Применение в кейсе',
         bullets: [
-          'Переформулируй проблему в одном предложении с пользователем и метрикой.',
-          'Выбери один фреймворк из раздела — самый подходящий, а не все подряд.',
-          'Назови первый срез данных, который запросишь у интервьюера.',
-          'Заверши criteria for success: когда мы поймём, что решение сработало?',
+          '**Проблема** формулируется в одном предложении с указанием пользователя и измеримого результата.',
+          '**Фреймворк** выбирается по типу неопределённости: пользовательская, рыночная, техническая, экономическая или операционная.',
+          '**Первый срез данных** показывает, где находится главный источник риска или потери ценности.',
+          '**Criteria for success** фиксирует момент, когда решение считается сработавшим.',
         ],
       },
     ],
     callouts,
     diagramSteps: CHAPTER_DIAGRAM_STEPS[chapter.id],
     diagramLabel: `Логика: ${chapter.title}`,
+    visuals: chapter.id === 'ch1' ? PRODUCT_THINKING_VISUALS : [],
   };
 };
 
 const sanitizeTextbookText = (value = '') =>
   value
+    .replace(/\bты\b/gi, 'студент')
+    .replace(/\bтвой\b/gi, 'изучаемый')
+    .replace(/\bтвоя\b/gi, 'изучаемая')
     .replace(/Product Manager — это человек, который управляет созданием ценности\. Не «генератор идей», не «менеджер задач», а тот, кто решает:/g, 'Product Manager управляет созданием ценности и принимает решения:')
     .replace(/Продукт — это не приложение, не сайт и не набор функций\./g, 'Продукт описывает полную систему создания и доставки ценности.')
     .replace(/Продукт — это не список функций\. Это система/g, 'Продукт — это система')
@@ -2645,6 +2678,16 @@ const sanitizeTextbookText = (value = '') =>
     .replace(/«Вы бы купили это за 500 рублей\?» — плохо\. Мама из вежливости скажет «да»\./g, 'Вопрос о гипотетической покупке за 500 рублей даёт слабые данные, потому что респонденту легко согласиться из вежливости.')
     .replace(/Никогда не показывай/g, 'Прототип показывается после того, как команда поняла проблему; не следует показывать')
     .replace(/Начинай/g, 'Начинать следует')
+    .replace(/Начни/g, 'Начальная точка анализа —')
+    .replace(/Выбери/g, 'Выбирается')
+    .replace(/Используй/g, 'Применяется')
+    .replace(/Проверь/g, 'Проверяется')
+    .replace(/проверь/g, 'проверяется')
+    .replace(/напиши/g, 'составляется')
+    .replace(/сформулируй/g, 'формулируется')
+    .replace(/объясни/g, 'объясняется')
+    .replace(/открой/g, 'открывается')
+    .replace(/переформулируй/g, 'переформулируется')
     .replace(/проведи/g, 'проводится')
     .replace(/Возьми/g, 'Пример')
     .trim();
@@ -2701,9 +2744,102 @@ const getSubtopicTextbookLesson = (chapter, subtopic) => {
     example: sanitizeTextbookText(exampleText),
     analogy: analogyNote?.text ? sanitizeTextbookText(analogyNote.text) : '',
     diagramSteps: CHAPTER_DIAGRAM_STEPS[chapter.id] || ['Термин', 'Зачем нужен', 'Данные', 'Решение', 'Метрика', 'Риск'],
-    practice: `Практическое задание: сформулировать определение темы «${topicTitle}», привести один продуктовый пример и описать, какая метрика покажет успешное применение концепции.`,
+    practice: `Контроль понимания: для темы «${topicTitle}» важны три элемента — точное определение, продуктовый пример и метрика, показывающая успешное применение концепции.`,
+    visuals: getLessonVisuals(chapter, subtopic),
   };
 };
+
+const getLessonVisuals = (chapter, subtopic) => {
+  if (subtopic?.id === 'ch2_1') {
+    return [
+      {
+        type: 'jtbd',
+        title: 'Структура Job Story',
+        items: ['Ситуация', 'Мотивация', 'Желаемый прогресс', 'Барьер', 'Наблюдаемый результат'],
+      },
+      {
+        type: 'forces',
+        title: 'Forces of Progress',
+        items: ['Push: боль текущего решения', 'Pull: привлекательность нового', 'Anxiety: риск перехода', 'Habit: сила привычки'],
+      },
+    ];
+  }
+  if (chapter.id === 'ch1') return PRODUCT_THINKING_VISUALS;
+  return [
+    {
+      type: 'flow',
+      title: 'Схема применения темы',
+      items: CHAPTER_DIAGRAM_STEPS[chapter.id] || ['Понятие', 'Данные', 'Вывод', 'Действие'],
+    },
+  ];
+};
+
+function TextbookVisual({ visual }) {
+  if (!visual) return null;
+
+  if (visual.type === 'venn') {
+    return (
+      <div className="textbookVisual textbookVisualVenn">
+        <div className="textbookVisualTitle">{visual.title}</div>
+        <div className="vennDiagram" aria-label={visual.title}>
+          {visual.items.map((item, index) => (
+            <div key={item.label} className={`vennCircle vennCircle${index + 1}`}>
+              <strong>{item.label}</strong>
+              <span>{item.detail}</span>
+            </div>
+          ))}
+          <div className="vennCenter">Сильное продуктовое решение</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (visual.type === 'tree') {
+    return (
+      <div className="textbookVisual textbookVisualTree">
+        <div className="textbookVisualTitle">{visual.title}</div>
+        <div className="ostTree">
+          <div className="ostRoot">{visual.root}</div>
+          <div className="ostBranches">
+            {visual.branches.map((branch) => (
+              <div key={branch.label} className="ostBranch">
+                <strong>{branch.label}</strong>
+                {branch.children.map((child) => <span key={child}>{child}</span>)}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (visual.type === 'forces') {
+    return (
+      <div className="textbookVisual textbookForces">
+        <div className="textbookVisualTitle">{visual.title}</div>
+        <div className="forcesGrid">
+          {visual.items.map((item, index) => (
+            <div key={item} className={index < 2 ? 'forcePositive' : 'forceNegative'}>{item}</div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="textbookVisual textbookFlow">
+      <div className="textbookVisualTitle">{visual.title}</div>
+      <div className="textbookFlowSteps">
+        {visual.items.map((item, index) => (
+          <React.Fragment key={item}>
+            <span>{item}</span>
+            {index < visual.items.length - 1 && <em>→</em>}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function NoteCallout({ callout }) {
   if (callout.type === 'table') {
@@ -2825,6 +2961,8 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
             </ol>
           </section>
 
+          {lesson.visuals.map((visual) => <TextbookVisual key={visual.title} visual={visual} />)}
+
           <div className="noteArticleDiagram textbookDiagram">
             <span>Схема применения</span>
             <div>
@@ -2915,6 +3053,8 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
             </ol>
           </section>
         ))}
+
+        {(article.visuals || []).map((visual) => <TextbookVisual key={visual.title} visual={visual} />)}
 
         <div className="noteArticleDiagram">
           <span>{article.diagramLabel || 'Логика ответа на кейс'}</span>

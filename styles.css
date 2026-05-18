@@ -4174,6 +4174,151 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   background: rgba(184, 255, 92, 0.045);
 }
 
+.textbookVisual {
+  padding: 22px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-lg);
+  background:
+    radial-gradient(360px 180px at 80% 8%, rgba(184, 255, 92, 0.075), transparent 66%),
+    rgba(255, 255, 255, 0.018);
+}
+
+.textbookVisualTitle {
+  margin-bottom: 18px;
+  color: var(--mint);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.vennDiagram {
+  position: relative;
+  min-height: 330px;
+}
+
+.vennCircle {
+  position: absolute;
+  width: 210px;
+  height: 210px;
+  padding: 42px 26px;
+  border: 1px solid rgba(184, 255, 92, 0.26);
+  border-radius: 50%;
+  background: rgba(184, 255, 92, 0.065);
+  display: grid;
+  align-content: center;
+  text-align: center;
+}
+
+.vennCircle1 { left: 50%; top: 0; transform: translateX(-50%); }
+.vennCircle2 { left: calc(50% - 118px); top: 108px; }
+.vennCircle3 { left: calc(50% + 18px); top: 108px; }
+
+.vennCircle strong {
+  color: var(--paper);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.vennCircle span {
+  margin-top: 6px;
+  color: var(--paper-dim);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.vennCenter {
+  position: absolute;
+  left: 50%;
+  top: 154px;
+  transform: translateX(-50%);
+  width: 160px;
+  padding: 12px;
+  border: 1px solid rgba(184, 255, 92, 0.38);
+  border-radius: var(--r-md);
+  background: rgba(5, 8, 7, 0.86);
+  color: var(--mint);
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.35;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.ostTree {
+  display: grid;
+  gap: 18px;
+}
+
+.ostRoot {
+  justify-self: center;
+  padding: 12px 22px;
+  border: 1px solid rgba(184, 255, 92, 0.32);
+  border-radius: 999px;
+  background: rgba(184, 255, 92, 0.075);
+  color: var(--paper);
+  font-weight: 700;
+}
+
+.ostBranches {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  position: relative;
+}
+
+.ostBranch {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.ostBranch strong {
+  color: var(--mint);
+}
+
+.ostBranch span,
+.textbookFlowSteps span,
+.forcesGrid div {
+  padding: 9px 10px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.022);
+  color: var(--paper-dim);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.textbookFlowSteps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.textbookFlowSteps em {
+  color: var(--mint);
+  font-style: normal;
+  font-family: var(--mono);
+}
+
+.forcesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.forcesGrid div {
+  border-color: rgba(184, 255, 92, 0.18);
+}
+
+.forcesGrid .forceNegative {
+  border-color: rgba(255, 184, 107, 0.22);
+}
+
 .sidebarSubtopic.active {
   border-color: rgba(184, 255, 92, 0.36);
   background: rgba(184, 255, 92, 0.08);
@@ -4187,6 +4332,32 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .sidebarSubtopic.active .sidebarSubName,
 .sidebarSubtopic.active .sidebarSubDuration {
   color: var(--mint);
+}
+
+@media (max-width: 720px) {
+  .vennDiagram {
+    min-height: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .vennCircle,
+  .vennCircle1,
+  .vennCircle2,
+  .vennCircle3,
+  .vennCenter {
+    position: static;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    transform: none;
+    border-radius: var(--r-md);
+  }
+
+  .ostBranches,
+  .forcesGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ============================ Unified dojo dark system ============================ */
