@@ -4121,3 +4121,414 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .shell--learnLight .noteCalloutFormulaLabel { color: #92400e; }
 .noteCalloutFormulaCode { font-family: var(--mono); font-size: 0.82rem; color: var(--amber); background: rgba(255,184,107,0.1); padding: 2px 8px; border-radius: 4px; }
 .shell--learnLight .noteCalloutFormulaCode { color: #78350f; background: rgba(120,53,15,0.08); }
+
+/* ============================ Unified dojo dark system ============================ */
+.shell {
+  background:
+    radial-gradient(920px 420px at 82% 16%, rgba(184, 255, 92, 0.055), transparent 62%),
+    radial-gradient(740px 420px at 8% 82%, rgba(255, 184, 107, 0.035), transparent 58%),
+    var(--ink);
+}
+
+.main {
+  max-width: 1460px;
+}
+
+.topbar {
+  min-height: 64px;
+  background: rgba(6, 8, 7, 0.82);
+  border-bottom-color: rgba(255, 255, 255, 0.085);
+}
+
+.brand-mark {
+  font-size: 28px;
+}
+
+.brand-tag,
+.topbar-meta,
+.home-xp span,
+.home-sale button,
+.home-section-head button,
+.quiz-cat-tag,
+.quiz-cat-count,
+.learnScreenSub,
+.casePrepMenuText small,
+.caseCourseRow em {
+  letter-spacing: 0.12em;
+}
+
+.home-dashboard,
+.learnLayout,
+.workspace,
+.interviewMotionShell {
+  gap: 28px;
+}
+
+.home-sidebar,
+.learnSidebar,
+.steps-rail,
+.progress-card,
+.case-card,
+.step-block,
+.coach,
+.eval,
+.interviewCasePanel,
+.interviewRoundCard,
+.quizCard,
+.quizResultCard,
+.resourcesOverview,
+.resourcesHero,
+.notesHomeHead,
+.noteArticleHero,
+.noteArticleTopicRail,
+.caseCourseRows,
+.learnChapterViewHeader,
+.fcHomeStats,
+.fcProgressBox,
+.qbCard,
+.defCard {
+  border-color: var(--hair);
+  border-radius: var(--r-lg);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.026), rgba(255, 255, 255, 0.012)),
+    rgba(5, 8, 7, 0.52);
+}
+
+.learnSidebar {
+  padding: 14px;
+  border: 1px solid var(--hair);
+  backdrop-filter: blur(8px);
+}
+
+.learnScreenHeader {
+  margin-bottom: 24px;
+  padding: 26px 30px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-lg);
+  background:
+    radial-gradient(460px 180px at 80% 12%, rgba(184, 255, 92, 0.12), transparent 64%),
+    rgba(255, 255, 255, 0.018);
+}
+
+.learnScreenTitle,
+.dojoHeroTitle,
+.interviewEntry h2,
+.interviewAgent h2,
+.interviewRoundCard h3,
+.learnChapterViewHeader h2,
+.resourcesHero h2,
+.notesHomeHead h2,
+.casePrepMenuGroup h2,
+.caseCourseContentHead h2,
+.quizPicker h1,
+.quizResultScore {
+  font-family: var(--serif);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+
+.learnScreenTitle {
+  font-size: clamp(44px, 7vw, 86px);
+  line-height: 0.96;
+}
+
+.learnScreenTitle em {
+  color: var(--mint);
+}
+
+.learnTabBar {
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-lg);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.learnTab {
+  border: 0;
+  border-radius: var(--r-md);
+  color: var(--paper-dim);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.learnTab.active,
+.learnTab:hover,
+.learnSidebarItem.active,
+.sidebarChapterHead.active,
+.sidebarSubtopic:hover,
+.home-menu button:hover,
+.home-menu button.active,
+.home-menu-group button:hover {
+  background: rgba(184, 255, 92, 0.08);
+  color: var(--mint);
+}
+
+.learnSidebarItem,
+.sidebarChapterHead,
+.sidebarSubtopic,
+.caseCourseRow,
+.qbOpt,
+.fcRatingBtn,
+.quizOpt,
+.interviewChoiceList button {
+  border-color: var(--hair);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.sidebarChapterHead:hover,
+.learnSidebarItem:hover,
+.caseCourseRow:hover,
+.qbOpt:hover:not(:disabled),
+.fcRatingBtn:hover,
+.quizOpt:hover:not(:disabled),
+.interviewChoiceList button:hover,
+.interviewChoiceList button.active {
+  border-color: rgba(184, 255, 92, 0.34);
+  background: rgba(184, 255, 92, 0.06);
+}
+
+.resourcesOverview {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.resourcesHero,
+.home-sale {
+  border-radius: var(--r-lg);
+}
+
+.casePrepMenuGrid,
+.home-subjects,
+.quizGrid {
+  gap: 18px;
+}
+
+.casePrepMenuItem,
+.quiz-cat-card,
+.resourceCard,
+.learnChapterCard,
+.learnSubtopicRow,
+.fcChapterTile,
+.defCard,
+.qbCard,
+.interviewBlock,
+.interviewTestCard,
+.interviewTaskGrid article,
+.chapter,
+.track-card,
+.subject-card {
+  border: 1px solid var(--hair);
+  border-radius: var(--r-lg);
+  background:
+    radial-gradient(260px 140px at 86% 10%, rgba(184, 255, 92, 0.055), transparent 64%),
+    rgba(255, 255, 255, 0.018);
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.casePrepMenuItem:hover,
+.quiz-cat-card:hover,
+.resourceCard:hover,
+.learnChapterCard:hover,
+.learnSubtopicRow:hover,
+.fcChapterTile:hover,
+.defCard:hover,
+.qbCard:hover,
+.interviewBlock:hover,
+.interviewBlock.active,
+.interviewTestCard:hover,
+.chapter:hover,
+.track-card:hover,
+.subject-card:hover {
+  border-color: rgba(184, 255, 92, 0.34);
+  background:
+    radial-gradient(300px 160px at 86% 10%, rgba(184, 255, 92, 0.09), transparent 64%),
+    rgba(255, 255, 255, 0.032);
+  transform: translateY(-1px);
+}
+
+.casePrepMenuIcon {
+  border-radius: var(--r-md);
+  border-color: rgba(184, 255, 92, 0.24);
+  background: rgba(184, 255, 92, 0.055);
+}
+
+.casePrepMenuIcon > span {
+  background: var(--mint);
+  color: var(--ink);
+}
+
+.casePrepMenuIcon.blue,
+.casePrepMenuIcon.gray,
+.casePrepMenuIcon.yellow,
+.casePrepMenuIcon.purple,
+.casePrepMenuIcon.orange,
+.casePrepMenuIcon.cyan,
+.casePrepMenuIcon.pink {
+  --tile-accent: var(--ink);
+  --tile-bg: rgba(184, 255, 92, 0.055);
+  --tile-border: rgba(184, 255, 92, 0.24);
+}
+
+.noteArticleDefinition,
+.noteArticleCallout,
+.noteArticleDiagram,
+.noteArticlePractice,
+.learnNoteBlock,
+.interviewTaskIntro,
+.interviewRoundContext,
+.interviewExpected,
+.interviewFollowups,
+.quizFeedback,
+.learning-flow,
+.hint,
+.practice-task {
+  border-color: var(--hair);
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.022);
+}
+
+.noteArticleDefinition,
+.noteArticleCallout.note,
+.noteArticleCallout.example,
+.noteArticleCallout.analogy,
+.noteArticleCallout.mistake,
+.learnNoteBlock--definition,
+.learnNoteBlock--example,
+.learnNoteBlock--note,
+.learnNoteBlock--analogy {
+  border-left: 2px solid var(--mint);
+}
+
+.noteArticleDefinition span,
+.noteArticleCalloutLabel,
+.noteArticleDiagram > span,
+.noteArticlePractice h3,
+.learnNotesSectionTitle,
+.learnNoteBlockLabel,
+.learnSubtopicArrow,
+.interviewCaseLabel,
+.interviewMiniData span,
+.interviewExpected span,
+.quizQuestionMeta span,
+.quizStats p,
+.resourcesKicker {
+  color: var(--mint);
+}
+
+.quizPicker,
+.quizSession {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.quizPicker > .btn,
+.quizSession > .btn {
+  margin-bottom: 24px;
+}
+
+.quizStats div,
+.quizScoreBadge,
+.quizResultStats span,
+.fw,
+.skill,
+.linked-steps span,
+.noteArticleSources a {
+  border-color: rgba(184, 255, 92, 0.2);
+  background: rgba(184, 255, 92, 0.045);
+  color: var(--mint);
+}
+
+.quizCard {
+  max-width: 780px;
+  margin: 0 auto 16px;
+  padding: 30px;
+}
+
+.quizQ {
+  font-family: var(--serif);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.quiz-cat-icon,
+.learnBannerIcon,
+.learnPlaceholderIcon,
+.learnChapterCardIcon,
+.learnChapterViewIcon {
+  filter: grayscale(1);
+  opacity: 0.78;
+}
+
+.track-card .tag,
+.track-card .num,
+.subject-card span,
+.chapter .circle,
+.progress-card span,
+.steps-rail h4,
+.step-block .step-meta .idx,
+.interviewRoundTop span,
+.casePrepMenuText small,
+.learnSidebarTitle,
+.home-menu-group > span,
+.workspace-pill span:not(.user-dot) {
+  color: var(--mint);
+}
+
+.form-grid,
+.field input,
+.field select,
+.field textarea,
+.coach-input input,
+.interviewAgentForm select,
+.interviewAgentForm textarea,
+.interviewAnswerInput,
+.defsSearch,
+.defsSelect {
+  border-color: var(--hair);
+  background: rgba(255, 255, 255, 0.022);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.coach-input input:focus,
+.interviewAgentForm select:focus,
+.interviewAgentForm textarea:focus,
+.interviewAnswerInput:focus,
+.defsSearch:focus {
+  border-color: var(--mint);
+  outline: none;
+}
+
+.eval,
+.interviewReview.passed,
+.quizFeedback.ok,
+.noteArticlePractice {
+  background: rgba(184, 255, 92, 0.045);
+  border-color: rgba(184, 255, 92, 0.22);
+}
+
+.interviewReview,
+.quizFeedback.err {
+  background: rgba(255, 184, 107, 0.045);
+  border-color: rgba(255, 184, 107, 0.22);
+}
+
+@media (max-width: 900px) {
+  .learnScreenHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .learnScreenTitle {
+    font-size: 44px;
+  }
+
+  .casePrepMenuGrid,
+  .quizGrid {
+    grid-template-columns: 1fr;
+  }
+}

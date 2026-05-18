@@ -1676,7 +1676,7 @@ const App = () => {
   const screenLabel = { landing: 'dojo / resources', track: `exam mode / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz', interview: 'mock interview', learn: `resources / ${learnInitialTab}` }[screen];
 
   return (
-    <div className={`shell${screen === 'learn' ? ' shell--learnLight' : ''}`}>
+    <div className="shell">
       <Topbar onHome={() => setScreen('landing')} screen={screenLabel} />
       <main className="main">
         {busy && <BusyBanner screen={screen} />}
