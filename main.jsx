@@ -2041,6 +2041,7 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
   const normalizeTab = (tab) => LEARN_TABS.includes(tab) ? tab : 'Notes';
   const [activeTab, setActiveTab] = useState(normalizeTab(initialTab));
   const [selectedChapter, setSelectedChapter] = useState(null);
+  const [selectedSubtopic, setSelectedSubtopic] = useState(null);
   const [reviewOpen, setReviewOpen] = useState(false);
 
   useEffect(() => {
@@ -2050,6 +2051,11 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
   useEffect(() => {
     if (autoOpenReview) setReviewOpen(true);
   }, [autoOpenReview]);
+
+  const selectChapter = useCallback((chapter, subtopic = null) => {
+    setSelectedChapter(chapter);
+    setSelectedSubtopic(subtopic);
+  }, []);
 
   return (
     <div className="learnScreen fade-in">
@@ -2067,7 +2073,7 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
 
       <div className="learnTabBar">
         {LEARN_TABS.map((t) => (
-          <button key={t} className={`learnTab${activeTab === t ? ' active' : ''}`} onClick={() => { setActiveTab(t); setSelectedChapter(null); }}>{LEARN_TAB_LABELS[t] || t}</button>
+          <button key={t} className={`learnTab${activeTab === t ? ' active' : ''}`} onClick={() => { setActiveTab(t); setSelectedChapter(null); setSelectedSubtopic(null); }}>{LEARN_TAB_LABELS[t] || t}</button>
         ))}
       </div>
 
@@ -2075,13 +2081,17 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
         <LearnSidebar
           activeTab={activeTab}
           selectedChapter={selectedChapter}
-          onSelect={setSelectedChapter}
+          selectedSubtopic={selectedSubtopic}
+          onSelect={(chapter, subtopic = null) => {
+            setActiveTab('Notes');
+            selectChapter(chapter, subtopic);
+          }}
         />
         <div className="learnMain">
-          {activeTab === 'All Resources' && <ResourcesOverview onSelectChapter={setSelectedChapter} onOpenTab={setActiveTab} onOpenReview={() => setReviewOpen(true)} onOpenExam={onOpenExam} />}
-          {activeTab === 'Notes' && <NotesContent chapter={selectedChapter} onSelectChapter={setSelectedChapter} />}
+          {activeTab === 'All Resources' && <ResourcesOverview onSelectChapter={(chapter) => selectChapter(chapter)} onOpenTab={setActiveTab} onOpenReview={() => setReviewOpen(true)} onOpenExam={onOpenExam} />}
+          {activeTab === 'Notes' && <NotesContent chapter={selectedChapter} selectedSubtopic={selectedSubtopic} onSelectChapter={selectChapter} />}
           {activeTab === 'Questionbank' && <QuestionBankContent chapter={selectedChapter} />}
-          {activeTab === 'Flashcards' && <FlashCardsContent chapter={selectedChapter} onSelectChapter={setSelectedChapter} />}
+          {activeTab === 'Flashcards' && <FlashCardsContent chapter={selectedChapter} onSelectChapter={(chapter) => selectChapter(chapter)} />}
           {activeTab === 'Key Definitions' && <DefinitionsContent />}
         </div>
       </div>
@@ -2114,7 +2124,7 @@ function ResourcesOverview({ onSelectChapter, onOpenTab, onOpenReview, onOpenExa
 }
 
 /* ── Sidebar — expandable chapter + subtopic tree ── */
-function LearnSidebar({ activeTab, selectedChapter, onSelect }) {
+function LearnSidebar({ activeTab, selectedChapter, selectedSubtopic, onSelect }) {
   const [expanded, setExpanded] = useState(() => new Set(selectedChapter ? [selectedChapter.id] : []));
   const fcProgress = loadFcProgress();
 
@@ -2168,8 +2178,8 @@ function LearnSidebar({ activeTab, selectedChapter, onSelect }) {
                 {ch.subtopics.map((sub) => (
                   <button
                     key={sub.id}
-                    className="sidebarSubtopic"
-                    onClick={() => onSelect(ch)}
+                    className={`sidebarSubtopic${selectedSubtopic?.id === sub.id ? ' active' : ''}`}
+                    onClick={() => onSelect(ch, sub)}
                   >
                     <span className="sidebarSubDot" />
                     <span className="sidebarSubName">{sub.title}</span>
@@ -2623,6 +2633,78 @@ const getNotesArticle = (chapter) => {
   };
 };
 
+const sanitizeTextbookText = (value = '') =>
+  value
+    .replace(/Product Manager — это человек, который управляет созданием ценности\. Не «генератор идей», не «менеджер задач», а тот, кто решает:/g, 'Product Manager управляет созданием ценности и принимает решения:')
+    .replace(/Продукт — это не приложение, не сайт и не набор функций\./g, 'Продукт описывает полную систему создания и доставки ценности.')
+    .replace(/Продукт — это не список функций\. Это система/g, 'Продукт — это система')
+    .replace(/Job — это не демографический сегмент\. Это ситуация/g, 'Job описывает ситуацию')
+    .replace(/PM — не официант, который принимает заказы на фичи\. PM ближе к диагносту:/g, 'PM работает как диагност:')
+    .replace(/Не «людям нравится», а «люди не могут без этого жить»\./g, 'Признак состояния: пользователи регулярно возвращаются, рекомендуют продукт и считают потерю продукта существенной.')
+    .replace(/«Запустили онбординг» — output\. «D7 retention вырос с 22% до 35%» — outcome\./g, 'Пример output: запущен онбординг. Пример outcome: D7 retention вырос с 22% до 35%.')
+    .replace(/«Вы бы купили это за 500 рублей\?» — плохо\. Мама из вежливости скажет «да»\./g, 'Вопрос о гипотетической покупке за 500 рублей даёт слабые данные, потому что респонденту легко согласиться из вежливости.')
+    .replace(/Никогда не показывай/g, 'Прототип показывается после того, как команда поняла проблему; не следует показывать')
+    .replace(/Начинай/g, 'Начинать следует')
+    .replace(/проведи/g, 'проводится')
+    .replace(/Возьми/g, 'Пример')
+    .trim();
+
+const renderTextbookText = (value) => {
+  const text = sanitizeTextbookText(value);
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+    return <React.Fragment key={index}>{part}</React.Fragment>;
+  });
+};
+
+const splitLessonParagraphs = (value = '') =>
+  sanitizeTextbookText(value)
+    .split(/\n\n+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const subtopicDefinitionOverrides = {
+  ch0_1: 'Product Manager — роль, отвечающая за выбор продуктовой проблемы, целевой аудитории, критерия успеха и способа доставки ценности пользователю и бизнесу.',
+  ch1_1: 'Продукт — система, соединяющая проблему, аудиторию, решение, бизнес-модель и канал доставки ценности.',
+  ch1_3: 'Product-Market Fit — состояние, при котором конкретный рынок устойчиво получает ценность от продукта, а поведение пользователей подтверждает потребность.',
+  ch2_1: 'Jobs To Be Done — подход, в котором продукт рассматривается как средство достижения прогресса пользователя в конкретной ситуации.',
+  ch3_3: 'The Mom Test — методика интервью, где вопросы строятся вокруг прошлого поведения, фактических затрат, реального контекста и уже совершённых действий.',
+};
+
+const getSubtopicTextbookLesson = (chapter, subtopic) => {
+  const content = subtopic ? LEARN_TOGETHER_CONTENT[subtopic.id] : null;
+  const definitionNote = chapter.notes?.find((note) => note.type === 'definition') || chapter.notes?.[0];
+  const exampleNote = chapter.notes?.find((note) => note.type === 'example');
+  const analogyNote = chapter.notes?.find((note) => note.type === 'analogy');
+  const topicTitle = subtopic?.title || chapter.title;
+  const exposition = content?.exposition || definitionNote?.text || chapter.description;
+  const paragraphs = splitLessonParagraphs(exposition);
+  const definition = subtopicDefinitionOverrides[subtopic?.id] || sanitizeTextbookText(paragraphs[0] || definitionNote?.text || chapter.description);
+  const exampleText = content?.mcq?.explanation || exampleNote?.text || `В кейсе тема «${topicTitle}» применяется для перехода от общего описания проблемы к проверяемой гипотезе, метрике успеха и следующему действию команды.`;
+
+  return {
+    title: subtopic ? `Урок: ${topicTitle}` : `Конспект: ${chapter.title}`,
+    eyebrow: subtopic ? `Модуль ${chapter.number} · Подтема` : `Модуль ${chapter.number}`,
+    subtitle: subtopic ? `Учебный разбор темы «${topicTitle}» в контексте Product Management и case interview.` : chapter.description,
+    definitionTitle: topicTitle,
+    definition,
+    paragraphs: paragraphs.length > 1 ? paragraphs.slice(1) : paragraphs,
+    keyPoints: [
+      '**Сначала фиксируется смысл термина.** У понятия должна быть рабочая формулировка, которую можно применить в кейсе.',
+      '**Затем определяется управленческое решение.** Концепция полезна, когда помогает выбрать сегмент, метрику, инициативу или эксперимент.',
+      '**После этого проверяется связь с данными.** Для каждой идеи нужны наблюдения, метрики или факты из исследования.',
+      '**Финальный шаг — вывод.** В ответе должно быть понятно, какое действие меняется благодаря этой теме.',
+    ],
+    example: sanitizeTextbookText(exampleText),
+    analogy: analogyNote?.text ? sanitizeTextbookText(analogyNote.text) : '',
+    diagramSteps: CHAPTER_DIAGRAM_STEPS[chapter.id] || ['Термин', 'Зачем нужен', 'Данные', 'Решение', 'Метрика', 'Риск'],
+    practice: `Практическое задание: сформулировать определение темы «${topicTitle}», привести один продуктовый пример и описать, какая метрика покажет успешное применение концепции.`,
+  };
+};
+
 function NoteCallout({ callout }) {
   if (callout.type === 'table') {
     return (
@@ -2686,17 +2768,110 @@ function NoteCallout({ callout }) {
     <div className={`noteArticleCallout ${callout.type}`}>
       <div className="noteArticleCalloutLabel">{callout.title}</div>
       {callout.items ? (
-        <ul>{callout.items.map((item) => <li key={item}>{item}</li>)}</ul>
+        <ul>{callout.items.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}</ul>
       ) : (
-        <p>{callout.text}</p>
+        <p>{renderTextbookText(callout.text)}</p>
       )}
     </div>
   );
 }
 
-function NotesContent({ chapter, onSelectChapter }) {
+function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
   const activeChapter = chapter || PM_CHAPTERS.find((item) => item.id === 'ch1') || PM_CHAPTERS[0];
   const article = getNotesArticle(activeChapter);
+  const lesson = selectedSubtopic ? getSubtopicTextbookLesson(activeChapter, selectedSubtopic) : null;
+
+  if (lesson) {
+    return (
+      <div className="noteArticle textbookLesson">
+        <div className="noteArticleHero" style={{ '--ch-color': activeChapter.color }}>
+          <div>
+            <div className="noteArticleCrumbs">
+              <span>Case prep resources</span>
+              <b>›</b>
+              <span>Уроки</span>
+              <b>›</b>
+              <strong>{activeChapter.title}</strong>
+            </div>
+            <h2>{lesson.title}</h2>
+            <p>{lesson.subtitle}</p>
+          </div>
+          <button className="btn btn-ghost" onClick={() => onSelectChapter(activeChapter, null)}>К обзору модуля</button>
+        </div>
+
+        <article className="noteArticleBody">
+          <div className="textbookMeta">
+            <span>{lesson.eyebrow}</span>
+            <span>{selectedSubtopic.duration}</span>
+          </div>
+
+          <section className="noteArticleDefinition">
+            <span>Определение</span>
+            <strong>{lesson.definitionTitle}</strong>
+            <p>{renderTextbookText(`**${lesson.definition}**`)}</p>
+          </section>
+
+          <section className="noteArticleSection">
+            <h3>Учебное объяснение</h3>
+            {lesson.paragraphs.map((paragraph) => (
+              <p key={paragraph} className="textbookParagraph">{renderTextbookText(paragraph)}</p>
+            ))}
+          </section>
+
+          <section className="noteArticleSection">
+            <h3>Ключевые выводы</h3>
+            <ol className="noteArticleList">
+              {lesson.keyPoints.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
+            </ol>
+          </section>
+
+          <div className="noteArticleDiagram textbookDiagram">
+            <span>Схема применения</span>
+            <div>
+              {lesson.diagramSteps.map((item) => (
+                <strong key={item}>{item}</strong>
+              ))}
+            </div>
+          </div>
+
+          <section className="noteArticleCallout example textbookExample">
+            <div className="noteArticleCalloutLabel">Пример</div>
+            <p>{renderTextbookText(`**Пример применения.** ${lesson.example}`)}</p>
+          </section>
+
+          {lesson.analogy && (
+            <section className="noteArticleCallout analogy">
+              <div className="noteArticleCalloutLabel">Аналогия</div>
+              <p>{renderTextbookText(lesson.analogy)}</p>
+            </section>
+          )}
+
+          <section className="noteArticlePractice">
+            <h3>Практика</h3>
+            <p>{renderTextbookText(`**${lesson.practice}**`)}</p>
+          </section>
+        </article>
+
+        <aside className="noteArticleTopicRail">
+          <span>Подтемы модуля</span>
+          {activeChapter.subtopics.map((item) => (
+            <button
+              key={item.id}
+              className={item.id === selectedSubtopic.id ? 'active' : ''}
+              onClick={() => onSelectChapter(activeChapter, item)}
+              style={{ '--col': activeChapter.color }}
+            >
+              <span>{activeChapter.icon}</span>
+              <div>
+                <strong>{item.title}</strong>
+                <small>{item.duration}</small>
+              </div>
+            </button>
+          ))}
+        </aside>
+      </div>
+    );
+  }
 
   return (
     <div className="noteArticle">
@@ -2725,18 +2900,18 @@ function NotesContent({ chapter, onSelectChapter }) {
         <div className="noteArticleDefinition">
           <span>Определение</span>
           <strong>{article.definitionTitle}</strong>
-          <p>{article.definition}</p>
+          <p>{renderTextbookText(article.definition)}</p>
         </div>
 
         <ol className="noteArticleList">
-          {article.bullets.map((item) => <li key={item}>{item}</li>)}
+          {article.bullets.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
         </ol>
 
         {article.sections.map((section) => (
           <section key={section.title} className="noteArticleSection">
             <h3>{section.title}</h3>
             <ol className="noteArticleList">
-              {section.bullets.map((item) => <li key={item}>{item}</li>)}
+              {section.bullets.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
             </ol>
           </section>
         ))}
@@ -2754,7 +2929,7 @@ function NotesContent({ chapter, onSelectChapter }) {
 
         <section className="noteArticlePractice">
           <h3>Как отработать конспект</h3>
-          <p>Возьми любой продуктовый prompt и напиши ответ на 90 секунд по схеме выше. Затем открой банк вопросов и проверь, есть ли в ответе пользователь, проблема, данные, компромисс и метрика.</p>
+          <p>{renderTextbookText('**Практический формат.** Выбирается любой продуктовый prompt и составляется ответ на 90 секунд по схеме выше. Затем через банк вопросов проверяется наличие пользователя, проблемы, данных, компромисса и метрики.')}</p>
           <div>
             <button className="btn btn-primary" onClick={() => onSelectChapter(activeChapter)}>Оставить эту тему</button>
           </div>

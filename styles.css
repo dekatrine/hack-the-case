@@ -4122,6 +4122,73 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .noteCalloutFormulaCode { font-family: var(--mono); font-size: 0.82rem; color: var(--amber); background: rgba(255,184,107,0.1); padding: 2px 8px; border-radius: 4px; }
 .shell--learnLight .noteCalloutFormulaCode { color: #78350f; background: rgba(120,53,15,0.08); }
 
+.textbookLesson .noteArticleHero h2 {
+  max-width: 920px;
+}
+
+.textbookMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.textbookMeta span {
+  padding: 6px 10px;
+  border: 1px solid rgba(184, 255, 92, 0.22);
+  border-radius: 999px;
+  background: rgba(184, 255, 92, 0.045);
+  color: var(--mint);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.textbookParagraph {
+  margin: 0;
+  color: var(--paper-dim);
+  font-size: 17px;
+  line-height: 1.82;
+}
+
+.textbookParagraph strong,
+.noteArticleList strong,
+.noteArticleDefinition strong + p strong,
+.noteArticleCallout p strong,
+.noteArticlePractice p strong {
+  color: var(--paper);
+  font-weight: 700;
+}
+
+.textbookDiagram div {
+  align-items: stretch;
+}
+
+.textbookDiagram strong {
+  display: inline-flex;
+  align-items: center;
+}
+
+.textbookExample {
+  border-color: rgba(184, 255, 92, 0.24);
+  background: rgba(184, 255, 92, 0.045);
+}
+
+.sidebarSubtopic.active {
+  border-color: rgba(184, 255, 92, 0.36);
+  background: rgba(184, 255, 92, 0.08);
+}
+
+.sidebarSubtopic.active .sidebarSubDot {
+  background: var(--mint);
+  border-color: var(--mint);
+}
+
+.sidebarSubtopic.active .sidebarSubName,
+.sidebarSubtopic.active .sidebarSubDuration {
+  color: var(--mint);
+}
+
 /* ============================ Unified dojo dark system ============================ */
 .shell {
   background:
