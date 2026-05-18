@@ -2841,6 +2841,71 @@ function TextbookVisual({ visual }) {
   );
 }
 
+const compactDiagramLabel = (value = '') =>
+  sanitizeTextbookText(value)
+    .replace(/\*\*/g, '')
+    .split(/[.:—-]/)[0]
+    .trim()
+    .slice(0, 42);
+
+const sectionToVisual = (section) => ({
+  type: 'flow',
+  title: `Схема: ${section.title}`,
+  items: section.bullets.map(compactDiagramLabel).filter(Boolean).slice(0, 5),
+});
+
+function TextbookSketch({ title, chapterId, subtopicId }) {
+  const isJtbd = chapterId === 'ch2' || subtopicId === 'ch2_1';
+  const isMetrics = chapterId === 'ch6' || chapterId === 'ch7';
+
+  return (
+    <figure className={`textbookSketch${isJtbd ? ' jtbdSketch' : isMetrics ? ' metricsSketch' : ''}`}>
+      <svg viewBox="0 0 720 320" role="img" aria-label={title}>
+        {isJtbd ? (
+          <>
+            <path className="sketchDashed" d="M86 214 C 190 78, 302 72, 364 156 S 528 242, 635 96" />
+            <path className="sketchLine" d="M86 236 L 636 236" />
+            <circle className="sketchDot" cx="86" cy="236" r="12" />
+            <circle className="sketchDot" cx="636" cy="236" r="12" />
+            <text x="62" y="276">status quo</text>
+            <text x="582" y="276">progress</text>
+            <text className="sketchAccent" x="250" y="116">Job</text>
+            <text className="sketchAccent" x="388" y="190">barrier</text>
+          </>
+        ) : isMetrics ? (
+          <>
+            <rect className="sketchBox" x="70" y="58" width="150" height="62" rx="18" />
+            <rect className="sketchBox" x="285" y="58" width="150" height="62" rx="18" />
+            <rect className="sketchBox" x="500" y="58" width="150" height="62" rx="18" />
+            <path className="sketchArrow" d="M224 88 H 278" />
+            <path className="sketchArrow" d="M438 88 H 492" />
+            <text x="108" y="96">input</text>
+            <text x="318" y="96">proxy</text>
+            <text x="535" y="96">NSM</text>
+            <path className="sketchLine" d="M120 224 L 260 178 L 396 198 L 560 132" />
+            <circle className="sketchDot" cx="120" cy="224" r="9" />
+            <circle className="sketchDot" cx="260" cy="178" r="9" />
+            <circle className="sketchDot" cx="396" cy="198" r="9" />
+            <circle className="sketchDot" cx="560" cy="132" r="9" />
+          </>
+        ) : (
+          <>
+            <circle className="sketchOrbit" cx="242" cy="154" r="104" />
+            <circle className="sketchOrbit" cx="362" cy="154" r="104" />
+            <circle className="sketchOrbit" cx="302" cy="238" r="104" />
+            <text x="132" y="78">user value</text>
+            <text x="420" y="78">business</text>
+            <text x="250" y="302">feasibility</text>
+            <rect className="sketchBox" x="252" y="138" width="118" height="48" rx="16" />
+            <text className="sketchAccent" x="276" y="168">product</text>
+          </>
+        )}
+      </svg>
+      <figcaption>{title}</figcaption>
+    </figure>
+  );
+}
+
 function NoteCallout({ callout }) {
   if (callout.type === 'table') {
     return (
@@ -2947,6 +3012,8 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
             <p>{renderTextbookText(`**${lesson.definition}**`)}</p>
           </section>
 
+          <TextbookSketch title={`Визуальная модель: ${lesson.definitionTitle}`} chapterId={activeChapter.id} subtopicId={selectedSubtopic.id} />
+
           <section className="noteArticleSection">
             <h3>Учебное объяснение</h3>
             {lesson.paragraphs.map((paragraph) => (
@@ -2960,6 +3027,7 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
               {lesson.keyPoints.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
             </ol>
           </section>
+          <TextbookVisual visual={{ type: 'flow', title: 'Логика усвоения темы', items: lesson.keyPoints.map(compactDiagramLabel).slice(0, 4) }} />
 
           {lesson.visuals.map((visual) => <TextbookVisual key={visual.title} visual={visual} />)}
 
@@ -3041,9 +3109,12 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
           <p>{renderTextbookText(article.definition)}</p>
         </div>
 
+        <TextbookSketch title={`Визуальная модель: ${article.definitionTitle}`} chapterId={activeChapter.id} />
+
         <ol className="noteArticleList">
           {article.bullets.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
         </ol>
+        <TextbookVisual visual={{ type: 'flow', title: 'Схема основных идей', items: article.bullets.map(compactDiagramLabel).slice(0, 5) }} />
 
         {article.sections.map((section) => (
           <section key={section.title} className="noteArticleSection">
@@ -3051,6 +3122,7 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
             <ol className="noteArticleList">
               {section.bullets.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
             </ol>
+            <TextbookVisual visual={sectionToVisual(section)} />
           </section>
         ))}
 
@@ -3065,7 +3137,7 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
           </div>
         </div>
 
-        {article.callouts.map((callout) => <NoteCallout key={callout.title || callout.type + Math.random()} callout={callout} />)}
+        {article.callouts.map((callout, index) => <NoteCallout key={callout.title || `${callout.type}-${index}`} callout={callout} />)}
 
         <section className="noteArticlePractice">
           <h3>Как отработать конспект</h3>
