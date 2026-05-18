@@ -2617,6 +2617,44 @@ const PRODUCT_THINKING_VISUALS = [
   },
 ];
 
+const getChapterVisuals = (chapter) => {
+  if (!chapter) return [];
+  if (chapter.id === 'ch1') return PRODUCT_THINKING_VISUALS;
+  if (chapter.id === 'ch2') {
+    return [
+      { type: 'jtbd', title: 'Job Story', items: ['Ситуация', 'Мотивация', 'Прогресс', 'Барьер', 'Результат'] },
+      { type: 'forces', title: 'Forces of Progress', items: ['Push', 'Pull', 'Anxiety', 'Habit'] },
+    ];
+  }
+  if (chapter.id === 'ch3') {
+    return [
+      { type: 'flow', title: 'Цикл discovery', items: ['Гипотеза', 'Интервью', 'Инсайт', 'Opportunity', 'Решение'] },
+    ];
+  }
+  if (chapter.id === 'ch4') {
+    return [
+      { type: 'flow', title: 'Market sizing', items: ['TAM', 'SAM', 'SOM', 'Доля', 'Вывод'] },
+    ];
+  }
+  if (chapter.id === 'ch5') {
+    return [
+      { type: 'flow', title: 'Strategy kernel', items: ['Diagnosis', 'Policy', 'Actions', 'Metrics'] },
+    ];
+  }
+  if (chapter.id === 'ch6') {
+    return [
+      { type: 'tree', title: 'Metric tree', root: 'North Star Metric', branches: [
+        { label: 'Acquisition', children: ['Visitors', 'Signup rate'] },
+        { label: 'Activation', children: ['Aha moment', 'TTFV'] },
+        { label: 'Retention', children: ['D7', 'WAU'] },
+      ] },
+    ];
+  }
+  return [
+    { type: 'flow', title: `Карта модуля ${chapter.number}`, items: CHAPTER_DIAGRAM_STEPS[chapter.id] || ['Понятие', 'Данные', 'Вывод', 'Действие'] },
+  ];
+};
+
 const getNotesArticle = (chapter) => {
   if (!chapter || chapter.id === 'ch1') return { ...PRODUCT_THINKING_NOTE, visuals: PRODUCT_THINKING_VISUALS };
   const definitionNote = chapter.notes?.find((n) => n.type === 'definition') || chapter.notes?.[0];
@@ -2659,7 +2697,7 @@ const getNotesArticle = (chapter) => {
     callouts,
     diagramSteps: CHAPTER_DIAGRAM_STEPS[chapter.id],
     diagramLabel: `Логика: ${chapter.title}`,
-    visuals: chapter.id === 'ch1' ? PRODUCT_THINKING_VISUALS : [],
+    visuals: getChapterVisuals(chapter),
   };
 };
 
@@ -2841,19 +2879,6 @@ function TextbookVisual({ visual }) {
   );
 }
 
-const compactDiagramLabel = (value = '') =>
-  sanitizeTextbookText(value)
-    .replace(/\*\*/g, '')
-    .split(/[.:—-]/)[0]
-    .trim()
-    .slice(0, 42);
-
-const sectionToVisual = (section) => ({
-  type: 'flow',
-  title: `Схема: ${section.title}`,
-  items: section.bullets.map(compactDiagramLabel).filter(Boolean).slice(0, 5),
-});
-
 function TextbookSketch({ title, chapterId, subtopicId }) {
   const isJtbd = chapterId === 'ch2' || subtopicId === 'ch2_1';
   const isMetrics = chapterId === 'ch6' || chapterId === 'ch7';
@@ -3027,8 +3052,6 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
               {lesson.keyPoints.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
             </ol>
           </section>
-          <TextbookVisual visual={{ type: 'flow', title: 'Логика усвоения темы', items: lesson.keyPoints.map(compactDiagramLabel).slice(0, 4) }} />
-
           {lesson.visuals.map((visual) => <TextbookVisual key={visual.title} visual={visual} />)}
 
           <div className="noteArticleDiagram textbookDiagram">
@@ -3114,15 +3137,12 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
         <ol className="noteArticleList">
           {article.bullets.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
         </ol>
-        <TextbookVisual visual={{ type: 'flow', title: 'Схема основных идей', items: article.bullets.map(compactDiagramLabel).slice(0, 5) }} />
-
         {article.sections.map((section) => (
           <section key={section.title} className="noteArticleSection">
             <h3>{section.title}</h3>
             <ol className="noteArticleList">
               {section.bullets.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
             </ol>
-            <TextbookVisual visual={sectionToVisual(section)} />
           </section>
         ))}
 

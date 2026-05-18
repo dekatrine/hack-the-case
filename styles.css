@@ -4356,13 +4356,13 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .noteArticleDefinition span::before,
 .noteArticleCalloutLabel::before,
 .textbookVisualTitle::before {
-  content: '▦';
+  content: '•';
   width: 28px;
   height: 28px;
   display: inline-grid;
   place-items: center;
   border-radius: 8px;
-  background: currentColor;
+  background: var(--mint);
   color: var(--ink);
   font-family: var(--mono);
   font-size: 14px;
@@ -4643,19 +4643,23 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   color: var(--paper-dim);
   font-size: 16px;
   line-height: 1.35;
+  min-height: 68px;
+  display: grid;
+  align-items: center;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .textbookFlowSteps {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  align-items: stretch;
+  gap: 12px;
 }
 
 .textbookFlowSteps em {
-  color: var(--mint);
-  font-style: normal;
-  font-family: var(--mono);
+  display: none;
 }
 
 .forcesGrid {
