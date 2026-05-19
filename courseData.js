@@ -2547,16 +2547,337 @@ Five Forces — это снимок в моменте. Силы меняются
       explanation: 'Нет. Хорошая стратегия описывает что компания НЕ будет делать. Фокус — основа стратегии. Стратегия без отказов — это не стратегия, а wish list.',
     },
   },
+  ch5_2: {
+    title: 'Strategy Kernel (Румельт)',
+    definition: 'Strategy Kernel — фреймворк Ричарда Румельта: реальная стратегия состоит из трёх элементов — Diagnosis (диагностика проблемы), Guiding Policy (направляющий принцип), Coherent Actions (согласованные действия).',
+    exposition: `**Strategy Kernel** Ричарда Румельта — это **минимальная анатомия настоящей стратегии**. Из «Good Strategy / Bad Strategy»: большинство «стратегий» в компаниях — это туман из амбиций и слайдов. Реальная стратегия состоит из трёх жёстких элементов.
+
+**Diagnosis (Диагностика)**: в чём реальная проблема или возможность? Не «хотим вырасти на 30%», а «рынок фрагментирован, нет лидера, у пользователей есть незакрытая боль X, и мы единственные имеем technology Y, способную её закрыть». Diagnosis — это insight, не описание.
+
+**Guiding Policy (Направляющий принцип)**: ключевой принцип, направляющий все выборы. «Мы конкурируем только через простоту, а не через функциональность». «Мы инвестируем только в продукты для SMB, ignore enterprise». Policy ограничивает действия, делая выбор острым.
+
+**Coherent Actions (Согласованные действия)**: набор действий, каждое из которых усиливает другое. Marketing, hiring, product, GTM — всё должно укладываться в Policy. Если убрать Policy — становятся ли actions бессмысленными? Если да — Policy реальная. Если actions можно делать без Policy — это «list of stuff to do», не стратегия.
+
+**Антипаттерны Bad Strategy** (по Румельту): **Fluff** — пустые слова и buzzwords («synergy», «leverage», «world-class»). **Failure to face challenge** — не назвать ключевую проблему, обойти её. **Mistaking goals for strategy** — «вырасти на 30%» вместо «как». **Bad strategic objectives** — несвязанный список целей без logic.
+
+Strategy Kernel — это **тест на реальность**. Возьмите stratregy document любой компании. Найдите Diagnosis, Guiding Policy, Coherent Actions. Если хотя бы одного нет — это Bad Strategy.`,
+    simplifiedExposition: `Представь врача. Сначала он ставит диагноз («сердечная аритмия, тип X»). Потом выбирает стратегию лечения («снизить риск инсульта через антикоагулянты, а не через хирургию»). Потом назначает конкретные действия (препарат A, диета B, мониторинг C).
+
+Strategy Kernel — то же самое для бизнеса. Диагноз → принцип лечения → конкретные действия. Без диагноза любое лечение случайное.`,
+    keyPoints: [
+      '**3 элемента: Diagnosis + Guiding Policy + Coherent Actions.** Любого одного не хватает — стратегии нет.',
+      '**Diagnosis = insight, не описание.** «Рынок плохой» — описание. «Конкуренты не используют X, а пользователи требуют» — insight.',
+      '**Guiding Policy ограничивает выборы.** Без явного ограничения — нет фокуса.',
+      '**Coherent Actions усиливают друг друга.** Если выкинуть одно — остальные становятся слабее.',
+      '**Bad Strategy = Fluff + неназванная проблема + goals as strategy.**',
+    ],
+    framework: {
+      title: '4 типа Bad Strategy (Румельт)',
+      items: [
+        { name: 'Fluff', description: 'Buzzwords без смысла: synergy, leverage, world-class.' },
+        { name: 'Failure to face challenge', description: 'Не назвать главную проблему, обойти её.' },
+        { name: 'Mistaking goals for strategy', description: '«Вырасти на 30%» — это goal, не как достичь.' },
+        { name: 'Bad strategic objectives', description: 'Список целей без логики и связи между собой.' },
+      ],
+    },
+    realExamples: [
+      { product: 'Apple возвращение Стива Джобса (1997)', situation: 'Apple на грани банкротства, 350+ продуктов, размытая стратегия.', action: 'Diagnosis: «слишком много продуктов, потеряли фокус». Policy: «4 продукта в 2×2 матрице (consumer/pro × desktop/portable)». Actions: cut SKUs.', outcome: 'Survived и вернулись к прибыли за 18 месяцев.' },
+      { product: 'Netflix pivot to streaming', situation: 'DVD-by-mail business stagnating.', action: 'Diagnosis: «broadband меняет потребление». Policy: «всё ставим на streaming, sacrifice DVD profit». Actions: split DVD/streaming, invest in originals.', outcome: 'Стал лидером streaming, $300B+ market cap.' },
+      { product: 'GE «be #1 or #2»', situation: 'Welch как пример Strategic Action.', action: 'Diagnosis: «слишком много слабых бизнесов». Policy: «#1 или #2 в категории или продаём». Actions: divest weak businesses.', outcome: 'Стали наиболее прибыльной американской компанией на десятилетие.' },
+    ],
+    commonMistakes: [
+      '**Goals вместо strategy.** «Стать №1» — goal, не как.',
+      '**Fluff с buzzwords.** «Leverage synergies» — без actionable meaning.',
+      '**Policy без actions.** «Фокусируемся на SMB» без конкретных решений по hiring, marketing, product = wishful thinking.',
+      '**Actions без policy.** Список действий, не связанных общим принципом = списка задач, не стратегия.',
+    ],
+    mcq: {
+      question: 'Команда представила стратегию: «вырасти выручку на 50% за 2 года через лучший продукт». Какой главный недостаток?',
+      options: ['Слишком амбициозно', 'Это goal, а не стратегия — нет diagnosis и policy', 'Срок слишком длинный', 'Не указаны конкретные метрики'],
+      correct: 1,
+      explanation: '«Вырасти выручку» — это цель. «Лучший продукт» — fluff без conkretики. Нет diagnosis (какая проблема), нет guiding policy (как именно лучше), нет coherent actions. Bad Strategy по Румельту.',
+    },
+    trueFalse: {
+      statement: 'Стратегия — это амбициозная цель, например «стать лидером рынка к 2027».',
+      correct: false,
+      explanation: 'Нет. Это goal, не strategy. Strategy объясняет КАК достичь goal: какая diagnosis рынка, какой guiding principle, какие coherent actions. Без них «стать лидером» — wishful thinking.',
+    },
+  },
+
+  ch5_3: {
+    title: 'Playing to Win (Лафли)',
+    definition: 'Playing to Win — стратегический фреймворк A.G. Лафли (P&G), формализующий выбор where to play и how to win через 5 связанных вопросов.',
+    exposition: `**Playing to Win** (A.G. Лафли, бывший CEO P&G, и Roger Martin) — самый практичный фреймворк продуктовой стратегии. Был разработан в P&G, применяется в Microsoft, Disney, многих SaaS-командах.
+
+Стратегия = ответы на **5 связанных вопросов**:
+
+**1. Winning aspiration**: каково наше «победить»? Не «быть лучшим», а конкретное состояние, в котором мы выиграли. «Stripe: stripe payments в каждом стартапе по умолчанию».
+
+**2. Where to play**: какие рынки, сегменты, география, каналы, продуктовые категории мы выбираем? Это явный выбор с явным отказом. «Slack: small tech-teams 5-50 человек в US, не enterprise, не consumer».
+
+**3. How to win**: каким способом мы выиграем в выбранном where? Дифференцирование, низкая цена, фокусный сегмент, новая категория. «Linear: дифференцирование через craft + speed + дизайн против Jira».
+
+**4. Core capabilities**: какие компетенции и активности мы должны выполнять отлично? «Apple: industrial design + software integration + supply chain». Без этих capabilities — нельзя выиграть.
+
+**5. Management systems**: какие процессы, метрики, organisational design поддерживают стратегию? «Amazon: working backwards documents + bar raisers + 2-pizza teams». Системы превращают стратегию в действие.
+
+Каждый ответ должен быть **связан** с другими. Если how-to-win требует capabilities, которых у вас нет — стратегия unrealistic. Если where-to-play выбран без понимания how-to-win — рандом.
+
+Главное правило Playing to Win — **explicit choice with explicit no**. Если ваш ответ позволяет «and others too» — это не выбор, это пустота.`,
+    simplifiedExposition: `Представь, что ты собираешься сыграть в шахматы с гроссмейстером. Тебе нужна стратегия:
+
+1. Что значит «выиграть» (не сразу сделать мат, а просто продержаться 30 ходов).
+2. Где играть (на какой доске? Если онлайн, можно ли использовать движок?).
+3. Как выигрывать (не пытаться выиграть атакой, играть защитно).
+4. Какие навыки нужны (знать классические защиты).
+5. Какие правила процесса (как анализирую после партии).
+
+Каждый ответ связан с другими.`,
+    keyPoints: [
+      '**5 вопросов: Aspiration → Where → How → Capabilities → Systems.** Все связаны.',
+      '**Where to play = выбор + отказ.** Без отказа — не выбор.',
+      '**How to win = дифференцирование.** Не «лучше», а «по-другому».',
+      '**Capabilities должны быть real.** Если how-to-win требует чего, чего нет — стратегия unrealistic.',
+      '**Systems — это org design + processes + metrics.** Без них стратегия не превращается в действие.',
+    ],
+    framework: {
+      title: '5 вопросов Playing to Win',
+      items: [
+        { name: 'Winning aspiration', description: 'Конкретное состояние «выигрыша». Не general «быть лучшим».' },
+        { name: 'Where to play', description: 'Рынки, сегменты, каналы, география. Явный выбор + явный отказ.' },
+        { name: 'How to win', description: 'Дифференцирование и source of advantage. Почему именно мы.' },
+        { name: 'Core capabilities', description: 'Какие компетенции и активности нам нужны.' },
+        { name: 'Management systems', description: 'Процессы, метрики, organisational design.' },
+      ],
+    },
+    realExamples: [
+      { product: 'P&G Olay', situation: 'Олд-school бренд, теряющий долю.', action: 'Aspiration: market leader in masstige skincare. Where: US, women 35-55, premium drugstores. How: premium positioning at mass price. Capabilities: R&D + brand storytelling. Systems: pricing + retail relationships.', outcome: 'Olay вырос с $300M до $2.5B brand за 10 лет.' },
+      { product: 'Stripe', situation: 'Запуск в перенасыщенной payments категории.', action: 'Aspiration: «default payment infrastructure for internet companies». Where: developers в SaaS. How: 5-line integration. Capabilities: API DX, docs. Systems: developer-first culture.', outcome: 'Стали стандартом для startup payments, $95B valuation.' },
+      { product: 'Disney (под Iger)', situation: 'Strategic refresh при приходе Iger.', action: 'Aspiration: «highest quality entertainment franchises». Where: IP-heavy entertainment. How: M&A + content. Capabilities: content production + brand management. Systems: studio-level autonomy + corporate strategy.', outcome: 'Pixar + Marvel + Lucasfilm = десятилетие dominance.' },
+    ],
+    commonMistakes: [
+      '**Aspiration = wishful thinking.** «Be the best» без conkretики.',
+      '**Where без отказа.** «Everyone in tech» = не выбор.',
+      '**How без дифференцирования.** «Better product» = не стратегия.',
+      '**Capabilities mismatched с How.** Хотим выиграть через design, нет дизайнеров — unrealistic.',
+      '**Skipping systems.** Без org/process/metrics стратегия не воплощается.',
+    ],
+    visual: {
+      type: 'flow',
+      title: 'Playing to Win flow',
+      items: ['Aspiration', 'Where', 'How', 'Capabilities', 'Systems'],
+    },
+    mcq: {
+      question: 'PM формулирует стратегию: «выиграем за счёт лучшего продукта». Какой вопрос Playing to Win не отвечен?',
+      options: ['Winning aspiration', 'Where to play и How to win (нет дифференцирования)', 'Core capabilities', 'Все пять'],
+      correct: 1,
+      explanation: '«Лучший продукт» — это не where to play (для кого) и не how to win (чем именно лучше). Без конкретики это fluff, не стратегия.',
+    },
+    trueFalse: {
+      statement: 'В Playing to Win 5 вопросов независимы и каждый можно отвечать отдельно.',
+      correct: false,
+      explanation: 'Нет. 5 вопросов связаны. How зависит от Where. Capabilities зависят от How. Systems — от Capabilities. Это связная цепочка, а не чек-лист.',
+    },
+  },
+
+  ch5_4: {
+    title: 'Moat: 5 типов конкурентных преимуществ',
+    definition: 'Moat (Уоррен Баффет) — устойчивое конкурентное преимущество, защищающее бизнес от конкурентов и копирования. Главные типы: network effects, data, switching costs, distribution, brand.',
+    exposition: `**Moat** (ров вокруг замка) — метафора Уоррена Баффета для **устойчивого конкурентного преимущества**. Без moat бизнес копируется конкурентами, маржа падает, нет durable advantage. С moat — компания может зарабатывать excess returns десятилетиями.
+
+**Network Effects**: ценность продукта растёт с каждым новым пользователем. **Прямые NE** (same-side): больше пользователей одного типа → ценнее каждому (WhatsApp, Facebook). **Косвенные NE** (cross-side): больше пользователей одной стороны привлекает другую (маркетплейс: покупатели → продавцы). **Data NE**: больше пользователей → больше данных → лучше продукт → ещё больше пользователей (Waze, Spotify, Google Search).
+
+**Data Moat**: уникальные данные, которых нет у конкурентов. Google Search имеет десятилетия search-данных, которые невозможно догнать. Tesla имеет миллиарды миль автономного вождения. Финансовые сервисы имеют years of risk-данных. Важно: данные сами по себе не moat — нужна способность превращать их в product advantage.
+
+**Switching Costs**: насколько дорого пользователю уйти к конкуренту. Salesforce: вся база, интеграции, обученные сотрудники. Apple ecosystem: iCloud, AirPods, Apple Watch. Бухгалтерский софт: история транзакций, интеграции с банками. Чем выше switching costs — тем устойчивее customer base.
+
+**Distribution Moat**: уникальный канал привлечения. Apple — App Store / iOS. Amazon — own logistics. Google — Chrome + Android. Coca-Cola — global distribution через рестораны и vending.
+
+**Brand Moat**: лояльность и доверие выше рационального. Nike, Apple, Disney — пользователи готовы платить премию за бренд независимо от характеристик. Самый сложный moat для построения, но самый устойчивый.
+
+**Самый мощный и редкий — Network Effects**. Самый доступный для стартапа — **data moat через нишевую специализацию**. PM должен понимать, какой moat строит его продукт. Без moat — даже хороший продукт легко копируется.`,
+    simplifiedExposition: `Представь, что ты построил замок. Moat — это ров вокруг него. Без рва любой может зайти и захватить. С глубоким рвом — сложно подобраться.
+
+В бизнесе: без moat конкурент копирует тебя за полгода. С moat — годы или невозможно. Network effects — самый сложный для копирования: чтобы догнать WhatsApp, нужны не деньги, а 2 миллиарда пользователей.`,
+    keyPoints: [
+      '**5 типов moat.** Network effects, Data, Switching costs, Distribution, Brand.',
+      '**Network effects = самый мощный.** Размер становится преимуществом.',
+      '**Data sama не moat.** Нужна способность превращать в продуктовое преимущество.',
+      '**Switching costs усиливаются временем.** Чем дольше клиент, тем сложнее уйти.',
+      '**Brand — самый сложный для построения.** Десятилетия consistency. Самый защищённый от копирования.',
+    ],
+    framework: {
+      title: '5 типов Moat',
+      items: [
+        { name: 'Network effects', description: 'Ценность растёт с каждым новым пользователем. Прямые (мессенджеры) и косвенные (маркетплейсы).' },
+        { name: 'Data moat', description: 'Уникальные данные → лучший продукт → ещё больше данных. Google, Tesla.' },
+        { name: 'Switching costs', description: 'Дорого уходить: интеграции, обучение, история данных. Salesforce, Apple ecosystem.' },
+        { name: 'Distribution moat', description: 'Уникальный канал привлечения. Apple App Store, Amazon logistics, Google Chrome.' },
+        { name: 'Brand moat', description: 'Лояльность выше рационального. Nike, Apple, Coca-Cola. Самый сложный для копирования.' },
+      ],
+    },
+    comparisonTable: {
+      title: 'Moats — сила и сложность построения',
+      headers: ['Тип', 'Защищённость', 'Сложность построения', 'Пример'],
+      rows: [
+        ['Network effects', 'Самая высокая', 'Очень сложно', 'WhatsApp, Visa'],
+        ['Data moat', 'Высокая', 'Требует масштаба', 'Google, Tesla'],
+        ['Switching costs', 'Средняя-высокая', 'Достижимо для B2B', 'Salesforce, SAP'],
+        ['Distribution', 'Высокая, но дисраптируется', 'Капитал + время', 'Apple, Amazon'],
+        ['Brand', 'Самая устойчивая', 'Десятилетия', 'Nike, Coca-Cola'],
+      ],
+    },
+    realExamples: [
+      { product: 'WhatsApp', situation: 'Конкурировал с iMessage, Telegram, Signal.', action: 'Network effect: 2.5B users. Друзья и семья уже там.', outcome: 'Невозможно скопировать — switching cost for users слишком высокий.' },
+      { product: 'Stripe', situation: 'Платёжная индустрия очень конкурентная.', action: 'Switching costs: developer integration уже сделана. Brand: trusted by Y Combinator companies.', outcome: 'Customer retention >95% в SaaS-сегменте.' },
+      { product: 'Salesforce', situation: 'CRM-категория с многими конкурентами (HubSpot, Microsoft Dynamics, Zoho).', action: 'Switching costs: training, integrations, custom workflows.', outcome: 'NRR (Net Revenue Retention) >120% — клиенты не только остаются, но и платят больше.' },
+    ],
+    commonMistakes: [
+      '**«Mы будем иметь network effect» без plan.** Сами по себе NE не появляются — нужна product mechanics.',
+      '**Data without product link.** Накопили данные, но не превращают в product advantage.',
+      '**Brand как маркетинг.** Брат не reklama — это десятилетия consistent customer experience.',
+      '**Switching costs силой.** Когда клиента «запирают» plohimi контрактами — это работает короткое время, потом backlash.',
+    ],
+    mcq: {
+      question: 'Стартап утверждает «у нас будет network effect, потому что пользователей становится больше». Какой главный недостаток?',
+      options: ['Слишком быстро растут', 'Не указана конкретная mechanics, как пользователи создают ценность друг другу', 'Слишком много пользователей', 'Нет монетизации'],
+      correct: 1,
+      explanation: 'Network effect — это конкретная mechanics, не «просто много пользователей». Slack: больше людей в team → больше ценности каждому. Если этой связки нет — это просто масштаб, не NE.',
+    },
+    trueFalse: {
+      statement: 'Brand moat легко построить с хорошим маркетингом за 2-3 года.',
+      correct: false,
+      explanation: 'Нет. Brand moat — это десятилетия consistent customer experience + storytelling. Маркетинг создаёт awareness, но не brand moat. Nike, Coca-Cola, Disney строили десятилетиями.',
+    },
+  },
+
+  ch5_5: {
+    title: 'Build / Buy / Partner',
+    definition: 'Build / Buy / Partner — стратегический фреймворк выбора способа получения новой capability: построить самим, купить компанию, или партнёрство.',
+    exposition: `Когда компании нужна новая capability — продукт, технология, talent, market access — есть три стратегических выбора: **Build, Buy или Partner**. Каждый имеет свои trade-offs.
+
+**Build (строить самим)**: максимальный контроль, возможность дифференцирования, долго и дорого. Подходит для **core competencies** — то, что является вашим конкурентным преимуществом. Apple строит iOS сам, не покупает. Google строит search сам.
+
+**Buy (M&A)**: быстро, дорого, риски интеграции. Подходит когда **скорость важнее денег** или нужна команда + IP. Facebook купил Instagram ($1B) и WhatsApp ($19B) — speed-to-market был важнее. Google купил Android — стратегический mobile play.
+
+**Partner (интеграция, API, OEM, licensing)**: быстро, меньше контроля, риск зависимости от партнёра. Подходит для **non-core функций**. Spotify не строит подкаст-хостинг с нуля — партнёрится. Slack не строит video-conferencing — интеграция с Zoom.
+
+**Главное правило**: **не строй то, что можно купить или интегрировать, если это не core**. Если capability определяет ваше дифференцирование (How to win) — Build. Если это commodity или вспомогательная функция — Buy или Partner.
+
+Антипаттерн **NIH (Not Invented Here)** — компания строит всё сама, даже non-core, потому что «we can do it better». Это медленно, дорого, отвлекает фокус от core.
+
+**Buy критерии**: стратегическая ценность, цена справедлива, культура совместима, integration plan есть, retention ключевых людей. Большинство M&A в Tech провалились из-за integration issues, а не финансовых.
+
+**Partner критерии**: стабильность партнёра, контракт на multiple year, exit план если партнёрство сломается, не критическая зависимость.
+
+В реальности компании комбинируют. Microsoft: core (Windows, Office) — Build. AI — Partner with OpenAI + Build internal. GitHub — Buy.`,
+    simplifiedExposition: `Представь, что ты строишь дом. Можешь сам с нуля (Build) — долго, но именно как хочешь. Можешь купить готовый дом (Buy) — быстро, но не идеально под тебя. Можешь арендовать (Partner) — самый быстрый, но не твой дом.
+
+Решение: для главного (где живёшь сам) — обычно Build или Buy. Для гостевого домика — может быть аренда.`,
+    keyPoints: [
+      '**3 варианта: Build / Buy / Partner.** Каждый с trade-off скорость/контроль/деньги.',
+      '**Core = Build, non-core = Buy/Partner.** Основное правило.',
+      '**Buy быстрее, но риски integration.** Большинство M&A проваливаются из-за integration.',
+      '**Partner = least control + dependency risk.** Хорошо для commodity функций.',
+      '**Antipattern NIH.** «We can do it better» для всего — медленно и дорого.',
+    ],
+    comparisonTable: {
+      title: 'Build vs Buy vs Partner',
+      headers: ['Параметр', 'Build', 'Buy', 'Partner'],
+      rows: [
+        ['Скорость', 'Самая низкая', 'Средняя-высокая', 'Самая высокая'],
+        ['Контроль', 'Полный', 'Полный после buy', 'Низкий'],
+        ['Стоимость', 'Средняя-высокая (long-term)', 'Высокая (upfront)', 'Низкая (operational)'],
+        ['Риск', 'Project risk, time', 'Integration, culture', 'Dependency, partner stability'],
+        ['Подходит для', 'Core capability', 'Speed + талант + IP', 'Non-core, commodity'],
+      ],
+    },
+    realExamples: [
+      { product: 'Facebook → Instagram', situation: 'Instagram быстро рос, угрожал Facebook mobile.', action: 'Buy за $1B (2012). Сохранили команду и независимость.', outcome: 'Один из самых успешных M&A в tech: Instagram теперь ~$100B value.' },
+      { product: 'Microsoft + OpenAI', situation: 'Microsoft нужен AI, OpenAI нужен compute.', action: 'Partner: $13B investment в OpenAI + Azure compute exclusive.', outcome: 'Microsoft стал AI leader без acquiring OpenAI; OpenAI получил resources.' },
+      { product: 'Apple ARM CPUs', situation: 'Apple нужен chip differentiation.', action: 'Build: M1, M2 chips internally вместо покупки Intel.', outcome: 'Лучший perf/watt в индустрии — критическое дифференцирование для Mac.' },
+      { product: 'Quibi (анти-пример)', situation: 'Стартап mobile-video.', action: 'Build everything — original content production, distribution, technology.', outcome: 'Слишком много build для команды без core competency. Закрылись.' },
+    ],
+    commonMistakes: [
+      '**Build для всего (NIH).** Tech debt, slow, expensive. Игнор готовых решений.',
+      '**Buy без integration plan.** Большинство M&A провалов — integration, культура, retention.',
+      '**Partner с unstable partner.** Зависимость от компании, которая closes или меняет правила.',
+      '**Build core capabilities buy-стилем.** Покупать differentiating capability дороже, чем строить.',
+    ],
+    mcq: {
+      question: 'Saas-стартап в FinTech нужно добавить KYC/AML compliance. Какой подход обычно правильный?',
+      options: ['Build — это core safety feature', 'Buy специализированную KYC компанию', 'Partner с Sumsub/Onfido', 'Игнорировать compliance'],
+      correct: 2,
+      explanation: 'KYC/AML — commodity функция, не дифференцирование. Partner с Sumsub/Onfido даёт fast time-to-market без отвлечения от core product. Build KYC с нуля — медленно и дорого без преимущества.',
+    },
+    trueFalse: {
+      statement: 'Большие компании всегда выбирают Build, потому что у них есть ресурсы.',
+      correct: false,
+      explanation: 'Нет. Большие компании активно используют все три: Microsoft Buy GitHub, Partner с OpenAI, Build Windows. Выбор зависит от core/non-core и скорости, не от ресурсов.',
+    },
+  },
+
   ch6_1: {
     title: 'North Star Metric',
-    exposition: `North Star Metric (NSM) — единственная метрика, которая лучше всего отражает долгосрочную ценность для пользователей и предсказывает рост бизнеса.
+    definition: 'North Star Metric — единственная метрика, которая лучше всего отражает долгосрочную ценность для пользователей и предсказывает рост бизнеса, доступная для понимания всей команды.',
+    exposition: `**North Star Metric (NSM)** — единственная метрика, которая лучше всего отражает долгосрочную ценность для пользователей и предсказывает рост бизнеса. Метафора «полярной звезды» — одна точка ориентации для всей команды.
 
-Примеры: Spotify — Monthly Active Listeners (слушают активно), Airbnb — Nights Booked (реально используют продукт), Slack — DAU who send messages (коллаборируют). Каждая NSM отражает реальное использование, а не тщеславные метрики.
+Примеры. **Spotify**: Monthly Active Listeners (слушают активно, не просто открыли). **Airbnb**: Nights Booked (реально живут, не просто smотрят). **Slack**: DAU who send messages (коллаборируют, не просто залогинены). **Facebook**: DAU (возвращаются ежедневно). **WhatsApp**: messages sent. **Amazon**: total orders. **Uber**: completed trips.
 
-Плохие NSM для EdTech: «Количество регистраций» (можно зарегистрироваться и не учиться), «Количество загрузок» (аналогично). Хорошие: «Уроков завершено в неделю», «Пользователи, достигшие учебной цели».`,
+Критерии хорошей NSM. **Отражает реальную ценность пользователя**: не «открыл приложение», а «получил ценность». **Коррелирует с долгосрочной выручкой**: рост NSM = рост revenue в перспективе. **Понятна всей компании**: каждый сотрудник может объяснить за 30 секунд. **Чувствительна к действиям команды**: команда может влиять на неё через продуктовые изменения. **Не поощряет нечестное поведение**: нельзя «накрутить» через trick.
+
+Плохие NSM для EdTech: «Количество регистраций» (можно зарегистрироваться и не учиться), «Количество загрузок» (аналогично). Хорошие: «Уроков завершено в неделю», «Пользователи, достигшие учебной цели».
+
+NSM не одна для всех продуктов. **Marketplace** = transactions completed (Airbnb, Uber). **Communication** = messages sent (WhatsApp). **Media** = time engaged (Netflix, TikTok). **SaaS** = active accounts × value generated (Slack messages × team size). Выбор зависит от того, в чём именно создаётся ценность.
+
+NSM также **leading indicator** долгосрочной выручки. Vanity metrics (regs, downloads) — это начало воронки, не ценность. Real NSM фиксирует момент, когда пользователь получает ценность.`,
     simplifiedExposition: `NSM — это как спидометр для продукта: одна цифра, которая показывает всё важное. У каждой компании своя NSM — зависит от того, в чём их ценность для пользователя.
 
 Если цифра растёт — продукт создаёт ценность. Если падает — что-то идёт не так. Вся команда смотрит на одну метрику.`,
+    keyPoints: [
+      '**Одна NSM, не несколько.** Если PM не может выбрать одну — стратегия размыта.',
+      '**Отражает ценность, не активность.** «Открыл приложение» ≠ «получил ценность».',
+      '**Понятна за 30 секунд.** Каждый сотрудник может объяснить.',
+      '**Зависит от категории продукта.** Marketplace ≠ communication ≠ media ≠ SaaS.',
+      '**Leading indicator выручки.** Связь NSM ↔ revenue должна быть подтверждена данными.',
+    ],
+    framework: {
+      title: 'Критерии хорошей NSM',
+      items: [
+        { name: 'Reflects real value', description: 'Отражает момент получения пользователем реальной ценности.' },
+        { name: 'Leading revenue indicator', description: 'Корреляция NSM с долгосрочной выручкой.' },
+        { name: 'Understandable', description: 'Каждый сотрудник может объяснить за 30 секунд.' },
+        { name: 'Actionable', description: 'Команда может влиять через продуктовые изменения.' },
+        { name: 'Resistant to gaming', description: 'Нельзя «накрутить» без создания реальной ценности.' },
+      ],
+    },
+    comparisonTable: {
+      title: 'Хорошие vs Плохие NSM (примеры)',
+      headers: ['Тип продукта', 'Плохая NSM', 'Хорошая NSM'],
+      rows: [
+        ['EdTech', 'Регистрации', 'Уроков завершено в неделю'],
+        ['Music streaming', 'App opens', 'Active listening hours'],
+        ['Marketplace', 'Total users', 'Completed transactions'],
+        ['Communication', 'Sign-ups', 'Messages sent in active conversations'],
+        ['B2B SaaS', 'Free trials', 'Weekly active teams sending 50+ messages'],
+      ],
+    },
+    realExamples: [
+      { product: 'Spotify (NSM evolution)', situation: 'Раньше: DAU (открывают app). Не отражает реальной ценности.', action: 'Перешли на «Active Listeners» (>30 min/week). Затем уточнили — added engagement quality.', outcome: 'Команда сфокусировалась на quality of listening, что коррелировало с retention и subscription.' },
+      { product: 'Airbnb', situation: 'NSM = «Nights Booked». Отражает реальное использование.', action: 'Все команды (search, trust, host onboarding) optimize на Nights Booked.', outcome: 'Aligned focus, дошли до IPO $86B valuation.' },
+      { product: 'WhatsApp', situation: 'NSM = «messages sent». Простая и powerful.', action: 'Все продуктовые решения проверяются: повышает ли это messages sent.', outcome: 'Достигли 100B messages/day, $19B acquisition.' },
+    ],
+    commonMistakes: [
+      '**Vanity metric как NSM.** «Регистрации», «загрузки» — начало воронки, не ценность.',
+      '**Несколько NSM одновременно.** Несколько NSM = размытый фокус. Не «3 main metrics», а 1.',
+      '**NSM, на которую команда не влияет.** Если NSM — это «доход компании», команда не может direct влиять. Нужна более продуктовая метрика.',
+      '**NSM игнорирует guardrails.** Без counter-metrics можно оптимизировать NSM, разрушая user experience.',
+    ],
+    visual: {
+      type: 'flow',
+      title: 'Иерархия метрик от NSM',
+      items: ['NSM', 'Proxy metrics', 'Input metrics', 'Guardrails'],
+    },
     mcq: {
       question: 'Почему «число регистраций» — плохая NSM для EdTech-платформы?',
       options: ['Её сложно измерить технически', 'Она не отражает реального обучения — можно зарегистрироваться и ничему не научиться', 'Регистраций всегда мало', 'Это хорошая NSM для начальной стадии'],
