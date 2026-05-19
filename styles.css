@@ -5127,3 +5127,70 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
     grid-template-columns: 1fr;
   }
 }
+
+/* ─────────── Lesson real-examples & framework blocks ─────────── */
+
+.noteArticleRealExamples {
+  margin-top: 8px;
+}
+
+.noteArticleRealExamples h3 {
+  font-family: var(--sans);
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+
+.realExamplesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.realExampleCard {
+  border-radius: 22px;
+  padding: 22px 24px;
+  border: 1px solid rgba(132, 204, 255, 0.22);
+  background:
+    linear-gradient(180deg, rgba(96, 165, 250, 0.08), rgba(96, 165, 250, 0.03)),
+    rgba(255, 255, 255, 0.018);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.realExampleProduct {
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 800;
+  color: #60a5fa;
+  letter-spacing: 0.2px;
+}
+
+.realExampleRow {
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.realExampleRow strong {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  margin-right: 6px;
+}
+
+.noteArticleFramework h3 {
+  font-family: var(--sans);
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+
+.noteArticleFramework .noteArticleList li {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 720px) {
+  .realExamplesGrid {
+    grid-template-columns: 1fr;
+  }
+}

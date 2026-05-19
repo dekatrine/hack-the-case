@@ -2755,6 +2755,13 @@ const subtopicDefinitionOverrides = {
   ch3_3: 'The Mom Test — методика интервью, где вопросы строятся вокруг прошлого поведения, фактических затрат, реального контекста и уже совершённых действий.',
 };
 
+const DEFAULT_KEY_POINTS = [
+  '**Сначала фиксируется смысл термина.** У понятия должна быть рабочая формулировка, которую можно применить в кейсе.',
+  '**Затем определяется управленческое решение.** Концепция полезна, когда помогает выбрать сегмент, метрику, инициативу или эксперимент.',
+  '**После этого проверяется связь с данными.** Для каждой идеи нужны наблюдения, метрики или факты из исследования.',
+  '**Финальный шаг — вывод.** В ответе должно быть понятно, какое действие меняется благодаря этой теме.',
+];
+
 const getSubtopicTextbookLesson = (chapter, subtopic) => {
   const content = subtopic ? LEARN_TOGETHER_CONTENT[subtopic.id] : null;
   const definitionNote = chapter.notes?.find((note) => note.type === 'definition') || chapter.notes?.[0];
@@ -2763,8 +2770,15 @@ const getSubtopicTextbookLesson = (chapter, subtopic) => {
   const topicTitle = subtopic?.title || chapter.title;
   const exposition = content?.exposition || definitionNote?.text || chapter.description;
   const paragraphs = splitLessonParagraphs(exposition);
-  const definition = subtopicDefinitionOverrides[subtopic?.id] || sanitizeTextbookText(paragraphs[0] || definitionNote?.text || chapter.description);
+  const definitionOverride = content?.definition || subtopicDefinitionOverrides[subtopic?.id];
+  const definition = definitionOverride
+    ? sanitizeTextbookText(definitionOverride)
+    : sanitizeTextbookText(paragraphs[0] || definitionNote?.text || chapter.description);
   const exampleText = content?.mcq?.explanation || exampleNote?.text || `В кейсе тема «${topicTitle}» применяется для перехода от общего описания проблемы к проверяемой гипотезе, метрике успеха и следующему действию команды.`;
+
+  const subtopicVisual = content?.visual;
+  const baseVisuals = getLessonVisuals(chapter, subtopic);
+  const visuals = subtopicVisual ? [subtopicVisual, ...baseVisuals] : baseVisuals;
 
   return {
     title: subtopic ? `Урок: ${topicTitle}` : `Конспект: ${chapter.title}`,
@@ -2773,17 +2787,18 @@ const getSubtopicTextbookLesson = (chapter, subtopic) => {
     definitionTitle: topicTitle,
     definition,
     paragraphs: paragraphs.length > 1 ? paragraphs.slice(1) : paragraphs,
-    keyPoints: [
-      '**Сначала фиксируется смысл термина.** У понятия должна быть рабочая формулировка, которую можно применить в кейсе.',
-      '**Затем определяется управленческое решение.** Концепция полезна, когда помогает выбрать сегмент, метрику, инициативу или эксперимент.',
-      '**После этого проверяется связь с данными.** Для каждой идеи нужны наблюдения, метрики или факты из исследования.',
-      '**Финальный шаг — вывод.** В ответе должно быть понятно, какое действие меняется благодаря этой теме.',
-    ],
+    keyPoints: content?.keyPoints?.length ? content.keyPoints : DEFAULT_KEY_POINTS,
+    realExamples: content?.realExamples || null,
+    framework: content?.framework || null,
+    comparisonTable: content?.comparisonTable || null,
+    formula: content?.formula || null,
+    commonMistakes: content?.commonMistakes || null,
+    checklist: content?.checklist || null,
     example: sanitizeTextbookText(exampleText),
     analogy: analogyNote?.text ? sanitizeTextbookText(analogyNote.text) : '',
     diagramSteps: CHAPTER_DIAGRAM_STEPS[chapter.id] || ['Термин', 'Зачем нужен', 'Данные', 'Решение', 'Метрика', 'Риск'],
     practice: `Контроль понимания: для темы «${topicTitle}» важны три элемента — точное определение, продуктовый пример и метрика, показывающая успешное применение концепции.`,
-    visuals: getLessonVisuals(chapter, subtopic),
+    visuals,
   };
 };
 
@@ -2811,6 +2826,85 @@ const getLessonVisuals = (chapter, subtopic) => {
     },
   ];
 };
+
+const getLessonStudyBlocks = (chapter, subtopic) => {
+  const title = subtopic?.title || chapter.title;
+  const quality = chapter.id === 'ch6' || chapter.id === 'ch7'
+    ? 'выбранная метрика меняет решение команды'
+    : chapter.id === 'ch3'
+      ? 'исследование даёт проверяемый инсайт'
+      : 'понятие помогает выбрать продуктовый ход';
+
+  return {
+    why: `Тема «${title}» нужна для того, чтобы продуктовая рекомендация опиралась на поведение пользователя, данные и бизнес-эффект. В кейсе она превращает общий ответ в проверяемую управленческую гипотезу.`,
+    example: [
+      'Контекст: продукт, пользователь, цель и ограничение.',
+      'Неопределённость: ценность, рынок, метрика, экономика или реализация.',
+      'Инструмент: концепция используется для выбора следующего действия.',
+      `Критерий качества: ${quality}.`,
+    ],
+    checkQuestion: `Как тема «${title}» меняет решение PM в продуктовой задаче?`,
+    checkAnswer: 'Ответ считается сильным, если в нём есть сегмент, проблема, данные, решение, метрика успеха и главный риск.',
+    summary: [
+      `«${title}» — рабочий инструмент анализа.`,
+      'Применение связывает пользователя, данные, решение и метрику.',
+      'Главный результат урока — более обоснованное действие команды.',
+    ],
+  };
+};
+
+function PracticumStudyBlocks({ blocks }) {
+  if (!blocks) return null;
+  return (
+    <section className="practicumBlocks">
+      <article className="practicumCard practicumWhy">
+        <div className="practicumCardLabel">Зачем это нужно</div>
+        <p>{blocks.why}</p>
+      </article>
+      <article className="practicumCard practicumExample">
+        <div className="practicumCardLabel">Пример применения</div>
+        <ul>{blocks.example.map((item) => <li key={item}>{item}</li>)}</ul>
+      </article>
+      <article className="practicumCard practicumCheck">
+        <div className="practicumCardLabel">Мини-тренажёр</div>
+        <p><strong>{blocks.checkQuestion}</strong></p>
+        <div className="practicumAnswer">{blocks.checkAnswer}</div>
+      </article>
+      <article className="practicumCard practicumSummary">
+        <div className="practicumCardLabel">Самое главное</div>
+        <ol>{blocks.summary.map((item) => <li key={item}>{item}</li>)}</ol>
+      </article>
+    </section>
+  );
+}
+
+function ProductCaseCanvas({ chapterId, title }) {
+  const labels = chapterId === 'ch3'
+    ? ['Гипотеза', 'Интервью', 'Инсайт', 'Opportunity', 'Решение']
+    : chapterId === 'ch6' || chapterId === 'ch7'
+      ? ['Цель', 'NSM', 'Input', 'Guardrail', 'Решение']
+      : ['Пользователь', 'Проблема', 'Данные', 'Решение', 'Метрика'];
+
+  return (
+    <figure className="productCaseCanvas">
+      <figcaption>{title}</figcaption>
+      <svg viewBox="0 0 760 280" role="img" aria-label={title}>
+        <path className="canvasSpine" d="M90 140 H670" />
+        {labels.map((label, index) => {
+          const x = 90 + index * 145;
+          const y = index % 2 === 0 ? 72 : 158;
+          return (
+            <g key={label}>
+              <path className="canvasConnector" d={`M${x} 140 V${y + 30}`} />
+              <rect className="canvasNode" x={x - 54} y={y} width="108" height="60" rx="16" />
+              <text x={x} y={y + 36} textAnchor="middle">{label}</text>
+            </g>
+          );
+        })}
+      </svg>
+    </figure>
+  );
+}
 
 function TextbookVisual({ visual }) {
   if (!visual) return null;
@@ -3006,6 +3100,7 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
   const activeChapter = chapter || PM_CHAPTERS.find((item) => item.id === 'ch1') || PM_CHAPTERS[0];
   const article = getNotesArticle(activeChapter);
   const lesson = selectedSubtopic ? getSubtopicTextbookLesson(activeChapter, selectedSubtopic) : null;
+  const studyBlocks = getLessonStudyBlocks(activeChapter, selectedSubtopic);
 
   if (lesson) {
     return (
@@ -3038,6 +3133,7 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
           </section>
 
           <TextbookSketch title={`Визуальная модель: ${lesson.definitionTitle}`} chapterId={activeChapter.id} subtopicId={selectedSubtopic.id} />
+          <ProductCaseCanvas chapterId={activeChapter.id} title="Карта применения в продуктовой задаче" />
 
           <section className="noteArticleSection">
             <h3>Учебное объяснение</h3>
@@ -3052,7 +3148,62 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
               {lesson.keyPoints.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
             </ol>
           </section>
+
+          {lesson.formula && (
+            <NoteCallout callout={{ type: 'formula', title: lesson.formula.title, items: lesson.formula.items }} />
+          )}
+
+          {lesson.framework && (
+            <section className="noteArticleSection noteArticleFramework">
+              <h3>{lesson.framework.title}</h3>
+              <ol className="noteArticleList">
+                {lesson.framework.items.map((item) => (
+                  <li key={item.name}>{renderTextbookText(`**${item.name}.** ${item.description}`)}</li>
+                ))}
+              </ol>
+            </section>
+          )}
+
+          {lesson.comparisonTable && (
+            <NoteCallout callout={{ type: 'table', title: lesson.comparisonTable.title, headers: lesson.comparisonTable.headers, rows: lesson.comparisonTable.rows }} />
+          )}
+
+          {lesson.realExamples && lesson.realExamples.length > 0 && (
+            <section className="noteArticleSection noteArticleRealExamples">
+              <h3>Примеры из реальных продуктов</h3>
+              <div className="realExamplesGrid">
+                {lesson.realExamples.map((ex) => (
+                  <article key={ex.product + ex.situation} className="realExampleCard">
+                    <div className="realExampleProduct">{ex.product}</div>
+                    <div className="realExampleRow"><strong>Ситуация.</strong> {ex.situation}</div>
+                    <div className="realExampleRow"><strong>Действие.</strong> {ex.action}</div>
+                    <div className="realExampleRow"><strong>Результат.</strong> {ex.outcome}</div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {lesson.commonMistakes && lesson.commonMistakes.length > 0 && (
+            <section className="noteArticleCallout note">
+              <div className="noteArticleCalloutLabel">Типичные ошибки</div>
+              <ul>
+                {lesson.commonMistakes.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
+              </ul>
+            </section>
+          )}
+
+          {lesson.checklist && lesson.checklist.length > 0 && (
+            <section className="noteArticleCallout example">
+              <div className="noteArticleCalloutLabel">Чек-лист</div>
+              <ul>
+                {lesson.checklist.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
+              </ul>
+            </section>
+          )}
+
           {lesson.visuals.map((visual) => <TextbookVisual key={visual.title} visual={visual} />)}
+          <PracticumStudyBlocks blocks={studyBlocks} />
 
           <div className="noteArticleDiagram textbookDiagram">
             <span>Схема применения</span>
@@ -3133,6 +3284,7 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
         </div>
 
         <TextbookSketch title={`Визуальная модель: ${article.definitionTitle}`} chapterId={activeChapter.id} />
+        <ProductCaseCanvas chapterId={activeChapter.id} title="Карта применения в продуктовой задаче" />
 
         <ol className="noteArticleList">
           {article.bullets.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
@@ -3147,6 +3299,7 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
         ))}
 
         {(article.visuals || []).map((visual) => <TextbookVisual key={visual.title} visual={visual} />)}
+        <PracticumStudyBlocks blocks={studyBlocks} />
 
         <div className="noteArticleDiagram">
           <span>{article.diagramLabel || 'Логика ответа на кейс'}</span>
