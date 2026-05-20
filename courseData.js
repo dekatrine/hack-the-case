@@ -2890,4 +2890,270 @@ NSM также **leading indicator** долгосрочной выручки. Va
       explanation: 'Нет. "North Star" в названии — это метафора одной звезды-ориентира. Несколько NSM создают конкурирующие приоритеты и размывают фокус команды. Если сложно выбрать одну — значит стратегия недостаточно ясна.',
     },
   },
+
+  ch6_2: {
+    title: 'Иерархия метрик: NSM → прокси → input → guardrails',
+    definition: 'Иерархия метрик — структура, связывающая стратегическую цель (NSM) с измеримыми краткосрочными прокси, действиями команды (input metrics) и контрметриками (guardrails), на которые нельзя ронять при оптимизации.',
+    exposition: `**Иерархия метрик** превращает абстрактную NSM в работающую систему. Без иерархии NSM остаётся «чём-то на дашборде», на которое команда не может влиять напрямую.
+
+**Уровень 1 — NSM**: одна целевая метрика, отражающая долгосрочную ценность (Active Listeners, Nights Booked, Messages Sent).
+
+**Уровень 2 — Proxy metrics (прокси-метрики)**: предсказывают NSM на короткой дистанции. Если NSM = «Weekly Active Learners», proxy = «D7 retention новых пользователей», «уроков завершено в неделю», «среднее количество дней с активностью». Эти метрики чувствительнее к продуктовым изменениям, чем NSM.
+
+**Уровень 3 — Input metrics**: действия команды и поведение пользователей, двигающие прокси. Если proxy = «D7 retention», input = «% пользователей, прошедших онбординг», «время до первого aha-moment (Time-to-Value)», «среднее количество приглашённых коллег». PM управляет именно input metrics — они под прямым влиянием команды.
+
+**Уровень 4 — Guardrail metrics (контрметрики)**: метрики, которые **нельзя ронять при оптимизации основных**. Если оптимизируем D7 retention через push-уведомления, guardrail = «unsubscribe rate ≤ 2%». Если оптимизируем revenue, guardrail = «NPS ≥ 40». Guardrails защищают от локальной оптимизации, которая разрушает долгосрочные показатели.
+
+**Главная мысль**: PM управляет inputs, чтобы двигать proxies, которые ведут к NSM. Guardrails не дают разрушить продукт по дороге. Команды без этой иерархии оптимизируют что-то одно и разрушают остальное.
+
+Хорошая система метрик строится один раз в квартал на стратегическом ритуале. Без обновления иерархия устаревает: NSM меняется со стратегией, proxies становятся менее предсказательными, inputs зависят от текущих инициатив.`,
+    simplifiedExposition: `Представь корабль. NSM — это куда плывём (порт назначения). Proxy — это маяки на пути (видим ли их). Input — это паруса, руль, скорость гребцов (что мы делаем). Guardrails — это «не наскочить на скалы и не утопить часть команды».
+
+Капитан смотрит на все четыре уровня одновременно: куда идём, видим ли маяки, что делаем, и что не должны разрушить.`,
+    keyPoints: [
+      '**Четыре уровня: NSM → proxy → input → guardrails.** Каждый связан с другими.',
+      '**PM управляет inputs.** Proxy и NSM — то, что измеряем; inputs — то, на что влияем.',
+      '**Guardrails защищают от локальной оптимизации.** Без них NSM растёт, но продукт разрушается.',
+      '**Proxy быстрее NSM.** D7 retention меняется быстрее, чем NSM — поэтому ценен для еженедельных решений.',
+      '**Пересмотр раз в квартал.** Иначе иерархия устаревает вместе со стратегией.',
+    ],
+    framework: {
+      title: '4 уровня иерархии метрик',
+      items: [
+        { name: 'NSM', description: 'Стратегическая цель: одна метрика на 2-3 года вперёд.' },
+        { name: 'Proxy metrics', description: 'Предсказывают NSM в короткой перспективе (недели/месяцы). Чувствительнее к продуктовым изменениям.' },
+        { name: 'Input metrics', description: 'Действия команды и поведение пользователей, двигающие proxy. Под прямым влиянием.' },
+        { name: 'Guardrails', description: 'Контрметрики: нельзя ронять при оптимизации основных. NPS, churn, support load.' },
+      ],
+    },
+    realExamples: [
+      { product: 'Spotify', situation: 'NSM = Active Listeners. Proxy = retention by playlist quality.', action: 'Input: % users using Discover Weekly, engagement with personalized playlists. Guardrail: skip rate < threshold.', outcome: 'Команды Discover, Recommendations, Onboarding выровнены на единую иерархию.' },
+      { product: 'Slack', situation: 'NSM = DAU sending messages. Proxy = teams reaching 2000 messages.', action: 'Input: invites sent per team, integrations added, channels created. Guardrail: support load per active user.', outcome: 'Activation milestone (2000 messages) стал leading indicator retention.' },
+      { product: 'EdTech (пример)', situation: 'NSM = Weekly Active Learners.', action: 'Proxy: lesson completion rate, D7 retention. Input: onboarding completion %, time-to-first-lesson. Guardrail: support tickets per user.', outcome: 'Команда фокусируется на input, видит динамику proxy, измеряет NSM.' },
+    ],
+    commonMistakes: [
+      '**Нет guardrails.** Команда оптимизирует NSM и разрушает retention или NPS.',
+      '**Только NSM, без proxies и inputs.** PM не знает, что делать на этой неделе.',
+      '**Слишком много метрик на уровне.** 10 proxies = шум, не сигнал. 3-5 на уровень — оптимум.',
+      '**Иерархия не пересматривается.** Метрики на ландшафте 2-летней давности больше не репрезентативны.',
+    ],
+    visual: {
+      type: 'flow',
+      title: 'Иерархия метрик',
+      items: ['NSM', 'Proxy', 'Input', 'Guardrails'],
+    },
+    mcq: {
+      question: 'PM управляет EdTech-продуктом. NSM = «Weekly Active Learners». Какая метрика — Input?',
+      options: ['Доля пользователей с retention D7', 'Количество завершённых уроков в неделю', '% пользователей, прошедших онбординг', 'NPS пользователей'],
+      correct: 2,
+      explanation: 'Input — действие команды или поведение пользователей, на которое можно прямо влиять. Онбординг — input. D7 retention — proxy. NPS — guardrail.',
+    },
+    trueFalse: {
+      statement: 'Guardrail-метрики не важны на ранних стадиях продукта — нужно сосредоточиться только на NSM.',
+      correct: false,
+      explanation: 'Нет. Guardrails критичны на любой стадии. Без них команда может оптимизировать NSM, разрушая retention или user experience.',
+    },
+  },
+
+  ch6_3: {
+    title: 'OKR: Objective, Key Results, анти-паттерны',
+    definition: 'OKR (Objective and Key Results) — фреймворк целеполагания: качественная амбициозная цель (Objective) сопровождается 3-5 измеримыми изменениями в мире (Key Results), доказывающими достижение цели.',
+    exposition: `**OKR (Objective and Key Results)** — фреймворк целеполагания, формализованный Энди Гроувом в Intel и популяризированный Google. **Objective** — амбициозная, вдохновляющая, качественная цель на квартал/год. **Key Results** — 3-5 измеримых изменений в мире, доказывающих достижение Objective.
+
+**Главное правило**: **KR — не задача и не deliverable**. «Запустить онбординг» — задача. «D7 retention вырастет с 22% до 35%» — Key Result. KR измеряется изменением в реальности, не выпуском фичи.
+
+OKR должны быть **амбициозными**: 60-70% выполнения — успех. Если команда регулярно выполняет 100% — цели слишком лёгкие. **Каскадируемыми**: компания → BU → команда → PM. Цели нижнего уровня поддерживают цели верхнего. **Публичными**: открытость создаёт accountability и alignment.
+
+**Структура хорошего OKR**: 1 Objective + 3-5 Key Results. Object жёстко формулируется в одном предложении. KR должны быть outcome-based, не activity-based. У каждого KR — baseline (старт) и target (цель).
+
+**Anti-patterns OKR**: **Sandbag** (намеренно занижают, чтобы выполнить). **Task-based KR** («провести 10 интервью» вместо «понять 3 ключевых job»). **Слишком много** (более 3 Objectives на команду — фокус размывается). **OKR без review** (поставили и забыли). **Каскад без buy-in** (спускают сверху, команда не чувствует ownership).
+
+OKR — инструмент **изменений на период**, не мониторинга. Если что-то нужно мониторить постоянно (NPS, churn) — это KPI, не KR. KR живут 1 квартал, KPI живут всегда.
+
+Главная польза OKR не в самой метрике, а в **дискуссии о приоритетах**. Когда команда обсуждает, какие 3 KR взять, она вынуждена явно отказываться от 7 других. Это и есть стратегический выбор.`,
+    simplifiedExposition: `Представь, что ты ставишь себе цель на квартал. «Стать здоровее» — это Objective. Как поймёшь, что стал здоровее? Key Results: «пробежать 5K за 25 минут», «BMI снизился с 28 до 26», «улучшил сон до 7 часов 5 раз в неделю».
+
+Каждый KR измерим. Каждый — изменение в реальности, не действие. «Записался в спортзал» — это task, не KR.`,
+    keyPoints: [
+      '**Objective — качественный, KR — количественные.** Один Objective + 3-5 KR.',
+      '**KR = outcome, не task.** «D7 retention 22→35%», не «запустили онбординг».',
+      '**Амбициозность: 60-70% выполнения = успех.** Если всегда 100% — цели слишком лёгкие.',
+      '**OKR ≠ KPI.** OKR — изменения на квартал. KPI — постоянный мониторинг.',
+      '**Главная польза — дискуссия о приоритетах.** Выбор 3 KR заставляет отказаться от 7 других.',
+    ],
+    framework: {
+      title: 'Структура OKR',
+      items: [
+        { name: 'Objective', description: 'Качественная амбициозная цель на квартал/год. 1 предложение.' },
+        { name: 'Key Results (3-5)', description: 'Измеримые outcome-based изменения с baseline и target.' },
+        { name: 'Initiatives', description: 'Действия команды, которые двигают KR. Это уже не часть OKR, но связь обязательна.' },
+        { name: 'Cadence', description: 'Weekly check-ins, monthly review, quarterly retrospective + new OKR.' },
+      ],
+    },
+    comparisonTable: {
+      title: 'Good vs Bad KR',
+      headers: ['Bad KR (task-based)', 'Good KR (outcome-based)'],
+      rows: [
+        ['Запустить редизайн онбординга', 'D7 activation вырастет с 28% до 42%'],
+        ['Провести 10 user interviews', 'Найти и валидировать 3 ключевых job-to-be-done'],
+        ['Запустить новый pricing page', 'Free→Paid conversion вырастет с 4% до 6%'],
+        ['Сделать integrations с Slack/Notion', 'Power users (10+ инвайтов) вырастут на 30%'],
+      ],
+    },
+    realExamples: [
+      { product: 'Google (исторически)', situation: 'OKR — обязательная практика всех команд.', action: 'Каскадирование: company OKR → product area → team → IC. Публичный доступ к OKR друг друга.', outcome: 'Каждый сотрудник понимает, как его работа связана с company strategy.' },
+      { product: 'LinkedIn (Jeff Weiner)', situation: 'OKR-фреймворк адаптировали под Sales и Product.', action: 'Каждая команда 3 OKR/quarter. Weekly check-ins. Quarterly review.', outcome: 'Strategic alignment + measurable progress.' },
+      { product: 'Большинство стартапов (анти-пример)', situation: 'Adopted OKR без серьёзной дисциплины.', action: 'Ставят OKR в Q1, забывают до Q2 review. KR task-based.', outcome: 'OKR-фреймворк становится формальностью, не двигает фокус.' },
+    ],
+    commonMistakes: [
+      '**Task-based KR.** «Запустили X» вместо «X повысил метрику Y».',
+      '**Sandbag (намеренное занижение).** «Гарантированно выполним 100%» — не амбициозно.',
+      '**>3 Objectives на команду.** Размытие фокуса.',
+      '**OKR без review.** Поставили в Q1, забыли до Q4.',
+      '**Каскад без buy-in.** Спускают сверху без обсуждения, команда не чувствует ownership.',
+    ],
+    mcq: {
+      question: 'Какой из этих KR хорошо сформулирован?',
+      options: ['Запустить новый онбординг к концу квартала', 'D7 retention вырастет с 28% до 40%', 'Сделать 5 экспериментов', 'Улучшить UX onboarding'],
+      correct: 1,
+      explanation: 'Хороший KR — measurable outcome с baseline и target. «Запустить онбординг» — task. «Сделать 5 экспериментов» — activity. «Улучшить UX» — fluff.',
+    },
+    trueFalse: {
+      statement: 'Если команда выполнила 100% всех OKR за квартал — это идеальный результат.',
+      correct: false,
+      explanation: 'Наоборот: это сигнал, что цели были слишком лёгкими. Хорошие OKR — амбициозные, 60-70% выполнения = успех. 100% постоянно = sandbag.',
+    },
+  },
+
+  ch6_4: {
+    title: 'KPI vs OKR',
+    definition: 'KPI — постоянные показатели здоровья продукта и бизнеса, которые мониторятся непрерывно; OKR — амбициозные цели изменения на квартал/год. Это два разных инструмента для разных задач.',
+    exposition: `**KPI и OKR часто путают**, но это два разных инструмента для разных задач.
+
+**KPI (Key Performance Indicators)** — мониторинг **здоровья** продукта и бизнеса. Они **стабильны**, мониторятся постоянно, не должны падать ниже порога. Примеры: retention, NPS, churn, конверсия, response time, uptime. KPI говорят «всё в норме» или «есть проблема». Они существуют годами и не должны меняться от квартала к кварталу.
+
+**OKR** — инструмент **изменений на период** (квартал/год). Они амбициозны, временные, фокусные. «Где мы хотим быть к концу квартала и почему». OKR говорят «куда мы движемся». В отличие от KPI, OKR заканчиваются и заменяются новыми.
+
+**Когда что применять**. KPI — для всего, что нужно мониторить постоянно: financial metrics, user experience metrics, operational metrics. OKR — для главных стратегических изменений: новый продукт, новый сегмент, big initiative.
+
+**Ошибка**: пытаться использовать OKR как KPI или заменить одно другим. «Наш OKR — поддерживать NPS выше 50» — это не OKR, это KPI. «Наш KPI — запустить новый продукт» — это не KPI, это initiative/OKR.
+
+Хорошая команда имеет **и KPI, и OKR**: KPI dashboard постоянно показывает здоровье, OKR document каждый квартал показывает фокус изменений. Они дополняют друг друга.
+
+**Пример**. Email marketing команда. KPI: open rate (target >25%), unsubscribe rate (target <0.5%), deliverability (target >98%). OKR на квартал: «Личностные email-кампании повысят engagement в power-сегменте» с KR «click rate в power-сегменте вырастет с 12% до 18%». KPI говорят «всё работает», OKR — «что улучшаем».`,
+    simplifiedExposition: `Представь автомобиль. KPI — это датчики на приборной панели: скорость, топливо, температура двигателя. Они должны быть в норме всегда.
+
+OKR — это маршрут на следующую поездку: «доехать до X города за 3 часа». Это цель на конкретный отрезок времени. Когда приехали — ставится новая.`,
+    keyPoints: [
+      '**KPI = здоровье.** Стабильные, мониторятся постоянно, не должны падать ниже порога.',
+      '**OKR = изменения.** Амбициозные, временные, фокусные на квартал.',
+      '**Оба нужны вместе.** KPI dashboard + OKR document — разные документы для разных задач.',
+      '**KPI не имеют срока.** Они существуют годами.',
+      '**OKR заканчиваются и заменяются.** Каждый квартал — новые.',
+    ],
+    comparisonTable: {
+      title: 'KPI vs OKR',
+      headers: ['Параметр', 'KPI', 'OKR'],
+      rows: [
+        ['Цель', 'Мониторинг здоровья', 'Изменение на период'],
+        ['Срок', 'Постоянно', 'Квартал/год'],
+        ['Амбициозность', 'Поддержание нормы', 'Stretch goal (60-70%)'],
+        ['Примеры', 'NPS, churn, uptime, conversion', 'D7 retention 22%→35%, launch new segment'],
+        ['Изменение', 'Редко меняется', 'Каждый квартал новые'],
+      ],
+    },
+    realExamples: [
+      { product: 'Netflix', situation: 'KPI: streaming uptime, content satisfaction, churn. OKR: launch new market, original content strategy.', action: 'KPI dashboard всегда виден ops-командам. OKR document пересматривается ежеквартально.', outcome: 'Strategic clarity + operational stability одновременно.' },
+      { product: 'Many SaaS teams', situation: 'Только OKR, без KPI dashboard.', action: 'Команды забывают про базовое здоровье продукта, фокусируются только на quarterly changes.', outcome: 'Деградация core metrics: NPS падает, retention снижается без замечания.' },
+      { product: 'Many enterprises', situation: 'Только KPI, без OKR.', action: 'Все ежемесячно смотрят на одни и те же показатели. Нет ощущения движения.', outcome: 'Status quo, отсутствие стратегического фокуса на изменения.' },
+    ],
+    commonMistakes: [
+      '**Использовать OKR как KPI.** «Поддерживать NPS > 50» — не OKR, это KPI.',
+      '**Использовать KPI как OKR.** «Запустить новый продукт» — не KPI, это OKR.',
+      '**Только один инструмент.** Нужны оба для разных задач.',
+      '**KPI меняются каждый квартал.** Тогда теряется их роль как baseline здоровья.',
+      '**OKR без KPI guardrails.** Можно достичь OKR, разрушив core metrics.',
+    ],
+    mcq: {
+      question: 'Команда пишет в roadmap: «KPI на Q3: запустить mobile app». Что не так?',
+      options: ['KPI должны быть финансовыми', 'Запуск mobile app — это OKR/инициатива, не KPI', 'KPI слишком амбициозный', 'Нужно больше KPI'],
+      correct: 1,
+      explanation: 'KPI — это показатель здоровья, который мониторится постоянно (например, mobile retention). «Запустить mobile app» — это initiative, входящая в OKR.',
+    },
+    trueFalse: {
+      statement: 'OKR и KPI — это одно и то же, просто разные названия.',
+      correct: false,
+      explanation: 'Нет. KPI — постоянные показатели здоровья. OKR — амбициозные временные цели изменений. Разные задачи, разные документы, разная cadence.',
+    },
+  },
+
+  ch6_5: {
+    title: 'Input vs Output метрики',
+    definition: 'Output (lagging) метрики — целевые показатели результата (retention, revenue); Input (leading) метрики — действия и поведения, которые двигают output. PM управляет inputs, измеряет outputs.',
+    exposition: `**Output (lagging) метрики** — то, чего хотим достичь. Retention, revenue, NPS, DAU. PM **не контролирует их напрямую** — они результат множества действий и поведений. Изменения в output отражаются с задержкой.
+
+**Input (leading) метрики** — действия и поведения, которые **предсказывают output**. % прошедших онбординг, частота использования ключевой фичи, время до первой ценности (Time-to-Value). PM **управляет inputs**, чтобы двигать outputs.
+
+**Связь**: команда делает X (initiative) → пользователи делают Y (input/behaviour) → метрика Z улучшается (output). Без понимания этой цепочки команда работает с метриками вслепую.
+
+**Почему важно различать**. Outputs показывают «что произошло», но не «что делать». «D7 retention упал с 35% до 28%» — это сигнал тревоги, но без inputs непонятно, **почему** и **что менять**. Inputs показывают, где именно идёт slip: «% completed onboarding упал с 62% до 48% после релиза» — теперь понятно, где копать.
+
+**Главный паттерн зрелого PM**: при работе с любой метрикой outputs искать **leading indicators (inputs)**, которые предсказывают изменение. Если выручка падает — какие user behaviours предсказывают это? Если retention растёт — какие inputs привели?
+
+**Хорошие input metrics**: actionable (команда может влиять), predictive (двигают output с разумным lag), measurable (доступны в аналитике без задержки), specific (не размытые).
+
+**Пример Slack**. Output: Weekly Active Teams. Input: «teams reaching 2000 messages in first 30 days» — это leading indicator retention. Команда не «улучшает retention напрямую» (это lagging), а оптимизирует «% teams reaching 2000 messages» (leading).`,
+    simplifiedExposition: `Представь спортсмена. Output — это вес или время бега. Input — это «съел Х калорий», «бегал N км в неделю», «спал 8 часов».
+
+Невозможно «менять вес напрямую» — можно только менять inputs (еда, тренировки, сон). Output следует за inputs с задержкой.`,
+    keyPoints: [
+      '**Output = lagging, Input = leading.** Outputs следуют за inputs с задержкой.',
+      '**PM управляет inputs.** Outputs — результат, не рычаг.',
+      '**Связь: initiative → input → output.** Без этой цепочки команда работает вслепую.',
+      '**Inputs показывают «что менять».** Outputs показывают «что произошло».',
+      '**Зрелый PM ищет leading indicators.** При любой output-метрике находит inputs, предсказывающие её.',
+    ],
+    framework: {
+      title: 'Критерии хороших input metrics',
+      items: [
+        { name: 'Actionable', description: 'Команда может прямо влиять через продуктовые изменения.' },
+        { name: 'Predictive', description: 'Двигают output с разумным lag (дни-недели, не месяцы).' },
+        { name: 'Measurable', description: 'Доступны в аналитике без задержки и сложных вычислений.' },
+        { name: 'Specific', description: 'Конкретные, не размытые. «Time-to-first-message» лучше «engagement».' },
+      ],
+    },
+    comparisonTable: {
+      title: 'Output vs Input (примеры по продуктам)',
+      headers: ['Продукт', 'Output (lagging)', 'Input (leading)'],
+      rows: [
+        ['Slack', 'Weekly Active Teams', 'Teams reaching 2000 messages in 30 days'],
+        ['Spotify', 'Monthly Active Listeners', 'Daily playlist creations, time per session'],
+        ['Airbnb', 'Nights Booked', 'Search-to-booking conversion, listing views'],
+        ['SaaS', 'D30 retention', 'Time-to-first-value, % completing onboarding'],
+        ['E-commerce', 'GMV', 'Add-to-cart rate, search depth'],
+      ],
+    },
+    realExamples: [
+      { product: 'Facebook (раннее)', situation: 'Output = DAU. Не понимали, как двигать.', action: 'Нашли input: «7 friends in 10 days» — predicted activation и retention.', outcome: 'Стало north star для growth-команды. Все усилия — на этот input.' },
+      { product: 'Dropbox', situation: 'Output = Paid conversion. Команда искала input.', action: 'Input: «sharing folder с другими пользователями в первую неделю» — leading indicator paid conversion.', outcome: 'Запустили механику sharing в onboarding — paid conversion вырос на 30%.' },
+      { product: 'Multi-product enterprise', situation: 'Output = revenue. Слишком lagging.', action: 'Input: «accounts using 3+ products», «active integrations per account».', outcome: 'Команды получили actionable metric, на которую могут влиять weekly.' },
+    ],
+    commonMistakes: [
+      '**Управлять только outputs.** «Поднять retention» без understanding инпутов = wishful thinking.',
+      '**Inputs без связи с outputs.** «Optimize button color» — input, но без proof, что это двигает output.',
+      '**Только short-term inputs.** Без long-term outputs можно оптимизировать вред пользователю.',
+      '**Inputs неattributable к команде.** Если на input влияет 10 внешних факторов — нельзя приписать success команде.',
+    ],
+    mcq: {
+      question: 'PM хочет повысить D30 retention. Какая метрика — input (leading), а не output (lagging)?',
+      options: ['D30 retention rate', 'Monthly revenue', 'Time-to-first-value', 'Net Promoter Score'],
+      correct: 2,
+      explanation: 'Time-to-first-value — leading indicator: пользователь, получивший ценность быстро, скорее всего останется. Это actionable input. Retention, revenue, NPS — outputs.',
+    },
+    trueFalse: {
+      statement: 'PM должен сосредоточиться только на output метриках — они показывают реальный результат.',
+      correct: false,
+      explanation: 'Нет. Outputs — это «что произошло», но они lagging. Inputs показывают, **что делать сейчас**, чтобы output изменился. PM управляет inputs, измеряет outputs.',
+    },
+  },
 };
