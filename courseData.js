@@ -3740,4 +3740,314 @@ Peeking — это «вижу что выигрываю, остановим». M
       explanation: 'Наоборот. Multiple testing без поправок повышает false positive. 10 метрик = ~40% что хоть один false positive. Лучше 1 primary + 2-3 guardrails.',
     },
   },
+
+  ch9_1: {
+    title: 'Зачем нужна приоритизация',
+    definition: 'Приоритизация — практика осознанного выбора, что строить сейчас, что позже и что не строить никогда; ключевая ответственность PM, защищающая команду от размытия фокуса и потери impact.',
+    exposition: `**Приоритизация** — главная и самая сложная ответственность PM. Не «что бы добавить», а «что НЕ делать». Команда без приоритизации работает на 20-30% от потенциального impact: распылена, перегружена параллельными инициативами, выпускает много, двигает мало.
+
+**Главная проблема**: backlog растёт быстрее, чем capacity. На каждую готовую фичу прилетают 5 новых запросов от sales, CEO, support, самой команды. Без приоритизации команда либо берёт всё (и ничего не доделывает), либо берёт «то, что громче кричит» (CEO, big customer) — оба варианта плохи.
+
+**Уровни приоритизации**: **Стратегический** — какие big bets мы делаем в год. Отвечает CEO/CPO. **Продуктовый** — какие инициативы в квартал. Отвечает PM продукта. **Тактический** — какие задачи в спринт. Отвечает PM фичи / tech lead.
+
+**Источники запросов**: customer requests, sales requests, internal stakeholders (legal, finance, ops), competitive pressure, technical debt, growth experiments. PM должен балансировать все источники, не отдаваясь одному.
+
+**Симптомы плохой приоритизации**: roadmap на 12 месяцев заполнен полностью, команда работает на 8 инициативах одновременно, каждая фича запаздывает, метрики не двигаются. Симптомы хорошей: команда работает на 1-2 инициативах, остальное явно declined, каждая инициатива имеет measurable outcome.
+
+**Главный навык PM**: умение сказать **«нет»**. И что важнее — объяснить, **почему нет**, через данные, opportunity cost, alignment со стратегией. «Нет» без объяснения — потеря доверия. «Нет» с объяснением — основа healthy product culture.`,
+    simplifiedExposition: `Представь, что у тебя одна машина и 10 поручений от разных людей: один просит съездить в магазин, другой — в аэропорт, третий — за документами. Можешь сделать 1-2 за день. Остальные надо отложить или отказать.
+
+PM — это водитель команды. Машина одна (capacity), запросов десятки. Главное умение — выбрать, что везти сейчас, и объяснить остальным, почему не сейчас.`,
+    keyPoints: [
+      '**Без приоритизации команда работает на 20-30% impact.** Не «делает мало», а «делает не то».',
+      '**3 уровня: стратегический → продуктовый → тактический.** Каждый со своей cadence.',
+      '**Главный навык PM — сказать «нет» с объяснением.** Без объяснения — потеря доверия.',
+      '**Симптомы плохой приоритизации.** Roadmap на год, 8 параллельных инициатив, метрики не двигаются.',
+      '**Источники запросов балансируются.** Customer + sales + internal + competitive + tech debt.',
+    ],
+    framework: {
+      title: 'Источники product backlog',
+      items: [
+        { name: 'Customer requests', description: 'Из интервью, support, NPS feedback. Самый valuable, но volume может затопить.' },
+        { name: 'Sales requests', description: 'Enterprise клиенты, deals в pipeline. Опасно, если только этому отдаваться.' },
+        { name: 'Internal stakeholders', description: 'Legal, finance, ops, security. Часто non-negotiable требования.' },
+        { name: 'Competitive pressure', description: 'Что делают конкуренты. Опасно следовать, ломая стратегию.' },
+        { name: 'Technical debt', description: 'Eng-команда требует время на cleanup. 20-30% capacity обычно.' },
+        { name: 'Growth experiments', description: 'Гипотезы PM и growth-команды. Должны быть в OST.' },
+      ],
+    },
+    realExamples: [
+      { product: 'Steve Jobs Apple (1997)', situation: '350+ продуктов, размытая стратегия, банкротство.', action: 'Жёсткая приоритизация: 4 продукта в 2×2 matrix (consumer/pro × desktop/portable).', outcome: 'Survived, переродились. Apple показал силу radical приоритизации.' },
+      { product: 'Stripe (фокус)', situation: 'Растущий стартап, много возможностей.', action: 'Сильное «нет» everything кроме developer experience. Никаких enterprise sales features первые годы.', outcome: 'Захватили developer-сегмент, потом расширились.' },
+      { product: 'Многие enterprise IT', situation: 'Roadmap из 100+ фичей в год без явных отказов.', action: 'Команда работает на 15 инициативах одновременно, ничего не доделывая.', outcome: '50%+ shipped фич не имеют adoption.' },
+    ],
+    commonMistakes: [
+      '**Брать всё.** Безусловное принятие запросов = отсутствие приоритизации.',
+      '**Sales-driven roadmap.** Один big deal с custom фичами разрушает стратегию.',
+      '**Игнорировать tech debt.** Cleanup откладывается → eng-команда замедляется.',
+      '**Нет «нет» с объяснением.** Stakeholders не понимают логику = теряют доверие.',
+    ],
+    mcq: {
+      question: 'Команда работает на 6 инициативах одновременно, метрики не двигаются. Какая первая проблема?',
+      options: ['Команда слишком маленькая', 'Отсутствие приоритизации — focus распылен на слишком многое', 'Метрики неверно выбраны', 'PM ленится'],
+      correct: 1,
+      explanation: '6 параллельных инициатив = расфокус. Большой команде нужно 1-2 в работе, остальное в очереди. Метрики не двигаются, потому что ни одна инициатива не получает достаточно focus и quality.',
+    },
+    trueFalse: {
+      statement: 'Хороший PM никогда не говорит «нет» customer-у — это плохой service.',
+      correct: false,
+      explanation: 'Наоборот. Хороший PM говорит «нет» customer-у часто, но с объяснением: opportunity cost, alignment со стратегией, временные горизонты. «Нет» с уважением — основа healthy product culture.',
+    },
+  },
+
+  ch9_2: {
+    title: 'RICE, ICE, MoSCoW, Kano',
+    definition: 'Фреймворки приоритизации (RICE, ICE, MoSCoW, Kano) — структурированные методы сравнения инициатив по объективным критериям; снижают bias и делают решение прозрачным.',
+    exposition: `**RICE** — самый популярный scoring framework. **Reach × Impact × Confidence / Effort**. Reach — сколько пользователей затронет за период. Impact — насколько сильно (шкала 0.25/0.5/1/2/3). Confidence — уверенность в оценке (100%/80%/50%). Effort — человеко-месяцы. Результат — сравнимый score между инициативами.
+
+**ICE** — упрощённая RICE для быстрых решений. **Impact × Confidence × Ease**. Подходит для growth-гипотез, когда нет данных для точного Reach. Менее объективно, но быстрее.
+
+**MoSCoW** — приоритизация **внутри релиза**. **Must / Should / Could / Won't have**. Must — без них релиз провален. Should — важно, но не блокирует. Could — nice to have. Won't — явный отказ. Используется в planning сессиях с стейкхолдерами.
+
+**Kano-модель** — анализ типа ценности фичи. **Basic** (отсутствие → неудовольствие, наличие → нейтрально, например работающий поиск). **Performance** (чем лучше, тем выше удовлетворённость, например скорость загрузки). **Delighter** (неожиданно радуют, создают wow-эффект, например персонализация). Помогает увидеть, где избыток инвестиций в perfomance vs delighters.
+
+**Главное правило**: **выбирай фреймворк под задачу**. RICE для большого backlog. ICE для growth-гипотез. MoSCoW для release planning. Kano для product portfolio review.
+
+**Антипаттерн**: использовать один фреймворк для всего. RICE для MVP — overhead. MoSCoW для quarterly roadmap — слишком грубо.`,
+    simplifiedExposition: `Фреймворки приоритизации — это калькуляторы для решений. Без них PM использует интуицию, которая часто bias.
+
+RICE — самый детальный калькулятор. ICE — быстрый. MoSCoW — для торга с командой и стейкхолдерами. Kano — для долгосрочного product portfolio.`,
+    keyPoints: [
+      '**RICE = Reach × Impact × Confidence / Effort.** Самый универсальный.',
+      '**ICE = Impact × Confidence × Ease.** Для growth-гипотез.',
+      '**MoSCoW = Must/Should/Could/Won\'t.** Для release planning.',
+      '**Kano = Basic/Performance/Delighter.** Для product portfolio.',
+      '**Один фреймворк не на всё.** Match the framework to the decision type.',
+    ],
+    formula: {
+      title: 'Формулы scoring framework',
+      items: [
+        { label: 'RICE', formula: '(Reach × Impact × Confidence) / Effort' },
+        { label: 'ICE', formula: 'Impact × Confidence × Ease' },
+        { label: 'Confidence шкала', formula: '100% (sure), 80% (medium), 50% (low)' },
+        { label: 'Impact шкала', formula: '3 (massive), 2 (high), 1 (medium), 0.5 (low), 0.25 (minimal)' },
+      ],
+    },
+    comparisonTable: {
+      title: 'Фреймворки приоритизации',
+      headers: ['Фреймворк', 'Формула / логика', 'Когда применять'],
+      rows: [
+        ['RICE', 'Reach×Impact×Confidence / Effort', 'Большой backlog, нужна объективность'],
+        ['ICE', 'Impact×Confidence×Ease', 'Быстрый scoring для growth-гипотез'],
+        ['MoSCoW', 'Must / Should / Could / Won\'t', 'Планирование релиза со стейкхолдерами'],
+        ['Kano', 'Basic / Performance / Delighter', 'Понять тип ценности фичи для юзера'],
+        ['Cost of Delay', 'Что теряем каждую неделю без фичи', 'Когда ресурсы дефицитны, тайминг важен'],
+      ],
+    },
+    realExamples: [
+      { product: 'Intercom (внутр.)', situation: '50+ инициатив в backlog.', action: 'RICE scoring всего backlog quarterly. Топ-10 идут в roadmap, остальное явно declined.', outcome: 'Прозрачные решения, команды понимают логику.' },
+      { product: 'Growth-команда (B2C)', situation: '20 hypothesis для experiments.', action: 'ICE scoring weekly. Топ-3 в текущий спринт.', outcome: 'Быстрая скорость experiments, high learning rate.' },
+      { product: 'Enterprise SaaS', situation: 'Major release с 30+ фичами.', action: 'MoSCoW сессия со stakeholders: Must (10), Should (10), Could (10), Won\'t (5).', outcome: 'Aligned expectations, transparent trade-offs.' },
+    ],
+    commonMistakes: [
+      '**RICE для всего.** Overhead для small decisions. Используй ICE.',
+      '**Confidence всегда 100%.** Тогда RICE превращается в Impact × Reach / Effort, теряет смысл.',
+      '**MoSCoW без явного «Won\'t».** Команда теряет фокус, всё становится «Should».',
+      '**Kano без research.** Если PM сам decides delighter — это feature thinking.',
+    ],
+    mcq: {
+      question: 'PM имеет 30 идей в backlog. Какой фреймворк лучше для quarterly прioritization?',
+      options: ['RICE — даёт сравнимый score', 'ICE — быстро', 'MoSCoW — для release', 'Kano — для portfolio'],
+      correct: 0,
+      explanation: 'Для большого backlog quarterly — RICE даёт самые объективные сравнения. ICE подходит для growth-гипотез (меньше данных). MoSCoW — для конкретного релиза, не quarterly.',
+    },
+    trueFalse: {
+      statement: 'RICE — лучший фреймворк приоритизации для любых ситуаций.',
+      correct: false,
+      explanation: 'Нет. RICE — overhead для маленьких решений. Для growth-гипотез лучше ICE. Для release planning — MoSCoW. Для portfolio — Kano. Match framework to decision type.',
+    },
+  },
+
+  ch9_3: {
+    title: 'Cost of Delay и WSJF',
+    definition: 'Cost of Delay (CoD) — стоимость промедления: что бизнес теряет каждую неделю/месяц, пока инициатива не запущена. WSJF (Weighted Shortest Job First) — приоритизация через CoD / Duration.',
+    exposition: `**Cost of Delay (CoD)** — концепция из lean/agile. Каждая неделя, пока фича не запущена, бизнес что-то теряет: упущенную выручку, проигранных клиентов, накопленную проблему. **CoD измеряется в деньгах в неделю**.
+
+**Зачем нужен CoD**. Стандартные фреймворки (RICE) рассматривают impact абстрактно. CoD добавляет **временное измерение**: важно не только насколько большой impact, но и **как быстро он наступает** и **сколько мы теряем каждую неделю промедления**.
+
+**Примеры расчёта CoD**. Compliance fix к концу квартала: если не запустим, штраф $500K → CoD = $500K за квартал. Pricing fix: каждую неделю теряем 100 customers по $50/month → CoD = $5K/week. Competitive feature: каждую неделю конкурент крадёт 10 customers → CoD = revenue × 10.
+
+**WSJF (Weighted Shortest Job First)** = **CoD / Duration**. Если две инициативы имеют одинаковый CoD, но одна занимает 2 недели, а другая 8 — приоритет у короткой. WSJF combines impact, urgency, и effort в одно число.
+
+**Когда использовать**. **Resource-constrained ситуации**: команда не может делать всё. CoD/WSJF показывает, что упускается из-за выбора. **Time-sensitive инициативы**: compliance deadline, sales pipeline, competitive response. **Multiple teams / programs**: SAFe и enterprise contexts.
+
+**Антипаттерн**: оценивать CoD «потолочно» без обоснования. «Эта фича стоит $100K/неделю» — откуда? Нужен расчёт с источниками: размер сегмента, churn rate, конверсия, средний чек.`,
+    simplifiedExposition: `Cost of Delay — это «сколько денег утекает в трубу каждую неделю, пока мы не запустим фичу».
+
+Представь, что у тебя есть кран, который капает. Каждый день — литр воды утекает. Можно починить за 2 часа (effort low), CoD = 1 литр × дни × цена воды. Если не чинить — будешь терять воду каждый день.
+
+WSJF — это «насколько быстро мы можем починить, делённое на сколько литров теряем». Быстрая починка с большой потерей — самый высокий приоритет.`,
+    keyPoints: [
+      '**CoD = $ потерь в неделю/месяц промедления.** Измеряется в деньгах.',
+      '**WSJF = CoD / Duration.** Combines impact, urgency, effort.',
+      '**Используй для time-sensitive.** Compliance, competitive response, sales pipeline.',
+      '**Расчёт с обоснованием.** Размер сегмента × churn × средний чек.',
+      '**Антипаттерн — потолочные числа.** «Стоит $100K/неделю» без источника.',
+    ],
+    formula: {
+      title: 'Cost of Delay и WSJF',
+      items: [
+        { label: 'CoD (Cost of Delay)', formula: 'Loss per week × Weeks of delay' },
+        { label: 'CoD components', formula: 'Lost revenue + lost customers + compliance risk + opportunity cost' },
+        { label: 'WSJF', formula: 'CoD / Duration (in weeks or person-months)' },
+        { label: 'When to use WSJF', formula: 'Resource-constrained, time-sensitive, multi-team programs' },
+      ],
+    },
+    realExamples: [
+      { product: 'SaaS pricing fix', situation: 'Команда нашла bug — 2% customers переплачивают.', action: 'Calculation: 10K customers × 2% × $100/month overpayment = $20K/week refund risk + reputational.', outcome: 'CoD $20K/week × fix time 2 weeks = $40K savings. Highest priority.' },
+      { product: 'Compliance deadline (GDPR)', situation: 'Deadline через 3 месяца, fine $1M если опоздаем.', action: 'CoD effectively infinite после deadline. WSJF maximum.', outcome: 'Всё остальное в backlog паузится, ресурсы перенаправляются.' },
+      { product: 'Competitive feature response', situation: 'Конкурент запустил killer feature, мы теряем 5% customers/month.', action: 'CoD = 5% × $1M ARR / month = $50K/month delay cost.', outcome: 'Высокий приоритет, но сравнивают с долгосрочной стратегией: не следовать конкурентам слепо.' },
+    ],
+    commonMistakes: [
+      '**Потолочные CoD без расчёта.** «Stoit $100K/week» без обоснования = манипуляция.',
+      '**CoD для всего.** Не каждая фича имеет measurable delay cost. Используй RICE/MoSCoW для остального.',
+      '**WSJF без Duration estimate.** Если Duration неизвестен — формула не работает.',
+      '**Игнор non-financial CoD.** Reputational, team morale, technical debt — тоже delay costs.',
+    ],
+    mcq: {
+      question: 'Compliance fix имеет deadline через 4 недели, штраф $500K. Bug fix priority, but team estimates 6 недель work. Какое решение?',
+      options: ['Принять штраф, не торопиться', 'Перебросить ресурсы (CoD после deadline = $500K, любая ускорение оправдана)', 'Отложить bug fix navsegda', 'Делать в обычном темпе'],
+      correct: 1,
+      explanation: 'CoD после deadline = $500K mom. Перебросить ресурсы (даже за счёт других инициатив) почти гарантированно exceeds opportunity cost. Возможно нужны контракторы для ускорения.',
+    },
+    trueFalse: {
+      statement: 'WSJF = CoD × Duration. Чем дольше задача, тем выше приоритет.',
+      correct: false,
+      explanation: 'Нет. WSJF = CoD / Duration. Чем короче задача с тем же CoD, тем выше приоритет. Логика: быстро снимаем потерю.',
+    },
+  },
+
+  ch9_4: {
+    title: 'Что такое Roadmap',
+    definition: 'Roadmap — высокоуровневое представление продуктовой стратегии и приоритетов с временными горизонтами; отвечает на вопросы «что» и «почему», а не «когда и как».',
+    exposition: `**Roadmap — это коммуникация стратегии и приоритетов**, не project plan. Roadmap объясняет **ЧТО мы строим и ПОЧЕМУ**, но **не обещает точные даты** реализации. Project plan управляет «как и когда» внутри команды. PM делает roadmap, Project Manager (или tech lead) — план.
+
+**Два типа roadmap**: **Feature roadmap** (слабый) — список фичей с датами. Обещает конкретные решения. Быстро устаревает: даты двигаются, фичи меняются, команда теряет flexibility. **Outcome roadmap** (сильный) — outcomes по горизонтам. Now / Next / Later. Объясняет стратегические ставки, не обещает фичи.
+
+**Структура outcome roadmap**:
+- **Now** (0-3 месяца): что команда строит сейчас, с подтверждёнными outcomes
+- **Next** (3-6 месяцев): следующие приоритеты, конкретные initiatives
+- **Later** (6-12+ месяцев): стратегические направления, без чётких initiatives
+
+**Главные элементы**: outcomes (целевые изменения), initiatives (что строим для outcomes), success metrics (как поймём success), confidence levels (насколько уверены в каждом).
+
+**Антипаттерны**: gantt-chart roadmap с конкретными датами на год вперёд (нереалистичен), feature list без outcomes (feature thinking), roadmap из 50+ items (нет фокуса), roadmap, который не обсуждается с командой (alignment проблема).
+
+**Roadmap живой документ**. Пересматривается quarterly. Items двигаются между горизонтами по мере обновления данных. Стабильный roadmap = команда не учится из experiments.
+
+**Главная цель roadmap — alignment**. Все стейкхолдеры (команда, sales, executive, customers) должны понимать, ЧТО и ПОЧЕМУ строится. Если PM объясняет roadmap каждый раз по-разному — alignment отсутствует.`,
+    simplifiedExposition: `Roadmap — это карта пути продукта. Не GPS с конкретным маршрутом, а карта местности с указанием «куда хотим прийти и какими дорогами».
+
+Хорошая карта показывает направление, ключевые остановки и горизонты. Плохая — пытается обещать «приедем в 14:30» за полгода вперёд.`,
+    keyPoints: [
+      '**Outcome roadmap > Feature roadmap.** Outcomes по горизонтам, не фичи с датами.',
+      '**3 горизонта: Now / Next / Later.** Гибкость во времени, чёткость в outcomes.',
+      '**Roadmap ≠ Project Plan.** PM — roadmap, PjM — plan.',
+      '**Quarterly review.** Roadmap живой, items двигаются по мере данных.',
+      '**Главная цель — alignment.** Все стейкхолдеры понимают «что и почему».',
+    ],
+    framework: {
+      title: '3 горизонта outcome roadmap',
+      items: [
+        { name: 'Now (0-3 месяца)', description: 'Что команда строит сейчас. Outcomes подтверждены данными, initiatives launched.' },
+        { name: 'Next (3-6 месяцев)', description: 'Следующие приоритеты. Initiatives определены, outcomes намечены.' },
+        { name: 'Later (6-12+ месяцев)', description: 'Стратегические направления. Outcomes общие, initiatives — placeholder.' },
+      ],
+    },
+    realExamples: [
+      { product: 'Atlassian', situation: 'Внешний public roadmap для customers.', action: 'Now / Next / Later. Outcomes + confidence levels.', outcome: 'Customers понимают direction, не expectation конкретных дат.' },
+      { product: 'Stripe', situation: 'Internal roadmap с конкретными outcomes.', action: 'Quarterly outcomes по segment (developers, enterprise, international).', outcome: 'Команды aligned на outcomes, не features.' },
+      { product: 'Enterprise IT (anti-pattern)', situation: 'Gantt-chart roadmap на 18 месяцев.', action: 'Каждый item с date estimate.', outcome: 'Через 3 месяца — устарел, через 6 — никто не смотрит, через 12 — забыт.' },
+    ],
+    commonMistakes: [
+      '**Feature list с датами.** Самая частая ошибка. Не roadmap, а wishful thinking.',
+      '**Gantt chart на год.** Не реалистично, не информативно.',
+      '**Без confidence levels.** Stakeholder думает «всё точно».',
+      '**Roadmap не пересматривается.** Quarterly review — необходимость.',
+      '**Roadmap не обсуждается с командой.** Alignment проблема, ownership issue.',
+    ],
+    mcq: {
+      question: 'PM показывает roadmap с конкретными фичами и точными датами на 12 месяцев вперёд. Какая главная проблема?',
+      options: ['Слишком детально', 'Это не roadmap, а project plan; даты на год вперёд unreliable; нет outcomes', 'Слишком короткий горизонт', 'Не хватает дизайна'],
+      correct: 1,
+      explanation: 'Точные даты на год вперёд — fantasy. Roadmap должен показывать outcomes по горизонтам (Now/Next/Later), не конкретные фичи. Это feature thinking + false precision.',
+    },
+    trueFalse: {
+      statement: 'Roadmap — это статический документ, который не должен меняться весь год.',
+      correct: false,
+      explanation: 'Нет. Roadmap живой, пересматривается quarterly. Items двигаются между горизонтами по мере появления данных, отрицательных результатов экспериментов, изменений рынка. Стабильный roadmap = команда не учится.',
+    },
+  },
+
+  ch9_5: {
+    title: 'Roadmap для разных аудиторий',
+    definition: 'Roadmap адаптируется под аудиторию: команда видит детали и зависимости, executives — стратегические ставки, sales — milestone без дат, инвесторы — долгосрочное видение.',
+    exposition: `Roadmap — не один документ для всех. Разные аудитории требуют **разный уровень детализации и формат**. Один общий roadmap либо перегружен для executives, либо недостаточен для команды.
+
+**Internal team roadmap**: детальный с зависимостями и decision points. Что строим, к какой outcome, какие risks, какие decisions нужны. Технические детали приветствуются. Обновляется bi-weekly или sprint-by-sprint.
+
+**Executive roadmap**: стратегический с outcomes и ставками. Фокус на «что выигрываем, что отказываемся». 5-10 outcomes по горизонтам, не 50 фич. Confidence levels. Quarterly review. Должен объяснять, как roadmap двигает company-level OKR.
+
+**Sales roadmap (внешний)**: outcomes с **примерными** milestone без чётких дат. «GA in H2 2026» вместо «launch July 15». Sales rep должен понимать, что обещать customer, но не обещать точную дату — это часто ломается.
+
+**Customer-facing roadmap**: outcomes и **planned investments**, не features. «Improving collaboration features» вместо «launch comments v2 in Q3». Управляет ожиданиями без over-commitment.
+
+**Investor roadmap**: долгосрочное видение, big bets, market opportunity. Меньше деталей, больше «где будем через 3 года». Connects product strategy с business outcomes.
+
+**Главное правило**: **same outcomes, different abstraction levels**. Не разные стратегии для разных аудиторий — одна стратегия, разные форматы. Несоответствие версий roadmap — серьёзная alignment проблема.`,
+    simplifiedExposition: `Roadmap для команды и для CEO — разные документы. Команде нужны детали, технические зависимости, decision points. CEO нужны главные ставки и outcomes.
+
+Это как карта для пешехода и для пилота самолёта: одно и то же место, но разные уровни абстракции и разная информация.`,
+    keyPoints: [
+      '**Same outcomes, different abstraction.** Одна стратегия, разные форматы.',
+      '**Team roadmap = детальный.** Decisions, dependencies, technical context.',
+      '**Executive roadmap = strategic.** 5-10 outcomes, confidence, company-level alignment.',
+      '**Sales/customer roadmap = milestones без точных дат.** Управляет expectations.',
+      '**Investor roadmap = долгосрочное видение.** Big bets, market opportunity.',
+    ],
+    comparisonTable: {
+      title: 'Roadmap для разных аудиторий',
+      headers: ['Аудитория', 'Детализация', 'Формат', 'Cadence'],
+      rows: [
+        ['Team', 'Высокая', 'Decisions, dependencies, technical', 'Bi-weekly / sprint'],
+        ['Executive', 'Стратегическая', '5-10 outcomes, confidence levels', 'Quarterly'],
+        ['Sales', 'Средняя', 'Milestones без точных дат', 'Quarterly'],
+        ['Customer', 'Высокоуровневая', 'Outcomes, planned investments', 'Quarterly или ad-hoc'],
+        ['Investor', 'Долгосрочная', 'Big bets, market opportunity', 'Quarterly board meeting'],
+      ],
+    },
+    realExamples: [
+      { product: 'Atlassian', situation: 'Public customer roadmap + internal team roadmap.', action: 'Customer-facing: «improving permissions in H1». Internal: «launching granular role-based access v2 by April 15».', outcome: 'Same outcome, разный abstraction — управляет expectations.' },
+      { product: 'Stripe', situation: 'Internal team roadmap vs investor narrative.', action: 'Team: «launch new payment method by Q2». Investor: «expanding payment infrastructure globally».', outcome: 'Aligned, но в разных форматах.' },
+      { product: 'Anti-pattern (typical)', situation: 'Один Excel-roadmap для всех.', action: 'Executives видят too much detail, team too little context, customers get false dates.', outcome: 'Никто не satisfied, alignment не работает.' },
+    ],
+    commonMistakes: [
+      '**Один документ для всех.** Никто не получает right level of detail.',
+      '**Разные стратегии разным аудиториям.** Лгать или искажать — alignment failure.',
+      '**Точные даты в external roadmap.** Sales обещают customers — broken expectations.',
+      '**Executive roadmap слишком детальный.** Перегружен, никто не читает.',
+      '**Customer roadmap без updates.** Раз показали — забыли. Customers ожидают transparency.',
+    ],
+    mcq: {
+      question: 'PM показывает sales team roadmap с конкретными датами по фичам на 6 месяцев. Какая опасность?',
+      options: ['Sales будут довольны', 'Sales будут обещать customers конкретные даты — broken expectations и churn', 'Слишком короткий горизонт', 'Нет проблем'],
+      correct: 1,
+      explanation: 'Sales-команда часто берёт roadmap как commitment и обещает customers. Когда даты сдвигаются (это нормально в продукте) — customer trust ломается. Лучше — milestones без точных дат.',
+    },
+    trueFalse: {
+      statement: 'Хороший PM использует один общий roadmap-документ для всех стейкхолдеров.',
+      correct: false,
+      explanation: 'Нет. Разные аудитории требуют разный уровень детализации. Team нужны зависимости, executives — outcomes, sales — milestones без дат, customer — planned investments. Same outcomes, different abstraction.',
+    },
+  },
 };
