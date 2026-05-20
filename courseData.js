@@ -3486,4 +3486,258 @@ A/B-тест — мощный инструмент, но **не для всег�
       explanation: 'Нет. A/B даёт надёжный ответ только при правильном дизайне: достаточная выборка, рандомизация, отсутствие peeking, единственное изменение. При нарушениях — false positives и неверные выводы.',
     },
   },
+
+  ch8_1: {
+    title: 'Логика экспериментов',
+    definition: 'Эксперимент — структурированный способ проверки продуктовой гипотезы через сравнение состояний (с изменением и без), который снижает риск неверного решения и заменяет мнение данными.',
+    exposition: `Эксперимент в продукте — это не «попробуем и посмотрим». Это **структурированный способ проверить продуктовую гипотезу** через сравнение состояний. Главная задача — снизить риск неверного решения и **заменить мнение данными**.
+
+**Цикл эксперимента**: Hypothesis → Design → Execute → Measure → Decide. На входе — конкретная гипотеза с механизмом. На выходе — решение: scale, kill или iterate.
+
+**Hypothesis format**: «Если [действие], то [метрика] вырастет на [X%] потому что [механизм]». Все три части критичны. Без действия — нечего тестировать. Без метрики — нечего измерять. Без механизма — нельзя интерпретировать результат.
+
+**Дизайн эксперимента** включает: primary metric, guardrail metrics, sample size (MDE-расчёт), длительность, success criteria до запуска. Если PM не может сказать, при каком результате scale и при каком kill — это не эксперимент, это рандомный запуск.
+
+**Decision framework**. После эксперимента есть 3 пути: **Scale** — раскатить на 100% и итерировать дальше. **Kill** — откатить, забыть. **Iterate** — частичный успех, перезапустить с изменениями. Многие команды забывают про kill и оставляют недоказанные изменения в продукте, накапливая complexity.
+
+**Главная мысль**: эксперимент — это **дисциплина**, а не активность. Дисциплина в формулировке гипотез, в дизайне, в готовности kill свою идею при отрицательном результате. Без этой дисциплины эксперименты становятся театром.`,
+    simplifiedExposition: `Эксперимент — это как готовить два варианта пирога одновременно. Если просто «попробую новый рецепт» — не узнаешь, лучше старого или хуже. Если печёшь оба и сравниваешь — получаешь данные, на которые можно опираться.
+
+В продукте то же самое: без сравнения и метрик «попробовать фичу» — это рандом, не эксперимент.`,
+    keyPoints: [
+      '**Hypothesis format: Если/то/потому что.** Все 3 части обязательны.',
+      '**Decision criteria — ДО запуска.** Что значит success, что значит kill.',
+      '**3 решения после эксперимента.** Scale, kill, iterate.',
+      '**Эксперимент = дисциплина, не активность.** Без дисциплины — театр.',
+      '**Kill — нормальный исход.** Готовность убить свою идею — признак зрелого PM.',
+    ],
+    framework: {
+      title: 'Цикл эксперимента',
+      items: [
+        { name: 'Hypothesis', description: 'Если [действие], то [метрика] вырастет на [X%] потому что [механизм].' },
+        { name: 'Design', description: 'Primary + guardrail metrics, sample size, длительность, success criteria.' },
+        { name: 'Execute', description: 'Запуск без вмешательства, мониторинг guardrails в real-time.' },
+        { name: 'Measure', description: 'Анализ через расчётный срок. P-value, confidence interval, segments.' },
+        { name: 'Decide', description: 'Scale, kill, iterate — на основе данных и success criteria.' },
+      ],
+    },
+    realExamples: [
+      { product: 'Amazon (working backwards)', situation: 'Каждая major инициатива проходит experiment phase.', action: 'Hypothesis → A/B → metrics review → scale/kill. Готовность kill даже популярные идеи.', outcome: 'Amazon Auctions killed после слабых результатов. Free shipping scaled — изменил retail.' },
+      { product: 'Spotify', situation: 'Discover Weekly запускали как эксперимент.', action: 'Hypothesis: «персонализированные плейлисты повысят retention в 5+ minute listeners». Pilot на 5% audience.', outcome: 'D7 retention +14%, scaled на 100%. Стал signature фичей Spotify.' },
+      { product: 'Многие startup teams', situation: 'Запускают изменения без структуры.', action: 'Нет hypothesis, нет primary metric, нет success criteria.', outcome: 'Не могут оценить, сработало ли. Накапливают changes без понимания эффекта.' },
+    ],
+    commonMistakes: [
+      '**Запуск без hypothesis.** «Попробуем» — это не эксперимент.',
+      '**Success criteria после результата.** «Двинулась эта метрика? Назовём её primary».',
+      '**Нет готовности kill.** Защита своей идеи против отрицательных данных.',
+      '**Накопление изменений без эксперимента.** Каждое изменение в продукт должно иметь evidence.',
+    ],
+    visual: {
+      type: 'flow',
+      title: 'Цикл эксперимента',
+      items: ['Hypothesis', 'Design', 'Execute', 'Measure', 'Decide'],
+    },
+    mcq: {
+      question: 'PM запускает новую фичу и говорит «посмотрим что произойдёт». Что не так?',
+      options: ['Слишком оптимистично', 'Нет hypothesis, primary metric, success criteria — это не эксперимент', 'Нужно больше пользователей', 'Слишком короткий срок'],
+      correct: 1,
+      explanation: '«Посмотрим что произойдёт» — рандом, не эксперимент. Без hypothesis нельзя интерпретировать результат, без primary metric — нечего измерять, без criteria — нельзя принять решение.',
+    },
+    trueFalse: {
+      statement: 'Если у команды нет статистически значимого результата, эксперимент считается провалом.',
+      correct: false,
+      explanation: 'Нет. Отсутствие значимости — это **результат**, который говорит: «эффект меньше MDE» или «механизм не работает». Это валидное знание, не провал.',
+    },
+  },
+
+  ch8_2: {
+    title: 'Когда нужен / не нужен A/B-тест',
+    definition: 'A/B-тест эффективен при достаточном трафике и измеримой гипотезе; в малом трафике, early discovery и B2B enterprise работают другие методы — staged rollout, qualitative research, pilots.',
+    exposition: `**A/B-тест — не серебряная пуля**. Существует много ситуаций, в которых другие методы дают лучшие данные.
+
+**A/B-тест работает, когда**: высокий трафик (минимум 1000+ событий/день на вариант), измеримая primary metric с разумным lag (дни-недели, не месяцы), эффект может быть достаточным по размеру (MDE достижим).
+
+**A/B-тест НЕ работает, когда**:
+
+**Малая выборка** (<1000 событий/день на вариант). Статистическая мощность недостаточна. Альтернатива: staged rollout (раскатываем поэтапно, мониторим guardrails) + qualitative research.
+
+**Ранний discovery**. Когда непонятна сама проблема — A/B не поможет. Альтернатива: интервью, fake door, concierge MVP. Сначала найди проблему, потом тестируй решения.
+
+**B2B enterprise**. Маленький pool customers, длинный sales cycle, сложно рандомизировать. Альтернатива: customer pilots, sales feedback, multi-month rollouts.
+
+**Safety / legal constraints**. Нельзя случайно показать критичные warnings части аудитории. Альтернатива: phased rollout без рандомизации, expert review.
+
+**Сильное качественное неизвестное**. Если 80% риска — это «понимаем ли мы потребность», A/B-тест преждевременен. Сначала qualitative.
+
+**Главный принцип**: выбор метода — это выбор инструмента под задачу. **Match the experiment to the risk you're trying to retire**.`,
+    simplifiedExposition: `Представь, что ты решаешь задачу. Если задача «какая кнопка лучше работает» — A/B-тест идеален. Если задача «нужна ли вообще эта функция» — A/B бесполезен, нужно идти говорить с пользователями.
+
+A/B хорош для оптимизации деталей. Плох для понимания, что вообще строить.`,
+    keyPoints: [
+      '**A/B хорош для оптимизации, не для discovery.** Понимание проблемы — другие методы.',
+      '**Малый трафик = staged rollout + qualitative.** Не A/B.',
+      '**B2B enterprise = customer pilots.** Не рандомизация.',
+      '**Safety/legal = phased rollout.** Без A/B.',
+      '**Match method to risk.** Технический риск ≠ продуктовый ≠ pricing.',
+    ],
+    comparisonTable: {
+      title: 'Когда какой метод',
+      headers: ['Ситуация', 'Лучший метод'],
+      rows: [
+        ['Высокий трафик, оптимизация', 'A/B-тест'],
+        ['Малая выборка (<1000/день)', 'Staged rollout + qualitative'],
+        ['Ранний discovery', 'Интервью, fake door, concierge'],
+        ['B2B enterprise', 'Customer pilots, sales feedback'],
+        ['Safety/legal constraints', 'Phased rollout без рандомизации'],
+        ['Pricing experimentation', 'Cohort-based pricing tests'],
+      ],
+    },
+    realExamples: [
+      { product: 'Salesforce', situation: 'B2B enterprise — нельзя A/B-тестить новую фичу.', action: 'Customer pilots с 3-5 strategic клиентами на 3-6 месяцев.', outcome: 'Получают качественные данные, не статистические — но более релевантные для enterprise.' },
+      { product: 'Airbnb (раннее)', situation: 'Стартап с малым трафиком — A/B неэффективен.', action: 'Concierge MVP: основатели сами обзванивали хостов, делали фото вручную.', outcome: 'Получили deep understanding до автоматизации.' },
+      { product: 'Большой fintech', situation: 'Запуск нового warning о фроде.', action: 'Phased rollout по странам, не рандомизация. Critical safety feature.', outcome: 'Snizen risk при ошибках, можно откатить в одной стране.' },
+    ],
+    commonMistakes: [
+      '**A/B-тест в B2B enterprise.** Малая выборка, длинный цикл — статистическая значимость недостижима.',
+      '**A/B вместо discovery.** «Запустим 5 вариантов, посмотрим какой» — без понимания проблемы.',
+      '**Staged rollout без guardrails.** Раскатываем без мониторинга = риск.',
+      '**Pricing A/B с user awareness.** Пользователи видят разные цены → жалобы, репутация.',
+    ],
+    mcq: {
+      question: 'PM в B2B SaaS с 50 enterprise клиентами хочет тестировать новую фичу. Какой метод лучший?',
+      options: ['A/B-тест на всех 50 клиентах', 'Customer pilot с 3-5 стратегическими клиентами', 'Фокус-группа на ConsumerSurvey', 'Запуск на 100% сразу'],
+      correct: 1,
+      explanation: '50 enterprise клиентов — слишком мало для статистической значимости A/B. Customer pilot даёт качественные данные, deep feedback, контролируемое тестирование.',
+    },
+    trueFalse: {
+      statement: 'A/B-тест — лучший метод проверки гипотез в любой продуктовой ситуации.',
+      correct: false,
+      explanation: 'Нет. A/B-тест эффективен при высоком трафике и измеримой гипотезе. В early discovery, B2B, low traffic — другие методы работают лучше: интервью, fake door, customer pilots, staged rollout.',
+    },
+  },
+
+  ch8_3: {
+    title: 'Типы экспериментов',
+    definition: 'Типы экспериментов — fake door, concierge MVP, Wizard of Oz, painted door, price testing, landing page tests — каждый подходит для проверки разных типов гипотез на разных стадиях продукта.',
+    exposition: `Экспериментирование — не только A/B-тесты. Есть много форматов, каждый под свою задачу.
+
+**Fake door**: показываешь кнопку фичи до реализации, считаешь клики. Самый дешёвый способ проверить demand. После клика — честное сообщение «фича в разработке». Эффективен в early discovery.
+
+**Concierge MVP**: делаешь вручную то, что потом автоматизируешь. Airbnb-основатели сами обзванивали хостов и делали фото. Stitch Fix вручную подбирала стиль для первых клиентов. Цель — валидация до строительства.
+
+**Wizard of Oz**: пользователь думает, что работает AI/автомат, а это человек. Полезно для тестирования AI-фичей до их реализации. Дорого и не масштабируется, но даёт глубокий feedback.
+
+**Painted door**: вариант fake door с разной формой. Показываешь фичу, она «не работает», но измеряется интерес. Часто используется в e-commerce для тестирования новых категорий.
+
+**Price testing**: разные ценники разным когортам. Нужна осторожность с user awareness — пользователи могут увидеть разные цены друг у друга и пожаловаться. Лучше cohort-based (по дате signup или сегменту), не геолокация.
+
+**Landing page test**: несколько посадочных с разным value prop. Покажет, какой message resonates лучше с целевой аудиторией. Дёшево и быстро.
+
+**Главное**: выбор формата зависит от **типа риска** и стадии продукта. Demand risk → fake door. Value risk → concierge. Pricing risk → cohort price test.`,
+    simplifiedExposition: `Эксперимент — это не только сложный A/B-тест. Можно проверить идею быстро и дёшево.
+
+Если хочешь узнать «нужна ли фича» — поставь кнопку, посмотри, кто кликает (fake door). Если хочешь проверить «как работает» — сделай вручную для 5 клиентов (concierge). Если хочешь узнать «купят ли по этой цене» — покажи 2 цены разным группам (price test).`,
+    keyPoints: [
+      '**Fake door = demand validation.** Кнопка без фичи. Считаем клики.',
+      '**Concierge = value validation.** Делаем вручную, прежде чем автоматизировать.',
+      '**Wizard of Oz = AI testing.** Человек вместо алгоритма для глубокого feedback.',
+      '**Price testing = cohort-based.** Не разные цены одновременно одним юзерам.',
+      '**Landing page test = messaging.** Какой value prop работает лучше.',
+    ],
+    framework: {
+      title: 'Типы экспериментов и их применение',
+      items: [
+        { name: 'Fake door', description: 'Демонстрация фичи до реализации. Лучше всего для demand validation.' },
+        { name: 'Concierge MVP', description: 'Ручное выполнение того, что потом автоматизируется. Value validation.' },
+        { name: 'Wizard of Oz', description: 'Имитация автоматизации человеком. AI/ML feature validation.' },
+        { name: 'Painted door', description: 'Показ фичи без функциональности — для измерения интереса.' },
+        { name: 'Price testing', description: 'Cohort-based ценовое тестирование. Не разные цены одним юзерам.' },
+        { name: 'Landing page test', description: 'Сравнение посадочных страниц с разным messaging.' },
+      ],
+    },
+    realExamples: [
+      { product: 'Dropbox (раннее)', situation: 'Хотели проверить demand на file sync до строительства.', action: 'Drew Houston сделал demo-видео, не продукт. Показал на Hacker News.', outcome: '75K signups за 24 часа на waitlist. Validated demand до major investment.' },
+      { product: 'Airbnb (early)', situation: 'Тестировали value prop hosting strangers.', action: 'Concierge MVP: founders сами арендовали свою квартиру первым гостям.', outcome: 'Глубокое понимание hosting experience до построения platform.' },
+      { product: 'Stitch Fix', situation: 'AI personal styling — но без AI.', action: 'Wizard of Oz: стилисты вручную подбирали outfit для первых 1000 клиентов.', outcome: 'Накопили training data для будущего ML, validated value prop.' },
+    ],
+    commonMistakes: [
+      '**Fake door без честного объяснения.** Пользователь кликает, ничего не получает — frustration без feedback.',
+      '**Concierge без записи insights.** Делаем вручную, не учимся.',
+      '**Wizard of Oz слишком долго.** Не масштабируется. Должна быть exit strategy.',
+      '**Price test с разными ценами одному юзеру.** Видит разные → жалоба → репутация.',
+      '**Landing page test без traffic.** Без достаточного трафика — нет данных.',
+    ],
+    mcq: {
+      question: 'PM хочет проверить, нужна ли пользователям новая AI-функция рекомендаций. Какой эксперимент стартовый?',
+      options: ['A/B-тест с реализованной фичей', 'Fake door: кнопка «AI рекомендации», count кликов', 'Опросить пользователей напрямую', 'Запустить на 100%'],
+      correct: 1,
+      explanation: 'Fake door — самый дешёвый способ проверить demand до строительства AI. Если кликают много — значит интерес есть, можно инвестировать в реализацию.',
+    },
+    trueFalse: {
+      statement: 'Concierge MVP — это плохой подход, потому что не масштабируется.',
+      correct: false,
+      explanation: 'Нет. Concierge — это validation phase, не finale. Делаешь вручную, чтобы понять value и detect issues. Потом автоматизируешь. Airbnb, Stitch Fix, многие unicorns начинались с concierge.',
+    },
+  },
+
+  ch8_4: {
+    title: 'Ошибки экспериментов',
+    definition: 'Типичные ошибки экспериментов: peeking, multiple testing, novelty effect, Simpson Paradox, selection bias — все они приводят к ложным выводам и неверным продуктовым решениям.',
+    exposition: `Эксперимент проектируется правильно, но команда легко делает ошибки в исполнении или анализе. Топ-5 ошибок, ломающих validity результатов.
+
+**Peeking**: остановка теста досрочно при «хорошем» промежуточном результате. P-value колеблется во время теста; остановка при peak завышает false positive до 30-40% вместо заявленных 5%. Лечение: фиксированная sample size до запуска, не смотреть на p-value до завершения. Или использовать sequential testing (Bayesian).
+
+**Multiple testing**: проверка 10 метрик без поправки. Каждый тест даёт ~5% chance false positive. При 10 тестах — ~40% что хоть один сработает случайно. Лечение: Bonferroni correction (делишь threshold на количество тестов), или primary metric + 2-3 guardrails вместо «посмотрим все 20 метрик».
+
+**Novelty effect**: пользователи реагируют на новизну, а не реальную ценность. Первые 1-2 недели после запуска новой фичи метрики растут просто потому что «что-то новое». Лечение: достаточная длительность (4+ недели), анализ отдельно cohort'ов «week 1» vs «week 4+».
+
+**Simpson Paradox**: агрегированные данные показывают один результат, а в разрезе по сегменту — противоположный. Test «улучшил» retention на 5%, но в каждом сегменте retention хуже — просто changed mix of segments. Лечение: всегда анализ по сегментам, не только global average.
+
+**Selection bias**: группы получились не случайные. Например, treatment group получила больше power users из-за бага в рандомизации. Результаты ложны. Лечение: проверка рандомизации до запуска (sample ratio mismatch test), стратификация по ключевым сегментам.
+
+**Главный принцип**: experiment validity > experiment speed. Лучше дождаться правильного результата, чем быстро получить ложный.`,
+    simplifiedExposition: `Эксперимент похож на pick-up игру в шахматы: правила есть, но легко жульничать, даже самому себе.
+
+Peeking — это «вижу что выигрываю, остановим». Multiple testing — «проверим всё, что-то да сработает». Novelty — «новый ход всегда работает, пока он новый». Simpson Paradox — «в среднем выиграл, но в каждом куске проиграл».`,
+    keyPoints: [
+      '**Peeking** — самая частая ошибка. Не смотреть на p-value до конца.',
+      '**Multiple testing** — 10 метрик = ~40% false positive. Bonferroni или primary metric.',
+      '**Novelty effect** — fade after 2-4 weeks. Длительные тесты.',
+      '**Simpson Paradox** — анализ по сегментам обязателен.',
+      '**Selection bias** — проверка рандомизации до анализа.',
+    ],
+    framework: {
+      title: 'Топ-5 ошибок и противодействие',
+      items: [
+        { name: 'Peeking', description: 'Остановка до набора выборки. Лечение: фиксированный sample size, sequential testing.' },
+        { name: 'Multiple testing', description: 'Без поправок ~40% false positive. Лечение: Bonferroni, primary + guardrails.' },
+        { name: 'Novelty effect', description: 'Краткосрочный эффект новизны. Лечение: длительность 4+ недели.' },
+        { name: 'Simpson Paradox', description: 'Global average противоречит segments. Лечение: анализ по сегментам.' },
+        { name: 'Selection bias', description: 'Non-random groups. Лечение: SRM test, стратификация.' },
+      ],
+    },
+    realExamples: [
+      { product: 'Microsoft Bing (известный кейс)', situation: 'Команда запустила тест, увидела +5% click rate на 3-й день.', action: 'Peeking → раскатили. Через 2 недели click rate упал ниже базы.', outcome: 'Откатили. Внутренний пост-мортем стал learning case.' },
+      { product: 'Booking.com', situation: 'Тестировали 15 метрик без поправок.', action: '5 показали significance. После анализа — большинство false positive.', outcome: 'Перешли на 1 primary + 2-3 guardrails, multiple testing разрешён только с Bonferroni.' },
+      { product: 'Многие startup teams', situation: 'Запустили redesign, метрики выросли в первую неделю.', action: 'Объявили успех, раскатили.', outcome: 'Через 6 недель — fade-back до базы. Novelty effect, не реальный value.' },
+    ],
+    commonMistakes: [
+      '**Peeking без коррекции.** Самая частая. Sequential testing — другой подход.',
+      '**Игнорировать guardrails.** Optimizing primary, разрушая retention.',
+      '**Анализ только global average.** Простой Simpson Paradox упускает важное.',
+      '**Тест без проверки randomization.** Если distribution segments не такой, результат ложен.',
+      '**Преждевременная победа.** Novelty effect и selection bias дают ложный позитив.',
+    ],
+    mcq: {
+      question: 'A/B-тест redesign показал +12% engagement за 14 дней. PM хочет раскатить. Что нужно проверить?',
+      options: ['Можно сразу раскатывать', 'Проверить engagement в week 4-5 для novelty effect и проанализировать по сегментам', 'Запустить ещё один тест', 'Спросить у команды'],
+      correct: 1,
+      explanation: '14 дней может быть недостаточно для исключения novelty effect. Анализ по сегментам исключит Simpson Paradox. Только при стабильных результатах в week 4-5 и согласованности по сегментам — scale.',
+    },
+    trueFalse: {
+      statement: 'Чем больше метрик в эксперименте измеряется, тем надёжнее результат.',
+      correct: false,
+      explanation: 'Наоборот. Multiple testing без поправок повышает false positive. 10 метрик = ~40% что хоть один false positive. Лучше 1 primary + 2-3 guardrails.',
+    },
+  },
 };
