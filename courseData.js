@@ -3156,4 +3156,334 @@ OKR — это маршрут на следующую поездку: «доех
       explanation: 'Нет. Outputs — это «что произошло», но они lagging. Inputs показывают, **что делать сейчас**, чтобы output изменился. PM управляет inputs, измеряет outputs.',
     },
   },
+
+  ch7_1: {
+    title: 'Иерархия метрик в продукте',
+    definition: 'Иерархия метрик связывает стратегический ориентир (NSM), краткосрочные прокси, действия команды (input) и контрметрики (guardrails) в единую систему принятия продуктовых решений.',
+    exposition: `Иерархия метрик — практическая реализация системы измерения в продукте. NSM показывает направление, прокси — близкую динамику, input — то, чем управляет команда, guardrails — то, что нельзя разрушить.
+
+**Целевая метрика (NSM)** отражает долгосрочную ценность. Spotify — Monthly Active Listeners. Airbnb — Nights Booked. Каждое решение команды в идеале связано с движением NSM.
+
+**Прокси-метрики** — предсказывают NSM в короткой перспективе. NSM движется медленно (недели/месяцы), а прокси — быстро (дни/неделя). Lesson completion, D7 retention, time-to-first-value — типичные прокси для NSM «Active Learners».
+
+**Input-метрики** — действия команды и поведение пользователей, которые двигают прокси. % завершивших онбординг, TTF (time to first value), частота использования ключевой фичи. PM напрямую влияет на input через продуктовые решения.
+
+**Guardrail-метрики** — контрметрики, которые **нельзя ронять при оптимизации основных**. NPS, churn, support load. Они защищают от локальной оптимизации, разрушающей продукт.
+
+**Главный принцип**: PM строит эту цепочку **до начала работы** над инициативой. Без иерархии команда оптимизирует «что-то одно» и разрушает остальное.`,
+    simplifiedExposition: `Представь машину. NSM — это направление пути (Москва → Питер). Прокси — спидометр и километры (как быстро движемся). Input — нажатие газа, поворот руля (что делаем). Guardrails — топливо, температура двигателя (что не разрушить).
+
+Хороший водитель смотрит на все 4 одновременно. Плохой — только на спидометр.`,
+    keyPoints: [
+      '**4 уровня: NSM → Proxy → Input → Guardrails.** Цепочка связывает стратегию и действия.',
+      '**Proxy — leading indicator для NSM.** Меняется быстрее, реагирует на продуктовые изменения.',
+      '**Input — то, на что команда напрямую влияет.** Метрики действий, не результата.',
+      '**Guardrails защищают от локальной оптимизации.** Без них NSM растёт, но retention падает.',
+      '**Иерархия строится ДО инициативы.** Не «придумаем метрику после запуска», а до.',
+    ],
+    framework: {
+      title: 'Иерархия метрик',
+      items: [
+        { name: 'NSM (целевая)', description: 'Долгосрочная ценность. Одна метрика на стратегический горизонт.' },
+        { name: 'Proxy (прокси)', description: 'Предсказывают NSM на короткой дистанции. Чувствительны к продуктовым изменениям.' },
+        { name: 'Input (входные)', description: 'Действия команды и поведение пользователей, двигающие proxy.' },
+        { name: 'Guardrails (контрметрики)', description: 'Метрики, которые нельзя ронять. NPS, churn, support load.' },
+      ],
+    },
+    realExamples: [
+      { product: 'Airbnb', situation: 'NSM = Nights Booked. Proxy = Search-to-booking conversion, listing views per search.', action: 'Input: photo quality score, instant book adoption %. Guardrails: cancellation rate, host NPS.', outcome: 'Команды Search и Trust выровнены на единой иерархии.' },
+      { product: 'EdTech (типовой)', situation: 'NSM = Weekly Active Learners. Proxy = lesson completion, D7 retention.', action: 'Input: onboarding completion %, time-to-first-lesson. Guardrails: support tickets per user, NPS.', outcome: 'PM управляет input weekly, мониторит proxy, измеряет NSM ежемесячно.' },
+      { product: 'Без иерархии (anti-pattern)', situation: 'Команда смотрит только на NSM «registered users».', action: 'Накручивают регистрации через массовый маркетинг.', outcome: 'NSM растёт, но retention и revenue падают — vanity metric instead of value metric.' },
+    ],
+    commonMistakes: [
+      '**Только NSM, без proxy и input.** PM не знает, что делать на этой неделе.',
+      '**Прокси без связи с NSM.** «D7 retention» не предсказывает NSM = плохой прокси.',
+      '**Input, на которые команда не влияет.** Если влияет только маркетинг — это не PM-input.',
+      '**Нет guardrails.** Команда оптимизирует NSM, разрушая retention.',
+    ],
+    visual: {
+      type: 'flow',
+      title: 'Иерархия метрик',
+      items: ['NSM', 'Proxy', 'Input', 'Guardrails'],
+    },
+    mcq: {
+      question: 'NSM продукта — Weekly Active Learners. Какая из перечисленных — input-метрика?',
+      options: ['D7 retention rate', '% пользователей, прошедших онбординг', 'NPS', 'Weekly Active Learners'],
+      correct: 1,
+      explanation: '% прошедших онбординг — действие, на которое PM прямо влияет (продуктовое решение). D7 retention — proxy, NPS — guardrail, WAL — NSM.',
+    },
+    trueFalse: {
+      statement: 'Достаточно одной NSM, чтобы команда понимала, что делать на этой неделе.',
+      correct: false,
+      explanation: 'Нет. NSM показывает направление, но не действие. Команда должна работать с input-метриками (на которые влияет), мониторить proxy (как реагирует продукт) и не ронять guardrails.',
+    },
+  },
+
+  ch7_2: {
+    title: 'AARRR: Pirate Metrics',
+    definition: 'AARRR (Pirate Metrics) — фреймворк Дэйва МакКлюра для анализа продуктовой воронки: Acquisition, Activation, Retention, Referral, Revenue. Помогает найти главный leak в продукте.',
+    exposition: `**AARRR (Pirate Metrics)** — пять стадий воронки, которые проходит пользователь в продукте. Название от созвучия с пиратским «arrr». Фреймворк Дэйва МакКлюра (500 Startups).
+
+**Acquisition**: как пользователи узнают о продукте. Метрики: CTR, CAC, конверсия лендинга, signup rate. Откуда приходят, сколько стоит, какая доля становится registered users.
+
+**Activation**: первый aha-moment — пользователь почувствовал ценность. Метрики: % завершивших онбординг, time-to-value, % достигших activation milestone. Slack: 2000 messages в команде. Facebook: 7 friends за 10 дней. Twitter: подпишись на 30 аккаунтов.
+
+**Retention**: возвращаются ли. Метрики: D1/D7/D30 retention, weekly active users, churn rate. Самый критичный уровень — без retention остальные метрики бессмысленны.
+
+**Referral**: рекомендуют ли другим. Метрики: NPS, viral coefficient, % users who invite. Дешевле всего привлекать через рекомендации, поэтому referral — leverage acquisition.
+
+**Revenue**: платят ли и сколько. Метрики: conversion to paid, ARPU, LTV. Финальная стадия — превращение ценности в деньги.
+
+**Главный вопрос PM**: **где самый большой drop-off в воронке?** Именно там — главная точка роста. Если acquisition = 100K, но activation = 5%, нет смысла увеличивать acquisition в 2 раза — нужно чинить activation.
+
+AARRR — это **диагностический инструмент**, а не план действий. Сначала PM видит, где утечка. Потом идёт в качественное исследование, чтобы понять «почему», и формулирует гипотезы решения.`,
+    simplifiedExposition: `Представь воронку с дыркой. Сверху ты льёшь воду (новых пользователей), а на каждом из 5 уровней часть воды утекает. На последнем уровне выходят те, кто платит.
+
+Задача PM — найти, где дырка самая большая, и заткнуть её. Бессмысленно лить больше воды, если она утекает на втором уровне.`,
+    keyPoints: [
+      '**5 стадий: Acquisition → Activation → Retention → Referral → Revenue.** Каждая со своими метриками.',
+      '**Главный вопрос: где самый большой drop-off?** Там — главная точка роста.',
+      '**Activation milestone критичен.** Slack: 2000 messages. Facebook: 7 friends. Aha-moment — фиксируется конкретной метрикой.',
+      '**Retention важнее Acquisition.** Без retention увеличение acquisition = деньги в трубу.',
+      '**AARRR — диагностика, не план.** Показывает где, не объясняет почему. После диагностики — качественное исследование.',
+    ],
+    framework: {
+      title: 'AARRR — стадии и метрики',
+      items: [
+        { name: 'Acquisition', description: 'CTR, CAC, signup conversion, source-of-truth каналов привлечения.' },
+        { name: 'Activation', description: '% завершивших onboarding, time-to-value, activation milestone (e.g. 7 friends).' },
+        { name: 'Retention', description: 'D1/D7/D30 retention curves, weekly active users, churn rate.' },
+        { name: 'Referral', description: 'NPS, viral coefficient (K-factor), % users who invite others.' },
+        { name: 'Revenue', description: 'Conversion to paid, ARPU, LTV, gross margin per user.' },
+      ],
+    },
+    realExamples: [
+      { product: 'Dropbox (раннее)', situation: 'Anaаlysis показал — низкий referral coefficient.', action: 'Запустили double-sided referral (extra storage за приглашение).', outcome: 'Viral coefficient вырос с 0.1 до 0.7, signups +60% за 15 месяцев.' },
+      { product: 'Facebook', situation: 'Drop-off на activation: users регистрировались, не возвращались.', action: 'Нашли activation milestone: 7 friends за 10 дней предсказывает long-term retention.', outcome: 'Growth team optimize на этот milestone — главный leverage point.' },
+      { product: 'Multi-channel e-commerce', situation: 'CAC растёт, conversion падает.', action: 'Analysis AARRR — drop-off на activation (first purchase). Только 12% делают первую покупку.', outcome: 'Запустили nudges, скидки first-time. Activation вырос до 28%, revenue +85%.' },
+    ],
+    commonMistakes: [
+      '**Фокус только на acquisition.** Привлекают больше, но retention низкий = leaky bucket.',
+      '**Игнорировать activation.** Между signup и retention лежит activation. Это самый частый drop-off.',
+      '**Referral как marketing-канал.** Referral — это product mechanic, не маркетинг.',
+      '**Revenue без LTV.** ARPU без понимания churn — это снимок, не цифра.',
+    ],
+    visual: {
+      type: 'flow',
+      title: 'AARRR Funnel',
+      items: ['Acquisition', 'Activation', 'Retention', 'Referral', 'Revenue'],
+    },
+    mcq: {
+      question: 'Стартап имеет 100K visits/мес, 50K signups, 5K activated, 2K paid. CAC растёт, но revenue не растёт. Какая стадия требует первого внимания?',
+      options: ['Acquisition — нужно больше visits', 'Activation — drop-off с 50K до 5K (90%)', 'Revenue — увеличить цену', 'Referral'],
+      correct: 1,
+      explanation: 'Drop-off на activation 90% — главная утечка. Бессмысленно увеличивать acquisition, пока activation течёт. После починки activation revenue вырастет автоматически.',
+    },
+    trueFalse: {
+      statement: 'Активная привлекательная стратегия acquisition — самая важная часть AARRR.',
+      correct: false,
+      explanation: 'Нет. Самая важная — retention. Без retention acquisition становится «leaky bucket»: льёшь воду, а она утекает. Сначала retention, потом масштабирование acquisition.',
+    },
+  },
+
+  ch7_3: {
+    title: 'HEART: UX-метрики Google',
+    definition: 'HEART — фреймворк Google для UX-метрик: Happiness, Engagement, Adoption, Retention, Task Success. Помогает измерить качество пользовательского опыта на нескольких уровнях.',
+    exposition: `**HEART** — фреймворк Google для UX-метрик. В отличие от AARRR (фокус на воронку и рост), HEART измеряет **качество пользовательского опыта**. Применяется в команде Google Search, Gmail, Maps.
+
+**Happiness**: удовлетворённость пользователей. NPS, CSAT, app rating, qualitative feedback. Отвечает на вопрос «нравится ли продукт?».
+
+**Engagement**: глубина и частота вовлечённости. Sessions per user, time per session, actions per session. «Насколько активно пользуются?».
+
+**Adoption**: принятие новых фичей и пользователей. % users using new feature, new user acquisition rate. «Кто использует и как растёт база?».
+
+**Retention**: удержание со временем. D7/D30 retention, churn rate, weekly cohorts. «Возвращаются ли?».
+
+**Task Success**: успешное выполнение конкретных задач. Search success rate, conversion на ключевой задаче, error rate. «Получается ли у пользователя сделать то, ради чего пришёл?».
+
+HEART строится через **G-S-M** (Goals-Signals-Metrics): для каждой H/E/A/R/T определяется goal (что хотим), signal (поведенческий индикатор), metric (как измеряем).
+
+**AARRR vs HEART**. AARRR — growth/funnel ориентация. HEART — UX/quality ориентация. Зрелые команды используют оба: AARRR для бизнес-метрик, HEART для product quality.
+
+Не все 5 категорий нужны одновременно. PM выбирает 2-3 наиболее релевантных для текущей задачи. Search-команда фокусируется на Task Success + Engagement. Onboarding-команда — на Adoption + Happiness.`,
+    simplifiedExposition: `HEART — это «здоровье» пользовательского опыта по 5 параметрам. Как медосмотр: смотрим давление, пульс, температуру.
+
+H — счастье. E — вовлечённость. A — adoption (используют ли). R — retention (возвращаются ли). T — task success (получается ли у них).`,
+    keyPoints: [
+      '**5 категорий: H + E + A + R + T.** UX-фокус, не growth.',
+      '**G-S-M структура.** Goals → Signals → Metrics для каждой категории.',
+      '**HEART дополняет AARRR.** AARRR для funnel, HEART для quality.',
+      '**Выбирай 2-3 релевантные категории.** Не все 5 одновременно.',
+      '**Task Success — самая практичная.** Прямо связана с user job-to-be-done.',
+    ],
+    framework: {
+      title: 'HEART категории',
+      items: [
+        { name: 'Happiness', description: 'NPS, CSAT, ratings, customer feedback. Эмоциональное измерение опыта.' },
+        { name: 'Engagement', description: 'Sessions, time per session, actions per session. Глубина использования.' },
+        { name: 'Adoption', description: '% users using new feature, % growth in user base. Принятие фич и людей.' },
+        { name: 'Retention', description: 'D7/D30 retention, churn, cohort analysis. Удержание.' },
+        { name: 'Task Success', description: 'Conversion на key task, error rate, time-to-complete. Эффективность.' },
+      ],
+    },
+    comparisonTable: {
+      title: 'AARRR vs HEART',
+      headers: ['Параметр', 'AARRR', 'HEART'],
+      rows: [
+        ['Фокус', 'Growth, funnel', 'UX, product quality'],
+        ['Стадии', '5 funnel stages', '5 quality dimensions'],
+        ['Лучше для', 'Marketing, growth teams', 'Design, product teams'],
+        ['Главная метрика', 'Revenue', 'Task Success / Happiness'],
+        ['Компании', 'B2C startups', 'Google, B2B SaaS'],
+      ],
+    },
+    realExamples: [
+      { product: 'Google Search', situation: 'HEART применяют ежедневно.', action: 'Task Success: % successful searches (no re-query). Engagement: time-to-first-click. Happiness: SERP rating.', outcome: 'Search quality улучшается без видимых изменений UI — за счёт ML и алгоритмов.' },
+      { product: 'Gmail', situation: 'Запуск нового compose flow.', action: 'Adoption: % users using new compose. Task Success: % emails sent without error. Happiness: rating after sending.', outcome: 'Identified issues с new compose, итерировали до full rollout.' },
+      { product: 'B2B SaaS (типовой)', situation: 'Дизайн-команда не имеет своих метрик, использует общие.', action: 'Внедрили HEART: Task Success на main flow + Happiness через NPS.', outcome: 'Design команда получает actionable metrics, влияет на product decisions.' },
+    ],
+    commonMistakes: [
+      '**Использовать все 5 категорий сразу.** Размытие фокуса. 2-3 наиболее релевантных.',
+      '**HEART вместо AARRR.** HEART — это quality, не growth. Оба нужны для полноценной картины.',
+      '**Игнор Task Success.** Самая практичная категория — прямо связана с user job.',
+      '**Adoption % new users только.** Adoption также включает % current users using new feature.',
+    ],
+    mcq: {
+      question: 'Design команда хочет измерить качество нового checkout flow. Какие 2 HEART категории наиболее релевантны?',
+      options: ['Happiness + Adoption', 'Task Success + Engagement', 'Task Success + Happiness', 'Retention + Adoption'],
+      correct: 2,
+      explanation: 'Checkout — это task с конкретной целью. Task Success (доля успешных покупок) + Happiness (CSAT после) — самые релевантные. Engagement не критичен (чем быстрее, тем лучше), Retention — это уже после checkout.',
+    },
+    trueFalse: {
+      statement: 'HEART — это альтернатива AARRR, нельзя использовать оба одновременно.',
+      correct: false,
+      explanation: 'Нет. HEART и AARRR дополняют друг друга. AARRR — для growth/business metrics, HEART — для UX/quality metrics. Зрелые команды используют оба.',
+    },
+  },
+
+  ch7_4: {
+    title: 'Goodhart Law: когда метрика становится целью',
+    definition: 'Закон Гудхарта: «когда метрика становится целью, она перестаёт быть хорошей метрикой» — оптимизация одного показателя без guardrails приводит к локальным улучшениям при разрушении общей системы.',
+    exposition: `**Закон Гудхарта**: «Когда метрика становится целью, она перестаёт быть хорошей метрикой». Сформулирован экономистом Чарльзом Гудхартом, актуален для любых измерений — от макроэкономики до продуктовых KPI.
+
+Механика проста. Любая метрика — это **прокси** для реальной ценности. Пока метрика просто измеряется, она хорошо отражает ценность. Как только она становится целью команды — команда оптимизирует метрику, а не ценность. Это два разных оптимума.
+
+**Примеры в продукте**. KPI по количеству звонков поддержки → менеджеры искусственно закрывают тикеты быстрее, не решая проблемы. KPI по CTR заголовков → команда делает кликбейт → NPS падает, retention снижается. KPI по количеству фич → команда шипает мелкие ненужные вещи, теряя фокус. KPI по DAU → push-уведомления каждые 10 минут → unsubscribe rate растёт.
+
+**Лечение**. Всегда добавляй **guardrail-метрики**, которые защищают от Goodhart. Оптимизируем CTR — guardrail на NPS. Оптимизируем DAU — guardrail на unsubscribe rate. Оптимизируем support response time — guardrail на CSAT.
+
+Периодически **меняй KPI и оценочные метрики**. Если команда работает на одну метрику 2 года, она нашла способы её «гейминга», не создавая ценности. Ротация метрик ломает gaming-паттерны.
+
+**Главная мысль**: метрика — не цель. **Цель — ценность для пользователя и бизнеса**. Метрика — способ её измерить. PM должен помнить разницу.`,
+    simplifiedExposition: `Представь, что в больнице платят врачам за количество принятых пациентов. Врачи начинают принимать быстрее, поверхностнее, меньше времени на каждого. Метрика растёт — качество лечения падает.
+
+То же в продукте: ставишь KPI «больше регистраций» — команда добавит всплывающее окно при каждом клике. Метрика растёт, пользователи уходят.`,
+    keyPoints: [
+      '**Метрика ≠ цель.** Метрика — прокси ценности, не сама ценность.',
+      '**Команда оптимизирует то, что измеряется.** Goodhart — это про человеческое поведение, не про метрики сами по себе.',
+      '**Guardrails — главная защита.** На каждую optimized metric — counter-metric.',
+      '**Ротация KPI ломает gaming.** Меняй метрики раз в 1-2 года.',
+      '**Vanity metrics — частный случай.** Регистрации, downloads — легко гейминтся, не отражают ценность.',
+    ],
+    framework: {
+      title: 'Goodhart-паттерны и противодействие',
+      items: [
+        { name: 'Volume gaming', description: 'KPI по количеству → искусственное увеличение объёма без качества. Guardrail: quality metric.' },
+        { name: 'Speed gaming', description: 'KPI по скорости → ухудшение качества. Guardrail: customer satisfaction.' },
+        { name: 'Conversion gaming', description: 'KPI по конверсии → агрессивные дарк-паттерны. Guardrail: NPS, churn.' },
+        { name: 'Engagement gaming', description: 'KPI по engagement → addiction patterns. Guardrail: user wellbeing, complaints.' },
+      ],
+    },
+    realExamples: [
+      { product: 'YouTube watch time (исторически)', situation: 'KPI = total watch time → алгоритм рекомендует sensational контент.', action: 'Растёт время просмотра, но падает user satisfaction. Внутренняя критика и пресса.', outcome: 'Изменили на satisfaction-weighted watch time + survey-based quality signals.' },
+      { product: 'Facebook News Feed', situation: 'KPI = time spent → пользователи жалуются на «brain rot».', action: 'Внутреннее расследование показало негативное влияние на mental health.', outcome: 'Переключились на «meaningful interactions» с гейтированием через guardrails.' },
+      { product: 'Many enterprise sales', situation: 'KPI sales reps = closed deals.', action: 'Reps дают огромные скидки и обещания → revenue растёт, но gross margin падает.', outcome: 'Добавили guardrail metric: gross margin per deal, customer retention 12 months.' },
+    ],
+    commonMistakes: [
+      '**Один KPI без guardrails.** Самая частая ошибка. Команда оптимизирует, разрушает остальное.',
+      '**Vanity metrics как target.** «Больше регистраций» без quality фильтров.',
+      '**Один KPI на 3+ года.** Команда находит способы гейминга, не создавая ценности.',
+      '**Игнор негативного фидбека.** Метрика растёт, но пользователи жалуются — это сигнал Goodhart.',
+    ],
+    mcq: {
+      question: 'PM поставил команде KPI «уменьшить среднее время ответа support до 2 минут». Через квартал KPI выполнен, но CSAT упал на 15 пп. Что произошло?',
+      options: ['CSAT упал по другим причинам', 'Goodhart Law: команда оптимизировала скорость в ущерб качеству ответов', 'Нужно ставить более амбициозный KPI', 'Support команда некомпетентна'],
+      correct: 1,
+      explanation: 'Классический Goodhart: метрика стала целью, команда нашла способ её достичь, разрушая ценность. Решение — добавить guardrail на CSAT и quality of resolution.',
+    },
+    trueFalse: {
+      statement: 'Если у команды стабильно растёт KPI, это всегда означает рост ценности продукта.',
+      correct: false,
+      explanation: 'Нет. Метрика может расти за счёт gaming, dark patterns, искажения. Без guardrails и качественного фидбека рост KPI не равен росту ценности. Закон Гудхарта.',
+    },
+  },
+
+  ch7_5: {
+    title: 'A/B тестирование',
+    definition: 'A/B-тест — контролируемый эксперимент, в котором пользователи случайно делятся на контрольную и тестовую группу, измеряется разница в primary metric для установления причинно-следственной связи между изменением и результатом.',
+    exposition: `**A/B-тест** — контролируемый эксперимент: пользователи случайно делятся на группу A (контроль) и B (изменение), измеряется разница в primary metric. Цель — **причинно-следственная связь**, а не корреляция.
+
+**Анатомия A/B-теста**. **Hypothesis**: «Если мы [действие], то [метрика] вырастет на [X%] потому что [механизм]». Без явной гипотезы и механизма — это рандом, не эксперимент. **Treatment**: группа с изменением. **Control**: группа без. **Primary metric**: NSM или прокси, на которую смотрим. **Guardrail**: метрика, которую нельзя ронять. **MDE (Minimum Detectable Effect)**: минимальный эффект, который важно поймать.
+
+**Statistical power**. Размер выборки зависит от MDE. Чем меньше эффект хочешь поймать, тем больше нужна выборка. Хочешь поймать +1% конверсии — нужно намного больше пользователей, чем для +10%. Стандарт: p < 0.05, power = 0.8.
+
+**Типичные ошибки**. **Peeking**: остановить тест досрочно «когда видим хороший результат» — p-value нестабилен до набора выборки. **Multiple testing**: проверять 10 метрик без Bonferroni — каждая даёт ~5% шанс false positive, при 10 метриках вероятность ложного срабатывания ~40%. **Novelty effect**: пользователи реагируют на новизну, а не реальную ценность. **Selection bias**: группы получились не случайные.
+
+**Когда A/B не подходит**. Маленький трафик (<1000 событий/день на вариант). Ранний discovery (нужно сначала понять проблему). B2B enterprise (сложно рандомизировать). Strong qualitative unknown — интервью эффективнее.
+
+A/B-тест — мощный инструмент, но **не для всего**. Перед запуском теста PM должен ответить: есть ли у меня hypothesis? Достаточно ли trafic? Понимаю ли я механизм? Если нет — лучше qualitative research, чем плохой A/B.`,
+    simplifiedExposition: `A/B-тест — это как сравнить два рецепта пирога. Половине людей даёшь рецепт A, половине — рецепт B, всё остальное одинаково. Кто скажет «вкуснее» — тот и победил.
+
+Главное правило: пробует достаточно людей (не 5 знакомых), и ты не остановишь дегустацию, как только увидишь промежуточный результат.`,
+    keyPoints: [
+      '**Hypothesis с механизмом, не просто «попробуем».** Если/то/потому что.',
+      '**MDE определяет sample size.** Меньше эффект → больше выборка нужна.',
+      '**P < 0.05, power = 0.8 — стандарт.** Peeking ломает значимость.',
+      '**Multiple testing требует поправок.** Bonferroni или альтернативные методы.',
+      '**Не для всего.** Малый трафик, early discovery, B2B enterprise — A/B не подходит.',
+    ],
+    framework: {
+      title: 'Чек-лист A/B-теста',
+      items: [
+        { name: 'Hypothesis', description: 'Если [действие], то [метрика] вырастет на [X%] потому что [механизм].' },
+        { name: 'MDE и sample size', description: 'Рассчитать минимальный эффект и нужную выборку ДО запуска.' },
+        { name: 'Primary + Guardrail metrics', description: 'Одна основная метрика, 1-2 контрметрики.' },
+        { name: 'Длительность', description: 'Минимум 7 дней (week-effect), идеально 14. Не останавливать раньше.' },
+        { name: 'Анализ', description: 'P-value, confidence interval, segments. Не только global average.' },
+      ],
+    },
+    formula: {
+      title: 'Sample size для A/B-теста',
+      items: [
+        { label: 'Sample per variant', formula: 'n ≈ 16 × σ² / MDE²' },
+        { label: 'Где σ²', formula: 'Variance of metric' },
+        { label: 'Где MDE', formula: 'Minimum detectable effect (e.g. +5%)' },
+        { label: 'P-value standard', formula: '< 0.05 (95% confidence)' },
+        { label: 'Statistical power', formula: '0.8 (80% chance to detect real effect)' },
+      ],
+    },
+    realExamples: [
+      { product: 'Booking.com', situation: 'Самая A/B-тестирующая компания: 1000+ тестов одновременно.', action: 'Каждое изменение через A/B. Включая цвета, формулировки, layout.', outcome: 'Continuous improvement; conversion вырос на ~30% за 5 лет.' },
+      { product: 'Microsoft Bing (раннее)', situation: 'A/B-тест цвета ссылок.', action: 'Незначительное изменение оттенка blue. Sample: миллионы пользователей.', outcome: '$200M+ ежегодного revenue impact от изменения цвета.' },
+      { product: 'Multi-team SaaS', situation: 'Команда останавливает A/B-тест на 4-й день «потому что побеждаем».', action: 'Peeking приводит к false positive — статистически не значимо.', outcome: 'Rollout «победившего» варианта — реального эффекта нет, потом откатывают.' },
+    ],
+    commonMistakes: [
+      '**Peeking** — остановка до набора выборки. P-value нестабилен.',
+      '**Multiple testing без поправок.** 10 метрик = ~40% false positive.',
+      '**Novelty effect** — фиксируем краткосрочный эффект новизны.',
+      '**A/B-тест без hypothesis** — рандомный «попробуем», не эксперимент.',
+      '**A/B при малом трафике.** <1000/день на вариант — статистическая мощность недостаточна.',
+    ],
+    mcq: {
+      question: 'PM запустил A/B-тест на 14 дней. На 5-й день видит p-value = 0.03 и хочет остановить тест. Что не так?',
+      options: ['Ничего не так — p < 0.05', 'Peeking: p-value нестабилен до набора выборки, остановка увеличивает false positive', 'Нужно подождать ещё 14 дней', 'P = 0.03 недостаточно низкое'],
+      correct: 1,
+      explanation: 'Peeking — классическая ошибка. P-value колеблется во время теста; остановка при «хорошем» промежуточном результате завышает вероятность false positive. Нужно дождаться расчётной выборки.',
+    },
+    trueFalse: {
+      statement: 'A/B-тест всегда даёт надёжный ответ о причинно-следственной связи изменения и результата.',
+      correct: false,
+      explanation: 'Нет. A/B даёт надёжный ответ только при правильном дизайне: достаточная выборка, рандомизация, отсутствие peeking, единственное изменение. При нарушениях — false positives и неверные выводы.',
+    },
+  },
 };
