@@ -4050,4 +4050,389 @@ WSJF — это «насколько быстро мы можем починит
       explanation: 'Нет. Разные аудитории требуют разный уровень детализации. Team нужны зависимости, executives — outcomes, sales — milestones без дат, customer — planned investments. Same outcomes, different abstraction.',
     },
   },
+
+  ch10_1: {
+    title: 'Юнит и unit economics',
+    definition: 'Unit economics — экономика одного «юнита» продукта (клиента, транзакции, листинга), на которой строится понимание здоровья бизнеса до учёта масштаба и постоянных затрат.',
+    exposition: `**Unit economics** — экономика одного «юнита» продукта. Не финансовый отчёт компании в целом, а **разбор одного клиента, одной транзакции, одного листинга**. Это базовый язык продакта, который умеет читать P&L.
+
+**Что такое юнит**. Зависит от business model. **Subscription SaaS**: юнит = клиент / аккаунт. **E-commerce**: юнит = заказ или клиент. **Marketplace**: юнит = транзакция, или buyer, или seller. **Mobile app с рекламой**: юнит = active user. Без чёткого определения юнита расчёты неверны.
+
+**Главные метрики юнит-экономики**:
+- **ARPU** (Average Revenue Per User) — выручка с одного юнита
+- **COGS** (Cost of Goods Sold) — переменные затраты на одного юнита
+- **Gross Margin** — (ARPU − COGS) / ARPU. Сколько остаётся после прямых затрат
+- **LTV** (Lifetime Value) — общая ценность юнита за весь lifetime
+- **CAC** (Customer Acquisition Cost) — стоимость привлечения одного юнита
+- **LTV/CAC** — главный health индикатор
+
+**Главный принцип**: **юнит должен быть прибыльным до scale**. Если ARPU < CAC + COGS — каждый новый клиент углубляет убыток. Масштабирование убыточного юнита = ускорение к смерти.
+
+**Почему важно для PM**. Продуктовые решения влияют на юнит-экономику. Increased onboarding completion → higher activation → lower churn → higher LTV. Better integration → less support load → lower COGS. PM, который не понимает юнит-экономику, не может объяснить business impact продуктовых решений.`,
+    simplifiedExposition: `Представь магазин кофе. Юнит — это одна чашка. Чтобы понять, выгоден ли бизнес, ты считаешь: сколько стоит сделать чашку (себестоимость), сколько за неё платят, сколько тратишь на маркетинг для привлечения клиентов.
+
+Если каждая чашка приносит больше, чем тратишь на её производство и продажу — бизнес работает. Если меньше — продаёшь больше чашек, теряешь больше денег.`,
+    keyPoints: [
+      '**Юнит зависит от business model.** Subscription — клиент, marketplace — транзакция.',
+      '**Главные метрики: ARPU, COGS, Gross Margin, LTV, CAC, LTV/CAC.**',
+      '**Юнит должен быть прибыльным до scale.** Иначе масштаб = ускорение к смерти.',
+      '**LTV/CAC > 3 — здорово.** < 1 — каждый клиент убыточен. 1-3 — pre-break-even.',
+      '**Продуктовые решения двигают юнит-экономику.** Activation, retention, support efficiency.',
+    ],
+    framework: {
+      title: 'Анатомия unit economics',
+      items: [
+        { name: 'ARPU', description: 'Средняя выручка с одного юнита за период (месяц/год).' },
+        { name: 'COGS', description: 'Переменные затраты на юнита: hosting, support, payment processing, content costs.' },
+        { name: 'Gross Margin', description: '(ARPU − COGS) / ARPU. Что остаётся после прямых затрат.' },
+        { name: 'LTV', description: 'Общая ценность за lifetime. ARPU × Gross Margin / Churn rate.' },
+        { name: 'CAC', description: 'Стоимость привлечения: маркетинг + sales / новые юниты за период.' },
+        { name: 'Payback Period', description: 'CAC / (ARPU × Gross Margin). Сколько месяцев до окупаемости.' },
+      ],
+    },
+    realExamples: [
+      { product: 'Spotify (премиум)', situation: 'Юнит = paid subscriber.', action: 'ARPU $10/mo, COGS (royalties + hosting) $7/mo, Gross Margin 30%, Churn 5%/mo, CAC $30.', outcome: 'LTV = $3/0.05 = $60. LTV/CAC = 2x. Marginal — поэтому Spotify фокусируется на price increases и cost reduction.' },
+      { product: 'Salesforce (enterprise SaaS)', situation: 'Юнит = enterprise customer.', action: 'ARPU $100K/yr, Gross Margin 80%, Churn 5%/yr, CAC $30K.', outcome: 'LTV = $80K × 20 yr = $1.6M. LTV/CAC = 53x. Healthy unit economics — основа для агрессивного scale.' },
+      { product: 'Many subsidised marketplaces', situation: 'Юнит = transaction. Take rate 5%.', action: 'Subsidising supply + demand: CAC по обеим сторонам высокий.', outcome: 'LTV/CAC < 1 first year, но scale создаёт network effects → LTV растёт со временем.' },
+    ],
+    commonMistakes: [
+      '**Считать ARPU = LTV.** Без учёта retention/churn LTV не вычисляется.',
+      '**Игнор COGS.** Считать revenue как margin → переоценка прибыльности.',
+      '**Один юнит для blended audience.** Power users и casual users имеют разные ARPU и churn.',
+      '**Scale до прибыльности юнита.** Самая дорогая ошибка стартапа.',
+    ],
+    visual: {
+      type: 'flow',
+      title: 'Unit economics chain',
+      items: ['Revenue', '− COGS', '= Gross Profit', '− CAC', '= Contribution Margin'],
+    },
+    mcq: {
+      question: 'Стартап имеет ARPU $50/mo, COGS $40/mo, CAC $200, Churn 8%/mo. LTV/CAC?',
+      options: ['Очень здоровый, ~10x', 'Marginal, ~0.6x', 'Отличный, ~5x', 'Невозможно посчитать'],
+      correct: 1,
+      explanation: 'Gross Margin = (50-40)/50 = 20%. LTV = 50 × 20% / 8% = $125. LTV/CAC = 125/200 = 0.6x. Каждый клиент убыточен — нужно или поднимать ARPU, или снижать CAC, или churn.',
+    },
+    trueFalse: {
+      statement: 'Если стартап быстро растёт, проблемы с unit economics не критичны — можно решить потом.',
+      correct: false,
+      explanation: 'Нет. Это классическая ошибка. Если unit economics плохие, рост увеличивает убытки. «Дырявое ведро» при росте просто увеличивает скорость утечки. Сначала юнит экономика, потом scale.',
+    },
+  },
+
+  ch10_2: {
+    title: 'LTV: как считать правильно',
+    definition: 'LTV (Lifetime Value) — общая ценность одного клиента за весь срок жизни в продукте; рассчитывается по марже (не выручке) с учётом churn и должен включать ретеншн-кривую, а не среднее.',
+    exposition: `**LTV (Lifetime Value)** — общая ценность клиента за весь срок его жизни в продукте. Это **самая важная и самая часто неправильно считаемая** метрика в продукте.
+
+**Основная формула**: **LTV = ARPU × Gross Margin / Monthly Churn Rate**.
+
+Пример. ARPU 1000 ₽/мес, Gross Margin 70%, Monthly Churn 5%. LTV = 1000 × 0.7 / 0.05 = **14 000 ₽**.
+
+**Главные правила**:
+
+**1. LTV по марже, не по выручке.** «LTV = ARPU / Churn» = revenue-based LTV. Завышает реальную ценность, потому что не учитывает COGS. Margin-based LTV — единственно правильный.
+
+**2. Используй сегментный churn**. Аверс churn по всем юзерам скрывает реальность. Power users и casual users имеют разный churn → разный LTV. Считай по сегментам.
+
+**3. LTV не статичен**. Churn меняется со временем (cohort behaviour), ARPU растёт через upsell, COGS снижается через scale. LTV — это projection, требует updates.
+
+**4. Cohort-based LTV точнее формулы**. Формула предполагает constant churn rate. Реальность: churn падает со временем (выжившие более лояльны). Cohort analysis показывает истинный LTV по cohort.
+
+**5. LTV/CAC > 3 — стандарт.** LTV/CAC < 1 — убыточный бизнес. 1-3 — marginal, нужны улучшения. > 5 — отлично, можно агрессивно масштабироваться. > 10 — обычно недо-инвестируешь в acquisition.
+
+**Антипаттерны**: LTV по revenue, не margin (overstatement). LTV по среднему churn, скрывающему сегменты. LTV без cohort analysis (formula-based прогноз неточен). LTV без update — раз посчитали и забыли.`,
+    simplifiedExposition: `LTV — это сколько денег приносит один клиент за всё время. Считается просто: средний чек × сколько месяцев он останется.
+
+Главная ошибка — считать по revenue, а не по марже. Если клиент платит 1000₽/мес, но себестоимость 700₽, то реальная ценность — 300₽/мес. Не 1000.`,
+    keyPoints: [
+      '**Margin-based LTV, не revenue-based.** ARPU × Gross Margin / Churn.',
+      '**Сегментный churn.** Power users vs casual — разный LTV.',
+      '**Cohort-based точнее формулы.** Churn не constant, выжившие лояльнее.',
+      '**LTV/CAC > 3 — здорово.** < 1 — убыточно. > 10 — недоинвестируешь в acquisition.',
+      '**LTV — projection.** Требует regular updates по мере данных.',
+    ],
+    formula: {
+      title: 'Формулы LTV',
+      items: [
+        { label: 'LTV (margin, базовый)', formula: 'ARPU × Gross Margin / Monthly Churn Rate' },
+        { label: 'LTV (revenue)', formula: 'ARPU / Monthly Churn Rate (overstates by ~30-50%)' },
+        { label: 'LTV (NPV-adjusted)', formula: 'Σ (ARPU × Margin × (1-Churn)^t) / (1+r)^t' },
+        { label: 'LTV/CAC ratios', formula: '>3 healthy, 1-3 marginal, <1 unprofitable' },
+        { label: 'CAC Payback', formula: 'CAC / (ARPU × Gross Margin) — months to recover' },
+      ],
+    },
+    realExamples: [
+      { product: 'Netflix', situation: 'Subscription business.', action: 'ARPU $15/mo, Gross Margin 40%, Churn ~2%/mo. LTV = $15 × 0.4 / 0.02 = $300.', outcome: 'Allows aggressive content investment + global expansion.' },
+      { product: 'Поверхностный SaaS подсчёт', situation: 'Стартап считает LTV = ARPU / Churn = $50 / 0.05 = $1000.', action: 'Не учли COGS (hosting + support + payment fees = $35/mo).', outcome: 'Реальный margin LTV = $15 × 0.3 / 0.05 = $300. Investor увидел разницу — down-round.' },
+      { product: 'Substack', situation: 'Marketplace с writers.', action: 'Юнит = paying subscriber. Различные LTV по genre (news vs fiction vs tech).', outcome: 'Сегментный анализ показал: tech-writers имеют 3x LTV vs news — стратегический insight.' },
+    ],
+    commonMistakes: [
+      '**LTV = revenue, не margin.** Завышает реальную ценность.',
+      '**Aver churn для всех.** Скрывает разницу между power и casual users.',
+      '**Formula-based вместо cohort.** Constant churn — упрощение, не правда.',
+      '**LTV без updates.** Считал год назад — данные устарели.',
+      '**LTV/CAC = 10 = радоваться.** Может означать under-investment в acquisition.',
+    ],
+    mcq: {
+      question: 'PM считает LTV = ARPU / Churn = $100/mo / 5% = $2000. Какая главная ошибка?',
+      options: ['Слишком высокий', 'Использует revenue, не margin — реальный LTV ниже на gross margin', 'Churn слишком низкий', 'Период не учтён'],
+      correct: 1,
+      explanation: 'Это revenue-based LTV. Реальная ценность — после COGS. Если Gross Margin 30%, реальный LTV = $100 × 0.3 / 0.05 = $600. В 3.3 раза меньше.',
+    },
+    trueFalse: {
+      statement: 'LTV — статическая метрика, которую считают один раз при запуске продукта.',
+      correct: false,
+      explanation: 'Нет. LTV — projection, которая меняется со временем: ARPU растёт через upsell, churn меняется, COGS снижается через scale. Требует regular updates минимум раз в квартал.',
+    },
+  },
+
+  ch10_3: {
+    title: 'CAC и payback period',
+    definition: 'CAC (Customer Acquisition Cost) — стоимость привлечения одного клиента; Payback Period — время до окупаемости этой инвестиции через выручку клиента.',
+    exposition: `**CAC (Customer Acquisition Cost)** — стоимость привлечения **одного** нового клиента. Расчёт: **(Marketing + Sales spending) / Новые клиенты за период**.
+
+Важно различать:
+- **Blended CAC**: все маркетинговые расходы / все новые клиенты (включая organic). Самый базовый.
+- **Paid CAC**: маркетинг / клиенты от paid каналов. Показывает «эффективность купленных пользователей».
+- **Channel CAC**: разный CAC по каналам (Google Ads, Facebook, sales-driven). Помогает выбрать каналы для scale.
+
+**CAC Payback Period** — время до окупаемости. Формула: **CAC / (ARPU × Gross Margin) → в месяцах**.
+
+Пример. CAC = $300, ARPU = $50/mo, Gross Margin = 70%. Payback = 300 / (50 × 0.7) = **8.6 месяцев**.
+
+**Бенчмарки**:
+- **B2C subscription**: Payback < 12 месяцев — нормально, < 6 — отлично
+- **B2B SaaS**: Payback < 18 месяцев — норма, < 12 — хорошо. SMB обычно быстрее enterprise
+- **Marketplace**: Payback может быть выше из-за network effects
+
+**Главные правила**:
+
+**1. CAC не растёт линейно с scale**. Первые клиенты дешёвые (low-hanging fruit, organic, referrals). По мере scale CAC растёт — нужно платить за всё более холодную аудиторию.
+
+**2. Channel mix важен**. Зависеть от одного канала (Facebook Ads, Google Ads) опасно — каналы могут «сломаться» (policy changes, конкуренция, audience burnout).
+
+**3. CAC включает не только ads**. Sales-driven CAC = sales team salaries + commissions / новые клиенты. В enterprise CAC может быть $50K+ при ACV $500K.
+
+**4. Organic ≠ free**. Organic acquisition требует content, SEO, PR, brand investment. «Бесплатных» каналов нет.
+
+**Антипаттерны**: считать только paid CAC и игнорировать organic costs. Усреднять CAC по всем каналам (скрывает unhealthy channels). CAC без context payback — high CAC может быть OK при high LTV.`,
+    simplifiedExposition: `CAC — это сколько ты тратишь, чтобы привлечь одного клиента. Если потратил $1000 на рекламу и привлёк 10 клиентов, CAC = $100.
+
+Payback Period — за сколько месяцев этот клиент «отбивает» $100, которые ты на него потратил. Если он платит $50/mo с маржой 50%, то отбивает $25/mo. Payback = 4 месяца.`,
+    keyPoints: [
+      '**CAC = (Marketing + Sales) / Новые клиенты.** Включает sales, не только paid ads.',
+      '**Channel CAC > blended CAC.** Разные каналы — разная эффективность.',
+      '**Payback = CAC / (ARPU × Gross Margin).** В месяцах.',
+      '**B2C < 12 мес, B2B SaaS < 18 мес.** Стандартные бенчмарки.',
+      '**CAC растёт с scale.** Первые клиенты cheapest, потом растёт.',
+    ],
+    formula: {
+      title: 'CAC и Payback формулы',
+      items: [
+        { label: 'CAC (blended)', formula: 'Total marketing + sales spending / New customers in period' },
+        { label: 'Paid CAC', formula: 'Paid spending / Customers from paid channels' },
+        { label: 'Payback Period', formula: 'CAC / (ARPU × Gross Margin) → в месяцах' },
+        { label: 'Healthy Payback', formula: 'B2C < 12 мес, B2B SaaS < 18 мес' },
+        { label: 'Magic Number (SaaS)', formula: 'Net New ARR (Q) / Previous Q S&M spend — должно быть > 1' },
+      ],
+    },
+    realExamples: [
+      { product: 'Slack (раннее)', situation: 'Product-led growth, low CAC.', action: 'CAC < $100 благодаря виральности. Payback < 3 months.', outcome: 'Allowed aggressive scale без burning cash.' },
+      { product: 'Salesforce (enterprise)', situation: 'Sales-driven CAC высокий.', action: 'CAC ~$30K на enterprise customer. Long sales cycle.', outcome: 'Compensated высоким LTV ($1.5M+). Payback ~12 months.' },
+      { product: 'Поверхностный startup', situation: 'CAC blended $50, считают здоровым.', action: 'Channel breakdown: organic $0 (50% leads), Facebook $200 (50%). Blended скрывал unhealthy Facebook CAC.', outcome: 'После анализа — focus на organic, кат Facebook spend в 3х.' },
+    ],
+    commonMistakes: [
+      '**CAC только paid.** Sales-team salaries и organic content — тоже CAC.',
+      '**Blended CAC без channel breakdown.** Скрывает unhealthy каналы.',
+      '**Payback без gross margin.** Считают по revenue, переоценивают скорость возврата.',
+      '**Игнор CAC inflation.** Канал работает год — потом стоимость удваивается.',
+      '**Single-channel dependency.** Зависимость от одного канала — operational risk.',
+    ],
+    comparisonTable: {
+      title: 'CAC по типам бизнеса',
+      headers: ['Тип', 'Типичный CAC', 'Payback', 'Главный канал'],
+      rows: [
+        ['B2C subscription', '$30-150', '6-12 мес', 'Paid ads + organic'],
+        ['B2C marketplace', '$50-200', '12-24 мес', 'Paid + referrals'],
+        ['B2B SaaS SMB', '$300-2K', '6-18 мес', 'Inbound + PLG'],
+        ['B2B Enterprise', '$10K-100K', '12-24 мес', 'Sales-driven'],
+        ['Consumer mobile', '$1-15', '3-12 мес', 'App store + viral'],
+      ],
+    },
+    mcq: {
+      question: 'CAC = $400, ARPU = $50/mo, Gross Margin = 60%, Churn = 5%/mo. Какой CAC Payback?',
+      options: ['8 месяцев', '13.3 месяцев', '20 месяцев', 'Невозможно посчитать'],
+      correct: 1,
+      explanation: 'Payback = CAC / (ARPU × Gross Margin) = 400 / (50 × 0.6) = 400 / 30 = 13.3 месяца. Для B2C subscription marginal, для B2B SaaS — приемлемо.',
+    },
+    trueFalse: {
+      statement: 'Organic acquisition не считается в CAC — это бесплатный канал.',
+      correct: false,
+      explanation: 'Нет. Organic требует content production, SEO investment, PR, brand spending, community management. Все эти costs включаются в blended CAC. «Бесплатных» каналов не существует.',
+    },
+  },
+
+  ch10_4: {
+    title: 'Unit economics подписки',
+    definition: 'Subscription unit economics — модель повторяющейся выручки от subscriber-а с фокусом на retention, MRR/ARR, ARPU и churn rate как главные рычаги ценности.',
+    exposition: `**Subscription model** — клиент платит регулярно (monthly/yearly), создавая **recurring revenue**. Это самая привлекательная модель для investors из-за predictability и compounding.
+
+**Главные метрики**:
+- **MRR (Monthly Recurring Revenue)** — sum всех месячных подписок
+- **ARR (Annual Recurring Revenue)** — MRR × 12 или sum yearly contracts
+- **ARPU** — MRR / Active subscribers
+- **Net Revenue Retention (NRR)** — (Starting MRR + Expansion − Churn − Contraction) / Starting MRR. >100% означает рост даже без новых клиентов
+
+**Churn — главный враг subscription**. Monthly churn 5% означает 60% churn в год при cohort accumulation. Subscription business с >10% monthly churn практически не работает.
+
+**Retention curves**. График % active subscribers по месяцам с момента signup. Healthy curve: быстро снижается первые 2-3 месяца, потом стабилизируется на плато (PMF). Unhealthy: linear decay к 0.
+
+**Cohort analysis**. Группировка subscribers по месяцу signup. Видишь, как изменения продукта/маркетинга меняют retention по cohort-ам.
+
+**Главные рычаги subscription**:
+1. **Reduce churn** — improving retention. Самый высокий ROI.
+2. **Increase ARPU** — upsell, pricing optimization, multi-tier plans.
+3. **Expansion revenue** — продавать больше существующим (seats, modules, usage).
+4. **Reduce CAC** — improving funnel efficiency и organic.
+
+**NRR > 100% — Holy Grail SaaS**. Snowflake NRR 165%. Datadog NRR 130%. Это означает: даже если не привлечь ни одного нового клиента, выручка растёт.
+
+**Cohort-based pricing**. Старые когорты на старых ценах — никто не любит «grandfathering» поломки. New cohorts on new prices — стандарт для управления price experimentation.`,
+    simplifiedExposition: `Subscription — это как подписка на спортзал. Клиент платит каждый месяц, ты получаешь предсказуемую выручку. Главное — чтобы он не отписался (churn).
+
+Хороший subscription business: клиенты остаются годами, платят больше со временем (upsell), приводят друзей. Плохой: половина уходит за 3 месяца, остальные платят минимум.`,
+    keyPoints: [
+      '**MRR/ARR — главные метрики.** Predictability — главное преимущество.',
+      '**Churn — главный враг.** 5% monthly = 60% yearly. Critical для health.',
+      '**NRR > 100% — Holy Grail.** Расти без новых клиентов = expansion-driven growth.',
+      '**Cohort analysis обязателен.** Среднее скрывает разницу между cohort.',
+      '**4 рычага: reduce churn, increase ARPU, expansion, reduce CAC.** В порядке ROI.',
+    ],
+    formula: {
+      title: 'Subscription формулы',
+      items: [
+        { label: 'MRR', formula: 'Sum of all monthly subscriptions' },
+        { label: 'ARR', formula: 'MRR × 12 (or annual contracts)' },
+        { label: 'NRR', formula: '(Starting MRR + Expansion − Churn − Contraction) / Starting MRR × 100%' },
+        { label: 'Gross MRR Churn', formula: 'Lost MRR / Starting MRR' },
+        { label: 'Net MRR Churn', formula: '(Lost − Expansion) / Starting MRR — может быть negative!' },
+      ],
+    },
+    comparisonTable: {
+      title: 'Healthy vs Unhealthy subscription metrics',
+      headers: ['Метрика', 'Healthy', 'Marginal', 'Unhealthy'],
+      rows: [
+        ['Monthly Churn', '< 2%', '2-5%', '> 5%'],
+        ['Yearly Churn', '< 10%', '10-25%', '> 25%'],
+        ['NRR', '> 110%', '100-110%', '< 100%'],
+        ['LTV/CAC', '> 3x', '1-3x', '< 1x'],
+        ['Gross Margin', '> 70%', '50-70%', '< 50%'],
+      ],
+    },
+    realExamples: [
+      { product: 'Snowflake', situation: 'NRR 165%.', action: 'Usage-based pricing — клиенты используют больше, платят больше automatically.', outcome: 'Compounding growth: каждый existing customer растёт на 65%/год.' },
+      { product: 'Netflix', situation: 'Mature subscription business.', action: 'Churn 2%/mo, ARPU $15. Focus на content investment для reducing churn.', outcome: 'Стабильный business на 200M+ subscribers.' },
+      { product: 'Heroku (anti-pattern)', situation: 'Subscription с high churn (10%+ monthly).', action: 'Не смогли удержать customers после free tier ended.', outcome: 'Стагнация growth, в итоге слабая позиция в cloud space.' },
+    ],
+    commonMistakes: [
+      '**Focus только на new MRR.** Игнор churn — leaking bucket.',
+      '**Один Churn для всех cohorts.** Старые когорты часто более лояльны.',
+      '**Skipping NRR.** Главная метрика SaaS — игнорируют new-to-SaaS PMs.',
+      '**Expansion как afterthought.** Должен быть first-class product priority.',
+      '**Grandfathering без strategy.** Старые цены навсегда → revenue ceiling.',
+    ],
+    mcq: {
+      question: 'SaaS компания: MRR $1M, expansion +$200K, churn −$100K, contraction −$50K. Какой NRR?',
+      options: ['100%', '105%', '110%', '115%'],
+      correct: 1,
+      explanation: 'NRR = (1000 + 200 − 100 − 50) / 1000 = 1050/1000 = 105%. Это значит: даже без новых customers MRR растёт на 5%/период. Healthy для SaaS.',
+    },
+    trueFalse: {
+      statement: 'Если MRR растёт, subscription business здоровый.',
+      correct: false,
+      explanation: 'Нет. MRR может расти за счёт new customers, скрывая высокий churn. Главная метрика — NRR. NRR < 100% при росте MRR = leaky bucket, который компенсируется acquisition. Долгосрочно нездоровая модель.',
+    },
+  },
+
+  ch10_5: {
+    title: 'Unit economics маркетплейса',
+    definition: 'Marketplace unit economics — экономика платформы с двумя или более сторонами; ключевые метрики: GMV, take rate, liquidity, network effects, отдельные LTV для buyer и seller.',
+    exposition: `**Marketplace** — продукт с **двумя или более сторонами**: buyers и sellers, hosts и guests, drivers и riders. Экономика принципиально отличается от subscription или e-commerce.
+
+**Главные метрики**:
+- **GMV (Gross Merchandise Value)** — общая сумма транзакций через платформу
+- **Take Rate** — % с GMV, который остаётся платформе. Uber ~25%, Airbnb 12-15%, Etsy 6%
+- **Net Revenue** — GMV × Take Rate
+- **Liquidity** — насколько быстро meets supply и demand. На Uber это «время от запроса до водителя». На Airbnb — «доля listings, забронированных за X дней»
+
+**Юнит маркетплейса**. Зависит от модели:
+- **Транзакция**: одна поездка, бронирование, заказ
+- **Buyer**: пользователь, делающий покупки
+- **Seller / Host / Driver**: пользователь, предоставляющий услугу
+- **Listing**: единица supply
+
+PM маркетплейса должен считать **юнит-экономику отдельно для каждой стороны**. Buyer LTV ≠ Seller LTV. Buyer CAC ≠ Seller CAC. Часто стороны субсидируются на разных стадиях.
+
+**Liquidity — главный challenge**. На раннем стадии маркетплейс страдает от **chicken-and-egg**: buyers не приходят без sellers, sellers не приходят без buyers. Решения: subsidise supply first (Uber gave drivers guaranteed earnings), single-side starts (Airbnb host-first), geographic concentration (focus on one city first).
+
+**Network effects** — главный moat маркетплейса. Каждый новый seller увеличивает ценность для buyers. Каждый buyer привлекает sellers. Network effects = winner-take-most market.
+
+**Take rate optimization**. Слишком высокий — sellers уходят. Слишком низкий — платформа нерентабельна. Sweet spot зависит от value-add платформы и alternatives для sellers.
+
+**Антипаттерны**: считать только blended unit economics. Sub-optimal liquidity tracking. Focus на одну сторону, игнор другую. Premature take rate increase.`,
+    simplifiedExposition: `Маркетплейс — это посредник. Ты не продаёшь свой товар, а соединяешь покупателей и продавцов, забирая комиссию.
+
+Главная сложность: чтобы покупатели приходили, нужны продавцы. Чтобы продавцы приходили, нужны покупатели. Это как открыть рынок, когда никого нет — нужно одну сторону «затащить» бесплатно или с subsidy.`,
+    keyPoints: [
+      '**GMV × Take Rate = Net Revenue.** Главное равенство маркетплейса.',
+      '**Liquidity > scale.** Без liquidity scale бесполезен.',
+      '**Юнит-экономика отдельно для buyer и seller.** Часто одну сторону subsidise.',
+      '**Network effects — главный moat.** Защита от копирования.',
+      '**Chicken-and-egg — главный launch challenge.** Subsidise supply или geographic focus.',
+    ],
+    formula: {
+      title: 'Marketplace формулы',
+      items: [
+        { label: 'GMV', formula: 'Total transaction volume through platform' },
+        { label: 'Net Revenue', formula: 'GMV × Take Rate' },
+        { label: 'Liquidity', formula: 'Match rate within X time (e.g. % of Uber requests fulfilled in < 5 min)' },
+        { label: 'Buyer LTV', formula: 'Transactions × ARPU × Buyer Margin / Buyer Churn' },
+        { label: 'Take Rate (industry)', formula: 'Uber 20-25%, Airbnb 12-15%, Etsy 6%, Amazon Marketplace 15%' },
+      ],
+    },
+    comparisonTable: {
+      title: 'Marketplace vs Subscription',
+      headers: ['Параметр', 'Marketplace', 'Subscription'],
+      rows: [
+        ['Юнит', 'Транзакция / buyer / seller', 'Subscriber'],
+        ['Главная метрика', 'GMV × Take Rate', 'MRR × NRR'],
+        ['Главный challenge', 'Liquidity, chicken-and-egg', 'Churn, retention'],
+        ['Moat', 'Network effects', 'Switching costs, brand'],
+        ['CAC dynamics', 'Subsidise одну сторону', 'Direct per subscriber'],
+      ],
+    },
+    realExamples: [
+      { product: 'Airbnb', situation: 'Chicken-and-egg для homes vs travellers.', action: 'Host-first strategy: focus на supply (NYC). Photographers для professional pics. Trust + insurance.', outcome: 'Achieved liquidity, expanded globally, IPO $86B.' },
+      { product: 'Uber', situation: 'Need to scale drivers AND riders одновременно.', action: 'Guaranteed earnings для drivers первые недели в новых городах + low fares for riders.', outcome: 'Created liquidity quickly в каждом новом городе.' },
+      { product: 'OpenTable (subsidising)', situation: 'Restaurants не платят, diners получают free booking.', action: 'Restaurants pay for technology + per-cover. Diners — free.', outcome: 'Achieved liquidity в US restaurants market.' },
+    ],
+    commonMistakes: [
+      '**Blended unit economics.** Buyer и seller имеют разную экономику.',
+      '**Игнорировать liquidity.** GMV растёт, но match rate низкий → user experience плохой.',
+      '**Premature take rate increase.** Sellers уходят к конкурентам.',
+      '**Глобальная экспансия без local liquidity.** Маркетплейс работает локально, не глобально.',
+      '**Network effects assumed.** Network effects появляются только при правильной mechanics.',
+    ],
+    mcq: {
+      question: 'Marketplace имеет GMV $10M/month, Take Rate 15%, но liquidity (match rate) 30%. Какое первое действие?',
+      options: ['Увеличить Take Rate для higher revenue', 'Сфокусироваться на liquidity (improving match rate) — без этого user experience плохой', 'Запустить в новых городах', 'Игнорировать liquidity'],
+      correct: 1,
+      explanation: '30% match rate = 70% запросов не закрываются. Это убивает user experience и retention. Без liquidity GMV growth — illusion. Focus сначала на liquidity, потом scale.',
+    },
+    trueFalse: {
+      statement: 'Buyer и seller на маркетплейсе имеют одинаковые unit economics, можно считать blended.',
+      correct: false,
+      explanation: 'Нет. Buyer и seller часто имеют принципиально разную экономику: разные CAC, разные LTV, разный churn. Платформы часто subsidise одну сторону для launch. Blended скрывает критически важные signals.',
+    },
+  },
 };
