@@ -4435,4 +4435,360 @@ PM маркетплейса должен считать **юнит-эконом�
       explanation: 'Нет. Buyer и seller часто имеют принципиально разную экономику: разные CAC, разные LTV, разный churn. Платформы часто subsidise одну сторону для launch. Blended скрывает критически важные signals.',
     },
   },
+
+  ch11_1: {
+    title: 'Структура решения кейса',
+    definition: 'Структура решения продуктового кейса — это 9-элементный фреймворк: Summary, Context, Diagnosis, Options, Recommendation, Why, Impact, Risks, Next steps.',
+    exposition: `**Продуктовый кейс на собеседовании** — это короткий тест PM-мышления за 30-45 минут. Сильный ответ имеет **жёсткую структуру**, которая показывает интервьюеру: системность, glubokoe мышление, способность принимать решения с trade-offs.
+
+**9-элементная структура сильного ответа**:
+
+**1. Summary (1-2 предложения)**. Главная рекомендация и почему. Многие interviewer-ы решают на этом этапе.
+
+**2. Context + допущения**. Какой продукт, на каком рынке, какая стадия. Явные допущения, которые нужно подтвердить.
+
+**3. Diagnosis**. В чём **реальная** проблема. Не симптом, а корневая причина. Это самый важный шаг — большинство кандидатов пропускают и сразу прыгают к решениям.
+
+**4. Options**. 3 варианта решения. Не один — это показывает узкое мышление. Не пять — слишком много, нет фокуса.
+
+**5. Recommendation**. Один выбор с явным обоснованием.
+
+**6. Why this**. Критерии выбора. Почему этот option, а не другие.
+
+**7. Expected impact**. Конкретные метрики и ожидаемое изменение.
+
+**8. Risks**. Что может пойти не так. Что мы делаем, чтобы митigate.
+
+**9. Next steps**. Что делаем первым. Discovery? Experiment? PRD?
+
+**Главные принципы**: **не прыгай в фичи** без понимания проблемы. **Думай голосом** — explain свой process. **Структурируй сразу** — «Давайте я разберу на 4 части...». **Подтверждай assumptions** с интервьюером.
+
+**Топ-3 ошибки**: прыжок в solutions, отсутствие quantification (impact в числах), отсутствие risks. Кейсы выигрываются глубиной мышления, не правильным ответом.`,
+    simplifiedExposition: `Кейс на собеседовании — это как презентация инвестору, только за 30 минут. Тебя оценивают не за «правильный ответ», а за **структуру мышления**.
+
+Сильный ответ: summary → context → diagnosis → 3 options → recommendation → impact → risks → next steps. Слабый: «Я бы добавил фичу X». Структура — это половина оценки.`,
+    keyPoints: [
+      '**9 элементов: Summary → Context → Diagnosis → Options → Recommendation → Why → Impact → Risks → Next.**',
+      '**Diagnosis — самый важный шаг.** Корневая причина, не симптом.',
+      '**3 options, не 1 и не 5.** Показывает structured thinking.',
+      '**Impact в числах.** «D7 retention +5 пп», не «улучшит engagement».',
+      '**Risks обязательны.** Без них ответ выглядит наивно.',
+    ],
+    framework: {
+      title: '9 элементов структуры ответа',
+      items: [
+        { name: 'Summary', description: 'Главная рекомендация в 1-2 предложениях. Сразу.' },
+        { name: 'Context + допущения', description: 'Продукт, рынок, стадия. Явные предположения.' },
+        { name: 'Diagnosis', description: 'Реальная проблема, не симптом. Why this matters.' },
+        { name: '3 Options', description: '3 варианта решения с trade-offs.' },
+        { name: 'Recommendation', description: 'Один выбор с обоснованием.' },
+        { name: 'Why this', description: 'Критерии выбора. Почему этот, не другие.' },
+        { name: 'Expected impact', description: 'Метрики и ожидаемое изменение в числах.' },
+        { name: 'Risks', description: 'Что может пойти не так и как митигируем.' },
+        { name: 'Next steps', description: 'Конкретный first action: discovery, experiment, PRD.' },
+      ],
+    },
+    realExamples: [
+      { product: 'Google PM interview', situation: 'Standard product case structure expected.', action: 'Кандидаты с structured approach (9-element) consistently outperform.', outcome: 'Interview руководства measures structure quality прежде всего.' },
+      { product: 'Meta RPM Program', situation: 'Очень конкурентная программа.', action: 'Кандидаты, прыгающие в solutions без diagnosis, режутся в первом раунде.', outcome: '70%+ отказов — из-за слабой структуры мышления.' },
+      { product: 'Многие startup interviews', situation: 'Less formal, но структура всё равно ценится.', action: 'Structured candidates dominate.', outcome: 'Структура — главный signal hire/no-hire.' },
+    ],
+    commonMistakes: [
+      '**Прыжок в solution.** «Я бы добавил X» без context и diagnosis.',
+      '**Только один option.** Показывает узкое мышление.',
+      '**Impact без чисел.** «Это улучшит engagement» = пусто.',
+      '**Без risks.** Ответ выглядит overconfident и поверхностный.',
+      '**Без structure announcement.** Не сказал «я разберу по 4 шагам» — interviewer не понимает direction.',
+    ],
+    visual: {
+      type: 'flow',
+      title: 'Structure of strong case answer',
+      items: ['Summary', 'Context', 'Diagnosis', 'Options', 'Recommendation', 'Impact', 'Risks', 'Next steps'],
+    },
+    mcq: {
+      question: 'Интервьюер задаёт product case. Что делать первым?',
+      options: ['Сразу предложить решение, которое первым приходит в голову', 'Сказать «я разберу за 4 шага: clarify → diagnose → options → recommend», и попросить разрешения уточнить assumptions', 'Спросить про метрики', 'Подумать молча 3 минуты'],
+      correct: 1,
+      explanation: 'Announcement structure показывает structured thinking сразу. Clarifying questions подтверждают допущения. Это снижает risk решения «не той задачи» и показывает дисциплину.',
+    },
+    trueFalse: {
+      statement: 'В case interview главное — найти правильный ответ.',
+      correct: false,
+      explanation: 'Нет. Главное — продемонстрировать качество мышления через структуру, diagnosis, trade-offs и risks. «Правильного» ответа часто нет — есть хорошо обоснованные.',
+    },
+  },
+
+  ch11_2: {
+    title: 'Типы продуктовых кейсов',
+    definition: 'Продуктовые кейсы делятся на 6 типов: Product Sense (улучши продукт), Metric drop (метрика упала), Growth (как вырастить), Launch (запусти MVP), Monetization (как монетизировать), Strategy (войти на рынок). Каждый требует своей структуры.',
+    exposition: `Не все кейсы одинаковы. Каждый тип проверяет разные PM-навыки и требует **разной структуры ответа**. Подготовка по типам — главный leverage point.
+
+**1. Product Sense («Улучши продукт X»)**. Проверяют: customer empathy, prioritization, structured thinking. Структура: clarify goal → define users → segment → identify pains → generate solutions → prioritize → metrics.
+
+**2. Metric drop («DAU упал на 20% — почему?»)**. Проверяют: analytical thinking, data instincts, diagnosis skills. Структура: clarify scope → check data quality → segment analysis → check funnel → external factors → release/incidents → hypotheses → next steps.
+
+**3. Growth («Как вырастить retention?»)**. Проверяют: AARRR understanding, experimentation mindset. Структура: clarify metric → analyze funnel → identify biggest leak → hypotheses → prioritization → experiment design → metrics.
+
+**4. Launch / MVP («Запусти новый продукт»)**. Проверяют: strategy, segmentation, GTM thinking. Структура: clarify scope → market analysis → target segment → value prop → MVP scope → GTM → success metrics → risks.
+
+**5. Monetization («Как монетизировать X?»)**. Проверяют: business thinking, unit economics, pricing strategy. Структура: clarify business → user value → willingness to pay → pricing model options → unit economics → recommendation.
+
+**6. Strategy («Войти ли на рынок Y?»)**. Проверяют: strategic thinking, market analysis. Структура: market size → competition → moat → fit с current strengths → GTM → financials → risks.
+
+**Главный совет**: **узнавай тип кейса в первые 30 секунд** и используй соответствующую структуру. «Улучши Spotify» = product sense. «Почему упал DAU» = metric drop. «Как монетизировать Notion» = monetization. Каждый тип имеет свой playbook.`,
+    simplifiedExposition: `Кейсы как блюда в ресторане: hamburger, sushi, pasta, pizza. Каждое блюдо требует своих ингредиентов и техники приготовления.
+
+«Improve product X» — это product sense, требует customer focus. «DAU упал» — это analytical diagnosis. «Войти на рынок Y» — это strategy. Узнаёшь тип сразу — используешь правильную структуру.`,
+    keyPoints: [
+      '**6 типов: Product Sense, Metric Drop, Growth, Launch, Monetization, Strategy.**',
+      '**Каждый тип имеет свою структуру.** Не один-fits-all template.',
+      '**Узнавай тип в первые 30 секунд.** Это меняет твой подход полностью.',
+      '**Product Sense — самый частый.** Готовься больше всего.',
+      '**Strategy — самый редкий и сложный.** Senior+ позиции.',
+    ],
+    comparisonTable: {
+      title: 'Типы продуктовых кейсов',
+      headers: ['Тип', 'Вопрос кейса', 'Что проверяют'],
+      rows: [
+        ['Product Sense', 'Улучши продукт X', 'Пользовательское мышление, приоритизация'],
+        ['Metric Drop', 'DAU упал на 20% — почему?', 'Аналитика, диагностика, данные'],
+        ['Growth', 'Как вырастить retention?', 'AARRR, воронки, эксперименты'],
+        ['Launch MVP', 'Запусти новый продукт', 'Стратегия, GTM, приоритизация'],
+        ['Monetization', 'Как монетизировать X?', 'Unit-экономика, pricing'],
+        ['Strategy', 'Войти на рынок Y?', 'TAM, конкуренты, moat'],
+      ],
+    },
+    realExamples: [
+      { product: 'Google PM interview', situation: 'Standard кейсы: product sense + analytical.', action: 'Кандидат должен показать оба типа за 2 интервью.', outcome: 'Структурированные кандидаты пробивают первый раунд.' },
+      { product: 'Meta interview loop', situation: '4 раунда, разные типы кейсов.', action: 'Product sense + execution + leadership + analytical.', outcome: 'Полноценная оценка по разным dimensions.' },
+      { product: 'Startup interviews', situation: 'Менее formal, более business-oriented.', action: 'Часто Strategy + Growth + Monetization.', outcome: 'Проверяют business thinking, не только product.' },
+    ],
+    commonMistakes: [
+      '**Один template для всех кейсов.** Product sense framework для metric drop = провал.',
+      '**Не задаёшь clarifying questions.** Без них непонятно, какого типа кейс.',
+      '**Не announces structure.** Interviewer не понимает direction.',
+      '**Игнор analytical часть в product sense.** «Сделаем X» без метрик и приоритизации.',
+    ],
+    mcq: {
+      question: 'Интервьюер спрашивает: «D7 retention в нашем mobile app упал на 15% за месяц. Что произошло и что делать?». Какой тип кейса?',
+      options: ['Product Sense', 'Metric Drop', 'Growth', 'Strategy'],
+      correct: 1,
+      explanation: 'Metric drop case — главное аналитическое: clarify → segment → funnel → external factors → releases → hypotheses. Не product sense (не «улучши»), не growth (не «как поднять»).',
+    },
+    trueFalse: {
+      statement: 'Все продуктовые кейсы решаются одной универсальной структурой.',
+      correct: false,
+      explanation: 'Нет. Каждый тип требует своей структуры. Product sense ≠ Metric drop ≠ Strategy. Использовать одну структуру для всех — провал. Узнавай тип кейса первым делом.',
+    },
+  },
+
+  ch11_3: {
+    title: 'Case Cracking Framework',
+    definition: 'Case cracking framework — универсальный алгоритм работы с продуктовым кейсом: Clarify → Structure → Analyze → Synthesize → Recommend. Помогает не растеряться и держать дисциплину под давлением интервью.',
+    exposition: `**Case cracking** — это **алгоритм** работы с любым кейсом. Не replace специфическую структуру под тип кейса, а скелет, на который она надевается.
+
+**Step 1: Clarify (2-3 минуты)**. Уточни цель кейса, контекст, scope. Подтверди assumptions с интервьюером. Это критично — половина провалов кейсов из-за «решал не ту задачу». Примеры вопросов: какой продукт? Какая стадия? Какой регион? Какая time horizon? Какой главный goal?
+
+**Step 2: Structure (1-2 минуты)**. Объяви свою структуру вслух. «Я разберу за 4 шага: A → B → C → D». Это показывает structured thinking сразу и даёт интервьюеру возможность направить, если структура неверная.
+
+**Step 3: Analyze (10-15 минут)**. Иди по своей структуре. На каждом шаге: формулируй insights, проверяй с интервьюером, иди дальше. Главное — **глубина**, не скорость. Если застрял — лучше сказать «дайте мне 30 секунд подумать», чем filler.
+
+**Step 4: Synthesize (3-5 минут)**. Соедини инсайты в recommendation. «Из анализа следует X, потому что Y». Это самая сложная часть — связать данные в narrative.
+
+**Step 5: Recommend (2-3 минуты)**. Конкретная рекомендация с обоснованием, impact, risks, next steps.
+
+**Главные принципы**:
+- **Думай вслух**. Interviewer оценивает process, не только результат.
+- **Подтверждай assumptions**. «Я предполагаю, что X. Верно?»
+- **Структура over speed**. Лучше пройти 80% структуры качественно, чем 100% поверхностно.
+- **Не бойся пауз**. 30 секунд молчания лучше, чем filler talk.
+- **Confirm understanding в финале**. «Резюмируя моё решение: ...»`,
+    simplifiedExposition: `Case cracking — это как алгоритм: 1) пойми что спрашивают, 2) объяви как будешь решать, 3) реши, 4) собери ответ, 5) дай рекомендацию.
+
+Без алгоритма легко потеряться под давлением интервью. С ним — даже если волнуешься, идёшь по шагам.`,
+    keyPoints: [
+      '**5 шагов: Clarify → Structure → Analyze → Synthesize → Recommend.**',
+      '**Clarify обязателен.** Половина провалов — «решал не ту задачу».',
+      '**Announce structure.** Объяви, как будешь решать.',
+      '**Думай вслух.** Process > результат.',
+      '**Подтверждай assumptions.** «Я предполагаю X, верно?».',
+    ],
+    framework: {
+      title: '5-step Case Cracking',
+      items: [
+        { name: 'Clarify', description: 'Уточни цель, контекст, scope. Подтверди assumptions. 2-3 минуты.' },
+        { name: 'Structure', description: 'Объяви свою структуру вслух. «Я разберу за 4 шага». 1-2 минуты.' },
+        { name: 'Analyze', description: 'Иди по структуре, формулируй insights. Самая длинная часть.' },
+        { name: 'Synthesize', description: 'Соедини insights в narrative. «Из анализа следует X».' },
+        { name: 'Recommend', description: 'Конкретная рекомендация + impact + risks + next steps.' },
+      ],
+    },
+    realExamples: [
+      { product: 'Reforge case interview prep', situation: 'Самая популярная программа подготовки.', action: 'Тренируют именно 5-step framework на 30+ кейсах.', outcome: 'Стандартный подход в индустрии.' },
+      { product: 'Google APM interview', situation: 'Структурированный candidate vs unstructured.', action: 'Structured всегда побеждает, даже если содержательно слабее.', outcome: 'Process — главный signal.' },
+      { product: 'Многие неподготовленные кандидаты', situation: 'Прыгают в solution без clarify.', action: 'Через 10 минут понимают, что не понял задачу.', outcome: 'Провал ещё до synthesis.' },
+    ],
+    commonMistakes: [
+      '**Skip clarify.** Кандидат сразу решает, не уточняя задачу.',
+      '**Нет announce structure.** Interviewer не понимает direction.',
+      '**Молчаливое думанье.** Process не виден — оценить нельзя.',
+      '**Skip synthesize.** Прыжок от analyze к recommend без объяснения логики.',
+      '**Speed over depth.** Прошёл всю структуру поверхностно вместо deep work.',
+    ],
+    mcq: {
+      question: 'Кандидат уверенно решает кейс «улучши Notion» и через 5 минут даёт детальное решение. Что упустил?',
+      options: ['Ничего не упустил — быстро = хорошо', 'Clarify questions — какой сегмент? Какая стадия Notion? Какая цель? Без этого решение может быть не той задачи', 'Должен использовать другой framework', 'Слишком много структуры'],
+      correct: 1,
+      explanation: 'Скорость без clarify = решение «не той задачи». Notion для SMB и enterprise — разные продукты. Для retention vs activation — разные подходы. Clarify — 2-3 минуты, экономит весь кейс.',
+    },
+    trueFalse: {
+      statement: 'Главное в case cracking — быстро найти ответ. Чем быстрее, тем лучше.',
+      correct: false,
+      explanation: 'Нет. Главное — качество структуры и глубина мышления. Быстрый поверхностный ответ хуже, чем глубокий с правильной структурой. Interviewer оценивает process, не speed.',
+    },
+  },
+
+  ch11_4: {
+    title: 'Как структурировать ответ',
+    definition: 'Структура ответа в кейсе — visible framework, который PM объявляет в начале, держит на протяжении всего обсуждения и использует для итогового synthesis. Главное — communicate structure, не только думать структурно.',
+    exposition: `**Структура ответа — это visible framework**, который интервьюер видит и слышит. Не достаточно думать структурно — нужно **показать** структуру.
+
+**Три уровня структуры**:
+
+**Level 1 — Overall structure**. Объявляется в первые 2 минуты после clarify. «Я разберу этот кейс за 4 шага: market context → user segmentation → solution options → recommendation with metrics». Это даёт интервьюеру картину всего ответа сразу.
+
+**Level 2 — Local structure**. Внутри каждого шага. «Сейчас я работаю над segmentation. Я рассмотрю 3 потенциальных сегмента: A, B, C. Для каждого оценю по 3 критериям: size, willingness to pay, alignment с product strengths».
+
+**Level 3 — Verbal markers**. Сигналы переходов: «теперь я перехожу к step 2», «следующий критерий — это X», «соединяя три insight, я прихожу к recommendation».
+
+**Главные принципы**:
+
+**Speak the structure out loud**. Даже если ты держишь структуру в голове, интервьюер не знает об этом. «I'll cover 4 things: X, Y, Z, W» — критическое предложение.
+
+**Refer back to structure**. «Closing out segmentation, moving to solutions». Это показывает дисциплину и confidence.
+
+**Visual structure если возможно**. Whiteboard или paper — рисуй boxes, arrows, trees. Visual structure × 2 better, чем only verbal.
+
+**Synthesize в конце**. «Резюмируя: моё решение — X, потому что Y. Главные ожидаемые impact: A, B. Главные risks: C, D». Это закрывает loop.
+
+**Антипаттерны**: structure только в голове (не виден), слишком сложная structure (5+ шагов — никто не запомнит), changes structure mid-way (потеря consistency).`,
+    simplifiedExposition: `Структура ответа — это GPS для интервьюера. Без неё он теряется в твоих мыслях.
+
+Хороший кандидат говорит: «Я разберу за 4 шага: A → B → C → D». И потом громко проходит каждый: «Сейчас A, теперь B, далее C». Плохой думает структурно, но молча — интервьюер не видит.`,
+    keyPoints: [
+      '**3 уровня: overall + local + verbal markers.**',
+      '**Speak the structure out loud.** Не только думай.',
+      '**Refer back.** «Closing out X, moving to Y».',
+      '**Visual когда возможно.** Whiteboard рисунки усиливают.',
+      '**Synthesize в конце.** «Резюмируя: моё решение X, потому что Y».',
+    ],
+    framework: {
+      title: '3 уровня структуры',
+      items: [
+        { name: 'Overall', description: 'Объявляется в первые 2 минуты после clarify. 3-5 главных шагов.' },
+        { name: 'Local', description: 'Внутри каждого шага — подструктура. Например, 3 сегмента × 3 критерия.' },
+        { name: 'Verbal markers', description: '«Step 1...», «Moving to step 2», «Synthesizing across all insights».' },
+      ],
+    },
+    realExamples: [
+      { product: 'Top tier candidates', situation: 'Используют 2-уровневую структуру с whiteboard.', action: 'Overall structure написана. Каждый шаг разбирается с local structure.', outcome: 'Interviewer easily follows, scores высоко на process.' },
+      { product: 'Многие unsuccessful candidates', situation: 'Структура только в голове.', action: 'Интервьюер слышит discrete points без connecting tissue.', outcome: 'Получает feedback «structure was unclear».' },
+      { product: 'Reforge / Lewis Lin coaching', situation: 'Тренируют именно visible structure.', action: '«Always say what you will say, then say it, then say what you said».', outcome: 'Главный leverage point для improvement.' },
+    ],
+    commonMistakes: [
+      '**Структура только в голове.** Interviewer не видит.',
+      '**Слишком сложная.** 5+ шагов — никто не запомнит.',
+      '**Changes mid-way.** Объявил 4 шага, делает 6 — потеря consistency.',
+      '**Skip synthesis.** Detailed analyze, потом «So I would do X» — нет логического connection.',
+      '**No visual.** Если позволяет формат — рисуй.',
+    ],
+    mcq: {
+      question: 'Кандидат с глубоким анализом получает feedback «structure was unclear». Что улучшить?',
+      options: ['Сделать анализ глубже', 'Speak structure out loud — объявить overall framework и markers переходов между шагами', 'Решать быстрее', 'Использовать только один framework'],
+      correct: 1,
+      explanation: 'Глубокий analysis не помогает, если interviewer не видит структуру. Решение — verbal markers: announce overall framework, refer back at transitions, synthesize в конце.',
+    },
+    trueFalse: {
+      statement: 'Если PM думает структурно, не обязательно говорить структуру вслух — интервьюер заметит.',
+      correct: false,
+      explanation: 'Нет. Interviewer не читает мысли. Если не объявить структуру и не использовать verbal markers — feedback будет «structure was unclear». Visible structure — главный leverage point.',
+    },
+  },
+
+  ch11_5: {
+    title: 'Кейс-презентация',
+    definition: 'Кейс-презентация — формат presentation финального продуктового решения перед группой interviewers (часто senior PMs и executives). Требует strong storytelling, visualization и handling tough questions.',
+    exposition: `**Кейс-презентация** — финальный раунд в senior PM-собеседованиях (часто называется case study presentation или strategy presentation). Тебе дают кейс заранее (1-7 дней), готовишь презентацию, представляешь на 30-60 минут перед группой interviewers.
+
+**Структура презентации (20-30 slides)**:
+1. **Executive summary** (1 slide). Главная рекомендация в 3 пунктах.
+2. **Context + assumptions** (2-3 slides). Что мы знаем, что предполагаем.
+3. **Diagnosis / market analysis** (3-5 slides). Корневая проблема + market context.
+4. **User research / segmentation** (3-5 slides). Кому решаем проблему.
+5. **Options analysis** (3-5 slides). 3 варианта с trade-offs.
+6. **Recommendation** (2-3 slides). Выбор + обоснование.
+7. **Implementation plan** (3-5 slides). Roadmap, milestones, resources.
+8. **Metrics + success criteria** (2-3 slides). Как поймём success.
+9. **Risks + mitigation** (2-3 slides). Что может пойти не так.
+10. **Appendix** (10+ slides). Детальные расчёты, источники, additional analysis.
+
+**Главные принципы**:
+
+**Story over slides**. Презентация — это **storytelling**, не показ slides. Каждый slide поддерживает narrative.
+
+**Visual > text**. Чарты, диаграммы, frameworks — better чем bullet points. Slide должен читаться за 5 секунд.
+
+**Anticipate questions**. Подготовь back-up slides на 10-20 expected questions. Они показывают глубину анализа.
+
+**Confident handling tough questions**. «Great question. My current thinking is X because Y. I'd want to test that with...».
+
+**Recommendation upfront**. Executive summary в первом slide. Не строй suspense до 15-го слайда.
+
+**Антипаттерны**: too many slides (40+), text-heavy slides, weak recommendation, weak risks, no Q&A preparation.`,
+    simplifiedExposition: `Кейс-презентация — это как защита диссертации. Тебе дают тему, готовишь за неделю, представляешь перед комиссией.
+
+Главное — storytelling. Не «вот мои 30 slides», а «вот моя история: проблема X, я провёл analysis Y, решение Z, expected impact W». Slides — это поддержка, не сам ответ.`,
+    keyPoints: [
+      '**20-30 slides структура.** Executive summary в первом slide.',
+      '**Story > slides.** Презентация = narrative, slides — support.',
+      '**Visual > text.** 5-секундное чтение per slide.',
+      '**Anticipate questions.** Back-up slides для expected questions.',
+      '**Confident в tough questions.** «My current thinking is X».',
+    ],
+    framework: {
+      title: 'Структура кейс-презентации',
+      items: [
+        { name: 'Executive Summary', description: '1 slide — главная рекомендация в 3 пунктах. Сразу.' },
+        { name: 'Context + Diagnosis', description: '5-7 slides — что мы знаем, корневая проблема.' },
+        { name: 'Analysis (Users, Market, Options)', description: '10-15 slides — глубокий разбор с visuals.' },
+        { name: 'Recommendation', description: '3-5 slides — выбор + обоснование.' },
+        { name: 'Plan + Metrics + Risks', description: '5-7 slides — implementation, success, mitigation.' },
+        { name: 'Appendix', description: '10+ slides — детали, источники, back-up answers.' },
+      ],
+    },
+    realExamples: [
+      { product: 'Senior PM at FAANG', situation: 'Final round = case presentation.', action: 'Кандидат готовит 25 slides за неделю, презентует 45 минут + 15 минут Q&A.', outcome: 'Главный signal — quality of strategic thinking + presentation skills.' },
+      { product: 'Strong vs weak presentation', situation: '60% strong кандидатов имеют executive summary в первом slide.', action: 'Weak кандидаты building suspense до 15+ слайдов.', outcome: 'Strong wins — interviewer хочет видеть recommendation сразу.' },
+      { product: 'Преподготовка с peers', situation: 'Сильные кандидаты прогоняют presentation на peers 3-5 раз до actual interview.', action: 'Identified weak slides, anticipated questions, refined story.', outcome: 'Polished output, confident delivery.' },
+    ],
+    commonMistakes: [
+      '**Слишком много slides.** 40+ — interviewer теряет фокус.',
+      '**Text-heavy slides.** Bullet points instead of visuals.',
+      '**Weak executive summary.** Buried recommendation в slide 15.',
+      '**No Q&A preparation.** Surprised by obvious questions.',
+      '**Weak risks section.** Признак superficial анализа.',
+      '**Reading slides.** Если читаешь — не нужен ты, нужен только deck.',
+    ],
+    mcq: {
+      question: 'PM готовит case presentation для senior position. Когда нужно показать главную рекомендацию?',
+      options: ['В конце, для финального impact', 'В executive summary slide (первый или второй slide) — interviewer хочет видеть recommendation сразу', 'В середине презентации', 'Только при прямом вопросе'],
+      correct: 1,
+      explanation: 'Executive summary upfront — стандарт. Interviewer хочет понять recommendation сразу, потом проверить логику. Building suspense — bad presentation practice в business contexts.',
+    },
+    trueFalse: {
+      statement: 'Кейс-презентация — это в основном о том, как красиво сделать slides.',
+      correct: false,
+      explanation: 'Нет. Это в основном о storytelling и strategic thinking. Slides поддерживают narrative, но сами не выигрывают. Strong recommendation + solid analysis + confident delivery — главное.',
+    },
+  },
 };
