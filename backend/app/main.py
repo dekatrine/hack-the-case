@@ -152,8 +152,9 @@ def pick_steps_for_case(*, case_text: str, track_id: str | None, track_name: str
         f"Тип трека: {track_id or 'business'}\n\n"
         f"Каталог доступных шагов (выбирай только из этих id):\n{catalog}\n\n"
         f"Текст кейса:\n{case_text[:4000]}\n\n"
-        "Выбери 6–9 шагов из каталога, которые лучше всего подходят именно к этому кейсу, "
-        "и расставь их в логическом порядке прохождения. Верни строго JSON с полем stepIds."
+        "Выбери СТРОГО 4–6 шагов, которые наиболее точно раскрывают суть именно этого кейса. "
+        "Не добавляй шаги «на всякий случай» — лучше короткий точный маршрут, чем длинный общий. "
+        "Расставь шаги в логическом порядке прохождения. Верни строго JSON с полем stepIds."
     )
 
     try:
@@ -169,12 +170,17 @@ def pick_steps_for_case(*, case_text: str, track_id: str | None, track_name: str
     return _parse_step_ids(raw, allowed_ids)
 
 
+MAX_PICKED_STEPS = 6
+
+
 def _parse_step_ids(raw: str, allowed_ids: list[str]) -> list[str]:
-    """Аккуратно вытащить stepIds из ответа LLM, ограничив их валидным каталогом."""
+    """Аккуратно вытащить stepIds из ответа LLM, ограничив их валидным каталогом.
+
+    Возвращает не более MAX_PICKED_STEPS шагов: если LLM прислал больше,
+    обрезаем хвост, чтобы маршрут оставался коротким и фокусным."""
     if not raw:
         return []
     text = raw.strip()
-    # Найти первый { ... } блок JSON, чтобы пережить случайный prefix/suffix
     match = re.search(r"\{.*\}", text, re.DOTALL)
     if not match:
         return []
@@ -196,6 +202,8 @@ def _parse_step_ids(raw: str, allowed_ids: list[str]) -> list[str]:
         if step_id in allowed_set and step_id not in seen:
             seen.add(step_id)
             ordered.append(step_id)
+            if len(ordered) >= MAX_PICKED_STEPS:
+                break
     return ordered
 
 
