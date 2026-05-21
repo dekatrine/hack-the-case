@@ -11,6 +11,7 @@ class GenerateCaseRequest(BaseModel):
 
 class GenerateCaseResponse(BaseModel):
     caseText: str
+    suggestedStepIds: list[str] = Field(default_factory=list)
 
 
 class GenerateInterviewRequest(BaseModel):

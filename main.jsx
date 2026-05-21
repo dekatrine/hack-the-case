@@ -338,19 +338,28 @@ const ChapterCard = ({ chapter }) => (
   </div>
 );
 
-const getTrackSteps = (track, steps) => {
+const getTrackSteps = (track, steps, overrideIds = null) => {
+  const stepById = new Map(steps.map((step) => [step.id, step]));
+  const seen = new Set();
+  const dedupe = (ids) => ids.filter((id) => {
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+
+  // AI override: если backend вернул подобранный список — используем его,
+  // оставляя только id, которые реально существуют в каталоге шагов.
+  if (Array.isArray(overrideIds) && overrideIds.length > 0) {
+    const aiSteps = dedupe(overrideIds)
+      .map((id) => stepById.get(id))
+      .filter(Boolean);
+    if (aiSteps.length > 0) return aiSteps;
+  }
+
   const ids = track?.chapters?.flatMap((chapter) => chapter.stepIds || []) || [];
   if (ids.length === 0) return steps;
 
-  const stepById = new Map(steps.map((step) => [step.id, step]));
-  const seen = new Set();
-
-  return ids
-    .filter((id) => {
-      if (seen.has(id)) return false;
-      seen.add(id);
-      return true;
-    })
+  return dedupe(ids)
     .map((id) => stepById.get(id))
     .filter(Boolean);
 };
@@ -836,11 +845,11 @@ const MobileStepStrip = ({ steps, activeIdx, answers, onPick }) => {
 };
 
 /* ──────────────────────────── Workspace ─────────────────────────────── */
-const Workspace = ({ caseText, steps, track, onEvaluate, evaluation, onBack }) => {
+const Workspace = ({ caseText, steps, track, aiStepIds, onEvaluate, evaluation, onBack }) => {
   const [activeIdx, setActiveIdx] = useState(0);
   const [answers, setAnswers] = useState({});
   const [coachOpen, setCoachOpen] = useState(false);
-  const trackSteps = useMemo(() => getTrackSteps(track, steps), [track, steps]);
+  const trackSteps = useMemo(() => getTrackSteps(track, steps, aiStepIds), [track, steps, aiStepIds]);
   const step = trackSteps[Math.min(activeIdx, trackSteps.length - 1)];
   const activeChapter = getActiveChapter(track, step);
 
@@ -1628,6 +1637,7 @@ const App = () => {
   const [learnAutoReview, setLearnAutoReview] = useState(false);
   const [track, setTrack] = useState(null);
   const [caseText, setCaseText] = useState('');
+  const [aiStepIds, setAiStepIds] = useState([]);
   const [busy, setBusy] = useState(false);
   const [evaluation, setEvaluation] = useState(null);
 
@@ -1642,6 +1652,7 @@ const App = () => {
     try {
       const res = await api.generate(params);
       setCaseText(res.caseText);
+      setAiStepIds(Array.isArray(res.suggestedStepIds) ? res.suggestedStepIds : []);
       setScreen('workspace');
     } catch (e) {
       setErr(e.message);
@@ -1714,6 +1725,7 @@ const App = () => {
             caseText={caseText}
             steps={config.steps}
             track={track}
+            aiStepIds={aiStepIds}
             onEvaluate={evaluate}
             evaluation={evaluation}
             onBack={() => setScreen('track')}

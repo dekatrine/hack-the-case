@@ -1,4 +1,6 @@
 import importlib.util
+import json
+import re
 from pathlib import Path
 from typing import Union
 
@@ -13,6 +15,7 @@ from .prompts import (
     INTERVIEW_CHECK_SYSTEM,
     INTERVIEW_GENERATION_SYSTEM,
     RUBRIC_SYSTEM,
+    STEP_SELECTION_SYSTEM,
     get_coach_system_prompt,
 )
 from .schemas import (
@@ -118,9 +121,82 @@ def generate_case(payload: GenerateCaseRequest) -> GenerateCaseResponse:
 
     try:
         case_text = call_yandex_gpt(CASE_GENERATION_SYSTEM, prompt, temperature=0.8)
-        return GenerateCaseResponse(caseText=case_text)
+        suggested_step_ids = pick_steps_for_case(
+            case_text=case_text,
+            track_id=payload.trackId,
+            track_name=track_name,
+        )
+        return GenerateCaseResponse(
+            caseText=case_text,
+            suggestedStepIds=suggested_step_ids,
+        )
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+def pick_steps_for_case(*, case_text: str, track_id: str | None, track_name: str) -> list[str]:
+    """Спросить у LLM, какие шаги из каталога CASE_STEPS подходят к данному кейсу.
+
+    Возвращает упорядоченный список stepIds. Если LLM не справился — пустой
+    список (фронт упадёт на статические step_ids трека)."""
+    allowed_ids = [step["id"] for step in CASE_STEPS]
+    catalog_lines = []
+    for step in CASE_STEPS:
+        title = step.get("title", "")
+        description = step.get("description", "")
+        catalog_lines.append(f"- {step['id']}: {title} — {description}")
+    catalog = "\n".join(catalog_lines)
+
+    prompt = (
+        f"Направление: {track_name}\n"
+        f"Тип трека: {track_id or 'business'}\n\n"
+        f"Каталог доступных шагов (выбирай только из этих id):\n{catalog}\n\n"
+        f"Текст кейса:\n{case_text[:4000]}\n\n"
+        "Выбери 6–9 шагов из каталога, которые лучше всего подходят именно к этому кейсу, "
+        "и расставь их в логическом порядке прохождения. Верни строго JSON с полем stepIds."
+    )
+
+    try:
+        raw = call_yandex_gpt(
+            STEP_SELECTION_SYSTEM,
+            prompt,
+            temperature=0.2,
+            max_tokens=400,
+        )
+    except RuntimeError:
+        return []
+
+    return _parse_step_ids(raw, allowed_ids)
+
+
+def _parse_step_ids(raw: str, allowed_ids: list[str]) -> list[str]:
+    """Аккуратно вытащить stepIds из ответа LLM, ограничив их валидным каталогом."""
+    if not raw:
+        return []
+    text = raw.strip()
+    # Найти первый { ... } блок JSON, чтобы пережить случайный prefix/suffix
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        return []
+    try:
+        parsed = json.loads(match.group(0))
+    except json.JSONDecodeError:
+        return []
+    candidates = parsed.get("stepIds") or parsed.get("step_ids") or []
+    if not isinstance(candidates, list):
+        return []
+
+    seen: set[str] = set()
+    allowed_set = set(allowed_ids)
+    ordered: list[str] = []
+    for item in candidates:
+        if not isinstance(item, str):
+            continue
+        step_id = item.strip()
+        if step_id in allowed_set and step_id not in seen:
+            seen.add(step_id)
+            ordered.append(step_id)
+    return ordered
 
 
 @app.post("/api/interviews/generate", response_model=GenerateInterviewResponse)
