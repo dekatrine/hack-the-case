@@ -152,9 +152,10 @@ def pick_steps_for_case(*, case_text: str, track_id: str | None, track_name: str
         f"Тип трека: {track_id or 'business'}\n\n"
         f"Каталог доступных шагов (выбирай только из этих id):\n{catalog}\n\n"
         f"Текст кейса:\n{case_text[:4000]}\n\n"
-        "Выбери СТРОГО 4–6 шагов, которые наиболее точно раскрывают суть именно этого кейса. "
-        "Не добавляй шаги «на всякий случай» — лучше короткий точный маршрут, чем длинный общий. "
-        "Расставь шаги в логическом порядке прохождения. Верни строго JSON с полем stepIds."
+        "Собери маршрут из 5–7 шагов, который ПОЛНОСТЬЮ раскрывает решение именно этого кейса: "
+        "вход → анализ контекста → диагностика → решение → синтез. Каждый шаг должен быть конкретно "
+        "про этот кейс, без общих «на всякий случай». final_synthesis обязателен в конце. "
+        "Верни строго JSON с полем stepIds."
     )
 
     try:
@@ -170,14 +171,17 @@ def pick_steps_for_case(*, case_text: str, track_id: str | None, track_name: str
     return _parse_step_ids(raw, allowed_ids)
 
 
-MAX_PICKED_STEPS = 6
+MIN_PICKED_STEPS = 5
+MAX_PICKED_STEPS = 7
 
 
 def _parse_step_ids(raw: str, allowed_ids: list[str]) -> list[str]:
     """Аккуратно вытащить stepIds из ответа LLM, ограничив их валидным каталогом.
 
-    Возвращает не более MAX_PICKED_STEPS шагов: если LLM прислал больше,
-    обрезаем хвост, чтобы маршрут оставался коротким и фокусным."""
+    Маршрут должен раскрывать полное решение кейса: от 5 до 7 шагов.
+    Если LLM прислал больше — обрезаем хвост (но сохраняем final_synthesis).
+    Если LLM прислал меньше 5 — возвращаем пустой список, чтобы фронт
+    фолбэкнулся на статические шаги трека."""
     if not raw:
         return []
     text = raw.strip()
@@ -202,8 +206,20 @@ def _parse_step_ids(raw: str, allowed_ids: list[str]) -> list[str]:
         if step_id in allowed_set and step_id not in seen:
             seen.add(step_id)
             ordered.append(step_id)
-            if len(ordered) >= MAX_PICKED_STEPS:
-                break
+
+    if len(ordered) < MIN_PICKED_STEPS:
+        # маршрут не покрывает решение — пусть фронт уходит на fallback
+        return []
+
+    if len(ordered) > MAX_PICKED_STEPS:
+        # Обрезаем хвост, но гарантируем, что final_synthesis (если был в выборе)
+        # сохранится последним шагом маршрута.
+        had_synthesis = "final_synthesis" in ordered
+        trimmed = ordered[:MAX_PICKED_STEPS]
+        if had_synthesis and "final_synthesis" not in trimmed:
+            trimmed[-1] = "final_synthesis"
+        ordered = trimmed
+
     return ordered
 
 
