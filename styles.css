@@ -102,7 +102,7 @@ a { color: var(--mint); text-decoration: none; }
   border-bottom: 1px solid var(--hair);
   backdrop-filter: blur(8px);
   position: sticky; top: 0; z-index: 10;
-  background: rgba(11, 13, 12, 0.75);
+  background: rgba(246, 239, 226, 0.82);
 }
 
 .shell--learnLight .topbar {
@@ -220,8 +220,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border-radius: var(--r-md);
   padding: 24px;
   background:
-    linear-gradient(140deg, rgba(184,255,92,0.12), rgba(59,130,246,0.08)),
-    rgba(255,255,255,0.035);
+    linear-gradient(140deg, rgba(255, 122, 24,0.12), rgba(59,130,246,0.08)),
+    rgba(76, 49, 22, 0.035);
   display: grid;
   align-content: center;
   gap: 12px;
@@ -252,14 +252,14 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 10px 14px;
   border: 1px solid var(--hair);
   border-radius: 999px;
-  background: rgba(255,255,255,0.035);
+  background: rgba(76, 49, 22, 0.035);
   color: var(--paper-dim);
   font-size: 13px;
 }
 .dojoResourceTabs button:hover {
   color: var(--paper);
   border-color: var(--hair-strong);
-  background: rgba(255,255,255,0.065);
+  background: rgba(76, 49, 22, 0.065);
 }
 .dojoTrustBanner {
   display: grid;
@@ -291,7 +291,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .dojoActionCard {
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
-  background: rgba(255,255,255,0.035);
+  background: rgba(76, 49, 22, 0.035);
 }
 .dojoPrimaryCard { padding: 22px; }
 .dojoCardHead,
@@ -324,10 +324,10 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 12px;
   border: 1px solid var(--hair);
   border-radius: var(--r-sm);
-  background: rgba(255,255,255,0.03);
+  background: rgba(76, 49, 22, 0.03);
   text-align: left;
 }
-.dojoModuleList button:hover { border-color: var(--col); background: rgba(255,255,255,0.055); }
+.dojoModuleList button:hover { border-color: var(--col); background: rgba(76, 49, 22, 0.055); }
 .dojoModuleList button > span { font-size: 22px; }
 .dojoModuleList strong { display: block; font-size: 13px; line-height: 1.25; }
 .dojoModuleList small { color: var(--paper-faint); }
@@ -341,7 +341,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .dojoActionCard:hover {
   border-color: var(--hair-strong);
   transform: translateY(-1px);
-  background: rgba(255,255,255,0.055);
+  background: rgba(76, 49, 22, 0.055);
 }
 .dojoActionCard strong { font-size: 18px; }
 .dojoActionCard small { color: var(--paper-dim); line-height: 1.45; }
@@ -355,12 +355,12 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   position: sticky; top: 92px; align-self: start;
   min-height: calc(100vh - 148px); display: flex; flex-direction: column; gap: 14px;
   padding: 14px; border: 1px solid var(--hair); border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 .workspace-pill {
   display: flex; align-items: center; gap: 10px; padding: 12px;
   border: 1px solid var(--hair); border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 .user-dot, .avatar-mini {
   width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -376,7 +376,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   color: var(--paper-dim); font-weight: 600;
 }
 .home-menu button:hover, .home-menu button.active, .home-menu-group button:hover {
-  background: rgba(184, 255, 92, 0.08); color: var(--mint);
+  background: rgba(255, 122, 24, 0.08); color: var(--mint);
 }
 .home-menu-group {
   padding-top: 10px; border-top: 1px solid var(--hair);
@@ -396,14 +396,14 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .home-search {
   flex: 1; max-width: 420px; display: flex; align-items: center; gap: 10px;
   padding: 12px 16px; border: 1px solid var(--hair); border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.018); color: var(--paper-faint);
+  background: rgba(76, 49, 22, 0.018); color: var(--paper-faint);
 }
 .home-search input {
   width: 100%; border: 0; outline: 0; background: transparent; color: var(--paper);
 }
 .home-xp {
   display: flex; overflow: hidden; border: 1px solid var(--hair); border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 .home-xp span {
   padding: 11px 14px; border-left: 1px solid var(--hair);
@@ -414,9 +414,9 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   display: grid; grid-template-columns: 1fr auto; gap: 24px;
   min-height: 240px; padding: 34px; border: 1px solid var(--hair); border-radius: var(--r-lg);
   background:
-    radial-gradient(520px 220px at 78% 18%, rgba(184, 255, 92, 0.12), transparent 62%),
+    radial-gradient(520px 220px at 78% 18%, rgba(255, 122, 24, 0.12), transparent 62%),
     radial-gradient(460px 240px at 22% 10%, rgba(255, 184, 107, 0.08), transparent 60%),
-    rgba(255, 255, 255, 0.018);
+    rgba(76, 49, 22, 0.018);
 }
 .home-hero-panel h1 {
   font-family: var(--serif); font-size: clamp(46px, 7vw, 86px);
@@ -426,7 +426,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .home-hero-panel p:not(.eyebrow) { max-width: 650px; color: var(--paper-dim); font-size: 17px; }
 .hero-progress {
   align-self: end; min-width: 150px; padding: 18px; border: 1px solid var(--hair);
-  border-radius: var(--r-md); background: rgba(11, 13, 12, 0.46);
+  border-radius: var(--r-md); background: rgba(251, 246, 236, 0.78);
 }
 .hero-progress strong {
   display: block; color: var(--mint); font-family: var(--serif); font-size: 52px; line-height: 1;
@@ -459,11 +459,11 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .subject-card {
   min-height: 160px; padding: 24px; text-align: left; border: 1px solid var(--hair);
   border-radius: var(--r-lg); overflow: hidden; position: relative;
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 .subject-card::after {
   content: ''; position: absolute; inset: auto -20px -50px auto; width: 220px; height: 220px;
-  border-radius: 50%; background: rgba(184, 255, 92, 0.12); pointer-events: none;
+  border-radius: 50%; background: rgba(255, 122, 24, 0.12); pointer-events: none;
 }
 .subject-card.product::after { background: rgba(77, 163, 255, 0.18); }
 .subject-card span {
@@ -473,12 +473,12 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .subject-card p { color: var(--paper-dim); max-width: 420px; }
 .subject-card em {
   display: inline-flex; margin-top: 12px; padding: 8px 12px; border-radius: var(--r-md);
-  background: var(--paper); color: var(--ink); font-style: normal; font-weight: 600;
+  background: var(--mint); color: var(--ink); font-style: normal; font-weight: 600;
 }
 .home-info-card, .home-study-plan {
   display: flex; justify-content: space-between; align-items: center; gap: 18px;
   padding: 24px 28px; border: 1px solid var(--hair); border-radius: var(--r-lg);
-  background: rgba(184, 255, 92, 0.04); margin-bottom: 22px;
+  background: rgba(255, 122, 24, 0.04); margin-bottom: 22px;
 }
 .home-info-card h2, .home-study-plan h2 { margin-bottom: 8px; font-size: 30px; }
 .home-info-card p, .home-study-plan p { color: var(--paper-dim); margin: 0; }
@@ -496,14 +496,14 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .track-card {
   position: relative; padding: 32px;
   border: 1px solid var(--hair); border-radius: var(--r-lg);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent);
+  background: linear-gradient(180deg, rgba(76, 49, 22, 0.025), transparent);
   transition: all .25s ease;
   text-align: left; width: 100%;
   overflow: hidden;
 }
 .track-card::after {
   content: ''; position: absolute; inset: 0;
-  background: radial-gradient(600px 200px at var(--mx, 50%) var(--my, 0%), rgba(184, 255, 92, 0.08), transparent 60%);
+  background: radial-gradient(600px 200px at var(--mx, 50%) var(--my, 0%), rgba(255, 122, 24, 0.08), transparent 60%);
   opacity: 0; transition: opacity .25s ease; pointer-events: none;
 }
 .track-card:hover { border-color: var(--hair-strong); transform: translateY(-2px); }
@@ -511,7 +511,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .track-card .tag {
   font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
   text-transform: uppercase; color: var(--mint);
-  padding: 4px 10px; border: 1px solid rgba(184, 255, 92, 0.3); border-radius: 999px;
+  padding: 4px 10px; border: 1px solid rgba(255, 122, 24, 0.3); border-radius: 999px;
   display: inline-block; margin-bottom: 24px;
 }
 .track-card .num {
@@ -535,10 +535,10 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 .chapter {
   padding: 24px; border: 1px solid var(--hair); border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.015);
+  background: rgba(76, 49, 22, 0.015);
   transition: all .2s ease;
 }
-.chapter:hover { border-color: var(--hair-strong); background: rgba(255, 255, 255, 0.03); }
+.chapter:hover { border-color: var(--hair-strong); background: rgba(76, 49, 22, 0.03); }
 .chapter .circle {
   font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--mint); margin-bottom: 12px;
@@ -576,7 +576,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
   margin-top: 32px; padding: 32px;
   border: 1px solid var(--hair); border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.015);
+  background: rgba(76, 49, 22, 0.015);
 }
 .field { display: flex; flex-direction: column; gap: 8px; }
 .field label {
@@ -610,8 +610,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   display: flex; gap: 12px; padding: 10px 12px; margin: 0 -12px;
   border-radius: var(--r-sm); cursor: pointer; transition: background .15s ease;
 }
-.step-item:hover { background: rgba(255, 255, 255, 0.03); }
-.step-item.active { background: rgba(184, 255, 92, 0.07); }
+.step-item:hover { background: rgba(76, 49, 22, 0.03); }
+.step-item.active { background: rgba(255, 122, 24, 0.07); }
 .step-item.active .step-num { color: var(--mint); border-color: var(--mint); }
 .step-item.done .step-num { background: var(--mint); color: var(--ink); border-color: var(--mint); }
 .step-num {
@@ -624,7 +624,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
 .case-card {
   border: 1px solid var(--hair); border-radius: var(--r-lg);
-  padding: 28px 32px; background: rgba(255, 255, 255, 0.015);
+  padding: 28px 32px; background: rgba(76, 49, 22, 0.015);
 }
 .case-card-structured { overflow: hidden; }
 .case-label {
@@ -655,7 +655,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 14px;
   border: 1px solid var(--hair);
   border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 .case-fact span {
   display: block;
@@ -679,7 +679,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .case-section {
   border: 1px solid var(--hair);
   border-radius: var(--r-sm);
-  background: rgba(11, 13, 12, 0.36);
+  background: rgba(251, 246, 236, 0.72);
   padding: 18px;
 }
 .case-section-head {
@@ -722,7 +722,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 12px;
   border: 1px dashed var(--hair-strong);
   border-radius: var(--r-sm);
-  background: rgba(184, 255, 92, 0.025);
+  background: rgba(255, 122, 24, 0.025);
 }
 .case-data-point span {
   display: block;
@@ -744,7 +744,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border: 1px solid var(--hair);
   border-radius: var(--r-lg);
   padding: 28px 32px;
-  background: rgba(184, 255, 92, 0.025);
+  background: rgba(255, 122, 24, 0.025);
 }
 .method-kicker {
   display: flex;
@@ -776,7 +776,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 16px;
   border: 1px solid var(--hair);
   border-radius: var(--r-sm);
-  background: rgba(11, 13, 12, 0.32);
+  background: rgba(251, 246, 236, 0.70);
 }
 .learning-flow-title {
   margin-bottom: 12px;
@@ -796,7 +796,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 14px 12px 12px;
   border: 1px solid var(--hair);
   border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 .flow-node::after {
   content: '';
@@ -845,7 +845,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   grid-template-columns: minmax(140px, 0.35fr) 1fr;
   gap: 16px;
   padding: 10px 0;
-  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  border-top: 1px dashed rgba(76, 49, 22, 0.08);
 }
 .term-row:first-of-type { border-top: 0; }
 .term-row span {
@@ -872,7 +872,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 12px;
   border: 1px solid var(--hair);
   border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 .method-card span {
   display: flex;
@@ -881,7 +881,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: rgba(184, 255, 92, 0.1);
+  background: rgba(255, 122, 24, 0.1);
   color: var(--mint);
   font-family: var(--mono);
   font-size: 11px;
@@ -895,7 +895,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
 .step-block {
   margin-top: 24px; border: 1px solid var(--hair); border-radius: var(--r-lg);
-  padding: 32px; background: rgba(255, 255, 255, 0.015);
+  padding: 32px; background: rgba(76, 49, 22, 0.015);
 }
 .step-block .step-meta {
   display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px;
@@ -919,14 +919,14 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .hint {
   border-left: 2px solid var(--mint); padding: 8px 16px;
   margin: 16px 0 24px; color: var(--paper-dim); font-size: 13px; line-height: 1.6;
-  background: rgba(184, 255, 92, 0.04);
+  background: rgba(255, 122, 24, 0.04);
 }
 .actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
 
 /* ============================ Coach panel ============================ */
 .coach {
   margin-top: 24px; border: 1px solid var(--hair); border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.015);
+  background: rgba(76, 49, 22, 0.015);
 }
 .coach-head {
   padding: 18px 24px; border-bottom: 1px solid var(--hair);
@@ -947,7 +947,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   max-width: 78%; padding: 10px 14px; border-radius: 14px;
   font-size: 14px; line-height: 1.55; white-space: pre-wrap;
 }
-.msg.coach .bubble { background: rgba(255, 255, 255, 0.05); border-top-left-radius: 4px; }
+.msg.coach .bubble { background: rgba(76, 49, 22, 0.05); border-top-left-radius: 4px; }
 .msg.student .bubble { background: var(--mint); color: var(--ink); border-top-right-radius: 4px; }
 .coach-input { padding: 14px 16px; border-top: 1px solid var(--hair); display: flex; gap: 10px; }
 .coach-input input {
@@ -960,7 +960,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .eval {
   margin-top: 32px; padding: 32px;
   border: 1px solid var(--hair); border-radius: var(--r-lg);
-  background: linear-gradient(180deg, rgba(184, 255, 92, 0.04), transparent);
+  background: linear-gradient(180deg, rgba(255, 122, 24, 0.04), transparent);
 }
 .eval pre {
   white-space: pre-wrap; font-family: var(--mono); font-size: 12px;
@@ -992,8 +992,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border: 1px solid var(--hair-strong);
   border-radius: var(--r-lg);
   background:
-    linear-gradient(135deg, rgba(184, 255, 92, 0.07), rgba(255, 184, 107, 0.055)),
-    rgba(255, 255, 255, 0.018);
+    linear-gradient(135deg, rgba(255, 122, 24, 0.07), rgba(255, 184, 107, 0.055)),
+    rgba(76, 49, 22, 0.018);
 }
 
 .interviewEntryKicker,
@@ -1045,13 +1045,13 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 14px 16px;
   border: 1px solid var(--hair-strong);
   border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(76, 49, 22, 0.025);
   text-align: left;
 }
 
 .directionSwitch button.active {
   border-color: var(--mint);
-  background: rgba(184, 255, 92, 0.08);
+  background: rgba(255, 122, 24, 0.08);
 }
 
 .directionSwitch span,
@@ -1096,7 +1096,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 20px;
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
   text-align: left;
   transition: border-color 0.18s, background 0.18s, transform 0.18s;
 }
@@ -1104,7 +1104,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .interviewBlock:hover,
 .interviewBlock.active {
   border-color: var(--mint);
-  background: rgba(184, 255, 92, 0.055);
+  background: rgba(255, 122, 24, 0.055);
   transform: translateY(-1px);
 }
 
@@ -1154,7 +1154,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 28px;
   border: 1px solid var(--hair-strong);
   border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 
 .interviewAgent h2 {
@@ -1238,13 +1238,13 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 20px;
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 
 .interviewTaskGrid article.wide {
   grid-column: 1 / -1;
-  border-color: rgba(184, 255, 92, 0.28);
-  background: rgba(184, 255, 92, 0.045);
+  border-color: rgba(255, 122, 24, 0.28);
+  background: rgba(255, 122, 24, 0.045);
 }
 
 .interviewTaskGrid h3 {
@@ -1266,9 +1266,9 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   gap: 18px;
   margin-bottom: 16px;
   padding: 24px 28px;
-  border: 1px solid rgba(184, 255, 92, 0.28);
+  border: 1px solid rgba(255, 122, 24, 0.28);
   border-radius: var(--r-md);
-  background: rgba(184, 255, 92, 0.045);
+  background: rgba(255, 122, 24, 0.045);
 }
 
 .interviewTaskIntro > div > span {
@@ -1311,7 +1311,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 24px 28px;
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 
 .interviewList {
@@ -1371,7 +1371,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .interviewRoundCard {
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 
 .interviewCasePanel {
@@ -1410,7 +1410,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 
 .interviewProgressBar {
@@ -1442,11 +1442,11 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 
 .interviewRoundTabs button.active {
-  background: rgba(184, 255, 92, 0.08);
+  background: rgba(255, 122, 24, 0.08);
 }
 
 .interviewRoundTabs button.done {
-  background: rgba(184, 255, 92, 0.13);
+  background: rgba(255, 122, 24, 0.13);
 }
 
 .interviewRoundTabs span {
@@ -1532,7 +1532,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   margin-bottom: 18px;
   padding: 14px 16px;
   border-left: 2px solid var(--mint);
-  background: rgba(184, 255, 92, 0.04);
+  background: rgba(255, 122, 24, 0.04);
   color: var(--paper-dim);
   font-size: 14px;
   line-height: 1.65;
@@ -1551,7 +1551,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 15px 16px;
   border: 1px solid var(--hair-strong);
   border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(76, 49, 22, 0.025);
   text-align: left;
   transition: border-color 0.16s, background 0.16s, transform 0.16s;
 }
@@ -1559,7 +1559,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .interviewChoiceList button:hover,
 .interviewChoiceList button.active {
   border-color: var(--mint);
-  background: rgba(184, 255, 92, 0.07);
+  background: rgba(255, 122, 24, 0.07);
   transform: translateY(-1px);
 }
 
@@ -1600,7 +1600,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 16px;
   border: 1px dashed var(--hair-strong);
   border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.015);
+  background: rgba(76, 49, 22, 0.015);
 }
 
 .interviewExpected ul {
@@ -1620,7 +1620,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 16px;
   border: 1px solid var(--hair);
   border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 
 .interviewFollowups > span {
@@ -1660,8 +1660,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 
 .interviewReview.passed {
-  border-color: rgba(184, 255, 92, 0.3);
-  background: rgba(184, 255, 92, 0.06);
+  border-color: rgba(255, 122, 24, 0.3);
+  background: rgba(255, 122, 24, 0.06);
 }
 
 .interviewReview > div {
@@ -1796,7 +1796,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border-color: rgba(236, 72, 153, 0.34);
   background:
     linear-gradient(180deg, rgba(236, 72, 153, 0.14), rgba(236, 72, 153, 0.065)),
-    rgba(255, 255, 255, 0.018);
+    rgba(76, 49, 22, 0.018);
 }
 
 .noteArticleDefinition,
@@ -1842,7 +1842,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border-color: rgba(96, 165, 250, 0.30);
   background:
     linear-gradient(180deg, rgba(96, 165, 250, 0.13), rgba(96, 165, 250, 0.06)),
-    rgba(255, 255, 255, 0.018);
+    rgba(76, 49, 22, 0.018);
 }
 
 .noteArticleCallout.example .noteArticleCalloutLabel {
@@ -1853,7 +1853,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border-color: rgba(168, 85, 247, 0.34);
   background:
     linear-gradient(180deg, rgba(168, 85, 247, 0.13), rgba(168, 85, 247, 0.06)),
-    rgba(255, 255, 255, 0.018);
+    rgba(76, 49, 22, 0.018);
 }
 
 .noteArticleCallout.note .noteArticleCalloutLabel {
@@ -1864,14 +1864,14 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border-color: rgba(255, 122, 89, 0.34);
   background:
     linear-gradient(180deg, rgba(255, 122, 89, 0.14), rgba(255, 122, 89, 0.06)),
-    rgba(255, 255, 255, 0.018);
+    rgba(76, 49, 22, 0.018);
 }
 
 .noteArticlePractice {
   border-color: rgba(16, 185, 129, 0.30);
   background:
     linear-gradient(180deg, rgba(16, 185, 129, 0.11), rgba(16, 185, 129, 0.05)),
-    rgba(255, 255, 255, 0.018);
+    rgba(76, 49, 22, 0.018);
 }
 
 @media (max-width: 900px) {
@@ -1928,7 +1928,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
     border-radius: var(--r-md);
     margin-bottom: 16px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(76, 49, 22, 0.02);
   }
 
   .stepStripTrack {
@@ -1983,7 +1983,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   }
 
   .stepChip.done .chipBadge {
-    background: rgba(184, 255, 92, 0.15);
+    background: rgba(255, 122, 24, 0.15);
     color: var(--mint);
     border-color: var(--mint);
   }
@@ -2031,7 +2031,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
     color: var(--ink);
     border-radius: 999px;
     padding: 12px 20px;
-    box-shadow: 0 4px 24px -4px rgba(184, 255, 92, 0.5);
+    box-shadow: 0 4px 24px -4px rgba(255, 122, 24, 0.5);
     font-family: var(--mono);
     font-size: 12px;
     font-weight: 500;
@@ -2083,7 +2083,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   }
 
   .sheetClose {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(76, 49, 22, 0.06);
     border: 1px solid var(--hair-strong);
     border-radius: 50%;
     width: 32px;
@@ -2241,14 +2241,14 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 22px 24px;
   border: 1px solid var(--hair-strong);
   border-radius: var(--r-lg);
-  background: rgba(184, 255, 92, 0.04);
+  background: rgba(255, 122, 24, 0.04);
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
 }
 
 .quizBanner:hover {
   border-color: var(--mint);
-  background: rgba(184, 255, 92, 0.08);
+  background: rgba(255, 122, 24, 0.08);
 }
 
 .quizBannerLeft {
@@ -2298,7 +2298,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 14px 16px;
   border: 1px solid var(--hair-strong);
   border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(76, 49, 22, 0.025);
 }
 
 .quizStats span {
@@ -2331,7 +2331,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 20px 18px;
   border: 1px solid var(--hair-strong);
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(76, 49, 22, 0.03);
   text-align: left;
   cursor: pointer;
   transition: border-color 0.18s, background 0.18s, transform 0.15s;
@@ -2339,7 +2339,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
 .quiz-cat-card:hover {
   border-color: var(--mint);
-  background: rgba(184, 255, 92, 0.06);
+  background: rgba(255, 122, 24, 0.06);
   transform: translateY(-2px);
 }
 
@@ -2418,7 +2418,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .quizScoreBadge {
   font-family: var(--mono);
   font-size: 0.8rem;
-  background: rgba(184, 255, 92, 0.1);
+  background: rgba(255, 122, 24, 0.1);
   color: var(--mint);
   border-radius: 999px;
   padding: 4px 12px;
@@ -2460,7 +2460,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border: 1px solid var(--hair-strong);
   border-radius: var(--r-md);
   padding: 24px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(76, 49, 22, 0.03);
   margin-bottom: 16px;
 }
 
@@ -2499,7 +2499,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 12px 14px;
   border: 1px solid var(--hair-strong);
   border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(76, 49, 22, 0.03);
   text-align: left;
   font-size: 0.88rem;
   font-weight: 400;
@@ -2510,8 +2510,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 
 .quizOpt:hover:not(:disabled) {
-  border-color: rgba(184, 255, 92, 0.4);
-  background: rgba(184, 255, 92, 0.06);
+  border-color: rgba(255, 122, 24, 0.4);
+  background: rgba(255, 122, 24, 0.06);
 }
 
 .quizLetter {
@@ -2531,7 +2531,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
 .quizOpt.correct {
   border-color: var(--mint) !important;
-  background: rgba(184, 255, 92, 0.08) !important;
+  background: rgba(255, 122, 24, 0.08) !important;
 }
 
 .quizOpt.correct .quizLetter {
@@ -2562,8 +2562,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 
 .quizFeedback.ok {
-  border: 1px solid rgba(184, 255, 92, 0.25);
-  background: rgba(184, 255, 92, 0.06);
+  border: 1px solid rgba(255, 122, 24, 0.25);
+  background: rgba(255, 122, 24, 0.06);
 }
 
 .quizFeedback.err {
@@ -2615,7 +2615,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   max-width: 420px;
   width: 100%;
   text-align: center;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(76, 49, 22, 0.03);
 }
 
 .quizResultScore {
@@ -2651,10 +2651,10 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   font-family: var(--mono);
   font-size: 0.72rem;
   color: var(--mint);
-  border: 1px solid rgba(184, 255, 92, 0.24);
+  border: 1px solid rgba(255, 122, 24, 0.24);
   border-radius: 999px;
   padding: 4px 9px;
-  background: rgba(184, 255, 92, 0.06);
+  background: rgba(255, 122, 24, 0.06);
 }
 
 /* ── Mobile quiz ── */
@@ -2700,10 +2700,10 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .learnBanner {
   display: flex; align-items: center; justify-content: space-between;
   margin-top: 24px; padding: 22px 28px; border-radius: var(--r-lg);
-  border: 1px solid var(--hair-strong); background: linear-gradient(135deg, rgba(184,255,92,0.06), rgba(99,102,241,0.06));
+  border: 1px solid var(--hair-strong); background: linear-gradient(135deg, rgba(255, 122, 24,0.06), rgba(99,102,241,0.06));
   cursor: pointer; gap: 16px; transition: border-color 0.2s, background 0.2s;
 }
-.learnBanner:hover { border-color: rgba(184,255,92,0.4); background: linear-gradient(135deg, rgba(184,255,92,0.1), rgba(99,102,241,0.08)); }
+.learnBanner:hover { border-color: rgba(255, 122, 24,0.4); background: linear-gradient(135deg, rgba(255, 122, 24,0.1), rgba(99,102,241,0.08)); }
 .learnBannerLeft { display: flex; align-items: center; gap: 16px; }
 .learnBannerIcon { font-size: 2rem; }
 .learnBannerTitle { font-weight: 600; font-size: 1rem; color: var(--paper); margin-bottom: 4px; }
@@ -2819,7 +2819,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   text-align: left; cursor: pointer; margin-bottom: 4px; transition: all 0.15s;
 }
 .learnSidebarItem:hover { background: var(--hair); border-color: var(--hair-strong); }
-.learnSidebarItem.active { background: rgba(184,255,92,0.07); border-color: rgba(184,255,92,0.25); }
+.learnSidebarItem.active { background: rgba(255, 122, 24,0.07); border-color: rgba(255, 122, 24,0.25); }
 .learnSidebarProgress {
   width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-size: 1rem; background: var(--hair); flex-shrink: 0; position: relative; overflow: hidden;
@@ -2882,7 +2882,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 22px;
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
-  background: linear-gradient(135deg, rgba(184,255,92,0.08), rgba(96,165,250,0.07));
+  background: linear-gradient(135deg, rgba(255, 122, 24,0.08), rgba(96,165,250,0.07));
 }
 
 .shell--learnLight .resourcesOverview {
@@ -2949,7 +2949,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 14px;
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
-  background: rgba(255,255,255,0.028);
+  background: rgba(76, 49, 22, 0.028);
   text-align: left;
 }
 
@@ -2973,7 +2973,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 .casePrepMenuItem:hover {
   border-color: var(--hair-strong);
-  background: rgba(255,255,255,0.055);
+  background: rgba(76, 49, 22, 0.055);
   transform: translateY(-1px);
 }
 .casePrepMenuIcon {
@@ -3058,7 +3058,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
   overflow: hidden;
-  background: rgba(255,255,255,0.025);
+  background: rgba(76, 49, 22, 0.025);
 }
 
 .shell--learnLight .caseCourseRows {
@@ -3081,7 +3081,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   text-align: left;
 }
 .caseCourseRow:last-child { border-bottom: 0; }
-.caseCourseRow:hover { background: rgba(255,255,255,0.045); }
+.caseCourseRow:hover { background: rgba(76, 49, 22, 0.045); }
 .caseCourseRow > span {
   width: 32px;
   height: 32px;
@@ -3118,12 +3118,12 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 15px;
   border: 1px solid var(--hair);
   border-radius: var(--r-sm);
-  background: rgba(255,255,255,0.035);
+  background: rgba(76, 49, 22, 0.035);
   text-align: left;
 }
 .resourceCard:hover {
   border-color: var(--hair-strong);
-  background: rgba(255,255,255,0.06);
+  background: rgba(76, 49, 22, 0.06);
 }
 .resourceCard span {
   display: block;
@@ -3148,13 +3148,13 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 14px;
   border: 1px solid var(--hair);
   border-radius: var(--r-sm);
-  background: rgba(255,255,255,0.03);
+  background: rgba(76, 49, 22, 0.03);
   text-align: left;
 }
 .resourceChapterStrip button:hover,
 .notesChapterGrid button:hover {
   border-color: var(--col);
-  background: rgba(255,255,255,0.055);
+  background: rgba(76, 49, 22, 0.055);
 }
 .resourceChapterStrip span,
 .notesChapterGrid span { display: block; font-size: 22px; margin-bottom: 8px; }
@@ -3166,7 +3166,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 22px;
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
-  background: rgba(255,255,255,0.035);
+  background: rgba(76, 49, 22, 0.035);
 }
 .notesChapter {
   display: grid;
@@ -3188,8 +3188,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--ch-color) 22%, transparent), rgba(255,255,255,0.02)),
-    rgba(255,255,255,0.025);
+    linear-gradient(135deg, color-mix(in srgb, var(--ch-color) 22%, transparent), rgba(76, 49, 22, 0.02)),
+    rgba(76, 49, 22, 0.025);
 }
 
 .shell--learnLight .noteArticleHero {
@@ -3247,7 +3247,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   color: #475467;
 }
 .noteArticleSources a:hover {
-  border-color: rgba(184,255,92,0.32);
+  border-color: rgba(255, 122, 24,0.32);
   color: var(--mint);
 }
 .noteArticleBody {
@@ -3333,7 +3333,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 18px;
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
-  background: rgba(255,255,255,0.025);
+  background: rgba(76, 49, 22, 0.025);
 }
 
 .shell--learnLight .noteArticleDiagram {
@@ -3364,9 +3364,9 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .noteArticleDiagram strong {
   padding: 8px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(184,255,92,0.24);
+  border: 1px solid rgba(255, 122, 24,0.24);
   color: var(--paper);
-  background: rgba(184,255,92,0.05);
+  background: rgba(255, 122, 24,0.05);
   font-size: 13px;
 }
 .noteArticleCallout {
@@ -3424,9 +3424,9 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   display: grid;
   gap: 14px;
   padding: 22px;
-  border: 1px solid rgba(184,255,92,0.2);
+  border: 1px solid rgba(255, 122, 24,0.2);
   border-radius: var(--r-md);
-  background: rgba(184,255,92,0.055);
+  background: rgba(255, 122, 24,0.055);
 }
 
 .shell--learnLight .noteArticlePractice {
@@ -3442,7 +3442,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 14px;
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
-  background: rgba(255,255,255,0.025);
+  background: rgba(76, 49, 22, 0.025);
 }
 
 .shell--learnLight .noteArticleTopicRail {
@@ -3475,7 +3475,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 .noteArticleTopicRail button:hover,
 .noteArticleTopicRail button.active {
-  background: rgba(255,255,255,0.055);
+  background: rgba(76, 49, 22, 0.055);
 }
 .noteArticleTopicRail button > span {
   width: 30px;
@@ -3683,7 +3683,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border-radius: var(--r-lg); border: 1px solid var(--hair-strong); background: var(--ink-soft);
   text-align: left; cursor: pointer; transition: all 0.15s;
 }
-.learnChapterCard:hover { border-color: var(--ch-color, var(--mint)); background: rgba(184,255,92,0.04); }
+.learnChapterCard:hover { border-color: var(--ch-color, var(--mint)); background: rgba(255, 122, 24,0.04); }
 .learnChapterCardIcon { font-size: 1.6rem; }
 .learnChapterCardTitle { font-size: 0.82rem; font-weight: 700; color: var(--paper); line-height: 1.3; }
 .learnChapterCardSub { font-size: 0.72rem; color: var(--paper-dim); }
@@ -3692,7 +3692,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .learnChapterView {}
 .learnChapterViewHeader {
   display: flex; align-items: center; gap: 16px; padding: 20px; border-radius: var(--r-lg);
-  border: 1px solid var(--ch-color, var(--hair-strong)); background: rgba(255,255,255,0.02); margin-bottom: 28px;
+  border: 1px solid var(--ch-color, var(--hair-strong)); background: rgba(76, 49, 22, 0.02); margin-bottom: 28px;
 }
 .learnChapterViewIcon { font-size: 2.2rem; }
 .learnChapterViewHeader h2 { margin: 0 0 4px; font-size: 1.2rem; }
@@ -3717,7 +3717,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border-radius: var(--r-md); border: 1px solid var(--hair); background: var(--ink-soft);
   text-align: left; cursor: pointer; margin-bottom: 8px; transition: all 0.15s;
 }
-.learnSubtopicRow:hover { border-color: var(--hair-strong); background: rgba(255,255,255,0.03); }
+.learnSubtopicRow:hover { border-color: var(--hair-strong); background: rgba(76, 49, 22, 0.03); }
 .learnSubtopicNum { width: 28px; height: 28px; border-radius: 50%; background: var(--hair); display: flex; align-items: center; justify-content: center; font-size: 0.77rem; font-weight: 700; color: var(--paper-dim); flex-shrink: 0; }
 .learnSubtopicTitle { font-weight: 600; font-size: 0.9rem; color: var(--paper); }
 .learnSubtopicMeta { font-size: 0.75rem; color: var(--paper-dim); margin-top: 2px; }
@@ -3730,14 +3730,14 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .aliceHealth { font-size: 1rem; letter-spacing: 2px; color: var(--rust); }
 .aliceXp { font-family: var(--mono); font-size: 12px; color: var(--mint); font-weight: 700; }
 
-.aliceRoad { display: flex; flex-direction: column; gap: 0; padding: 14px 18px; border-radius: var(--r-md); border: 1px solid var(--hair); background: rgba(184,255,92,0.04); margin-bottom: 24px; }
+.aliceRoad { display: flex; flex-direction: column; gap: 0; padding: 14px 18px; border-radius: var(--r-md); border: 1px solid var(--hair); background: rgba(255, 122, 24,0.04); margin-bottom: 24px; }
 .aliceRoadStep { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--paper-dim); }
 .aliceRoadStep.active { color: var(--mint); font-weight: 700; }
 .aliceRoadStep.done { color: var(--paper-faint); text-decoration: line-through; }
 .aliceRoadDot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
 .aliceExpo {}
-.aliceExpoCard { padding: 24px; border-radius: var(--r-lg); border: 1px solid var(--hair-strong); background: rgba(255,255,255,0.02); margin-bottom: 20px; }
+.aliceExpoCard { padding: 24px; border-radius: var(--r-lg); border: 1px solid var(--hair-strong); background: rgba(76, 49, 22, 0.02); margin-bottom: 20px; }
 .aliceExpoLabel { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--paper-faint); margin-bottom: 16px; }
 .aliceExpoText { margin: 0 0 14px; font-size: 0.93rem; line-height: 1.75; color: rgba(244,241,234,0.85); }
 .aliceExpoText:last-child { margin: 0; }
@@ -3747,42 +3747,42 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .aliceBtn { padding: 9px 18px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid; transition: all 0.15s; min-height: 38px; }
 .aliceBtnHard { background: rgba(255,184,107,0.1); border-color: rgba(255,184,107,0.3); color: var(--amber); }
 .aliceBtnHard:hover { background: rgba(255,184,107,0.18); }
-.aliceBtnEasy { background: rgba(184,255,92,0.1); border-color: rgba(184,255,92,0.3); color: var(--mint); }
-.aliceBtnEasy:hover { background: rgba(184,255,92,0.18); }
+.aliceBtnEasy { background: rgba(255, 122, 24,0.1); border-color: rgba(255, 122, 24,0.3); color: var(--mint); }
+.aliceBtnEasy:hover { background: rgba(255, 122, 24,0.18); }
 .aliceBtnContinue { background: var(--mint); border-color: var(--mint); color: var(--ink); font-weight: 700; margin-left: auto; }
 .aliceBtnContinue:hover { background: var(--mint-deep); }
 
 /* MCQ */
 .aliceMcq {}
-.aliceMcqCard { padding: 24px; border-radius: var(--r-lg); border: 1px solid var(--hair-strong); background: rgba(255,255,255,0.02); margin-bottom: 16px; }
+.aliceMcqCard { padding: 24px; border-radius: var(--r-lg); border: 1px solid var(--hair-strong); background: rgba(76, 49, 22, 0.02); margin-bottom: 16px; }
 .aliceMcqQ { font-weight: 700; font-size: 1rem; color: var(--paper); margin: 0 0 20px; line-height: 1.5; }
 .aliceMcqOptions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
 .aliceMcqOpt {
   display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--r-md);
-  border: 1px solid var(--hair); background: rgba(255,255,255,0.02); text-align: left;
+  border: 1px solid var(--hair); background: rgba(76, 49, 22, 0.02); text-align: left;
   cursor: pointer; font-size: 0.9rem; color: var(--paper); transition: all 0.12s;
 }
-.aliceMcqOpt:hover:not(:disabled) { border-color: var(--hair-strong); background: rgba(255,255,255,0.04); }
-.aliceMcqOpt.correct { background: rgba(184,255,92,0.1); border-color: rgba(184,255,92,0.4); color: var(--mint); }
+.aliceMcqOpt:hover:not(:disabled) { border-color: var(--hair-strong); background: rgba(76, 49, 22, 0.04); }
+.aliceMcqOpt.correct { background: rgba(255, 122, 24,0.1); border-color: rgba(255, 122, 24,0.4); color: var(--mint); }
 .aliceMcqOpt.wrong { background: rgba(255,122,89,0.1); border-color: rgba(255,122,89,0.4); color: var(--rust); }
 .aliceMcqOpt.dim { opacity: 0.35; }
 .aliceMcqLetter { width: 26px; height: 26px; border-radius: 50%; background: var(--hair); display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
 
 /* Feedback */
 .aliceFeedback { display: flex; align-items: flex-start; gap: 14px; padding: 16px; border-radius: var(--r-md); margin-top: 14px; }
-.aliceFeedback.correct { background: rgba(184,255,92,0.08); border: 1px solid rgba(184,255,92,0.2); }
+.aliceFeedback.correct { background: rgba(255, 122, 24,0.08); border: 1px solid rgba(255, 122, 24,0.2); }
 .aliceFeedback.wrong { background: rgba(255,122,89,0.08); border: 1px solid rgba(255,122,89,0.2); }
 .aliceFeedbackIcon { font-size: 1.1rem; flex-shrink: 0; padding-top: 2px; }
 .aliceFeedback strong { font-size: 0.87rem; display: block; margin-bottom: 4px; }
 .aliceFeedback p { margin: 0; font-size: 0.84rem; color: rgba(244,241,234,0.7); line-height: 1.55; }
 
 /* True/False */
-.aliceTf { padding: 20px 24px; border-radius: var(--r-lg); border: 1px solid var(--hair-strong); background: rgba(255,255,255,0.02); margin-top: 16px; }
+.aliceTf { padding: 20px 24px; border-radius: var(--r-lg); border: 1px solid var(--hair-strong); background: rgba(76, 49, 22, 0.02); margin-top: 16px; }
 .aliceTfStatement { font-weight: 600; font-size: 0.95rem; color: var(--paper); margin: 0 0 18px; line-height: 1.5; }
 .aliceTfBtns { display: flex; gap: 12px; }
-.aliceTfBtn { flex: 1; padding: 12px; border-radius: var(--r-md); border: 1px solid var(--hair-strong); background: rgba(255,255,255,0.03); color: var(--paper); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.12s; min-height: 44px; }
-.aliceTfBtn:hover:not(:disabled) { border-color: var(--hair-strong); background: rgba(255,255,255,0.06); }
-.aliceTfBtn.correct { background: rgba(184,255,92,0.1); border-color: rgba(184,255,92,0.4); color: var(--mint); }
+.aliceTfBtn { flex: 1; padding: 12px; border-radius: var(--r-md); border: 1px solid var(--hair-strong); background: rgba(76, 49, 22, 0.03); color: var(--paper); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.12s; min-height: 44px; }
+.aliceTfBtn:hover:not(:disabled) { border-color: var(--hair-strong); background: rgba(76, 49, 22, 0.06); }
+.aliceTfBtn.correct { background: rgba(255, 122, 24,0.1); border-color: rgba(255, 122, 24,0.4); color: var(--mint); }
 .aliceTfBtn.wrong { background: rgba(255,122,89,0.1); border-color: rgba(255,122,89,0.4); color: var(--rust); }
 .aliceTfBtn.dim { opacity: 0.35; }
 
@@ -3799,7 +3799,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   min-height: 110px;
   border: 1.5px solid var(--hair-strong);
   border-radius: var(--r-md);
-  background: rgba(255,255,255,0.04);
+  background: rgba(76, 49, 22, 0.04);
   color: var(--paper);
   padding: 12px 14px;
   font-size: 0.9rem;
@@ -3817,8 +3817,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   margin-top: 16px;
   padding: 18px 20px;
   border-radius: var(--r-lg);
-  background: rgba(184,255,92,0.07);
-  border: 1px solid rgba(184,255,92,0.25);
+  background: rgba(255, 122, 24,0.07);
+  border: 1px solid rgba(255, 122, 24,0.25);
 }
 .aliceAiFeedback p { font-size: 0.9rem; line-height: 1.65; color: var(--paper); margin: 8px 0 0; }
 .aliceAiFeedbackTip {
@@ -3834,7 +3834,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
 /* ── Flash Cards ── */
 .fcHome { }
-.fcHomeStats { display: flex; align-items: center; gap: 20px; padding: 20px; border-radius: var(--r-lg); border: 1px solid var(--hair); background: rgba(255,255,255,0.02); margin-bottom: 24px; }
+.fcHomeStats { display: flex; align-items: center; gap: 20px; padding: 20px; border-radius: var(--r-lg); border: 1px solid var(--hair); background: rgba(76, 49, 22, 0.02); margin-bottom: 24px; }
 .fcRingWrap { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
 .fcRingSvg { width: 64px; height: 64px; }
 .fcRingPct { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--mint); }
@@ -3842,7 +3842,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .fcHomeStatsSub { font-size: 0.8rem; color: var(--paper-dim); margin-top: 3px; }
 .fcHomeHint { font-size: 0.83rem; color: var(--paper-dim); margin-bottom: 20px; }
 .fcChapterGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.fcChapterTile { padding: 16px; border-radius: var(--r-md); border: 1px solid var(--hair); background: rgba(255,255,255,0.02); }
+.fcChapterTile { padding: 16px; border-radius: var(--r-md); border: 1px solid var(--hair); background: rgba(76, 49, 22, 0.02); }
 .fcChapterTile { width: 100%; text-align: left; }
 .fcChapterTileIcon { font-size: 1.4rem; display: block; margin-bottom: 8px; }
 .fcChapterTileName { font-size: 0.82rem; font-weight: 700; color: var(--paper); margin-bottom: 10px; line-height: 1.3; }
@@ -3860,7 +3860,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .fcCard { perspective: 1000px; width: 100%; max-width: 560px; margin: 0 auto; cursor: pointer; height: 240px; position: relative; }
 .fcCard > div { position: absolute; inset: 0; backface-visibility: hidden; transition: transform 0.5s cubic-bezier(.4,0,.2,1); border-radius: var(--r-lg); }
 .fcFront { background: var(--ink-soft); border: 1px solid var(--hair-strong); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; transform: rotateY(0deg); }
-.fcBack { background: rgba(184,255,92,0.06); border: 1px solid rgba(184,255,92,0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; transform: rotateY(180deg); }
+.fcBack { background: rgba(255, 122, 24,0.06); border: 1px solid rgba(255, 122, 24,0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; transform: rotateY(180deg); }
 .fcCard.flipped .fcFront { transform: rotateY(-180deg); }
 .fcCard.flipped .fcBack { transform: rotateY(0deg); }
 .fcCardText { font-size: 0.95rem; text-align: center; margin: 0; line-height: 1.7; color: var(--paper); }
@@ -3871,12 +3871,12 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .fcRating { margin-top: 24px; }
 .fcRatingHint { text-align: center; font-size: 0.83rem; color: var(--paper-dim); margin-bottom: 14px; }
 .fcRatingRow { display: flex; gap: 8px; justify-content: center; }
-.fcRatingBtn { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 18px; border-radius: var(--r-md); border: 1px solid var(--col, var(--hair-strong)); background: rgba(255,255,255,0.02); cursor: pointer; min-width: 75px; transition: all 0.12s; }
-.fcRatingBtn:hover { background: rgba(255,255,255,0.05); }
+.fcRatingBtn { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 18px; border-radius: var(--r-md); border: 1px solid var(--col, var(--hair-strong)); background: rgba(76, 49, 22, 0.02); cursor: pointer; min-width: 75px; transition: all 0.12s; }
+.fcRatingBtn:hover { background: rgba(76, 49, 22, 0.05); }
 .fcRatingLabel { font-size: 0.82rem; font-weight: 700; color: var(--col, var(--paper)); }
 .fcRatingInterval { font-family: var(--mono); font-size: 10px; color: var(--paper-dim); }
 
-.fcProgressBox { margin-top: 28px; padding: 14px 16px; border-radius: var(--r-md); border: 1px solid var(--hair); background: rgba(255,255,255,0.01); }
+.fcProgressBox { margin-top: 28px; padding: 14px 16px; border-radius: var(--r-md); border: 1px solid var(--hair); background: rgba(76, 49, 22, 0.01); }
 .fcProgressBoxLabel { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--paper-faint); margin-bottom: 8px; }
 .fcProgressBoxBar { width: 100%; height: 4px; background: var(--hair-strong); border-radius: 2px; overflow: hidden; margin-bottom: 6px; }
 .fcProgressBoxBar div { height: 100%; background: var(--mint); border-radius: 2px; transition: width 0.3s; }
@@ -3938,16 +3938,16 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .qbFilters { display: flex; gap: 6px; flex-wrap: wrap; }
 .qbFilterBtn { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--hair); background: none; color: var(--paper-dim); font-size: 0.78rem; font-weight: 600; cursor: pointer; min-height: 30px; transition: all 0.12s; }
 .qbFilterBtn:hover { border-color: var(--hair-strong); color: var(--paper); }
-.qbFilterBtn.active { border-color: rgba(184,255,92,0.4); background: rgba(184,255,92,0.08); color: var(--mint); }
+.qbFilterBtn.active { border-color: rgba(255, 122, 24,0.4); background: rgba(255, 122, 24,0.08); color: var(--mint); }
 
-.qbCard { padding: 16px 18px; border-radius: var(--r-md); border: 1px solid var(--hair); background: rgba(255,255,255,0.02); margin-bottom: 10px; transition: border-color 0.15s; }
-.qbCard.correct { border-color: rgba(184,255,92,0.25); }
+.qbCard { padding: 16px 18px; border-radius: var(--r-md); border: 1px solid var(--hair); background: rgba(76, 49, 22, 0.02); margin-bottom: 10px; transition: border-color 0.15s; }
+.qbCard.correct { border-color: rgba(255, 122, 24,0.25); }
 .qbCard.wrong { border-color: rgba(255,122,89,0.25); }
 .qbCardTop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
 .qbCardMeta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .qbChapterTag { font-size: 0.75rem; font-weight: 700; }
 .qbDiffTag { font-size: 0.72px; padding: 2px 8px; border-radius: 999px; font-weight: 600; font-size: 0.72rem; }
-.qbDiff-easy { background: rgba(184,255,92,0.1); color: var(--mint); }
+.qbDiff-easy { background: rgba(255, 122, 24,0.1); color: var(--mint); }
 .qbDiff-medium { background: rgba(255,184,107,0.1); color: var(--amber); }
 .qbDiff-hard { background: rgba(255,122,89,0.1); color: var(--rust); }
 .qbCardActions { display: flex; align-items: center; gap: 6px; }
@@ -3957,20 +3957,20 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .qbIconBtn.saved { color: var(--mint); }
 .qbQuestion { font-size: 0.9rem; font-weight: 600; margin: 0 0 12px; color: var(--paper); line-height: 1.5; }
 .qbOptions { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
-.qbOpt { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--r-md); border: 1px solid var(--hair); background: rgba(255,255,255,0.02); text-align: left; cursor: pointer; font-size: 0.87rem; color: var(--paper); transition: all 0.12s; }
-.qbOpt:hover:not(:disabled) { border-color: var(--hair-strong); background: rgba(255,255,255,0.04); }
-.qbOpt.correct { background: rgba(184,255,92,0.08); border-color: rgba(184,255,92,0.35); color: var(--mint); }
+.qbOpt { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--r-md); border: 1px solid var(--hair); background: rgba(76, 49, 22, 0.02); text-align: left; cursor: pointer; font-size: 0.87rem; color: var(--paper); transition: all 0.12s; }
+.qbOpt:hover:not(:disabled) { border-color: var(--hair-strong); background: rgba(76, 49, 22, 0.04); }
+.qbOpt.correct { background: rgba(255, 122, 24,0.08); border-color: rgba(255, 122, 24,0.35); color: var(--mint); }
 .qbOpt.wrong { background: rgba(255,122,89,0.08); border-color: rgba(255,122,89,0.35); color: var(--rust); }
 .qbOpt.dim { opacity: 0.35; }
 .qbOptLetter { width: 24px; height: 24px; border-radius: 50%; background: var(--hair); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
 .qbFeedback { padding: 12px 14px; border-radius: var(--r-md); font-size: 0.84rem; }
-.qbFeedback.correct { background: rgba(184,255,92,0.07); border: 1px solid rgba(184,255,92,0.2); }
+.qbFeedback.correct { background: rgba(255, 122, 24,0.07); border: 1px solid rgba(255, 122, 24,0.2); }
 .qbFeedback.wrong { background: rgba(255,122,89,0.07); border: 1px solid rgba(255,122,89,0.2); }
 .qbFeedback strong { display: block; margin-bottom: 4px; font-size: 0.83rem; }
 .qbFeedback p { margin: 0; color: rgba(244,241,234,0.65); }
-.qbAiBtn { margin-top: 10px; padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(184,255,92,0.3); background: rgba(184,255,92,0.06); color: var(--mint); font-size: 0.78rem; font-weight: 600; cursor: pointer; min-height: 32px; }
-.qbAiBtn:hover { background: rgba(184,255,92,0.1); }
-.qbAiBlock { margin-top: 12px; padding: 12px 14px; border-radius: var(--r-md); border: 1px solid rgba(184,255,92,0.15); background: rgba(184,255,92,0.04); }
+.qbAiBtn { margin-top: 10px; padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255, 122, 24,0.3); background: rgba(255, 122, 24,0.06); color: var(--mint); font-size: 0.78rem; font-weight: 600; cursor: pointer; min-height: 32px; }
+.qbAiBtn:hover { background: rgba(255, 122, 24,0.1); }
+.qbAiBlock { margin-top: 12px; padding: 12px 14px; border-radius: var(--r-md); border: 1px solid rgba(255, 122, 24,0.15); background: rgba(255, 122, 24,0.04); }
 .qbAiBlockLabel { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--mint); margin-bottom: 6px; }
 .qbAiBlock p { font-size: 0.83rem; margin: 0; color: rgba(244,241,234,0.75); line-height: 1.6; }
 .qbAiTip { margin-top: 8px; font-size: 0.8rem; color: var(--amber); padding: 6px 10px; background: rgba(255,184,107,0.07); border-radius: var(--r-sm); }
@@ -4029,12 +4029,12 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 /* ── Key Definitions ── */
 .defsContent {}
 .defsHeader { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-.defsSearch { flex: 1; min-width: 180px; padding: 10px 14px; border: 1px solid var(--hair-strong); border-radius: var(--r-md); background: rgba(255,255,255,0.03); color: var(--paper); font-size: 0.87rem; }
+.defsSearch { flex: 1; min-width: 180px; padding: 10px 14px; border: 1px solid var(--hair-strong); border-radius: var(--r-md); background: rgba(76, 49, 22, 0.03); color: var(--paper); font-size: 0.87rem; }
 .defsSearch::placeholder { color: var(--paper-faint); }
-.defsSearch:focus { outline: none; border-color: rgba(184,255,92,0.4); }
-.defsSelect { padding: 10px 14px; border: 1px solid var(--hair-strong); border-radius: var(--r-md); background: rgba(255,255,255,0.03); color: var(--paper); font-size: 0.87rem; cursor: pointer; }
+.defsSearch:focus { outline: none; border-color: rgba(255, 122, 24,0.4); }
+.defsSelect { padding: 10px 14px; border: 1px solid var(--hair-strong); border-radius: var(--r-md); background: rgba(76, 49, 22, 0.03); color: var(--paper); font-size: 0.87rem; cursor: pointer; }
 .defsList { display: flex; flex-direction: column; gap: 8px; }
-.defCard { padding: 14px 16px; border-radius: var(--r-md); border: 1px solid var(--hair); background: rgba(255,255,255,0.02); }
+.defCard { padding: 14px 16px; border-radius: var(--r-md); border: 1px solid var(--hair); background: rgba(76, 49, 22, 0.02); }
 .defCardTop { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
 .defTerm { font-size: 0.97rem; font-weight: 700; color: var(--paper); }
 .defCat { font-family: var(--mono); font-size: 10px; color: var(--paper-faint); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
@@ -4143,7 +4143,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   transition: background 0.12s;
 }
 .sidebarChapterHead:hover { background: var(--hair); }
-.sidebarChapterHead.active { background: rgba(184,255,92,0.08); }
+.sidebarChapterHead.active { background: rgba(255, 122, 24,0.08); }
 .shell--learnLight .sidebarChapterHead:hover { background: #f3f4f6; }
 .shell--learnLight .sidebarChapterHead.active { background: #f0fdf4; }
 
@@ -4219,7 +4219,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .noteCalloutComparisonCols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .noteCalloutComparisonCol { padding: 14px 16px; border-radius: var(--r-md); border: 1px solid var(--hair); }
 .noteCalloutComparisonLeft { background: rgba(255,122,89,0.06); border-color: rgba(255,122,89,0.25); }
-.noteCalloutComparisonRight { background: rgba(184,255,92,0.06); border-color: rgba(184,255,92,0.25); }
+.noteCalloutComparisonRight { background: rgba(255, 122, 24,0.06); border-color: rgba(255, 122, 24,0.25); }
 .shell--learnLight .noteCalloutComparisonLeft { background: #fef2f2; border-color: #fecaca; }
 .shell--learnLight .noteCalloutComparisonRight { background: #f0fdf4; border-color: #bbf7d0; }
 .noteCalloutComparisonLabel { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--paper-dim); margin-bottom: 8px; }
@@ -4250,9 +4250,9 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
 .textbookMeta span {
   padding: 6px 10px;
-  border: 1px solid rgba(184, 255, 92, 0.22);
+  border: 1px solid rgba(255, 122, 24, 0.22);
   border-radius: 999px;
-  background: rgba(184, 255, 92, 0.045);
+  background: rgba(255, 122, 24, 0.045);
   color: var(--mint);
   font-family: var(--mono);
   font-size: 10px;
@@ -4286,8 +4286,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 
 .textbookExample {
-  border-color: rgba(184, 255, 92, 0.24);
-  background: rgba(184, 255, 92, 0.045);
+  border-color: rgba(255, 122, 24, 0.24);
+  background: rgba(255, 122, 24, 0.045);
 }
 
 .textbookLesson,
@@ -4338,7 +4338,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border-color: rgba(236, 72, 153, 0.34);
   background:
     linear-gradient(180deg, rgba(236, 72, 153, 0.14), rgba(236, 72, 153, 0.07)),
-    rgba(255, 255, 255, 0.018);
+    rgba(76, 49, 22, 0.018);
 }
 
 .noteArticleDefinition span,
@@ -4400,7 +4400,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border-color: rgba(96, 165, 250, 0.30);
   background:
     linear-gradient(180deg, rgba(96, 165, 250, 0.13), rgba(96, 165, 250, 0.06)),
-    rgba(255, 255, 255, 0.018);
+    rgba(76, 49, 22, 0.018);
 }
 
 .noteArticleCallout.example .noteArticleCalloutLabel {
@@ -4415,7 +4415,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border-color: rgba(255, 122, 89, 0.34);
   background:
     linear-gradient(180deg, rgba(255, 122, 89, 0.14), rgba(255, 122, 89, 0.06)),
-    rgba(255, 255, 255, 0.018);
+    rgba(76, 49, 22, 0.018);
 }
 
 .noteArticleCallout.analogy .noteArticleCalloutLabel::before {
@@ -4427,7 +4427,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border-color: rgba(168, 85, 247, 0.34);
   background:
     linear-gradient(180deg, rgba(168, 85, 247, 0.13), rgba(168, 85, 247, 0.06)),
-    rgba(255, 255, 255, 0.018);
+    rgba(76, 49, 22, 0.018);
 }
 
 .noteArticleCallout.note .noteArticleCalloutLabel {
@@ -4445,7 +4445,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .textbookSketch {
   padding: 24px;
   border: 1px solid var(--hair);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 
 .textbookSketch svg {
@@ -4455,8 +4455,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border: 1px solid var(--hair);
   border-radius: 22px;
   background:
-    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(rgba(76, 49, 22, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(76, 49, 22, 0.035) 1px, transparent 1px),
     rgba(5, 8, 7, 0.46);
   background-size: 42px 42px;
 }
@@ -4509,14 +4509,14 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 
 .sketchBox {
-  fill: rgba(184, 255, 92, 0.08);
-  stroke: rgba(184, 255, 92, 0.36);
+  fill: rgba(255, 122, 24, 0.08);
+  stroke: rgba(255, 122, 24, 0.36);
   stroke-width: 2;
 }
 
 .sketchOrbit {
-  fill: rgba(184, 255, 92, 0.045);
-  stroke: rgba(184, 255, 92, 0.28);
+  fill: rgba(255, 122, 24, 0.045);
+  stroke: rgba(255, 122, 24, 0.28);
   stroke-width: 3;
 }
 
@@ -4525,8 +4525,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border: 1px solid var(--hair);
   border-radius: 28px;
   background:
-    radial-gradient(360px 180px at 80% 8%, rgba(184, 255, 92, 0.075), transparent 66%),
-    rgba(255, 255, 255, 0.018);
+    radial-gradient(360px 180px at 80% 8%, rgba(255, 122, 24, 0.075), transparent 66%),
+    rgba(76, 49, 22, 0.018);
 }
 
 .textbookVisualTitle {
@@ -4556,9 +4556,9 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   width: 210px;
   height: 210px;
   padding: 42px 26px;
-  border: 1px solid rgba(184, 255, 92, 0.26);
+  border: 1px solid rgba(255, 122, 24, 0.26);
   border-radius: 50%;
-  background: rgba(184, 255, 92, 0.065);
+  background: rgba(255, 122, 24, 0.065);
   display: grid;
   align-content: center;
   text-align: center;
@@ -4588,7 +4588,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   transform: translateX(-50%);
   width: 160px;
   padding: 12px;
-  border: 1px solid rgba(184, 255, 92, 0.38);
+  border: 1px solid rgba(255, 122, 24, 0.38);
   border-radius: var(--r-md);
   background: rgba(5, 8, 7, 0.86);
   color: var(--mint);
@@ -4607,9 +4607,9 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .ostRoot {
   justify-self: center;
   padding: 12px 22px;
-  border: 1px solid rgba(184, 255, 92, 0.32);
+  border: 1px solid rgba(255, 122, 24, 0.32);
   border-radius: 999px;
-  background: rgba(184, 255, 92, 0.075);
+  background: rgba(255, 122, 24, 0.075);
   color: var(--paper);
   font-weight: 700;
 }
@@ -4627,7 +4627,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 14px;
   border: 1px solid var(--hair);
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 
 .ostBranch strong {
@@ -4640,7 +4640,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 14px 16px;
   border: 1px solid var(--hair);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.022);
+  background: rgba(76, 49, 22, 0.022);
   color: var(--paper-dim);
   font-size: 16px;
   line-height: 1.35;
@@ -4670,7 +4670,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 
 .forcesGrid div {
-  border-color: rgba(184, 255, 92, 0.18);
+  border-color: rgba(255, 122, 24, 0.18);
 }
 
 .forcesGrid .forceNegative {
@@ -4678,8 +4678,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 
 .sidebarSubtopic.active {
-  border-color: rgba(184, 255, 92, 0.36);
-  background: rgba(184, 255, 92, 0.08);
+  border-color: rgba(255, 122, 24, 0.36);
+  background: rgba(255, 122, 24, 0.08);
 }
 
 .sidebarSubtopic.active .sidebarSubDot {
@@ -4721,7 +4721,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 /* ============================ Unified dojo dark system ============================ */
 .shell {
   background:
-    radial-gradient(920px 420px at 82% 16%, rgba(184, 255, 92, 0.055), transparent 62%),
+    radial-gradient(920px 420px at 82% 16%, rgba(255, 122, 24, 0.055), transparent 62%),
     radial-gradient(740px 420px at 8% 82%, rgba(255, 184, 107, 0.035), transparent 58%),
     var(--ink);
 }
@@ -4733,7 +4733,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .topbar {
   min-height: 64px;
   background: rgba(6, 8, 7, 0.82);
-  border-bottom-color: rgba(255, 255, 255, 0.085);
+  border-bottom-color: rgba(76, 49, 22, 0.085);
 }
 
 .brand-mark {
@@ -4786,7 +4786,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border-color: var(--hair);
   border-radius: var(--r-lg);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.026), rgba(255, 255, 255, 0.012)),
+    linear-gradient(180deg, rgba(76, 49, 22, 0.026), rgba(76, 49, 22, 0.012)),
     rgba(5, 8, 7, 0.52);
 }
 
@@ -4802,8 +4802,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border: 1px solid var(--hair);
   border-radius: var(--r-lg);
   background:
-    radial-gradient(460px 180px at 80% 12%, rgba(184, 255, 92, 0.12), transparent 64%),
-    rgba(255, 255, 255, 0.018);
+    radial-gradient(460px 180px at 80% 12%, rgba(255, 122, 24, 0.12), transparent 64%),
+    rgba(76, 49, 22, 0.018);
 }
 
 .learnScreenTitle,
@@ -4837,7 +4837,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 8px;
   border: 1px solid var(--hair);
   border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 
 .learnTab {
@@ -4857,7 +4857,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .home-menu button:hover,
 .home-menu button.active,
 .home-menu-group button:hover {
-  background: rgba(184, 255, 92, 0.08);
+  background: rgba(255, 122, 24, 0.08);
   color: var(--mint);
 }
 
@@ -4870,7 +4870,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .quizOpt,
 .interviewChoiceList button {
   border-color: var(--hair);
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(76, 49, 22, 0.018);
 }
 
 .sidebarChapterHead:hover,
@@ -4881,8 +4881,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .quizOpt:hover:not(:disabled),
 .interviewChoiceList button:hover,
 .interviewChoiceList button.active {
-  border-color: rgba(184, 255, 92, 0.34);
-  background: rgba(184, 255, 92, 0.06);
+  border-color: rgba(255, 122, 24, 0.34);
+  background: rgba(255, 122, 24, 0.06);
 }
 
 .resourcesOverview {
@@ -4919,8 +4919,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   border: 1px solid var(--hair);
   border-radius: var(--r-lg);
   background:
-    radial-gradient(260px 140px at 86% 10%, rgba(184, 255, 92, 0.055), transparent 64%),
-    rgba(255, 255, 255, 0.018);
+    radial-gradient(260px 140px at 86% 10%, rgba(255, 122, 24, 0.055), transparent 64%),
+    rgba(76, 49, 22, 0.018);
   transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
 }
 
@@ -4938,17 +4938,17 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .chapter:hover,
 .track-card:hover,
 .subject-card:hover {
-  border-color: rgba(184, 255, 92, 0.34);
+  border-color: rgba(255, 122, 24, 0.34);
   background:
-    radial-gradient(300px 160px at 86% 10%, rgba(184, 255, 92, 0.09), transparent 64%),
-    rgba(255, 255, 255, 0.032);
+    radial-gradient(300px 160px at 86% 10%, rgba(255, 122, 24, 0.09), transparent 64%),
+    rgba(76, 49, 22, 0.032);
   transform: translateY(-1px);
 }
 
 .casePrepMenuIcon {
   border-radius: var(--r-md);
-  border-color: rgba(184, 255, 92, 0.24);
-  background: rgba(184, 255, 92, 0.055);
+  border-color: rgba(255, 122, 24, 0.24);
+  background: rgba(255, 122, 24, 0.055);
 }
 
 .casePrepMenuIcon > span {
@@ -4964,8 +4964,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .casePrepMenuIcon.cyan,
 .casePrepMenuIcon.pink {
   --tile-accent: var(--ink);
-  --tile-bg: rgba(184, 255, 92, 0.055);
-  --tile-border: rgba(184, 255, 92, 0.24);
+  --tile-bg: rgba(255, 122, 24, 0.055);
+  --tile-border: rgba(255, 122, 24, 0.24);
 }
 
 .noteArticleDefinition,
@@ -4983,7 +4983,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .practice-task {
   border-color: var(--hair);
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.022);
+  background: rgba(76, 49, 22, 0.022);
 }
 
 .noteArticleDefinition,
@@ -5032,8 +5032,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .skill,
 .linked-steps span,
 .noteArticleSources a {
-  border-color: rgba(184, 255, 92, 0.2);
-  background: rgba(184, 255, 92, 0.045);
+  border-color: rgba(255, 122, 24, 0.2);
+  background: rgba(255, 122, 24, 0.045);
   color: var(--mint);
 }
 
@@ -5085,7 +5085,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .defsSearch,
 .defsSelect {
   border-color: var(--hair);
-  background: rgba(255, 255, 255, 0.022);
+  background: rgba(76, 49, 22, 0.022);
 }
 
 .field input:focus,
@@ -5104,8 +5104,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .interviewReview.passed,
 .quizFeedback.ok,
 .noteArticlePractice {
-  background: rgba(184, 255, 92, 0.045);
-  border-color: rgba(184, 255, 92, 0.22);
+  background: rgba(255, 122, 24, 0.045);
+  border-color: rgba(255, 122, 24, 0.22);
 }
 
 .interviewReview,
