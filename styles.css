@@ -5194,3 +5194,117 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
     grid-template-columns: 1fr;
   }
 }
+
+/* ─────────── Interview type / grade picker ─────────── */
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.choice-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.choice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--paper);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--sans);
+}
+
+.choice-card:hover {
+  border-color: rgba(192, 255, 0, 0.4);
+  background: rgba(192, 255, 0, 0.04);
+}
+
+.choice-card.active {
+  border-color: var(--ink-accent, #c0ff00);
+  background: rgba(192, 255, 0, 0.08);
+  box-shadow: 0 0 0 1px var(--ink-accent, #c0ff00);
+}
+
+.choice-card strong {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.choice-card small {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.4;
+}
+
+@media (max-width: 720px) {
+  .choice-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─────────── Phase sub-questions in Workspace ─────────── */
+
+.phase-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.phase-question {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.phase-question-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.phase-question-num {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(192, 255, 0, 0.5);
+  color: var(--ink-accent, #c0ff00);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phase-question-text {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--paper);
+}
+
+.phase-question-hint {
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 4px;
+}

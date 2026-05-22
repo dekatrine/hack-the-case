@@ -264,10 +264,36 @@ const TrackCard = ({ track, idx, onPick }) => {
 };
 
 /* ──────────────────────────── Track detail ─────────────────────────── */
+const INTERVIEW_TYPES = {
+  product: [
+    { id: 'product_sense', label: 'Product Sense', sub: 'Improve product / generate ideas' },
+    { id: 'product_design', label: 'Product Design', sub: 'Design a new product for X' },
+    { id: 'product_execution', label: 'Execution / Analytics', sub: 'Метрика упала, root cause' },
+    { id: 'product_strategy', label: 'Product Strategy', sub: 'Where to play, how to win' },
+    { id: 'product_growth', label: 'Product Growth', sub: 'AARRR, funnel optimization' },
+  ],
+  business: [
+    { id: 'profitability', label: 'Profitability', sub: 'Прибыль упала / выросла' },
+    { id: 'market_entry', label: 'Market Entry', sub: 'Войти ли на рынок Y' },
+    { id: 'pricing', label: 'Pricing', sub: 'Назначить или изменить цену' },
+    { id: 'growth_case', label: 'Growth', sub: 'Удвоить выручку / клиентов' },
+    { id: 'ma', label: 'M&A', sub: 'Купить ли компанию X' },
+  ],
+};
+
+const GRADES = [
+  { id: 'junior', label: 'Junior', sub: '1–2 года, базовые фреймворки' },
+  { id: 'middle', label: 'Middle', sub: '3–5 лет, ownership продукта' },
+  { id: 'senior', label: 'Senior', sub: '5+, strategy + leadership' },
+];
+
 const TrackDetail = ({ track, industries, difficulties, onStart, onBack }) => {
   const [industry, setIndustry] = useState(industries?.[0] || '');
   const [difficulty, setDifficulty] = useState(Object.keys(difficulties || {})[0] || '');
   const [extra, setExtra] = useState('');
+  const interviewTypes = INTERVIEW_TYPES[track.id] || INTERVIEW_TYPES.product;
+  const [interviewType, setInterviewType] = useState(interviewTypes[0].id);
+  const [grade, setGrade] = useState('middle');
 
   return (
     <div className="fade-in">
@@ -284,6 +310,41 @@ const TrackDetail = ({ track, industries, difficulties, onStart, onBack }) => {
       </div>
 
       <h2 style={{ marginTop: 64 }}>Сгенерировать кейс</h2>
+
+      <div className="field" style={{ marginBottom: 24 }}>
+        <label>Вид интервью</label>
+        <div className="choice-grid">
+          {interviewTypes.map((opt) => (
+            <button
+              key={opt.id}
+              className={`choice-card${interviewType === opt.id ? ' active' : ''}`}
+              onClick={() => setInterviewType(opt.id)}
+              type="button"
+            >
+              <strong>{opt.label}</strong>
+              <small>{opt.sub}</small>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="field" style={{ marginBottom: 24 }}>
+        <label>Грейд кандидата</label>
+        <div className="choice-grid choice-grid-3">
+          {GRADES.map((opt) => (
+            <button
+              key={opt.id}
+              className={`choice-card${grade === opt.id ? ' active' : ''}`}
+              onClick={() => setGrade(opt.id)}
+              type="button"
+            >
+              <strong>{opt.label}</strong>
+              <small>{opt.sub}</small>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="form-grid">
         <div className="field">
           <label>Отрасль</label>
@@ -310,7 +371,14 @@ const TrackDetail = ({ track, industries, difficulties, onStart, onBack }) => {
         <div className="full-width">
           <button
             className="btn btn-primary"
-            onClick={() => onStart({ industry, difficulty, extraContext: extra, trackId: track.id })}
+            onClick={() => onStart({
+              industry,
+              difficulty,
+              extraContext: extra,
+              trackId: track.id,
+              interviewType,
+              grade,
+            })}
           >
             Начать симуляцию <span className="arrow">→</span>
           </button>
@@ -362,6 +430,27 @@ const getTrackSteps = (track, steps, overrideIds = null) => {
   return dedupe(ids)
     .map((id) => stepById.get(id))
     .filter(Boolean);
+};
+
+/**
+ * Превратить AI-фазу в "step-like" объект, совместимый с существующими
+ * компонентами (StepsRail, StepBlock, CoachPanel). Поле questions[] — это
+ * sub-вопросы фазы, на каждый студент даёт отдельный ответ.
+ */
+const phasesAsRouteItems = (phases) => {
+  if (!Array.isArray(phases) || phases.length === 0) return null;
+  return phases
+    .filter((phase) => phase && phase.id && phase.title && Array.isArray(phase.questions))
+    .map((phase, idx) => ({
+      id: phase.id,
+      title: `${idx + 1}. ${phase.title}`,
+      description: phase.focus || '',
+      isPhase: true,
+      questions: phase.questions,
+      frameworks: [],
+      caseHint: phase.focus || '',
+      theory: {},
+    }));
 };
 
 const getActiveChapter = (track, step) =>
@@ -845,11 +934,16 @@ const MobileStepStrip = ({ steps, activeIdx, answers, onPick }) => {
 };
 
 /* ──────────────────────────── Workspace ─────────────────────────────── */
-const Workspace = ({ caseText, steps, track, aiStepIds, onEvaluate, evaluation, onBack }) => {
+const Workspace = ({ caseText, steps, track, aiStepIds, aiPhases, onEvaluate, evaluation, onBack }) => {
   const [activeIdx, setActiveIdx] = useState(0);
   const [answers, setAnswers] = useState({});
   const [coachOpen, setCoachOpen] = useState(false);
-  const trackSteps = useMemo(() => getTrackSteps(track, steps, aiStepIds), [track, steps, aiStepIds]);
+  const trackSteps = useMemo(() => {
+    // Если AI вернул phases с sub-вопросами — используем их вместо steps.
+    const phaseItems = phasesAsRouteItems(aiPhases);
+    if (phaseItems && phaseItems.length > 0) return phaseItems;
+    return getTrackSteps(track, steps, aiStepIds);
+  }, [track, steps, aiStepIds, aiPhases]);
   const step = trackSteps[Math.min(activeIdx, trackSteps.length - 1)];
   const activeChapter = getActiveChapter(track, step);
 
@@ -890,6 +984,8 @@ const Workspace = ({ caseText, steps, track, aiStepIds, onEvaluate, evaluation, 
             total={trackSteps.length}
             answer={answers[step.id] || ''}
             onAnswer={(v) => setAnswer(step.id, v)}
+            allAnswers={answers}
+            onAnswerById={setAnswer}
             onNext={() => setActiveIdx((i) => Math.min(i + 1, trackSteps.length - 1))}
             onPrev={() => setActiveIdx((i) => Math.max(i - 1, 0))}
             isLast={activeIdx === trackSteps.length - 1}
@@ -1103,39 +1199,71 @@ const LearningFlow = ({ steps }) => (
   </div>
 );
 
-const StepBlock = ({ step, chapter, idx, total, answer, onAnswer, onNext, onPrev, isLast, onEvaluate }) => (
-  <div className="step-block" key={step.id}>
-    <div className="step-meta">
-      <span className="idx">{chapter?.circle || `глава ${idx + 1}`} </span>
-      <span className="step-seq">step {idx + 1} / {total}</span>
-    </div>
-    <h2>{step.title}</h2>
-    <p className="desc">{step.description}</p>
-    {step.frameworks?.length > 0 && (
-      <div className="frameworks">
-        {step.frameworks.map((f) => <span key={f} className="fw">{f}</span>)}
+const StepBlock = ({ step, chapter, idx, total, answer, onAnswer, allAnswers, onAnswerById, onNext, onPrev, isLast, onEvaluate }) => {
+  const inputStyle = {
+    width: '100%', minHeight: 120, padding: 16,
+    background: 'var(--ink-soft)', color: 'var(--paper)',
+    border: '1px solid var(--hair)', borderRadius: 6,
+    fontFamily: 'var(--sans)', fontSize: 14, lineHeight: 1.6, resize: 'vertical',
+  };
+
+  return (
+    <div className="step-block" key={step.id}>
+      <div className="step-meta">
+        <span className="idx">{chapter?.circle || (step.isPhase ? `фаза ${idx + 1}` : `глава ${idx + 1}`)} </span>
+        <span className="step-seq">{step.isPhase ? 'phase' : 'step'} {idx + 1} / {total}</span>
       </div>
-    )}
-    {step.caseHint && <div className="hint">{step.caseHint}</div>}
-    <textarea
-      className="answer-input"
-      style={{
-        width: '100%', minHeight: 180, padding: 16,
-        background: 'var(--ink-soft)', color: 'var(--paper)',
-        border: '1px solid var(--hair)', borderRadius: 6,
-        fontFamily: 'var(--sans)', fontSize: 14, lineHeight: 1.6, resize: 'vertical',
-      }}
-      placeholder="Запиши ответ — структурно, с опорой на данные кейса…"
-      value={answer}
-      onChange={(e) => onAnswer(e.target.value)}
-    />
-    <div className="actions">
-      <button className="btn btn-ghost" onClick={onPrev} disabled={idx === 0}>← Назад</button>
-      {!isLast && <button className="btn btn-primary" onClick={onNext}>Дальше <span className="arrow">→</span></button>}
-      {isLast && <button className="btn btn-primary" onClick={onEvaluate}>Оценить решение <span className="arrow">→</span></button>}
+      <h2>{step.title}</h2>
+      {step.description && <p className="desc">{step.description}</p>}
+      {step.frameworks?.length > 0 && (
+        <div className="frameworks">
+          {step.frameworks.map((f) => <span key={f} className="fw">{f}</span>)}
+        </div>
+      )}
+      {step.caseHint && !step.isPhase && <div className="hint">{step.caseHint}</div>}
+
+      {step.isPhase && Array.isArray(step.questions) ? (
+        <div className="phase-questions">
+          {step.questions.map((q, qIdx) => {
+            const key = `${step.id}__${q.id}`;
+            return (
+              <div key={key} className="phase-question">
+                <div className="phase-question-head">
+                  <span className="phase-question-num">{qIdx + 1}</span>
+                  <div>
+                    <div className="phase-question-text">{q.text}</div>
+                    {q.hint && <div className="phase-question-hint">{q.hint}</div>}
+                  </div>
+                </div>
+                <textarea
+                  className="answer-input"
+                  style={inputStyle}
+                  placeholder="Ответ на этот вопрос — кратко, с опорой на данные кейса…"
+                  value={allAnswers?.[key] || ''}
+                  onChange={(e) => onAnswerById(key, e.target.value)}
+                />
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <textarea
+          className="answer-input"
+          style={{ ...inputStyle, minHeight: 180 }}
+          placeholder="Запиши ответ — структурно, с опорой на данные кейса…"
+          value={answer}
+          onChange={(e) => onAnswer(e.target.value)}
+        />
+      )}
+
+      <div className="actions">
+        <button className="btn btn-ghost" onClick={onPrev} disabled={idx === 0}>← Назад</button>
+        {!isLast && <button className="btn btn-primary" onClick={onNext}>Дальше <span className="arrow">→</span></button>}
+        {isLast && <button className="btn btn-primary" onClick={onEvaluate}>Оценить решение <span className="arrow">→</span></button>}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* ──────────────────────────── Coach ─────────────────────────────── */
 const CoachPanel = ({ step, caseText, answer, previousAnswers, trackId }) => {
@@ -1638,6 +1766,7 @@ const App = () => {
   const [track, setTrack] = useState(null);
   const [caseText, setCaseText] = useState('');
   const [aiStepIds, setAiStepIds] = useState([]);
+  const [aiPhases, setAiPhases] = useState([]);
   const [busy, setBusy] = useState(false);
   const [evaluation, setEvaluation] = useState(null);
 
@@ -1653,6 +1782,7 @@ const App = () => {
       const res = await api.generate(params);
       setCaseText(res.caseText);
       setAiStepIds(Array.isArray(res.suggestedStepIds) ? res.suggestedStepIds : []);
+      setAiPhases(Array.isArray(res.phases) ? res.phases : []);
       setScreen('workspace');
     } catch (e) {
       setErr(e.message);
@@ -1726,6 +1856,7 @@ const App = () => {
             steps={config.steps}
             track={track}
             aiStepIds={aiStepIds}
+            aiPhases={aiPhases}
             onEvaluate={evaluate}
             evaluation={evaluation}
             onBack={() => setScreen('track')}

@@ -14,11 +14,13 @@ from .prompts import (
     CASE_GENERATION_SYSTEM,
     INTERVIEW_CHECK_SYSTEM,
     INTERVIEW_GENERATION_SYSTEM,
+    PHASE_GENERATION_SYSTEM,
     RUBRIC_SYSTEM,
     STEP_SELECTION_SYSTEM,
     get_coach_system_prompt,
 )
 from .schemas import (
+    CasePhase,
     CheckInterviewRequest,
     CheckInterviewResponse,
     CoachRequest,
@@ -33,6 +35,7 @@ from .schemas import (
     LearnExplainResponse,
     LearnSessionRequest,
     LearnSessionResponse,
+    PhaseQuestion,
 )
 
 
@@ -121,14 +124,27 @@ def generate_case(payload: GenerateCaseRequest) -> GenerateCaseResponse:
 
     try:
         case_text = call_yandex_gpt(CASE_GENERATION_SYSTEM, prompt, temperature=0.8)
-        suggested_step_ids = pick_steps_for_case(
+        phases = generate_phases_for_case(
             case_text=case_text,
             track_id=payload.trackId,
             track_name=track_name,
+            interview_type=payload.interviewType,
+            grade=payload.grade,
         )
+        # Сохраняем suggestedStepIds для обратной совместимости фронта
+        # (если phases пустые — фронт упадёт на старый pick_steps).
+        if phases:
+            suggested_step_ids: list[str] = []
+        else:
+            suggested_step_ids = pick_steps_for_case(
+                case_text=case_text,
+                track_id=payload.trackId,
+                track_name=track_name,
+            )
         return GenerateCaseResponse(
             caseText=case_text,
             suggestedStepIds=suggested_step_ids,
+            phases=phases,
         )
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
@@ -173,6 +189,135 @@ def pick_steps_for_case(*, case_text: str, track_id: str | None, track_name: str
 
 MIN_PICKED_STEPS = 5
 MAX_PICKED_STEPS = 7
+
+MIN_PHASES = 5
+MAX_PHASES = 7
+MIN_QUESTIONS_PER_PHASE = 2
+MAX_QUESTIONS_PER_PHASE = 4
+
+INTERVIEW_TYPE_LABELS = {
+    "product_sense": "Product Sense",
+    "product_design": "Product Design",
+    "product_execution": "Product Execution / Analytics",
+    "product_strategy": "Product Strategy",
+    "product_growth": "Product Growth",
+    "profitability": "Consulting · Profitability",
+    "market_entry": "Consulting · Market Entry",
+    "pricing": "Consulting · Pricing",
+    "growth_case": "Consulting · Growth",
+    "ma": "Consulting · M&A",
+}
+
+GRADE_LABELS = {
+    "junior": "Junior (1-2 года опыта)",
+    "middle": "Middle (3-5 лет опыта)",
+    "senior": "Senior (5+ лет, ownership)",
+}
+
+
+def generate_phases_for_case(
+    *,
+    case_text: str,
+    track_id: str | None,
+    track_name: str,
+    interview_type: str | None,
+    grade: str | None,
+) -> list[CasePhase]:
+    """Сгенерировать AI-фазы маршрута решения под конкретный кейс.
+
+    Возвращает список из 5-7 фаз, каждая содержит 2-4 sub-вопроса.
+    При ошибке/пустом ответе LLM — возвращает пустой список, и фронт
+    падает на старые stepIds через suggestedStepIds."""
+    interview_label = INTERVIEW_TYPE_LABELS.get(interview_type or "", interview_type or "")
+    grade_label = GRADE_LABELS.get(grade or "", grade or "middle")
+
+    prompt = (
+        f"Направление: {track_name}\n"
+        f"Тип трека: {track_id or 'business'}\n"
+        f"Вид интервью: {interview_label or '(не выбран — подбери под содержание кейса)'}\n"
+        f"Грейд кандидата: {grade_label}\n\n"
+        f"Текст кейса:\n{case_text[:4000]}\n\n"
+        "Собери маршрут из 5–7 фаз решения этого кейса. В каждой фазе — 2–4 sub-вопроса, "
+        "конкретно про этот кейс. Финальная фаза — рекомендация и risks. Верни JSON с полем phases."
+    )
+
+    try:
+        raw = call_yandex_gpt(
+            PHASE_GENERATION_SYSTEM,
+            prompt,
+            temperature=0.3,
+            max_tokens=2000,
+        )
+    except RuntimeError:
+        return []
+
+    return _parse_phases(raw)
+
+
+def _parse_phases(raw: str) -> list[CasePhase]:
+    """Распарсить ответ LLM в список CasePhase с валидацией."""
+    if not raw:
+        return []
+    text = raw.strip()
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        return []
+    try:
+        parsed = json.loads(match.group(0))
+    except json.JSONDecodeError:
+        return []
+    items = parsed.get("phases") or []
+    if not isinstance(items, list):
+        return []
+
+    phases: list[CasePhase] = []
+    seen_phase_ids: set[str] = set()
+    for raw_phase in items:
+        if not isinstance(raw_phase, dict):
+            continue
+        phase_id = str(raw_phase.get("id", "")).strip()
+        title = str(raw_phase.get("title", "")).strip()
+        if not phase_id or not title:
+            continue
+        # Гарантируем уникальность phase_id
+        base_id = phase_id
+        suffix = 2
+        while phase_id in seen_phase_ids:
+            phase_id = f"{base_id}_{suffix}"
+            suffix += 1
+        seen_phase_ids.add(phase_id)
+
+        focus = str(raw_phase.get("focus", "")).strip()
+        questions_raw = raw_phase.get("questions") or []
+        if not isinstance(questions_raw, list):
+            continue
+
+        questions: list[PhaseQuestion] = []
+        seen_q_ids: set[str] = set()
+        for idx, raw_q in enumerate(questions_raw):
+            if not isinstance(raw_q, dict):
+                continue
+            q_text = str(raw_q.get("text", "")).strip()
+            if not q_text:
+                continue
+            q_id = str(raw_q.get("id", "") or f"q{idx + 1}").strip()
+            if q_id in seen_q_ids:
+                q_id = f"q{idx + 1}"
+            seen_q_ids.add(q_id)
+            q_hint = str(raw_q.get("hint", "")).strip()
+            questions.append(PhaseQuestion(id=q_id, text=q_text, hint=q_hint))
+            if len(questions) >= MAX_QUESTIONS_PER_PHASE:
+                break
+
+        if len(questions) < MIN_QUESTIONS_PER_PHASE:
+            continue
+        phases.append(CasePhase(id=phase_id, title=title, focus=focus, questions=questions))
+        if len(phases) >= MAX_PHASES:
+            break
+
+    if len(phases) < MIN_PHASES:
+        return []
+    return phases
 
 
 def _parse_step_ids(raw: str, allowed_ids: list[str]) -> list[str]:

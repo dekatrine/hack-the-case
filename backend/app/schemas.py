@@ -7,11 +7,27 @@ class GenerateCaseRequest(BaseModel):
     extraContext: str = ""
     trackId: str | None = None
     chapterId: str | None = None
+    interviewType: str | None = None
+    grade: str | None = None
+
+
+class PhaseQuestion(BaseModel):
+    id: str
+    text: str
+    hint: str = ""
+
+
+class CasePhase(BaseModel):
+    id: str
+    title: str
+    focus: str = ""
+    questions: list[PhaseQuestion] = Field(default_factory=list)
 
 
 class GenerateCaseResponse(BaseModel):
     caseText: str
     suggestedStepIds: list[str] = Field(default_factory=list)
+    phases: list[CasePhase] = Field(default_factory=list)
 
 
 class GenerateInterviewRequest(BaseModel):
