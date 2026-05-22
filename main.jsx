@@ -291,6 +291,7 @@ const TrackDetail = ({ track, industries, difficulties, onStart, onBack }) => {
   const [industry, setIndustry] = useState(industries?.[0] || '');
   const [difficulty, setDifficulty] = useState(Object.keys(difficulties || {})[0] || '');
   const [extra, setExtra] = useState('');
+  const isProductTrack = track.id === 'product';
   const interviewTypes = INTERVIEW_TYPES[track.id] || INTERVIEW_TYPES.product;
   const [interviewType, setInterviewType] = useState(interviewTypes[0].id);
   const [grade, setGrade] = useState('middle');
@@ -311,39 +312,43 @@ const TrackDetail = ({ track, industries, difficulties, onStart, onBack }) => {
 
       <h2 style={{ marginTop: 64 }}>Сгенерировать кейс</h2>
 
-      <div className="field" style={{ marginBottom: 24 }}>
-        <label>Вид интервью</label>
-        <div className="choice-grid">
-          {interviewTypes.map((opt) => (
-            <button
-              key={opt.id}
-              className={`choice-card${interviewType === opt.id ? ' active' : ''}`}
-              onClick={() => setInterviewType(opt.id)}
-              type="button"
-            >
-              <strong>{opt.label}</strong>
-              <small>{opt.sub}</small>
-            </button>
-          ))}
-        </div>
-      </div>
+      {isProductTrack && (
+        <>
+          <div className="field" style={{ marginBottom: 24 }}>
+            <label>Вид интервью</label>
+            <div className="choice-grid">
+              {interviewTypes.map((opt) => (
+                <button
+                  key={opt.id}
+                  className={`choice-card${interviewType === opt.id ? ' active' : ''}`}
+                  onClick={() => setInterviewType(opt.id)}
+                  type="button"
+                >
+                  <strong>{opt.label}</strong>
+                  <small>{opt.sub}</small>
+                </button>
+              ))}
+            </div>
+          </div>
 
-      <div className="field" style={{ marginBottom: 24 }}>
-        <label>Грейд кандидата</label>
-        <div className="choice-grid choice-grid-3">
-          {GRADES.map((opt) => (
-            <button
-              key={opt.id}
-              className={`choice-card${grade === opt.id ? ' active' : ''}`}
-              onClick={() => setGrade(opt.id)}
-              type="button"
-            >
-              <strong>{opt.label}</strong>
-              <small>{opt.sub}</small>
-            </button>
-          ))}
-        </div>
-      </div>
+          <div className="field" style={{ marginBottom: 24 }}>
+            <label>Грейд кандидата</label>
+            <div className="choice-grid choice-grid-3">
+              {GRADES.map((opt) => (
+                <button
+                  key={opt.id}
+                  className={`choice-card${grade === opt.id ? ' active' : ''}`}
+                  onClick={() => setGrade(opt.id)}
+                  type="button"
+                >
+                  <strong>{opt.label}</strong>
+                  <small>{opt.sub}</small>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="form-grid">
         <div className="field">
@@ -371,14 +376,11 @@ const TrackDetail = ({ track, industries, difficulties, onStart, onBack }) => {
         <div className="full-width">
           <button
             className="btn btn-primary"
-            onClick={() => onStart({
-              industry,
-              difficulty,
-              extraContext: extra,
-              trackId: track.id,
-              interviewType,
-              grade,
-            })}
+            onClick={() => onStart(
+              isProductTrack
+                ? { industry, difficulty, extraContext: extra, trackId: track.id, interviewType, grade }
+                : { industry, difficulty, extraContext: extra, trackId: track.id }
+            )}
           >
             Начать симуляцию <span className="arrow">→</span>
           </button>

@@ -7,18 +7,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --ink: #0b0d0c;
-  --ink-soft: #111513;
-  --ink-card: #14191700;
-  --hair: rgba(255, 255, 255, 0.08);
-  --hair-strong: rgba(255, 255, 255, 0.16);
-  --paper: #f4f1ea;
-  --paper-dim: rgba(244, 241, 234, 0.62);
-  --paper-faint: rgba(244, 241, 234, 0.42);
-  --mint: #b8ff5c;
-  --mint-deep: #7be000;
-  --amber: #ffb86b;
-  --rust: #ff7a59;
+  /* Светлая бежевая тема с оранжевыми акцентами */
+  --ink: #f6efe2;          /* основной фон — тёплый бежевый */
+  --ink-soft: #ede4d2;     /* чуть темнее для карточек/инпутов */
+  --ink-card: #fbf6ec;     /* самый светлый — для card-фонов */
+  --hair: rgba(76, 49, 22, 0.10);
+  --hair-strong: rgba(76, 49, 22, 0.20);
+  --paper: #2a1d11;        /* основной текст — тёплый тёмно-коричневый */
+  --paper-dim: rgba(42, 29, 17, 0.66);
+  --paper-faint: rgba(42, 29, 17, 0.44);
+  --mint: #ff7a18;         /* акцент — насыщенный оранжевый (бывший mint) */
+  --mint-deep: #d95a00;    /* глубокий оранжевый (бывший mint-deep) */
+  --amber: #ffa14d;        /* мягкий теплый */
+  --rust: #c0461e;         /* красновато-оранжевый */
   --serif: 'Fraunces', 'Times New Roman', serif;
   --sans: 'IBM Plex Sans', system-ui, sans-serif;
   --mono: 'JetBrains Mono', 'SF Mono', monospace;
@@ -37,8 +38,8 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   background:
-    radial-gradient(1200px 600px at 85% -10%, rgba(184, 255, 92, 0.08), transparent 60%),
-    radial-gradient(900px 500px at -10% 110%, rgba(255, 122, 89, 0.06), transparent 55%),
+    radial-gradient(1200px 600px at 85% -10%, rgba(255, 122, 24, 0.12), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(217, 90, 0, 0.08), transparent 55%),
     var(--ink);
   background-attachment: fixed;
 }
@@ -5150,10 +5151,10 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .realExampleCard {
   border-radius: 22px;
   padding: 22px 24px;
-  border: 1px solid rgba(132, 204, 255, 0.22);
+  border: 1px solid var(--hair-strong);
   background:
-    linear-gradient(180deg, rgba(96, 165, 250, 0.08), rgba(96, 165, 250, 0.03)),
-    rgba(255, 255, 255, 0.018);
+    linear-gradient(180deg, rgba(255, 122, 24, 0.08), rgba(255, 122, 24, 0.03)),
+    var(--ink-card);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -5163,7 +5164,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   font-family: var(--sans);
   font-size: 18px;
   font-weight: 800;
-  color: #60a5fa;
+  color: var(--mint);
   letter-spacing: 0.2px;
 }
 
@@ -5174,7 +5175,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
 .realExampleRow strong {
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--paper);
   margin-right: 6px;
 }
 
@@ -5215,8 +5216,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   gap: 6px;
   padding: 14px 16px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--hair-strong);
+  background: var(--ink-card);
   color: var(--paper);
   text-align: left;
   cursor: pointer;
@@ -5225,14 +5226,14 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 
 .choice-card:hover {
-  border-color: rgba(192, 255, 0, 0.4);
-  background: rgba(192, 255, 0, 0.04);
+  border-color: var(--mint);
+  background: rgba(255, 122, 24, 0.06);
 }
 
 .choice-card.active {
-  border-color: var(--ink-accent, #c0ff00);
-  background: rgba(192, 255, 0, 0.08);
-  box-shadow: 0 0 0 1px var(--ink-accent, #c0ff00);
+  border-color: var(--mint);
+  background: rgba(255, 122, 24, 0.12);
+  box-shadow: 0 0 0 1px var(--mint);
 }
 
 .choice-card strong {
@@ -5243,7 +5244,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
 .choice-card small {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--paper-dim);
   line-height: 1.4;
 }
 
@@ -5268,8 +5269,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   gap: 10px;
   padding: 16px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--hair);
+  background: var(--ink-card);
 }
 
 .phase-question-head {
@@ -5283,8 +5284,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid rgba(192, 255, 0, 0.5);
-  color: var(--ink-accent, #c0ff00);
+  border: 1px solid var(--mint);
+  color: var(--mint);
   font-family: var(--sans);
   font-size: 13px;
   font-weight: 700;
@@ -5305,6 +5306,6 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   font-family: var(--sans);
   font-size: 13px;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--paper-dim);
   margin-top: 4px;
 }

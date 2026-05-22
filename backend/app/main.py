@@ -124,23 +124,30 @@ def generate_case(payload: GenerateCaseRequest) -> GenerateCaseResponse:
 
     try:
         case_text = call_yandex_gpt(CASE_GENERATION_SYSTEM, prompt, temperature=0.8)
-        phases = generate_phases_for_case(
-            case_text=case_text,
-            track_id=payload.trackId,
-            track_name=track_name,
-            interview_type=payload.interviewType,
-            grade=payload.grade,
-        )
-        # Сохраняем suggestedStepIds для обратной совместимости фронта
-        # (если phases пустые — фронт упадёт на старый pick_steps).
-        if phases:
-            suggested_step_ids: list[str] = []
-        else:
-            suggested_step_ids = pick_steps_for_case(
+
+        # AI-маршрут (phases + step selection) — только для product-трека.
+        # Для business-трека возвращаем кейс «как есть»: фронт использует
+        # статические stepIds из track.chapters.
+        if payload.trackId == "product":
+            phases = generate_phases_for_case(
                 case_text=case_text,
                 track_id=payload.trackId,
                 track_name=track_name,
+                interview_type=payload.interviewType,
+                grade=payload.grade,
             )
+            if phases:
+                suggested_step_ids: list[str] = []
+            else:
+                suggested_step_ids = pick_steps_for_case(
+                    case_text=case_text,
+                    track_id=payload.trackId,
+                    track_name=track_name,
+                )
+        else:
+            phases = []
+            suggested_step_ids = []
+
         return GenerateCaseResponse(
             caseText=case_text,
             suggestedStepIds=suggested_step_ids,
