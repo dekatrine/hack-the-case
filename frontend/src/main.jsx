@@ -26,6 +26,7 @@ function App() {
   const [evaluation, setEvaluation] = useState('');
   const [loading, setLoading] = useState('');
   const [error, setError] = useState('');
+  const [track, setTrack] = useState('product');
 
   useEffect(() => {
     fetchConfig()
@@ -48,7 +49,7 @@ function App() {
     setLoading('Генерирую кейс...');
     setError('');
     try {
-      const data = await generateCase({ industry, difficulty, extraContext });
+      const data = await generateCase({ industry, difficulty, extraContext, trackId: track });
       setCaseText(data.caseText);
       setAnswers({});
       setChats({});
@@ -141,6 +142,8 @@ function App() {
           difficulty={difficulty}
           extraContext={extraContext}
           caseText={caseText}
+          track={track}
+          onTrackChange={setTrack}
           onIndustryChange={setIndustry}
           onDifficultyChange={setDifficulty}
           onExtraContextChange={setExtraContext}
@@ -196,19 +199,85 @@ function App() {
   );
 }
 
+const TRACKS = [
+  {
+    id: 'product',
+    tag: 'PM TRACK',
+    title: 'Product Case Track',
+    desc: 'PM-интервью, метрики, product discovery, стратегия продукта',
+    icon: '🧠',
+    details: ['Product sense & design', 'Metrics & analytics', 'Discovery & JTBD', 'Roadmap & strategy'],
+  },
+  {
+    id: 'business',
+    tag: 'CONSULTING TRACK',
+    title: 'Business Case Track',
+    desc: 'Консалтинговые кейсы, market sizing, unit-экономика, рекомендации',
+    icon: '📊',
+    details: ['Market sizing & structuring', 'Profitability analysis', 'Growth & go-to-market', 'Final recommendation'],
+  },
+];
+
 function StartPage(props) {
+  const [step, setStep] = useState('track');
   const difficultyKeys = Object.keys(props.config.difficultyLevels);
   const casePanelRef = useRef(null);
 
   useEffect(() => {
     if (props.caseText) {
       casePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      setStep('setup');
     }
   }, [props.caseText]);
+
+  if (step === 'track') {
+    return (
+      <section className="trackSelectSection">
+        <div className="trackSelectHead">
+          <p className="eyebrow">Шаг 1 из 2</p>
+          <h2 className="trackSelectTitle">Выбери направление</h2>
+          <p className="trackSelectSub">Какой тип кейса хочешь отработать?</p>
+        </div>
+        <div className="trackCards">
+          {TRACKS.map((t) => (
+            <button
+              key={t.id}
+              className={`trackCard${props.track === t.id ? ' active' : ''}`}
+              onClick={() => props.onTrackChange(t.id)}
+            >
+              <div className="trackCardTop">
+                <span className="trackCardTag">{t.tag}</span>
+                {props.track === t.id && <span className="trackCardCheck">✓</span>}
+              </div>
+              <div className="trackCardIcon">{t.icon}</div>
+              <div className="trackCardTitle">{t.title}</div>
+              <div className="trackCardDesc">{t.desc}</div>
+              <ul className="trackCardDetails">
+                {t.details.map((d) => <li key={d}>{d}</li>)}
+              </ul>
+            </button>
+          ))}
+        </div>
+        <div className="trackActions">
+          <button className="primary trackNextBtn" onClick={() => setStep('setup')}>
+            Продолжить →
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  const activeTrack = TRACKS.find((t) => t.id === props.track);
 
   return (
     <section className="grid two">
       <div className="panel">
+        <div className="trackBreadcrumb">
+          <button className="trackBackBtn" onClick={() => setStep('track')}>← Изменить трек</button>
+          <span className="trackBadgePill" style={{ background: props.track === 'product' ? '#6366f118' : '#10b98118', color: props.track === 'product' ? '#6366f1' : '#10b981' }}>
+            {activeTrack?.icon} {activeTrack?.title}
+          </span>
+        </div>
         <h2>Настройки кейса</h2>
         <label>
           Отрасль
@@ -1527,14 +1596,16 @@ function LearnTogetherTab() {
 }
 
 function LearnTogetherSession({ contentKey, content, chapter, onBack }) {
-  const [step, setStep] = useState('expo'); // expo | mcq | trueFalse | done
+  const [step, setStep] = useState('expo'); // expo | mcq | aiChat | done
   const [health, setHealth] = useState(3);
   const [xp, setXp] = useState(0);
-  const [mode, setMode] = useState('normal'); // normal | simplified
+  const [mode, setMode] = useState('normal');
   const [mcqAnswered, setMcqAnswered] = useState(null);
-  const [tfAnswered, setTfAnswered] = useState(null);
+  const [userAnswer, setUserAnswer] = useState('');
+  const [aiFeedback, setAiFeedback] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiExpo, setAiExpo] = useState(null);
+  const answerRef = useRef(null);
 
   async function handleTooHard() {
     setAiLoading(true);
@@ -1559,17 +1630,35 @@ function LearnTogetherSession({ contentKey, content, chapter, onBack }) {
     }
   }
 
-  function handleTfAnswer(answer) {
-    if (tfAnswered !== null) return;
-    setTfAnswered(answer);
-    if (answer === content.trueFalse.correct) {
-      setXp((x) => x + 5);
-    } else {
-      setHealth((h) => Math.max(0, h - 1));
+  async function handleGetAiFeedback() {
+    if (!userAnswer.trim() || aiLoading) return;
+    setAiLoading(true);
+    try {
+      const data = await learnExplain({
+        topic: chapter?.title || contentKey,
+        subtopic: content.title,
+        question: 'Студент объясняет концепцию своими словами и описывает применение в кейсе',
+        wrongAnswer: userAnswer,
+        correctAnswer: '',
+        difficulty: 'normal',
+      });
+      setAiFeedback(data);
+      setXp((x) => x + 15);
+    } catch {
+      setAiFeedback({
+        explanation: 'Отличный ответ! Объяснение концепций своими словами — один из лучших способов проверить понимание. Продолжай практиковать такой подход.',
+        tip: 'Перед PM-интервью попробуй объяснить ключевые концепции вслух за 30 секунд — это лучший тест на реальное понимание.',
+      });
+      setXp((x) => x + 10);
+    } finally {
+      setAiLoading(false);
     }
   }
 
   const exposition = mode === 'simplified' ? (aiExpo || content.simplifiedExposition) : content.exposition;
+
+  const stepLabels = ['Теория', 'Проверка', 'AI-разбор', 'Готово'];
+  const stepIndex = { expo: 0, mcq: 1, aiChat: 2, done: 3 }[step] ?? 0;
 
   return (
     <div className="togetherSession">
@@ -1581,32 +1670,40 @@ function LearnTogetherSession({ contentKey, content, chapter, onBack }) {
         </div>
       </div>
 
-      {/* Topic roadmap */}
-      <div className="togetherRoadmap">
-        <div className={`togetherRoadmapStep active`}>📍 {content.title}</div>
+      {/* Progress steps */}
+      <div className="mentorStepTrack">
+        {stepLabels.map((label, i) => (
+          <div key={label} className={`mentorStepDot${i < stepIndex ? ' done' : ''}${i === stepIndex ? ' active' : ''}`}>
+            <div className="mentorStepBubble">{i < stepIndex ? '✓' : i + 1}</div>
+            <div className="mentorStepLabel">{label}</div>
+          </div>
+        ))}
       </div>
 
       {step === 'expo' && (
         <div className="togetherExpo">
           <div className="togetherExpoBlock">
-            <div className="togetherExpoLabel">📖 Объяснение</div>
+            <div className="togetherExpoLabel">📖 {content.title}</div>
             {aiLoading ? (
-              <p className="muted">Генерирую упрощённое объяснение...</p>
+              <p className="muted">Генерирую упрощённое объяснение AI-ментором...</p>
             ) : (
               exposition.split('\n\n').map((para, i) => <p key={i}>{para}</p>)
             )}
           </div>
           <div className="togetherExpoActions">
-            <button className="togetherActionBtn togetherEasy" onClick={() => { setXp((x) => x + 5); setStep('mcq'); }}>🌟 Мне легко</button>
-            <button className="togetherActionBtn togetherHard" onClick={handleTooHard} disabled={aiLoading}>🤔 Мне сложно</button>
-            <button className="primary togetherContinue" onClick={() => setStep('mcq')}>Продолжить →</button>
+            <button className="togetherActionBtn togetherHard" onClick={handleTooHard} disabled={aiLoading}>
+              🤔 Объясни проще
+            </button>
+            <button className="primary togetherContinue" onClick={() => setStep('mcq')}>
+              Понял, проверь меня →
+            </button>
           </div>
         </div>
       )}
 
       {step === 'mcq' && (
         <div className="togetherMcq">
-          <div className="togetherMcqLabel">🔵 Вопрос с вариантами ответов</div>
+          <div className="togetherMcqLabel">🔵 Быстрая проверка</div>
           <p className="togetherMcqQ">{content.mcq.question}</p>
           <div className="togetherMcqOptions">
             {content.mcq.options.map((opt, i) => {
@@ -1628,37 +1725,56 @@ function LearnTogetherSession({ contentKey, content, chapter, onBack }) {
             <div className={`togetherFeedback${mcqAnswered === content.mcq.correct ? ' correct' : ' wrong'}`}>
               <strong>{mcqAnswered === content.mcq.correct ? '✓ Отлично!' : '✗ Не совсем...'}</strong>
               <p>{content.mcq.explanation}</p>
-              <button className="primary" onClick={() => {
-                if (mcqAnswered !== content.mcq.correct && health > 0) {
-                  setStep('trueFalse');
-                } else {
-                  setStep('done');
-                }
-              }}>
-                {mcqAnswered === content.mcq.correct ? 'Завершить тему →' : 'Попробуем ещё раз →'}
+              <button className="primary" onClick={() => setStep('aiChat')}>
+                Перейти к AI-разбору →
               </button>
             </div>
           )}
         </div>
       )}
 
-      {step === 'trueFalse' && (
-        <div className="togetherTf">
-          <div className="togetherTfLabel">☑️ Верно / Неверно</div>
-          <p className="togetherTfQ">{content.trueFalse.statement}</p>
-          <div className="togetherTfBtns">
-            <button className={`togetherTfBtn${tfAnswered !== null ? (false === content.trueFalse.correct ? ' wrong' : ' dim') : ''}`} onClick={() => handleTfAnswer(false)} disabled={tfAnswered !== null}>
-              👎 Неверно
-            </button>
-            <button className={`togetherTfBtn${tfAnswered !== null ? (true === content.trueFalse.correct ? ' correct' : (tfAnswered === true ? ' wrong' : ' dim')) : ''}`} onClick={() => handleTfAnswer(true)} disabled={tfAnswered !== null}>
-              👍 Верно
-            </button>
+      {step === 'aiChat' && (
+        <div className="aiMentorStep">
+          <div className="aiMentorStepHeader">
+            <span className="aiMentorStepTag">💬 AI-ментор</span>
+            <p className="aiMentorStepTitle">Закрепи тему своими словами</p>
           </div>
-          {tfAnswered !== null && (
-            <div className={`togetherFeedback${tfAnswered === content.trueFalse.correct ? ' correct' : ' wrong'}`}>
-              <strong>{tfAnswered === content.trueFalse.correct ? '✓ Правильно!' : '✗ Не совсем...'}</strong>
-              <p>{content.trueFalse.explanation}</p>
-              <button className="primary" onClick={() => setStep('done')}>Завершить тему →</button>
+          <div className="aiMentorPromptBlock">
+            <p className="aiMentorPromptText">
+              Объясни, что такое <strong>«{content.title}»</strong> и как бы ты применил это понятие в реальном PM-кейсе или собеседовании? Напиши 3–5 предложений.
+            </p>
+          </div>
+          <textarea
+            ref={answerRef}
+            className="aiMentorAnswer"
+            value={userAnswer}
+            onChange={(e) => setUserAnswer(e.target.value)}
+            placeholder="Напиши своими словами... AI-ментор даст персональный фидбек на твой ответ."
+            disabled={!!aiFeedback}
+            rows={5}
+          />
+          {!aiFeedback && (
+            <button
+              className="primary"
+              onClick={handleGetAiFeedback}
+              disabled={!userAnswer.trim() || aiLoading}
+            >
+              {aiLoading ? '🤖 Ментор анализирует...' : 'Получить фидбек от AI →'}
+            </button>
+          )}
+          {aiFeedback && (
+            <div className="aiFeedbackCard">
+              <div className="aiFeedbackHead">🤖 Фидбек AI-ментора</div>
+              <p className="aiFeedbackText">{aiFeedback.explanation}</p>
+              {aiFeedback.tip && (
+                <div className="aiFeedbackTip">
+                  <span>💡</span>
+                  <span><strong>Совет:</strong> {aiFeedback.tip}</span>
+                </div>
+              )}
+              <button className="primary aiFeedbackNext" onClick={() => setStep('done')}>
+                Завершить тему → +15 XP
+              </button>
             </div>
           )}
         </div>
@@ -1670,10 +1786,13 @@ function LearnTogetherSession({ contentKey, content, chapter, onBack }) {
           <h3>Тема завершена!</h3>
           <p>«{content.title}»</p>
           <div className="togetherDoneStats">
-            <div>❤️ Здоровье: {health}/3</div>
-            <div>⚡ Очки: {xp} XP</div>
+            <div><span>❤️</span> Здоровье: {health}/3</div>
+            <div><span>⚡</span> Очки: {xp} XP</div>
           </div>
-          <button className="primary" onClick={onBack}>← Выбрать другую тему</button>
+          <p className="togetherDoneHint">Ты прошёл теорию, проверку и получил фидбек от AI-ментора.</p>
+          <div className="togetherDoneActions">
+            <button className="primary" onClick={onBack}>← Другая тема</button>
+          </div>
         </div>
       )}
     </div>
