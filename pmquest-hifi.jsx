@@ -383,6 +383,15 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
   const levelProgress = getLevelProgress(progress.xp);
   const week = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
   const todayIdx = (new Date().getDay() + 6) % 7;
+  const lessonDone = KNOWLEDGE_NOTES.filter((note) => progress.completed?.[`lesson-${note.id}`]).length;
+  const checkDone = KNOWLEDGE_NOTES.filter((note) => progress.completed?.[`check-${note.id}`]).length;
+  const teachDone = KNOWLEDGE_NOTES.filter((note) => progress.completed?.[`teach-${note.id}`]).length;
+  const lessonPct = Math.round((lessonDone / KNOWLEDGE_NOTES.length) * 100);
+  const checkPct = Math.round((checkDone / KNOWLEDGE_NOTES.length) * 100);
+  const teachPct = Math.round((teachDone / KNOWLEDGE_NOTES.length) * 100);
+  const casePct = Math.min(100, Math.round((progress.cases / 12) * 100));
+  const storyPct = Math.min(100, Math.round((teachDone / 8) * 100));
+  const srsPct = Math.max(0, Math.min(100, 100 - progress.cardsDue * 8));
   return (
     <div className="screen" style={{ maxWidth: "none" }}>
       <Topbar crumbs={["PMQuest", "Home"]} progress={progress} clock={clock} />
@@ -407,8 +416,13 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
               Выбери урок → объясни стажёру → закрепи в Check/Drill → только после практики тема станет освоенной.
             </p>
           </div>
+          <div className="mission-bars">
+            <div><span>теория</span><i><b style={{ width: `${lessonPct}%` }}></b></i><em>{lessonDone}/{KNOWLEDGE_NOTES.length}</em></div>
+            <div><span>check</span><i><b style={{ width: `${checkPct}%` }}></b></i><em>{checkDone}/{KNOWLEDGE_NOTES.length}</em></div>
+            <div><span>practice</span><i><b style={{ width: `${teachPct}%` }}></b></i><em>{teachDone}/{KNOWLEDGE_NOTES.length}</em></div>
+          </div>
           <div className="footer" style={{ position: "relative", zIndex: 2 }}>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div className="mission-chips">
               <span className="chip" style={{ background: "var(--ph-sun)", borderColor: "var(--ph-ink)" }}>+120 XP</span>
               <span className="chip" style={{ background: "#fff", borderColor: "var(--ph-ink)" }}>🎯 product sense</span>
             </div>
@@ -464,7 +478,7 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
           <h3>Кейсы</h3>
           <p>product design · estimation · strategy</p>
           <div className="footer">
-            <div className="bar" style={{ width: 120 }}><i style={{ width: "62%" }}></i></div>
+            <div className="bar live-bar"><i style={{ width: `${casePct}%` }}></i></div>
             <button className="btn sm">{Icon.chev}</button>
           </div>
         </div>
@@ -474,7 +488,7 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
           <h3>Банк историй</h3>
           <p>30 STAR-шаблонов + твои истории</p>
           <div className="footer">
-            <div className="bar" style={{ width: 120 }}><i style={{ width: "38%", background: "var(--ph-plum)" }}></i></div>
+            <div className="bar live-bar"><i style={{ width: `${storyPct}%`, background: "var(--ph-plum)" }}></i></div>
             <button className="btn sm">{Icon.chev}</button>
           </div>
         </div>
@@ -497,6 +511,7 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
           <p>CIRCLES, NSM, AARM — вернулись по расписанию</p>
           <div className="footer">
             <span className="chip mint">~6 мин</span>
+            <div className="bar live-bar"><i style={{ width: `${srsPct}%`, background: "var(--ph-mint)" }}></i></div>
             <button className="btn sm primary">{Icon.play}</button>
           </div>
         </div>
