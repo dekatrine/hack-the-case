@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from './api/client.js';
 
 /* =====================================================================
@@ -971,6 +971,7 @@ function SRSScreen({ go, progress, clock, completeTask }) {
 function CaseScreen({ go, progress, clock, completeTask }) {
   const [step, setStep] = useState(2);
   const [text, setText] = useState("");
+  const [savedNotice, setSavedNotice] = useState("");
   const caseSuggestions = [
     {
       id: "spotify-likes",
@@ -1035,6 +1036,31 @@ function CaseScreen({ go, progress, clock, completeTask }) {
     { n: "5", title: "Metrics & success", desc: "как поймёшь, что сработало", prompt: "Какие метрики? Какие предсказывают долгосрочный успех?", placeholder: "Лидирующая метрика: …" },
   ];
   const cur = steps[step];
+  const saveCase = () => {
+    const saved = JSON.parse(localStorage.getItem("pmquest-saved-cases-v1") || "[]");
+    const next = [
+      {
+        id: `${selectedSuggestion.id}-${Date.now()}`,
+        title: caseTitle,
+        caseText,
+        step: cur.title,
+        draft: text,
+        savedAt: new Date().toISOString(),
+      },
+      ...saved,
+    ].slice(0, 12);
+    localStorage.setItem("pmquest-saved-cases-v1", JSON.stringify(next));
+    setSavedNotice("сохранено");
+    window.setTimeout(() => setSavedNotice(""), 1800);
+  };
+  const applyHint = (kind) => {
+    const hintText = {
+      framework: `Фреймворк: сначала цель и success metric, затем primary user/JTBD, после этого 3-5 решений, trade-offs и experiment plan.`,
+      example: `Сильный пример: "Я бы начал(а) с цели. Если цель retention, сфокусируюсь на новых пользователях, которые слушают плейлисты, но не сохраняют треки..."`,
+      mistakes: `Типичные ошибки: сразу предлагать фичи, не выбрать сегмент, назвать vanity metric и не проговорить риски запуска.`,
+    }[kind];
+    setText((prev) => (prev.trim() ? `${prev}\n\n${hintText}` : hintText));
+  };
   const generateCase = async (suggestion = selectedSuggestion) => {
     setGenBusy(true);
     setGenErr("");
@@ -1072,7 +1098,7 @@ function CaseScreen({ go, progress, clock, completeTask }) {
         </div>
         <div className="right">
           <span className="chip sun">{selectedSuggestion.trackId === "business" ? "business case" : "product case"}</span>
-          <button className="btn ghost sm">сохранить</button>
+          <button className="btn ghost sm" onClick={saveCase}>{savedNotice || "сохранить"}</button>
           <button className="btn ghost sm" onClick={() => go("home")}>× выйти</button>
         </div>
       </div>
@@ -1148,9 +1174,9 @@ function CaseScreen({ go, progress, clock, completeTask }) {
           <div className="case-actions">
             <div className="case-hints">
               <span className="eyebrow" style={{ marginRight: 4 }}>подсказки Pim:</span>
-              <span className="hint-pill">подсказать фреймворк</span>
-              <span className="hint-pill">пример сильного ответа</span>
-              <span className="hint-pill">типичные ошибки джунов</span>
+              <button className="hint-pill" onClick={() => applyHint("framework")}>подсказать фреймворк</button>
+              <button className="hint-pill" onClick={() => applyHint("example")}>пример сильного ответа</button>
+              <button className="hint-pill" onClick={() => applyHint("mistakes")}>типичные ошибки джунов</button>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <button className="btn ghost" onClick={() => setStep(Math.max(0, step - 1))}>{Icon.back} назад</button>
@@ -1201,11 +1227,15 @@ function MockScreen({ go, progress, clock, completeTask }) {
   const [answer, setAnswer] = useState("");
   const [checking, setChecking] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [listening, setListening] = useState(false);
+  const [speechDraft, setSpeechDraft] = useState("");
+  const [speechError, setSpeechError] = useState("");
   const [scores, setScores] = useState({ clarify: 2, user: 0, solutions: 0, metrics: 0 });
   const [transcript, setTranscript] = useState([
     { role: "them", who: "Виктор", text: "Привет! Сегодня кейс на product design. Готова?" },
     { role: "you", who: "Ты", text: "Да, готова. Дай 30 секунд собраться." },
   ]);
+  const recognitionRef = useRef(null);
   const cur = rounds[roundIdx];
   const elapsed = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
   const pace = Math.min(100, Math.round((seconds / (15 * 60)) * 100));
@@ -1229,6 +1259,74 @@ function MockScreen({ go, progress, clock, completeTask }) {
     const timer = setInterval(() => setSeconds((v) => v + 1), 1000);
     return () => clearInterval(timer);
   }, [paused]);
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSpeechError("Браузер не поддерживает распознавание речи. В Safari/Chrome на HTTPS должно работать.");
+      return undefined;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "ru-RU";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    recognition.onstart = () => {
+      setListening(true);
+      setSpeechError("");
+      setSpeechDraft("");
+    };
+    recognition.onresult = (event) => {
+      let finalText = "";
+      let interimText = "";
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        const chunk = event.results[i][0]?.transcript || "";
+        if (event.results[i].isFinal) finalText += chunk;
+        else interimText += chunk;
+      }
+      if (finalText.trim()) {
+        setAnswer((prev) => `${prev}${prev.trim() ? " " : ""}${finalText.trim()}`);
+      }
+      setSpeechDraft(interimText.trim());
+    };
+    recognition.onerror = (event) => {
+      const messages = {
+        "not-allowed": "Нужно разрешить доступ к микрофону в браузере.",
+        "no-speech": "Не услышал речь. Попробуй ещё раз и говори ближе к микрофону.",
+        "audio-capture": "Микрофон не найден или занят другим приложением.",
+      };
+      setSpeechError(messages[event.error] || `Ошибка микрофона: ${event.error}`);
+      setListening(false);
+    };
+    recognition.onend = () => {
+      setListening(false);
+      setSpeechDraft("");
+    };
+    recognitionRef.current = recognition;
+    return () => {
+      recognitionRef.current?.abort();
+      recognitionRef.current = null;
+    };
+  }, []);
+
+  const toggleMic = () => {
+    const recognition = recognitionRef.current;
+    if (!recognition) {
+      setSpeechError("Распознавание речи недоступно в этом браузере.");
+      return;
+    }
+    if (listening) {
+      recognition.stop();
+      return;
+    }
+    try {
+      setSpeechError("");
+      setSpeechDraft("");
+      recognition.start();
+    } catch {
+      recognition.stop();
+    }
+  };
 
   const submitAnswer = async () => {
     const clean = answer.trim();
@@ -1321,9 +1419,14 @@ function MockScreen({ go, progress, clock, completeTask }) {
             </div>
           )}
           <div className="mic-row">
-            <div className="mic-btn">{Icon.mic}</div>
+            <button className={`mic-btn ${listening ? "listening" : ""}`} onClick={toggleMic} type="button" aria-label={listening ? "Остановить микрофон" : "Включить микрофон"}>
+              {Icon.mic}
+            </button>
             <div style={{ flex: 1 }}>
               <textarea className="mock-answer-input" value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Ответь как на интервью. Можно коротко: 3 вопроса, структура, метрики..." />
+              <div className={`speech-status ${listening ? "on" : ""}`}>
+                {listening ? `Слушаю речь… ${speechDraft}` : speechError || "Нажми на микрофон и говори. Речь появится в ответе, затем AI проверит смысл."}
+              </div>
             </div>
             <button className="btn ghost sm" onClick={nextRound}>пропустить</button>
             <button className="btn primary" onClick={submitAnswer} disabled={checking || !answer.trim()}>{checking ? "проверяю" : "ответить"}</button>
@@ -1367,6 +1470,9 @@ function MockScreen({ go, progress, clock, completeTask }) {
 // ─── Screen: DRILL ───────────────────────────────────────────────────
 function DrillScreen({ go, progress, clock, completeTask }) {
   const [qIdx, setQIdx] = useState(2);
+  const [paused, setPaused] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(42);
+  const [stats, setStats] = useState({ clean: 1, shaky: 1, missed: 0 });
   const total = 10;
   const questions = [
     "Назови 3 метрики для оценки качества поиска",
@@ -1375,6 +1481,27 @@ function DrillScreen({ go, progress, clock, completeTask }) {
     "Опиши aha-moment для приложения для медитации",
     "Какой trade-off ты бы обсудил для лайков в Spotify?",
   ];
+  useEffect(() => {
+    if (paused) return undefined;
+    const timer = setInterval(() => {
+      setSecondsLeft((value) => {
+        if (value > 1) return value - 1;
+        setStats((prev) => ({ ...prev, missed: prev.missed + 1 }));
+        setQIdx((idx) => (idx < total - 1 ? idx + 1 : idx));
+        return 60;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [paused]);
+  const finishQuestion = (kind = "clean") => {
+    setStats((prev) => ({ ...prev, [kind]: prev[kind] + 1 }));
+    if (qIdx < total - 1) {
+      setQIdx(qIdx + 1);
+      setSecondsLeft(60);
+    } else {
+      completeTask("drill-product-sense", 50, "review");
+    }
+  };
   return (
     <div className="screen">
       <Topbar crumbs={["Home", "Drill 60s · Product sense"]} progress={progress} clock={clock} />
@@ -1385,7 +1512,7 @@ function DrillScreen({ go, progress, clock, completeTask }) {
         </div>
         <div className="right">
           <span className="chip mint">+5 XP / правильный</span>
-          <button className="btn ghost sm">пауза</button>
+          <button className="btn ghost sm" onClick={() => setPaused(!paused)}>{paused ? "продолжить" : "пауза"}</button>
         </div>
       </div>
       <div className="drill-stage">
@@ -1397,28 +1524,28 @@ function DrillScreen({ go, progress, clock, completeTask }) {
         <div className="drill-card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <span className="chip" style={{ background: "rgba(255,255,255,0.18)", border: "1.5px solid #fff", color: "#fff" }}>Вопрос {qIdx + 1} / {total}</span>
-            <div className="drill-timer-ring" style={{ background: "#fff", color: "var(--ph-ink)" }}>42</div>
+            <div className="drill-timer-ring" style={{ background: paused ? "var(--ph-sun-2)" : "#fff", color: "var(--ph-ink)" }}>{secondsLeft}</div>
           </div>
           <h2>{questions[qIdx % questions.length]}</h2>
-          <p>отвечай голосом или коротким текстом · флоу-режим, не стесняйся</p>
+          <p>{paused ? "пауза включена" : "отвечай голосом или коротким текстом · флоу-режим, не стесняйся"}</p>
           <div style={{ marginTop: 22, display: "flex", gap: 10, justifyContent: "center" }}>
             <div className="mic-btn" style={{ background: "#fff", color: "var(--ph-coral)" }}>{Icon.mic}</div>
-            <button className="btn lg" style={{ background: "var(--ph-ink)", color: "#fff", borderColor: "#fff" }}>пропустить</button>
-            <button className="btn lg" style={{ background: "#fff", color: "var(--ph-ink)" }} onClick={() => qIdx < total - 1 ? setQIdx(qIdx + 1) : completeTask("drill-product-sense", 50, "review")}>готово →</button>
+            <button className="btn lg" style={{ background: "var(--ph-ink)", color: "#fff", borderColor: "#fff" }} onClick={() => finishQuestion("missed")}>пропустить</button>
+            <button className="btn lg" style={{ background: "#fff", color: "var(--ph-ink)" }} onClick={() => finishQuestion("clean")}>готово →</button>
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
           <div className="review-card">
             <h4>✓ Чисто</h4>
-            <div className="h-display" style={{ fontSize: 36, color: "var(--ph-mint)" }}>1</div>
+            <div className="h-display" style={{ fontSize: 36, color: "var(--ph-mint)" }}>{stats.clean}</div>
           </div>
           <div className="review-card">
             <h4>⚠ Под вопросом</h4>
-            <div className="h-display" style={{ fontSize: 36, color: "var(--ph-sun)" }}>1</div>
+            <div className="h-display" style={{ fontSize: 36, color: "var(--ph-sun)" }}>{stats.shaky}</div>
           </div>
           <div className="review-card">
             <h4>✕ Не успел</h4>
-            <div className="h-display" style={{ fontSize: 36, color: "var(--ph-ink-4)" }}>0</div>
+            <div className="h-display" style={{ fontSize: 36, color: "var(--ph-ink-4)" }}>{stats.missed}</div>
           </div>
         </div>
       </div>
@@ -1428,17 +1555,79 @@ function DrillScreen({ go, progress, clock, completeTask }) {
 
 // ─── Screen: TEACH ───────────────────────────────────────────────────
 function TeachScreen({ go, progress, clock, completeTask }) {
+  const topics = [
+    {
+      title: "North Star Metric",
+      prompt: "Объясни North Star Metric стажёру",
+      rookie: "Привет! Я тут читал доку и не понял — а зачем нужна одна метрика? У нас же DAU, retention, revenue, NPS — давай за всеми следить?",
+    },
+    {
+      title: "RICE prioritization",
+      prompt: "Объясни RICE приоритизацию стажёру",
+      rookie: "Почему мы не можем просто взять идею, которая нравится команде? Зачем эти Reach, Impact, Confidence и Effort?",
+    },
+    {
+      title: "JTBD",
+      prompt: "Объясни JTBD стажёру",
+      rookie: "Я написал сегмент: женщины 25-34. Это же и есть пользовательская задача, да?",
+    },
+  ];
+  const [topicIdx, setTopicIdx] = useState(0);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const topic = topics[topicIdx];
+  const [messages, setMessages] = useState([
+    { role: "rookie", text: topics[0].rookie },
+    { role: "you", text: "Окей. North Star — это компас. Когда у команды 200 человек, без неё все тянут в разные стороны." },
+    { role: "rookie", text: "Ага, а чем тогда NSM отличается от обычной «бизнес-цели»? Это же просто KPI команды?" },
+    { role: "you", text: "Хороший вопрос. NSM — про ценность для пользователя, а не про деньги. Выручка — это следствие." },
+    { role: "rookie", text: "Окей, а как её выбрать, если есть 5 равных кандидатов? Это интуиция или есть метод?" },
+  ]);
+  const switchTopic = () => {
+    const next = (topicIdx + 1) % topics.length;
+    setTopicIdx(next);
+    setMessages([{ role: "rookie", text: topics[next].rookie }]);
+    setInput("");
+  };
+  const sendTeach = async () => {
+    const answer = input.trim();
+    if (!answer || busy) return;
+    const nextMessages = [...messages, { role: "you", text: answer }];
+    setMessages(nextMessages);
+    setInput("");
+    setBusy(true);
+    try {
+      const res = await api.coach({
+        stepId: "teach-rookie",
+        stepTitle: topic.prompt,
+        stepDescription: "Пользователь учит стажёра PM-концепции. Ответь как любопытный стажёр и задай следующий уточняющий вопрос.",
+        frameworks: [topic.title, "Feynman technique", "Product management"],
+        caseHint: "Будь кратким стажёром: сначала реакция, потом один вопрос с подвохом. Русский язык.",
+        caseText: `Тема обучения: ${topic.title}`,
+        answerText: answer,
+        userMessage: answer,
+        chatHistory: nextMessages.slice(-8),
+        previousAnswers: {},
+        trackId: "product",
+      });
+      setMessages([...nextMessages, { role: "rookie", text: res.message || "Кажется понятнее. А можешь привести пример из реального продукта?" }]);
+    } catch {
+      setMessages([...nextMessages, { role: "rookie", text: "Понял. А можешь теперь привести пример и одну метрику, по которой видно, что это работает?" }]);
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <div className="screen">
       <Topbar crumbs={["Home", "Teach the Rookie"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Feynman-режим · 12 мин · +50 XP</span>
-          <h1>Объясни North Star Metric стажёру</h1>
+          <h1>{topic.prompt}</h1>
         </div>
         <div className="right">
           <span className="chip plum">🐣 Rookie: «Тима»</span>
-          <button className="btn ghost sm">сменить тему</button>
+          <button className="btn ghost sm" onClick={switchTopic}>сменить тему</button>
         </div>
       </div>
       <div className="teach-stage">
@@ -1447,32 +1636,24 @@ function TeachScreen({ go, progress, clock, completeTask }) {
             <div className="ico">🎯</div>
             <div>
               <h4>Цель сессии</h4>
-              <p>Стажёр Тима пришёл в команду на этой неделе. Объясни ему, что такое NSM. Тима будет задавать «глупые» вопросы — это нормально и полезно.</p>
+              <p>Стажёр Тима пришёл в команду на этой неделе. Объясни ему тему «{topic.title}». Тима будет задавать наивные вопросы — это нормально и полезно.</p>
             </div>
           </div>
-          <div className="rookie-msg">
-            <div className="rookie-av">🐣</div>
-            <div className="chat-bubble">Привет! Я тут читал доку и не понял — а зачем нужна <b>одна</b> метрика? У нас же DAU, retention, revenue, NPS — давай за всеми следить?</div>
-          </div>
-          <div className="you-msg">
-            <div className="you-av">К</div>
-            <div className="chat-bubble">Окей. <mark>North Star — это компас.</mark> Когда у команды 200 человек, без неё все тянут в разные стороны.</div>
-          </div>
-          <div className="rookie-msg">
-            <div className="rookie-av">🐣</div>
-            <div className="chat-bubble">Ага, а чем тогда NSM отличается от обычной «бизнес-цели»? Это же просто KPI команды?</div>
-          </div>
-          <div className="you-msg">
-            <div className="you-av">К</div>
-            <div className="chat-bubble">Хороший вопрос. NSM — про <mark>ценность для пользователя</mark>, а не про деньги. Выручка — это следствие.</div>
-          </div>
-          <div className="rookie-msg">
-            <div className="rookie-av">🐣</div>
-            <div className="chat-bubble">Окей, а как её выбрать, если есть 5 равных кандидатов? Это интуиция или есть метод?</div>
-          </div>
+          {messages.map((m, i) => (
+            <div key={i} className={m.role === "you" ? "you-msg" : "rookie-msg"}>
+              <div className={m.role === "you" ? "you-av" : "rookie-av"}>{m.role === "you" ? "К" : "🐣"}</div>
+              <div className="chat-bubble">{m.text}</div>
+            </div>
+          ))}
+          {busy && (
+            <div className="rookie-msg">
+              <div className="rookie-av">🐣</div>
+              <div className="chat-bubble">думаю над твоим объяснением…</div>
+            </div>
+          )}
           <div className="chat-compose">
-            <input placeholder="Объясни на пальцах…" />
-            <button className="btn primary sm">отправить →</button>
+            <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") sendTeach(); }} placeholder="Объясни на пальцах…" />
+            <button className="btn primary sm" onClick={sendTeach} disabled={busy || !input.trim()}>отправить →</button>
           </div>
         </div>
         <aside className="teach-sidebar">
@@ -1611,7 +1792,15 @@ function ReviewScreen({ go, progress, clock, completeTask }) {
 }
 
 // ─── Screen: CV ──────────────────────────────────────────────────────
-function CVScreen({ progress, clock }) {
+function CVScreen({ progress, clock, completeTask }) {
+  const fileInputRef = useRef(null);
+  const [fileName, setFileName] = useState("");
+  const [analysisDone, setAnalysisDone] = useState(false);
+  const handleFile = (file) => {
+    if (!file) return;
+    setFileName(file.name);
+    setAnalysisDone(true);
+  };
   return (
     <div className="screen" style={{ maxWidth: 980 }}>
       <Topbar crumbs={["Home", "Резюме"]} progress={progress} clock={clock} />
@@ -1622,11 +1811,31 @@ function CVScreen({ progress, clock }) {
         </div>
       </div>
       <div className="mcq-card" style={{ textAlign: "center" }}>
-        <div style={{ border: "3px dashed var(--ph-ink-4)", borderRadius: 18, padding: "60px 30px", background: "var(--ph-bg-warm)" }}>
+        <div
+          style={{ border: "3px dashed var(--ph-ink-4)", borderRadius: 18, padding: "60px 30px", background: "var(--ph-bg-warm)" }}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files?.[0]); }}
+        >
           <div style={{ display: "inline-block" }}><PimFigure size={120} expression="cheer" /></div>
           <h2 style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 26, fontWeight: 800, margin: "16px 0 8px" }}>Перетащи сюда PDF или DOCX</h2>
-          <p style={{ color: "var(--ph-ink-3)", margin: "0 0 22px" }}>или нажми, чтобы выбрать файл с компьютера</p>
-          <button className="btn primary lg">выбрать файл</button>
+          <p style={{ color: "var(--ph-ink-3)", margin: "0 0 22px" }}>
+            {fileName ? `Выбран файл: ${fileName}` : "или нажми, чтобы выбрать файл с компьютера"}
+          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx"
+            style={{ display: "none" }}
+            onChange={(e) => handleFile(e.target.files?.[0])}
+          />
+          <button className="btn primary lg" onClick={() => fileInputRef.current?.click()}>выбрать файл</button>
+          {analysisDone && (
+            <div className="mcq-explain" style={{ marginTop: 18, textAlign: "left" }}>
+              <h5>Pim быстро посмотрел структуру</h5>
+              <p>1. Добавь цифры результата в последний PM-проект. 2. Перепиши обязанности через action verbs. 3. Подними самый релевантный кейс ближе к началу.</p>
+              <button className="btn ghost sm" onClick={() => completeTask("cv-review", 25, "home")}>забрать +25 XP</button>
+            </div>
+          )}
         </div>
         <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
           {[
