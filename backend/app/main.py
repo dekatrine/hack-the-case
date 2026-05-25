@@ -504,13 +504,19 @@ def learn_explain(payload: LearnExplainRequest) -> LearnExplainResponse:
     prompt += "\n\nДай объяснение (3-5 предложений) и один практический совет (tip). Отвечай строго в формате JSON: {\"explanation\": \"...\", \"tip\": \"...\"}"
 
     system = "Ты опытный PM-ментор. Объясняй ясно, с примерами. Давай практические советы. Отвечай только валидным JSON без markdown-блоков."
+    raw = ""
     try:
         raw = call_yandex_gpt(system, prompt, temperature=0.4, max_tokens=600)
-        import json as _json
-        parsed = _json.loads(raw)
-        return LearnExplainResponse(explanation=parsed.get("explanation", raw), tip=parsed.get("tip", ""))
+        # Модель часто оборачивает JSON в ```json ... ``` markdown — вытаскиваем
+        # первый сбалансированный объект через regex.
+        m = re.search(r"\{.*\}", raw, re.DOTALL)
+        parsed = json.loads(m.group(0) if m else raw)
+        return LearnExplainResponse(
+            explanation=parsed.get("explanation", raw),
+            tip=parsed.get("tip", ""),
+        )
     except Exception:
-        return LearnExplainResponse(explanation=raw, tip="")
+        return LearnExplainResponse(explanation=raw or "", tip="")
 
 
 @app.post("/api/learn/session", response_model=LearnSessionResponse)
