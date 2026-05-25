@@ -6244,6 +6244,33 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   box-shadow: var(--ph-sh-l); padding: 24px 26px;
   display: flex; flex-direction: column; gap: 12px; min-height: 520px;
 }
+.pmq-hifi .teach-topic-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  gap: 12px;
+  align-items: center;
+  background: var(--ph-sky-2);
+  border: 2px solid var(--ph-ink);
+  border-radius: var(--ph-r);
+  padding: 12px 14px;
+}
+.pmq-hifi .teach-topic-picker strong {
+  display: block;
+  margin-top: 3px;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 20px;
+  line-height: 1.1;
+}
+.pmq-hifi .teach-topic-picker select {
+  width: 100%;
+  min-width: 0;
+  background: #fff;
+  border: 2px solid var(--ph-ink);
+  border-radius: 999px;
+  padding: 10px 12px;
+  outline: none;
+  font-weight: 800;
+}
 .pmq-hifi .rookie-msg, .pmq-hifi .you-msg { display: flex; gap: 12px; align-items: flex-start; }
 .pmq-hifi .you-msg { flex-direction: row-reverse; }
 .pmq-hifi .rookie-av {

@@ -186,6 +186,21 @@ function useMoscowClock() {
   }, [now]);
 }
 
+const KNOWLEDGE_NOTES = [
+  { id: "circles", t: "CIRCLES для кейсов", cat: "framework", c: "is-sun", ex: "Comprehend → Identify → Report → Cut → List → Evaluate → Summarize. 7 шагов под любой product design.", s: 3, m: true, rookie: "Я увидел CIRCLES, но кажется это просто список шагов. Когда его реально применять и как не звучать как робот?", hints: ["объясни порядок шагов", "дай пример product design", "скажи, где можно гибко отойти"] },
+  { id: "nsm", t: "North Star Metric — как выбрать", cat: "metrics", c: "is-mint", ex: "Одна метрика, отражающая ценность для пользователя. Не выручка. Примеры: Airbnb nights booked.", s: 2, rookie: "Привет! Я тут читал доку и не понял — а зачем нужна одна метрика? У нас же DAU, retention, revenue, NPS — давай за всеми следить?", hints: ["упомяни retention", "приведи 1 FAANG-пример", "объясни leading vs lagging"] },
+  { id: "rice", t: "RICE для приоритизации", cat: "framework", c: "is-pink", ex: "Reach × Impact × Confidence ÷ Effort. Когда применять, типичные ошибки.", s: 2, rookie: "Почему мы не можем просто взять идею, которая нравится команде? Зачем эти Reach, Impact, Confidence и Effort?", hints: ["покажи формулу", "объясни confidence", "скажи про evidence"] },
+  { id: "aarrr", t: "AARRR (Pirate metrics)", cat: "metrics", c: "is-sky", ex: "Acquisition · Activation · Retention · Referral · Revenue. Воронка для продуктовых решений.", s: 1, rookie: "Я путаюсь в AARRR. Это просто маркетинговая воронка или PM тоже должен ей пользоваться?", hints: ["пройди 5 шагов", "дай пример продукта", "отдели activation от retention"] },
+  { id: "star", t: "STAR-метод ответов", cat: "behavioral", c: "is-sun", ex: "Situation → Task → Action → Result. Что делает ответ «джуновым» и как этого избежать.", s: 1, rookie: "Я отвечаю на behavioral как историю, но интервьюер просит структуру. Чем STAR реально помогает?", hints: ["разложи S/T/A/R", "покажи плохой vs хороший ответ", "упомяни результат в цифрах"] },
+  { id: "ab-power", t: "A/B тест: power & MDE", cat: "metrics", c: "is-mint", ex: "Минимально детектируемый эффект, мощность, длительность. Базовая интуиция, без формул.", s: 0, rookie: "Я понимаю A/B тест, но не понимаю power и MDE. Почему нельзя просто запустить и посмотреть?", hints: ["объясни риск false negative", "простыми словами MDE", "скажи про длительность теста"] },
+  { id: "tradeoff-matrix", t: "Trade-off матрица", cat: "design", c: "is-pink", ex: "Как структурно объяснять компромиссы между фичами — без «зависит от».", s: 2, rookie: "На кейсе я всё время говорю «зависит». Как trade-off матрица помогает выбрать решение?", hints: ["назови критерии", "сравни 2 альтернативы", "сделай рекомендацию"] },
+  { id: "estimation", t: "Estimation на собесе", cat: "design", c: "is-sky", ex: "Шаги «сверху вниз» vs «снизу вверх». Где джуны теряют баллы.", s: 1, rookie: "Если меня спросят оценить рынок, я боюсь ошибиться в цифрах. Что важнее: точность или ход мысли?", hints: ["сверху вниз vs снизу вверх", "проговори assumptions", "сделай sanity check"] },
+  { id: "danger-words", t: "Опасные слова в ответах", cat: "behavioral", c: "is-pink", ex: "«Мы», «помог», «занимался» — что слышит интервьюер и как переформулировать.", s: 3, m: true, rookie: "Почему плохо говорить «мы сделали»? Это же командная работа.", hints: ["отдели вклад от команды", "замени слабые глаголы", "сохрани уважение к команде"] },
+  { id: "sysdesign-101", t: "System design 101 для PM", cat: "sysdesign", c: "is-sun", ex: "API gateway, очереди, кэши — что должен знать PM на собесе и где «технический потолок».", s: 0, rookie: "PM точно должен знать system design? Где граница между PM и инженером?", hints: ["объясни PM-уровень", "свяжи с trade-offs", "не уходи в код"] },
+  { id: "activation", t: "Activation events", cat: "metrics", c: "is-mint", ex: "Aha-moment, magic number — как определить и измерить.", s: 2, rookie: "Что такое activation event? Это просто регистрация или первое действие?", hints: ["объясни aha-moment", "дай magic number", "свяжи с retention"] },
+  { id: "latency-cost", t: "Trade-off: latency vs cost", cat: "sysdesign", c: "is-sky", ex: "Типовой follow-up в FAANG. Как структурно отвечать.", s: 1, rookie: "Если latency лучше для пользователя, почему мы вообще думаем про cost?", hints: ["объясни business constraint", "назови guardrail", "покажи компромисс"] },
+];
+
 function Pim({ message, actions = [], expression = "idle", muted = false, route = "home", progress, openSignal = 0 }) {
   const [show, setShow] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
@@ -545,20 +560,7 @@ function LibraryScreen({ go, progress, clock }) {
     { k: "behavioral",label: "Behavioral / STAR",    n: 4 },
     { k: "sysdesign", label: "System design для PM", n: 2 },
   ];
-  const notes = [
-    { t: "CIRCLES для кейсов", cat: "framework", c: "is-sun",  ex: "Comprehend → Identify → Report → Cut → List → Evaluate → Summarize. 7 шагов под любой product design.", s: 3, m: true },
-    { t: "North Star Metric — как выбрать", cat: "metrics",  c: "is-mint", ex: "Одна метрика, отражающая ценность для пользователя. Не выручка. Примеры: Airbnb nights booked.", s: 2 },
-    { t: "RICE для приоритизации", cat: "framework", c: "is-pink", ex: "Reach × Impact × Confidence ÷ Effort. Когда применять, типичные ошибки.", s: 2 },
-    { t: "AARRR (Pirate metrics)", cat: "metrics", c: "is-sky", ex: "Acquisition · Activation · Retention · Referral · Revenue. Воронка для продуктовых решений.", s: 1 },
-    { t: "STAR-метод ответов", cat: "behavioral", c: "is-sun", ex: "Situation → Task → Action → Result. Что делает ответ «джуновым» и как этого избежать.", s: 1 },
-    { t: "A/B тест: power & MDE", cat: "metrics", c: "is-mint", ex: "Минимально детектируемый эффект, мощность, длительность. Базовая интуиция, без формул.", s: 0 },
-    { t: "Trade-off матрица", cat: "design", c: "is-pink", ex: "Как структурно объяснять компромиссы между фичами — без «зависит от».", s: 2 },
-    { t: "Estimation на собесе", cat: "design", c: "is-sky", ex: "Шаги «сверху вниз» vs «снизу вверх». Где джуны теряют баллы.", s: 1 },
-    { t: "Опасные слова в ответах", cat: "behavioral", c: "is-pink", ex: "«Мы», «помог», «занимался» — что слышит интервьюер и как переформулировать.", s: 3, m: true },
-    { t: "System design 101 для PM", cat: "sysdesign", c: "is-sun", ex: "API gateway, очереди, кэши — что должен знать PM на собесе и где «технический потолок».", s: 0 },
-    { t: "Activation events", cat: "metrics", c: "is-mint", ex: "Aha-moment, magic number — как определить и измерить.", s: 2 },
-    { t: "Trade-off: latency vs cost", cat: "sysdesign", c: "is-sky", ex: "Типовой follow-up в FAANG. Как структурно отвечать.", s: 1 },
-  ];
+  const notes = KNOWLEDGE_NOTES;
   const filtered = cat === "all" ? notes : notes.filter(n => n.cat === cat);
   return (
     <div className="screen" style={{ maxWidth: "none" }}>
@@ -1924,37 +1926,30 @@ function DrillScreen({ go, progress, clock, completeTask }) {
 
 // ─── Screen: TEACH ───────────────────────────────────────────────────
 function TeachScreen({ go, progress, clock, completeTask }) {
-  const topics = [
-    {
-      title: "North Star Metric",
-      prompt: "Объясни North Star Metric стажёру",
-      rookie: "Привет! Я тут читал доку и не понял — а зачем нужна одна метрика? У нас же DAU, retention, revenue, NPS — давай за всеми следить?",
-      hints: ["упомяни retention", "приведи 1 FAANG-пример", "объясни leading vs lagging"],
-    },
-    {
-      title: "RICE prioritization",
-      prompt: "Объясни RICE приоритизацию стажёру",
-      rookie: "Почему мы не можем просто взять идею, которая нравится команде? Зачем эти Reach, Impact, Confidence и Effort?",
-      hints: ["покажи формулу", "объясни confidence", "скажи про evidence"],
-    },
-    {
-      title: "JTBD",
-      prompt: "Объясни JTBD стажёру",
-      rookie: "Я написал сегмент: женщины 25-34. Это же и есть пользовательская задача, да?",
-      hints: ["отдели сегмент от задачи", "дай формат when/I want/so I can", "приведи пример"],
-    },
-  ];
-  const [topicIdx, setTopicIdx] = useState(0);
+  const topics = KNOWLEDGE_NOTES.map((note) => ({
+    id: note.id,
+    title: note.t,
+    prompt: `Объясни «${note.t}» стажёру`,
+    rookie: note.rookie,
+    hints: note.hints,
+    cat: note.cat,
+    excerpt: note.ex,
+  }));
+  const [topicId, setTopicId] = useState("nsm");
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const topic = topics[topicIdx];
-  const [messages, setMessages] = useState([{ role: "rookie", text: topics[0].rookie }]);
+  const topic = topics.find((item) => item.id === topicId) || topics[0];
+  const [messages, setMessages] = useState([{ role: "rookie", text: topics.find((item) => item.id === "nsm")?.rookie || topics[0].rookie }]);
   const answerCount = messages.filter((m) => m.role === "you").length;
-  const switchTopic = () => {
-    const next = (topicIdx + 1) % topics.length;
-    setTopicIdx(next);
-    setMessages([{ role: "rookie", text: topics[next].rookie }]);
+  const selectTopic = (id) => {
+    const nextTopic = topics.find((item) => item.id === id) || topics[0];
+    setTopicId(nextTopic.id);
+    setMessages([{ role: "rookie", text: nextTopic.rookie }]);
     setInput("");
+  };
+  const switchTopic = () => {
+    const index = topics.findIndex((item) => item.id === topic.id);
+    selectTopic(topics[(index + 1) % topics.length].id);
   };
   const sendTeach = async () => {
     const answer = input.trim();
@@ -1999,11 +1994,22 @@ function TeachScreen({ go, progress, clock, completeTask }) {
       </div>
       <div className="teach-stage">
         <div className="teach-chat">
+          <div className="teach-topic-picker">
+            <div>
+              <span className="eyebrow">тема из конспектов</span>
+              <strong>{topic.title}</strong>
+            </div>
+            <select value={topicId} onChange={(e) => selectTopic(e.target.value)}>
+              {topics.map((item) => (
+                <option key={item.id} value={item.id}>{item.title}</option>
+              ))}
+            </select>
+          </div>
           <div className="lesson-callout">
             <div className="ico">🎯</div>
             <div>
               <h4>Цель сессии</h4>
-              <p>Стажёр Тима начинает с первого вопроса. Ты отвечаешь как senior PM: просто, структурно, с примером. После каждого ответа Тима задаёт следующий вопрос.</p>
+              <p>Тима просит объяснить выбранный конспект: {topic.excerpt} Ты отвечаешь как senior PM: просто, структурно, с примером. После каждого ответа Тима задаёт следующий вопрос.</p>
             </div>
           </div>
           {messages.map((m, i) => (
