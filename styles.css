@@ -5747,6 +5747,100 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .pmq-hifi .mcq-explain p { margin: 0; font-size: 14.5px; color: var(--ph-ink-2); }
 
 /* case */
+.pmq-hifi .case-generator {
+  margin: 0 0 22px;
+  padding: 18px;
+  background: var(--ph-card);
+  border: var(--ph-b);
+  border-radius: var(--ph-r-l);
+  box-shadow: var(--ph-sh-sm);
+}
+.pmq-hifi .case-generator-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.pmq-hifi .case-generator-head h2 {
+  margin: 0;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+.pmq-hifi .case-generator-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pmq-hifi .case-generator-controls select {
+  height: 42px;
+  border: 2px solid var(--ph-ink);
+  border-radius: 999px;
+  background: var(--ph-bg-warm);
+  color: var(--ph-ink);
+  padding: 0 14px;
+  font-weight: 800;
+}
+.pmq-hifi .case-suggest-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.pmq-hifi .case-suggest {
+  min-height: 74px;
+  text-align: left;
+  border: 2px solid var(--ph-ink);
+  border-radius: var(--ph-r);
+  background: var(--ph-bg-warm);
+  padding: 10px 12px;
+  box-shadow: 2px 2px 0 var(--ph-ink);
+}
+.pmq-hifi .case-suggest:hover,
+.pmq-hifi .case-suggest.active {
+  background: var(--ph-sun-2);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ph-ink);
+}
+.pmq-hifi .case-suggest strong {
+  display: block;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 15px;
+  line-height: 1.15;
+}
+.pmq-hifi .case-suggest span {
+  display: block;
+  margin-top: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ph-ink-3);
+}
+.pmq-hifi .case-topic-input {
+  width: 100%;
+  min-height: 76px;
+  border: 2px solid var(--ph-ink);
+  border-radius: var(--ph-r);
+  background: #fff;
+  color: var(--ph-ink);
+  padding: 12px 14px;
+  resize: vertical;
+  outline: none;
+}
+.pmq-hifi .case-topic-input:focus {
+  box-shadow: 0 0 0 3px var(--ph-mint-2);
+}
+.pmq-hifi .case-generator-error {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 2px solid var(--ph-ink);
+  border-radius: var(--ph-r);
+  background: #ffe1e1;
+  color: #7a1515;
+  font-weight: 800;
+}
 .pmq-hifi .case-wrap { display: grid; grid-template-columns: 220px 1fr; gap: 24px; }
 .pmq-hifi .case-steps { display: flex; flex-direction: column; gap: 10px; }
 .pmq-hifi .case-step {
@@ -5774,6 +5868,23 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .pmq-hifi .case-stage .meta { display: flex; gap: 8px; flex-wrap: wrap; }
 .pmq-hifi .case-stage h2 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 26px; font-weight: 800; margin: 0; letter-spacing: -0.015em; }
 .pmq-hifi .case-stage .promptq { font-size: 16px; color: var(--ph-ink-2); margin: 0; }
+.pmq-hifi .generated-case-brief {
+  padding: 14px 16px;
+  background: var(--ph-bg-warm);
+  border: 2px solid var(--ph-ink);
+  border-radius: var(--ph-r);
+}
+.pmq-hifi .generated-case-brief .eyebrow { margin-bottom: 8px; }
+.pmq-hifi .generated-case-brief pre {
+  margin: 0;
+  max-height: 230px;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: var(--ph-ink-2);
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
 .pmq-hifi .case-input {
   flex: 1; border: 2px solid var(--ph-ink); border-radius: var(--ph-r);
   background: var(--ph-card-sunk); padding: 18px 20px;
@@ -5789,6 +5900,11 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   padding: 5px 12px; border-radius: 999px;
   background: var(--ph-pink-2); border: 2px solid var(--ph-ink);
   font-size: 12.5px; font-weight: 700; cursor: pointer;
+}
+
+@media (max-width: 1000px) {
+  .pmq-hifi .case-suggest-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pmq-hifi .case-generator-head { flex-direction: column; }
 }
 
 /* mock */

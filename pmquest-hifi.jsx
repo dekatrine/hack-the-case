@@ -914,6 +914,62 @@ function SRSScreen({ go, progress, clock, completeTask }) {
 function CaseScreen({ go, progress, clock, completeTask }) {
   const [step, setStep] = useState(2);
   const [text, setText] = useState("");
+  const caseSuggestions = [
+    {
+      id: "spotify-likes",
+      label: "Spotify · лайки",
+      theme: "Music streaming / Entertainment",
+      trackId: "product",
+      interviewType: "product_design",
+      prompt: "Spotify хочет добавить лайки песен в плейлистах. Сфокусируй кейс на activation, retention, discovery и выборе метрик.",
+    },
+    {
+      id: "marketplace-retention",
+      label: "Маркетплейс · retention",
+      theme: "E-commerce / Маркетплейсы",
+      trackId: "product",
+      interviewType: "product_growth",
+      prompt: "Маркетплейс видит падение повторных покупок у новых пользователей. Нужен PM case про диагностику воронки, сегменты, гипотезы роста и эксперименты.",
+    },
+    {
+      id: "fintech-onboarding",
+      label: "Fintech · onboarding",
+      theme: "Fintech / Банки",
+      trackId: "product",
+      interviewType: "product_execution",
+      prompt: "Финтех-приложение теряет пользователей на KYC/onboarding. Сгенерируй кейс с данными по funnel, ограничениями compliance и выбором решения.",
+    },
+    {
+      id: "edtech-monetization",
+      label: "EdTech · monetization",
+      theme: "EdTech / Образование",
+      trackId: "product",
+      interviewType: "product_strategy",
+      prompt: "EdTech хочет поднять trial-to-paid conversion без ухудшения learning outcomes. Нужен кейс про сегменты, pricing/paywall, retention и guardrail metrics.",
+    },
+    {
+      id: "consulting-profit",
+      label: "Банк · прибыльность",
+      theme: "Fintech / Банки",
+      trackId: "business",
+      interviewType: "",
+      prompt: "Цифровой банк растёт по клиентам, но прибыльность падает. Сгенерируй consulting case с экономикой, CAC, cross-sell, cost-to-serve и decision question.",
+    },
+  ];
+  const fallbackCaseText = `Компания: Spotify.
+
+Контекст: команда хочет добавить «лайки» песен прямо внутри плейлистов. Сейчас пользователи часто слушают curated-плейлисты, но редко сохраняют отдельные треки, а retention новых слушателей после 30 дней ниже целевого.
+
+Данные: 42% новых пользователей слушают хотя бы один плейлист в первую неделю; только 9% сохраняют трек; пользователи, которые сохраняют 3+ трека, имеют на 28% выше D30 retention.
+
+Вопрос: стоит ли запускать лайки в плейлистах, для какого сегмента и какими метриками проверять успех?`;
+  const [selectedSuggestion, setSelectedSuggestion] = useState(caseSuggestions[0]);
+  const [difficulty, setDifficulty] = useState("Средний");
+  const [customTopic, setCustomTopic] = useState("");
+  const [caseTitle, setCaseTitle] = useState("Spotify — фича лайков");
+  const [caseText, setCaseText] = useState(fallbackCaseText);
+  const [genBusy, setGenBusy] = useState(false);
+  const [genErr, setGenErr] = useState("");
   const steps = [
     { n: "1", title: "Clarifying questions", desc: "уточни цели и контекст", prompt: "Что хочешь уточнить у интервьюера?", placeholder: "1. Какая цель — engagement, retention или revenue?\n2. На каких устройствах…" },
     { n: "2", title: "User & pain points", desc: "выбери сегмент, опиши боли", prompt: "Кто целевой пользователь? Какую проблему ему решает «лайк песен»?", placeholder: "Сегмент: «активные слушатели» 18-35.\nБоли: …" },
@@ -922,20 +978,85 @@ function CaseScreen({ go, progress, clock, completeTask }) {
     { n: "5", title: "Metrics & success", desc: "как поймёшь, что сработало", prompt: "Какие метрики? Какие предсказывают долгосрочный успех?", placeholder: "Лидирующая метрика: …" },
   ];
   const cur = steps[step];
+  const generateCase = async (suggestion = selectedSuggestion) => {
+    setGenBusy(true);
+    setGenErr("");
+    setSelectedSuggestion(suggestion);
+    try {
+      const extraContext = customTopic.trim()
+        ? `${suggestion.prompt}\n\nСвоя тематика пользователя: ${customTopic.trim()}`
+        : suggestion.prompt;
+      const res = await api.generate({
+        industry: suggestion.theme,
+        difficulty,
+        extraContext,
+        trackId: suggestion.trackId,
+        interviewType: suggestion.interviewType || undefined,
+        grade: "middle",
+      });
+      setCaseText(res.caseText || fallbackCaseText);
+      setCaseTitle(customTopic.trim() || suggestion.label);
+      setStep(0);
+      setText("");
+    } catch (e) {
+      setGenErr(e.message);
+    } finally {
+      setGenBusy(false);
+    }
+  };
+
   return (
     <div className="screen">
-      <Topbar crumbs={["Home", "Кейс", "Spotify — фича лайков"]} progress={progress} clock={clock} />
+      <Topbar crumbs={["Home", "Кейс", caseTitle]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Кейс · ~15 мин · +60 XP · FAANG product design</span>
-          <h1>Spotify хочет добавить «лайки» песен в плейлистах</h1>
+          <h1>{caseTitle}</h1>
         </div>
         <div className="right">
-          <span className="chip sun">слабое место: product design</span>
+          <span className="chip sun">{selectedSuggestion.trackId === "business" ? "business case" : "product case"}</span>
           <button className="btn ghost sm">сохранить</button>
           <button className="btn ghost sm" onClick={() => go("home")}>× выйти</button>
         </div>
       </div>
+      <section className="case-generator">
+        <div className="case-generator-head">
+          <div>
+            <span className="eyebrow">AI генератор кейсов</span>
+            <h2>Сгенерируй свой кейс по тематике</h2>
+          </div>
+          <div className="case-generator-controls">
+            <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+              <option>Начальный</option>
+              <option>Средний</option>
+              <option>Сложный</option>
+            </select>
+            <button className="btn primary" onClick={() => generateCase()} disabled={genBusy}>
+              {genBusy ? "генерирую..." : "сгенерировать"}
+            </button>
+          </div>
+        </div>
+        <div className="case-suggest-row">
+          {caseSuggestions.map((item) => (
+            <button
+              key={item.id}
+              className={`case-suggest ${selectedSuggestion.id === item.id ? "active" : ""}`}
+              onClick={() => generateCase(item)}
+              disabled={genBusy}
+            >
+              <strong>{item.label}</strong>
+              <span>{item.trackId === "business" ? "business" : item.interviewType.replace("product_", "")}</span>
+            </button>
+          ))}
+        </div>
+        <textarea
+          className="case-topic-input"
+          value={customTopic}
+          onChange={(e) => setCustomTopic(e.target.value)}
+          placeholder="Своя тематика: например, «AI travel planner для семей», «B2B SaaS churn», «доставка еды: рост среднего чека», «банк теряет прибыльность в premium-сегменте»"
+        />
+        {genErr && <div className="case-generator-error">{genErr}</div>}
+      </section>
       <div className="case-wrap">
         <aside className="case-steps">
           <div className="eyebrow" style={{ padding: "0 4px 4px" }}>5 шагов кейса</div>
@@ -955,6 +1076,10 @@ function CaseScreen({ go, progress, clock, completeTask }) {
           </div>
         </aside>
         <div className="case-stage">
+          <div className="generated-case-brief">
+            <span className="eyebrow">условие кейса</span>
+            <pre>{caseText}</pre>
+          </div>
           <div className="meta">
             <span className="chip solid-ink">Шаг {step + 1} / 5</span>
             <span className="chip pink">{cur.title}</span>
@@ -975,7 +1100,7 @@ function CaseScreen({ go, progress, clock, completeTask }) {
               {step < steps.length - 1 ? (
                 <button className="btn primary lg" onClick={() => { setStep(step + 1); setText(""); }}>далее {Icon.chev}</button>
               ) : (
-                <button className="btn primary lg" onClick={() => completeTask("spotify-case", 60, "review", { cases: progress.cases + 1 })}>отправить на разбор {Icon.chev}</button>
+                <button className="btn primary lg" onClick={() => completeTask(`case-${selectedSuggestion.id}`, 60, "review", { cases: progress.cases + 1 })}>отправить на разбор {Icon.chev}</button>
               )}
             </div>
           </div>
