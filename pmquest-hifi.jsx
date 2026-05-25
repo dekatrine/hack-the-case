@@ -199,6 +199,14 @@ const KNOWLEDGE_NOTES = [
   { id: "sysdesign-101", t: "System design 101 для PM", cat: "sysdesign", c: "is-sun", ex: "API gateway, очереди, кэши — что должен знать PM на собесе и где «технический потолок».", s: 0, rookie: "PM точно должен знать system design? Где граница между PM и инженером?", hints: ["объясни PM-уровень", "свяжи с trade-offs", "не уходи в код"] },
   { id: "activation", t: "Activation events", cat: "metrics", c: "is-mint", ex: "Aha-moment, magic number — как определить и измерить.", s: 2, rookie: "Что такое activation event? Это просто регистрация или первое действие?", hints: ["объясни aha-moment", "дай magic number", "свяжи с retention"] },
   { id: "latency-cost", t: "Trade-off: latency vs cost", cat: "sysdesign", c: "is-sky", ex: "Типовой follow-up в FAANG. Как структурно отвечать.", s: 1, rookie: "Если latency лучше для пользователя, почему мы вообще думаем про cost?", hints: ["объясни business constraint", "назови guardrail", "покажи компромисс"] },
+  { id: "jtbd", t: "JTBD / user pain", cat: "design", c: "is-mint", ex: "Jobs-to-be-done: какую задачу пользователь пытается решить в конкретном контексте.", s: 1, rookie: "Я написал сегмент: женщины 25-34. Это же и есть пользовательская задача, да?", hints: ["отдели сегмент от задачи", "дай формат when/I want/so I can", "приведи пример"] },
+  { id: "guardrails", t: "Guardrail metrics", cat: "metrics", c: "is-pink", ex: "Метрики, которые защищают качество продукта, доверие и долгосрочную ценность при запуске фичи.", s: 0, rookie: "Если primary metric растёт, зачем ещё guardrails? Разве этого мало?", hints: ["дай пример вредного роста", "назови 2 guardrails", "свяжи с rollout"] },
+  { id: "root-cause", t: "Root cause analysis", cat: "metrics", c: "is-sky", ex: "Как диагностировать падение метрики через funnel, сегменты, события и внешние факторы.", s: 1, rookie: "Метрика упала. Почему нельзя сразу придумать фичу, чтобы её поднять?", hints: ["построй дерево причин", "разрежь по сегментам", "проверь instrumentation"] },
+  { id: "pricing", t: "Pricing & packaging", cat: "framework", c: "is-sun", ex: "Как думать о тарифах, упаковке value, willingness-to-pay и paywall trade-offs.", s: 0, rookie: "Почему нельзя просто поднять цену, если хотим больше revenue?", hints: ["объясни value perception", "скажи про churn", "предложи эксперимент"] },
+  { id: "marketplace", t: "Marketplace liquidity", cat: "design", c: "is-mint", ex: "Баланс спроса и предложения, time-to-match, density и chicken-and-egg проблемы.", s: 0, rookie: "В маркетплейсе кого важнее растить первым: продавцов или покупателей?", hints: ["объясни liquidity", "выбери constrained side", "дай метрику match quality"] },
+  { id: "roadmap", t: "Roadmap narrative", cat: "framework", c: "is-pink", ex: "Как связать стратегию, пользовательскую боль, метрики и порядок фич в понятный roadmap.", s: 0, rookie: "Roadmap — это просто список фич по кварталам?", hints: ["свяжи с целью", "объясни sequencing", "назови trade-offs"] },
+  { id: "stakeholders", t: "Stakeholder management", cat: "behavioral", c: "is-sky", ex: "Как PM работает с конфликтами, alignment, decision log и эскалациями без политики.", s: 1, rookie: "Если дизайн и инженерка спорят, PM должен просто выбрать сторону?", hints: ["проясни цель", "раздели факты и мнения", "зафиксируй decision"] },
+  { id: "ai-products", t: "AI product evaluation", cat: "metrics", c: "is-sun", ex: "Как оценивать AI-фичи: качество ответа, hallucination, latency, trust и human-in-the-loop.", s: 0, rookie: "У AI-фичи всё субъективно. Как вообще понять, что она стала лучше?", hints: ["назови offline/online метрики", "добавь human eval", "поставь trust guardrail"] },
 ];
 
 function Pim({ message, actions = [], expression = "idle", muted = false, route = "home", progress, openSignal = 0 }) {
@@ -302,8 +310,7 @@ function Sidebar({ route, go, progress }) {
   const level = getLevel(progress.xp);
   const items = [
     { k: "home",    label: "Home",          ico: Icon.home,   group: "main" },
-    { k: "library", label: "Конспекты",     ico: Icon.vault,  group: "main", badge: "12" },
-    { k: "lesson",  label: "Урок",          ico: Icon.book,   group: "learn" },
+    { k: "library", label: "Уроки",         ico: Icon.book,   group: "main", badge: String(KNOWLEDGE_NOTES.length) },
     { k: "check",   label: "Check · MCQ",   ico: Icon.cards,  group: "learn" },
     { k: "srs",     label: "Карточки SRS",  ico: Icon.zap,    group: "learn", badge: String(progress.cardsDue) },
     { k: "case",    label: "Кейс",          ico: Icon.case,   group: "practice" },
@@ -391,13 +398,13 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
       </div>
 
       <div className="bento">
-        <div className="tile t-mission is-coral" onClick={() => go("lesson")}>
+        <div className="tile t-mission is-coral" onClick={() => go("library")}>
           <span className="corner-ico">миссия дня · 35 мин</span>
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, paddingTop: 18, paddingRight: 130, position: "relative", zIndex: 2 }}>
             <span className="chip" style={{ background: "rgba(255,255,255,0.18)", color: "#fff", border: "1.5px solid #fff", width: "fit-content" }}>FAANG product design · слабое место недели</span>
             <h3 className="h-display" style={{ fontSize: 38, color: "#fff", margin: 0, maxWidth: "16ch" }}>Сегодня: «Spotify — фича лайков»</h3>
             <p style={{ color: "rgba(255,255,255,0.9)", fontSize: 15, maxWidth: "44ch" }}>
-              1 урок (8 мин) → 3 MCQ-вопроса (3 мин) → кейс на 5 шагов (15 мин) → разбор от Pim.
+              Выбери урок → объясни стажёру → закрепи в Check/Drill → только после практики тема станет освоенной.
             </p>
           </div>
           <div className="footer" style={{ position: "relative", zIndex: 2 }}>
@@ -552,27 +559,30 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
 // ─── Screen: LIBRARY ─────────────────────────────────────────────────
 function LibraryScreen({ go, progress, clock }) {
   const [cat, setCat] = useState("all");
+  const categoryCounts = KNOWLEDGE_NOTES.reduce((acc, note) => ({ ...acc, [note.cat]: (acc[note.cat] || 0) + 1 }), {});
   const cats = [
-    { k: "all",       label: "Все",                  n: 32 },
-    { k: "framework", label: "Фреймворки",           n: 12 },
-    { k: "metrics",   label: "Метрики & A/B",        n: 8 },
-    { k: "design",    label: "Product design",       n: 6 },
-    { k: "behavioral",label: "Behavioral / STAR",    n: 4 },
-    { k: "sysdesign", label: "System design для PM", n: 2 },
+    { k: "all",       label: "Все",                  n: KNOWLEDGE_NOTES.length },
+    { k: "framework", label: "Фреймворки",           n: categoryCounts.framework || 0 },
+    { k: "metrics",   label: "Метрики & A/B",        n: categoryCounts.metrics || 0 },
+    { k: "design",    label: "Product design",       n: categoryCounts.design || 0 },
+    { k: "behavioral",label: "Behavioral / STAR",    n: categoryCounts.behavioral || 0 },
+    { k: "sysdesign", label: "System design для PM", n: categoryCounts.sysdesign || 0 },
   ];
   const notes = KNOWLEDGE_NOTES;
   const filtered = cat === "all" ? notes : notes.filter(n => n.cat === cat);
+  const masteredCount = notes.filter((n) => progress.completed?.[`teach-${n.id}`]).length;
   return (
     <div className="screen" style={{ maxWidth: "none" }}>
-      <Topbar crumbs={["PMQuest", "Конспекты"]} progress={progress} clock={clock} />
+      <Topbar crumbs={["PMQuest", "Уроки"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
-          <span className="eyebrow">Хранилище — 32 урока, конспекты собираются автоматически</span>
-          <h1>Твой банк знаний</h1>
+          <span className="eyebrow">Хранилище — {notes.length} уроков, статус освоения открывается практикой</span>
+          <h1>Твои уроки</h1>
         </div>
         <div className="right">
           <button className="btn ghost">Сортировка: новые</button>
-          <button className="btn primary">＋ свой конспект</button>
+          <span className="chip mint">освоено {masteredCount}/{notes.length}</span>
+          <button className="btn primary">＋ свой урок</button>
         </div>
       </div>
       <div className="lib-stage">
@@ -586,26 +596,35 @@ function LibraryScreen({ go, progress, clock }) {
           ))}
           <h5 style={{ marginTop: 14 }}>Метки</h5>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", padding: "0 6px" }}>
-            <span className="chip mint">освоено</span>
-            <span className="chip sun">в SRS</span>
-            <span className="chip pink">слабое место</span>
+            <span className="chip mint">освоено после практики</span>
+            <span className="chip sun">готово к практике</span>
+            <span className="chip pink">новое</span>
             <span className="chip sky">избранное</span>
           </div>
         </aside>
         <div className="notes-grid">
-          {filtered.map((n, i) => (
-            <div key={i} className={`note-card ${n.c}`} onClick={() => go("lesson")}>
-              {n.m && <span className="mastered-badge">✓ освоено</span>}
-              <h4>{n.t}</h4>
-              <p className="excerpt">{n.ex}</p>
-              <div className="nfoot">
-                <span className="mono" style={{ color: "var(--ph-ink-3)" }}>{n.cat}</span>
-                <span className="stars">
-                  {[0,1,2,3].map(k => <i key={k} className={k < n.s ? "on" : ""}></i>)}
-                </span>
+          {filtered.map((n) => {
+            const mastered = Boolean(progress.completed?.[`teach-${n.id}`]);
+            const checked = progress.checkStats?.[n.id] || 0;
+            const progressSteps = Math.min(4, (n.s > 0 ? 1 : 0) + (checked > 0 ? 1 : 0) + (mastered ? 2 : 0));
+            return (
+              <div key={n.id} className={`note-card ${n.c}`} onClick={() => go("teach", { teachTopicId: n.id })}>
+                {mastered && <span className="mastered-badge">✓ освоено</span>}
+                <h4>{n.t}</h4>
+                <p className="excerpt">{n.ex}</p>
+                <div className="lesson-progress">
+                  <div className="bar"><i style={{ width: `${progressSteps * 25}%`, background: mastered ? "var(--ph-mint)" : "var(--ph-sun)" }}></i></div>
+                  <span>{mastered ? "практика пройдена" : checked > 0 ? "check начат · нужна практика" : "урок готов к практике"}</span>
+                </div>
+                <div className="nfoot">
+                  <span className="mono" style={{ color: "var(--ph-ink-3)" }}>{n.cat}</span>
+                  <span className="stars">
+                    {[0,1,2,3].map(k => <i key={k} className={k < progressSteps ? "on" : ""}></i>)}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
@@ -827,7 +846,7 @@ function CheckScreen({ go, progress, clock, completeTask, updateProgress }) {
   };
   return (
     <div className="screen" style={{ maxWidth: 880 }}>
-      <Topbar crumbs={["Home", "Урок", "Check"]} progress={progress} clock={clock} />
+      <Topbar crumbs={["Home", "Уроки", "Check"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Check · тема: {topics.find(t => t.id === topicId)?.label}</span>
@@ -884,7 +903,7 @@ function CheckScreen({ go, progress, clock, completeTask, updateProgress }) {
           </div>
         )}
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 22 }}>
-          <button className="btn ghost" onClick={() => go("lesson")}>{Icon.back} назад в урок</button>
+          <button className="btn ghost" onClick={() => go("library")}>{Icon.back} назад к урокам</button>
           {showExplain ? (
             <button className="btn primary lg" onClick={next}>{idx === questions.length - 1 ? "к практике" : "следующий"} {Icon.chev}</button>
           ) : (
@@ -1925,7 +1944,7 @@ function DrillScreen({ go, progress, clock, completeTask }) {
 }
 
 // ─── Screen: TEACH ───────────────────────────────────────────────────
-function TeachScreen({ go, progress, clock, completeTask }) {
+function TeachScreen({ go, progress, clock, completeTask, initialTopicId = "nsm" }) {
   const topics = KNOWLEDGE_NOTES.map((note) => ({
     id: note.id,
     title: note.t,
@@ -1935,12 +1954,18 @@ function TeachScreen({ go, progress, clock, completeTask }) {
     cat: note.cat,
     excerpt: note.ex,
   }));
-  const [topicId, setTopicId] = useState("nsm");
+  const [topicId, setTopicId] = useState(initialTopicId);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const topic = topics.find((item) => item.id === topicId) || topics[0];
   const [messages, setMessages] = useState([{ role: "rookie", text: topics.find((item) => item.id === "nsm")?.rookie || topics[0].rookie }]);
   const answerCount = messages.filter((m) => m.role === "you").length;
+  useEffect(() => {
+    const nextTopic = topics.find((item) => item.id === initialTopicId) || topics[0];
+    setTopicId(nextTopic.id);
+    setMessages([{ role: "rookie", text: nextTopic.rookie }]);
+    setInput("");
+  }, [initialTopicId]);
   const selectTopic = (id) => {
     const nextTopic = topics.find((item) => item.id === id) || topics[0];
     setTopicId(nextTopic.id);
@@ -1996,7 +2021,7 @@ function TeachScreen({ go, progress, clock, completeTask }) {
         <div className="teach-chat">
           <div className="teach-topic-picker">
             <div>
-              <span className="eyebrow">тема из конспектов</span>
+              <span className="eyebrow">тема из уроков</span>
               <strong>{topic.title}</strong>
             </div>
             <select value={topicId} onChange={(e) => selectTopic(e.target.value)}>
@@ -2009,7 +2034,7 @@ function TeachScreen({ go, progress, clock, completeTask }) {
             <div className="ico">🎯</div>
             <div>
               <h4>Цель сессии</h4>
-              <p>Тима просит объяснить выбранный конспект: {topic.excerpt} Ты отвечаешь как senior PM: просто, структурно, с примером. После каждого ответа Тима задаёт следующий вопрос.</p>
+              <p>Тима просит объяснить выбранный урок: {topic.excerpt} Ты отвечаешь как senior PM: просто, структурно, с примером. После каждого ответа Тима задаёт следующий вопрос.</p>
             </div>
           </div>
           {messages.map((m, i) => (
@@ -2056,7 +2081,7 @@ function TeachScreen({ go, progress, clock, completeTask }) {
               «Сейчас это не заготовленный чат. Диалог строится по твоим ответам: объясни как senior, а Тима уточнит слабое место.»
             </p>
           </div>
-          <button className="btn lg" style={{ width: "100%" }} onClick={() => completeTask("teach-rookie", 50, "review")}>завершить → разбор</button>
+          <button className="btn lg" style={{ width: "100%" }} onClick={() => completeTask(`teach-${topic.id}`, 50, "review", { cardsDue: progress.cardsDue + 1 })}>завершить → разбор</button>
         </aside>
       </div>
     </div>
@@ -2234,9 +2259,8 @@ function CVScreen({ progress, clock, completeTask }) {
 
 // ─── App router + persistent Pim ─────────────────────────────────────
 const PIM_BY_ROUTE = {
-  home:    { msg: "С возвращением, Катя! Слабое место недели — product design. Я подобрал кейс под него.", actions: [{ label: "Старт миссии", on: "lesson" }], expression: "smile" },
-  library: { msg: "12 конспектов уже освоено. Подсветил карточки, которые скоро вернутся в SRS.", actions: [{ label: "Открыть SRS", on: "srs" }], expression: "wink" },
-  lesson:  { msg: "Подсветить или объяснить любой кусок — просто выдели текст. Я рядом.", actions: [], expression: "teach" },
+  home:    { msg: "С возвращением, Катя! Слабое место недели — product design. Я подобрал урок и практику под него.", actions: [{ label: "Открыть уроки", on: "library" }], expression: "smile" },
+  library: { msg: "Урок считается освоенным только после практики. Выбери тему и объясни её Тиме.", actions: [{ label: "Открыть SRS", on: "srs" }], expression: "wink" },
   check:   { msg: "3 вопроса. Один с подвохом. После каждого — кнопка «почему».", actions: [], expression: "think" },
   case:    { msg: "Не торопись с решениями. Сильные кандидаты тратят 30% времени на clarify + user.", actions: [], expression: "think" },
   mock:    { msg: "На mock я в фоне — слежу за таймингом и шепну, если выйдешь за лимит шага.", actions: [], expression: "wink", muted: true },
@@ -2249,6 +2273,7 @@ const PIM_BY_ROUTE = {
 
 export default function PMQuestHifi({ onExit }) {
   const [route, setRoute] = useState("home");
+  const [selectedTeachTopicId, setSelectedTeachTopicId] = useState("nsm");
   const [pimOpenSignal, setPimOpenSignal] = useState(0);
   const [progress, setProgress] = useState(initialProgress);
   const clock = useMoscowClock();
@@ -2257,7 +2282,8 @@ export default function PMQuestHifi({ onExit }) {
     localStorage.setItem("pmquest-progress-v1", JSON.stringify(progress));
   }, [progress]);
 
-  const go = (r) => {
+  const go = (r, options = {}) => {
+    if (options.teachTopicId) setSelectedTeachTopicId(options.teachTopicId);
     setRoute(r);
     document.querySelector(".pmq-hifi .canvas")?.scrollTo(0, 0);
   };
@@ -2289,13 +2315,12 @@ export default function PMQuestHifi({ onExit }) {
   const screens = {
     home:    <HomeScreen go={go} openPim={() => setPimOpenSignal((v) => v + 1)} {...shared} />,
     library: <LibraryScreen go={go} {...shared} />,
-    lesson:  <LessonScreen go={go} {...shared} />,
     check:   <CheckScreen go={go} {...shared} />,
     srs:     <SRSScreen go={go} {...shared} />,
     case:    <CaseScreen go={go} {...shared} />,
     mock:    <MockScreen go={go} {...shared} />,
     drill:   <DrillScreen go={go} {...shared} />,
-    teach:   <TeachScreen go={go} {...shared} />,
+    teach:   <TeachScreen go={go} initialTopicId={selectedTeachTopicId} {...shared} />,
     review:  <ReviewScreen go={go} {...shared} />,
     cv:      <CVScreen go={go} {...shared} />,
   };

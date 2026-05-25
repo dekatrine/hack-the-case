@@ -6411,6 +6411,17 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .pmq-hifi .note-card.is-pink { background: var(--ph-pink-2); }
 .pmq-hifi .note-card h4 { margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
 .pmq-hifi .note-card .excerpt { font-size: 13px; color: var(--ph-ink-2); flex: 1; }
+.pmq-hifi .note-card .lesson-progress {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+  margin-top: 2px;
+}
+.pmq-hifi .note-card .lesson-progress span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: var(--ph-ink-3);
+}
 .pmq-hifi .note-card .nfoot { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
 .pmq-hifi .note-card .stars { display: flex; gap: 2px; }
 .pmq-hifi .note-card .stars i { width: 10px; height: 10px; border-radius: 50%; background: var(--ph-ink-4); display: block; }
