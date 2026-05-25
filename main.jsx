@@ -1765,7 +1765,7 @@ const InterviewSectionBody = ({ section, data = false, compact = false }) => {
 const App = () => {
   const [config, setConfig] = useState(null);
   const [err, setErr] = useState(null);
-  const [screen, setScreen] = useState('landing'); // landing | track | workspace | quiz | interview | learn
+  const [screen, setScreen] = useState('pmquest-hifi'); // pmquest-hifi | landing | track | workspace | quiz | interview | learn
   const [quizCategory, setQuizCategory] = useState(null);
   const [learnInitialTab, setLearnInitialTab] = useState('All Resources');
   const [learnAutoReview, setLearnAutoReview] = useState(false);
@@ -1820,12 +1820,12 @@ const App = () => {
     setScreen('learn');
   };
 
-  const screenLabel = { landing: 'dojo / resources', track: `exam mode / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz', interview: 'mock interview', learn: `resources / ${learnInitialTab}` }[screen];
+  const screenLabel = { 'pmquest-hifi': 'pmquest / home', landing: 'dojo / resources', track: `exam mode / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz', interview: 'mock interview', learn: `resources / ${learnInitialTab}` }[screen];
 
   // PMQuest Hi-Fi is a full-page takeover: own sidebar, topbar, mascot.
   // Render outside the regular .shell wrapper.
   if (screen === 'pmquest-hifi') {
-    return <PMQuestHifi onExit={() => setScreen('landing')} />;
+    return <PMQuestHifi />;
   }
 
   return (
