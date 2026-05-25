@@ -1469,18 +1469,67 @@ function MockScreen({ go, progress, clock, completeTask }) {
 
 // ─── Screen: DRILL ───────────────────────────────────────────────────
 function DrillScreen({ go, progress, clock, completeTask }) {
-  const [qIdx, setQIdx] = useState(2);
-  const [paused, setPaused] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(42);
-  const [stats, setStats] = useState({ clean: 1, shaky: 1, missed: 0 });
-  const total = 10;
-  const questions = [
-    "Назови 3 метрики для оценки качества поиска",
-    "Sub-2 sec latency vs full personalization — выбор и обоснование за 60 сек",
-    "Чем NSM отличается от вторичной метрики? Один пример.",
-    "Опиши aha-moment для приложения для медитации",
-    "Какой trade-off ты бы обсудил для лайков в Spotify?",
+  const drillTopics = [
+    {
+      id: "product-sense",
+      label: "Product sense",
+      bank: [
+        "Назови 3 метрики для оценки качества поиска и объясни, какая главная.",
+        "Sub-2 sec latency vs full personalization — выбор и обоснование за 60 сек.",
+        "Чем NSM отличается от вторичной метрики? Дай один пример.",
+        "Опиши aha-moment для приложения для медитации.",
+        "Какой trade-off ты бы обсудил для лайков в Spotify?",
+      ],
+    },
+    {
+      id: "metrics",
+      label: "Метрики",
+      bank: [
+        "Какая North Star Metric подойдёт для маркетплейса услуг и почему?",
+        "Revenue растёт, retention падает. Какие 3 проверки сделаешь первыми?",
+        "Придумай guardrail metrics для запуска AI-рекомендаций.",
+        "Чем actionable metric отличается от vanity metric? Пример.",
+        "Как измерить качество onboarding в fintech-приложении?",
+      ],
+    },
+    {
+      id: "growth",
+      label: "Growth",
+      bank: [
+        "Как бы ты искал причину падения activation после регистрации?",
+        "Предложи 3 гипотезы роста repeat purchase в маркетплейсе.",
+        "Какой эксперимент поставишь для referral-механики?",
+        "CAC вырос на 30%. Что проверишь до предложения решения?",
+        "Как отличить плохой acquisition от плохого продукта?",
+      ],
+    },
+    {
+      id: "strategy",
+      label: "Strategy",
+      bank: [
+        "Компания хочет выйти в B2B. Какие 3 вопроса задашь перед решением?",
+        "Build vs partner для новой AI-фичи: как рассуждать?",
+        "Как выбрать сегмент для первого запуска продукта?",
+        "Конкурент копирует фичу. Что делать PM?",
+        "Какие trade-offs есть у premium-подписки в consumer app?",
+      ],
+    },
   ];
+  const [topicId, setTopicId] = useState("product-sense");
+  const [questions, setQuestions] = useState(drillTopics[0].bank);
+  const [qIdx, setQIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(60);
+  const [stats, setStats] = useState({ clean: 0, shaky: 0, missed: 0 });
+  const [answer, setAnswer] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [checkedText, setCheckedText] = useState("");
+  const total = 10;
+  const topic = drillTopics.find((item) => item.id === topicId) || drillTopics[0];
+  const currentQuestion = questions[qIdx % questions.length];
+
   useEffect(() => {
     if (paused) return undefined;
     const timer = setInterval(() => {
@@ -1488,16 +1537,126 @@ function DrillScreen({ go, progress, clock, completeTask }) {
         if (value > 1) return value - 1;
         setStats((prev) => ({ ...prev, missed: prev.missed + 1 }));
         setQIdx((idx) => (idx < total - 1 ? idx + 1 : idx));
+        setAnswer("");
+        setFeedback("Время вышло: засчитала как «не успел». Следующий вопрос уже открыт.");
+        setCheckedText("");
         return 60;
       });
     }, 1000);
     return () => clearInterval(timer);
   }, [paused]);
+
+  useEffect(() => {
+    if (paused || checking || !answer.trim() || answer.trim() === checkedText) return undefined;
+    if (answer.trim().length < 24) return undefined;
+    const timer = setTimeout(() => {
+      checkAnswer();
+    }, 900);
+    return () => clearTimeout(timer);
+  }, [answer, paused, checking, checkedText]);
+
+  const parseQuestions = (raw) => {
+    const match = raw.match(/\[[\s\S]*\]/);
+    const parsed = JSON.parse(match ? match[0] : raw);
+    return parsed.map((item) => (typeof item === "string" ? item : item.question)).filter(Boolean).slice(0, total);
+  };
+
+  const generateQuestions = async (nextTopic = topic) => {
+    setGenerating(true);
+    setFeedback("");
+    try {
+      const res = await api.coach({
+        stepId: "drill-generate",
+        stepTitle: `Drill questions: ${nextTopic.label}`,
+        stepDescription: "Сгенерируй короткие вопросы для 60-секундного PM drill.",
+        frameworks: [nextTopic.label, "PM interview", "Product thinking"],
+        caseHint: "Ответь только JSON-массивом из 10 строк. Без markdown.",
+        caseText: `Тема drill: ${nextTopic.label}`,
+        answerText: "",
+        userMessage: `Сгенерируй 10 разных коротких вопросов на тему ${nextTopic.label}. Каждый вопрос должен проверять reasoning, метрики или trade-offs.`,
+        chatHistory: [],
+        previousAnswers: {},
+        trackId: "product",
+      });
+      const nextQuestions = parseQuestions(res.message);
+      setQuestions(nextQuestions.length ? nextQuestions : nextTopic.bank);
+      setQIdx(0);
+      setSecondsLeft(60);
+      setAnswer("");
+      setCheckedText("");
+      setFeedback("AI сгенерировал новый набор вопросов.");
+    } catch {
+      setQuestions(nextTopic.bank);
+      setFeedback("AI не ответил, включил локальный набор вопросов по теме.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const selectTopic = (id) => {
+    const nextTopic = drillTopics.find((item) => item.id === id) || drillTopics[0];
+    setTopicId(nextTopic.id);
+    setQuestions(nextTopic.bank);
+    setQIdx(0);
+    setSecondsLeft(60);
+    setAnswer("");
+    setCheckedText("");
+    setFeedback("");
+    generateQuestions(nextTopic);
+  };
+
+  const localGrade = (text) => {
+    const clean = text.trim().toLowerCase();
+    const hasStructure = /1|2|3|во-первых|сначала|затем|метрик|сегмент|польз/.test(clean);
+    const hasReason = /потому|так как|чтобы|если|trade|риск|retention|activation|конверс|value|ценност/.test(clean);
+    if (clean.length > 110 && hasStructure && hasReason) return "clean";
+    if (clean.length > 45 && (hasStructure || hasReason)) return "shaky";
+    return "missed";
+  };
+
+  const checkAnswer = async () => {
+    const clean = answer.trim();
+    if (!clean || checking || clean === checkedText) return;
+    setChecking(true);
+    setCheckedText(clean);
+    try {
+      const res = await api.coach({
+        stepId: "drill-check",
+        stepTitle: currentQuestion,
+        stepDescription: "Проверь короткий ответ на PM drill. Верни краткий вердикт.",
+        frameworks: [topic.label, "PM interview", "60-second drill"],
+        caseHint: "Формат: ✅ Чисто / ⚠️ Под вопросом / ✕ Не успел, затем 1 короткая причина и 1 улучшение.",
+        caseText: currentQuestion,
+        answerText: clean,
+        userMessage: clean,
+        chatHistory: [],
+        previousAnswers: {},
+        trackId: "product",
+      });
+      const verdict = /чисто|✅|strong|сильно/i.test(res.message)
+        ? "clean"
+        : /не успел|слабо|✕|плохо/i.test(res.message)
+          ? "missed"
+          : "shaky";
+      setStats((prev) => ({ ...prev, [verdict]: prev[verdict] + 1 }));
+      setFeedback(res.message);
+    } catch {
+      const verdict = localGrade(clean);
+      setStats((prev) => ({ ...prev, [verdict]: prev[verdict] + 1 }));
+      setFeedback(verdict === "clean" ? "✅ Чисто: есть структура и причина. Можно идти дальше." : verdict === "shaky" ? "⚠️ Под вопросом: мысль есть, но добавь метрику, сегмент или trade-off." : "✕ Не успел: ответ слишком короткий. Дай хотя бы структуру из 2-3 пунктов.");
+    } finally {
+      setChecking(false);
+    }
+  };
+
   const finishQuestion = (kind = "clean") => {
-    setStats((prev) => ({ ...prev, [kind]: prev[kind] + 1 }));
+    if (kind === "missed" && !checkedText) setStats((prev) => ({ ...prev, missed: prev.missed + 1 }));
     if (qIdx < total - 1) {
       setQIdx(qIdx + 1);
       setSecondsLeft(60);
+      setAnswer("");
+      setFeedback("");
+      setCheckedText("");
     } else {
       completeTask("drill-product-sense", 50, "review");
     }
@@ -1508,7 +1667,7 @@ function DrillScreen({ go, progress, clock, completeTask }) {
       <div className="screen-head">
         <div>
           <span className="eyebrow">Drill · 10 вопросов · ⏱ 60 сек каждый</span>
-          <h1>Drill-режим: Product sense ⚡</h1>
+          <h1>Drill-режим: {topic.label} ⚡</h1>
         </div>
         <div className="right">
           <span className="chip mint">+5 XP / правильный</span>
@@ -1516,6 +1675,16 @@ function DrillScreen({ go, progress, clock, completeTask }) {
         </div>
       </div>
       <div className="drill-stage">
+        <div className="drill-topic-row">
+          {drillTopics.map((item) => (
+            <button key={item.id} className={`drill-topic ${topicId === item.id ? "active" : ""}`} onClick={() => selectTopic(item.id)} disabled={generating}>
+              {item.label}
+            </button>
+          ))}
+          <button className="drill-topic generate" onClick={() => generateQuestions(topic)} disabled={generating}>
+            {generating ? "AI думает..." : "+ AI вопросы"}
+          </button>
+        </div>
         <div className="drill-progress-row">
           {Array.from({ length: total }).map((_, i) => (
             <div key={i} className={`seg ${i < qIdx ? "done" : ""} ${i === qIdx ? "now" : ""}`}></div>
@@ -1526,12 +1695,24 @@ function DrillScreen({ go, progress, clock, completeTask }) {
             <span className="chip" style={{ background: "rgba(255,255,255,0.18)", border: "1.5px solid #fff", color: "#fff" }}>Вопрос {qIdx + 1} / {total}</span>
             <div className="drill-timer-ring" style={{ background: paused ? "var(--ph-sun-2)" : "#fff", color: "var(--ph-ink)" }}>{secondsLeft}</div>
           </div>
-          <h2>{questions[qIdx % questions.length]}</h2>
-          <p>{paused ? "пауза включена" : "отвечай голосом или коротким текстом · флоу-режим, не стесняйся"}</p>
-          <div style={{ marginTop: 22, display: "flex", gap: 10, justifyContent: "center" }}>
-            <div className="mic-btn" style={{ background: "#fff", color: "var(--ph-coral)" }}>{Icon.mic}</div>
+          <h2>{currentQuestion}</h2>
+          <p>{paused ? "пауза включена" : "пиши коротко: структура, причина, метрика или trade-off. Проверю автоматически."}</p>
+          <div className="drill-answer-row">
+            <input
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") checkAnswer(); }}
+              placeholder="Например: 1) выберу сегмент... 2) метрика... 3) риск..."
+              disabled={paused || checking}
+            />
+            <button className="btn lg" style={{ background: "#fff", color: "var(--ph-ink)" }} onClick={checkAnswer} disabled={checking || !answer.trim()}>
+              {checking ? "проверяю" : "проверить"}
+            </button>
+          </div>
+          {feedback && <div className="drill-feedback">{feedback}</div>}
+          <div style={{ marginTop: 18, display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
             <button className="btn lg" style={{ background: "var(--ph-ink)", color: "#fff", borderColor: "#fff" }} onClick={() => finishQuestion("missed")}>пропустить</button>
-            <button className="btn lg" style={{ background: "#fff", color: "var(--ph-ink)" }} onClick={() => finishQuestion("clean")}>готово →</button>
+            <button className="btn lg" style={{ background: "#fff", color: "var(--ph-ink)" }} onClick={() => finishQuestion()}>дальше →</button>
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>

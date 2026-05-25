@@ -6072,6 +6072,54 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 .pmq-hifi .drill-progress-row .seg.done { background: var(--ph-mint); }
 .pmq-hifi .drill-progress-row .seg.now  { background: var(--ph-coral); }
+.pmq-hifi .drill-topic-row {
+  display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+}
+.pmq-hifi .drill-topic {
+  background: var(--ph-card);
+  border: 2px solid var(--ph-ink);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 3px 3px 0 var(--ph-ink);
+}
+.pmq-hifi .drill-topic.active,
+.pmq-hifi .drill-topic:hover:not(:disabled) {
+  background: var(--ph-mint-2);
+  transform: translate(-1px, -1px);
+}
+.pmq-hifi .drill-topic.generate { background: var(--ph-sun-2); }
+.pmq-hifi .drill-topic:disabled { opacity: 0.6; cursor: wait; }
+.pmq-hifi .drill-answer-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-top: 22px;
+}
+.pmq-hifi .drill-answer-row input {
+  min-width: 0;
+  background: #fff;
+  color: var(--ph-ink);
+  border: 3px solid var(--ph-ink);
+  border-radius: var(--ph-r);
+  padding: 14px 16px;
+  outline: none;
+  box-shadow: 4px 4px 0 var(--ph-ink);
+}
+.pmq-hifi .drill-answer-row input:focus { outline: 3px solid var(--ph-sun); }
+.pmq-hifi .drill-feedback {
+  margin-top: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ph-ink);
+  border: 2px solid var(--ph-ink);
+  border-radius: var(--ph-r);
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.45;
+}
 
 /* teach */
 .pmq-hifi .teach-stage { display: grid; grid-template-columns: 1fr 320px; gap: 24px; max-width: 1080px; margin: 0 auto; }
