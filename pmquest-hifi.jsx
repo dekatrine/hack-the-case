@@ -155,9 +155,9 @@ const TODAY_KEY = () => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Mos
 const initialProgress = () => {
   try {
     const saved = JSON.parse(localStorage.getItem("pmquest-progress-v1") || "{}");
-    return { xp: 1240, streak: 7, completed: {}, cases: 3, cardsDue: 8, ...saved };
+    return { xp: 1240, streak: 7, completed: {}, cases: 3, cardsDue: 8, checkStats: {}, ...saved };
   } catch {
-    return { xp: 1240, streak: 7, completed: {}, cases: 3, cardsDue: 8 };
+    return { xp: 1240, streak: 7, completed: {}, cases: 3, cardsDue: 8, checkStats: {} };
   }
 };
 
@@ -741,49 +741,94 @@ function LessonScreen({ go, progress, clock, completeTask }) {
 }
 
 // ─── Screen: CHECK / MCQ ─────────────────────────────────────────────
-function CheckScreen({ go, progress, clock, completeTask }) {
+function CheckScreen({ go, progress, clock, completeTask, updateProgress }) {
   const [idx, setIdx] = useState(0);
+  const [topicId, setTopicId] = useState("nsm");
+  const [batchSeed, setBatchSeed] = useState(0);
   const [picked, setPicked] = useState(null);
   const [showExplain, setShowExplain] = useState(false);
   const [whyTarget, setWhyTarget] = useState(null);
-  const questions = [
-    { q: "Какая из этих метрик ближе всего к настоящей North Star для Spotify?",
-      opts: [
-        { l: "A", t: "Общее число лайков в день", right: false, why: "Это активность, не ценность. Лайк ничего не говорит о реальном потреблении музыки." },
-        { l: "B", t: "Среднее число прослушиваний на пользователя в неделю", right: false, why: "Близко, но «прослушивание» можно накрутить случайным треком. Spotify считает время." },
-        { l: "C", t: "Время прослушивания на активного слушателя", right: true, why: "Это и есть NSM Spotify. Описывает реализованную ценность — человек реально провёл с продуктом время." },
-        { l: "D", t: "Доход с подписок", right: false, why: "Доход — следствие NSM, а не она сама. NSM должна предсказывать его, не подменять." },
-      ],
-      explain: "NSM измеряет ценность, а не активность или деньги. Spotify выбрал «время прослушивания на активного» — это связывает retention, удовлетворённость и в долгую — выручку." },
-    { q: "Что точно НЕ должно быть North Star Metric маркетплейса (типа Airbnb)?",
-      opts: [
-        { l: "A", t: "Забронированных ночей", right: false, why: "Это и есть NSM Airbnb — покрывает оба борта рынка." },
-        { l: "B", t: "DAU приложения", right: true, why: "DAU = активность, не транзакция. Можно зайти 100 раз и ничего не забронировать." },
-        { l: "C", t: "GMV (gross merchandise value)", right: false, why: "Чуть ближе к деньгам, чем хочется, но связь с ценностью есть." },
-        { l: "D", t: "Количество завершённых поездок (для гостя + хоста)", right: false, why: "Связано с реальной ценностью обеим сторонам." },
-      ],
-      explain: "У маркетплейсов NSM почти всегда привязана к транзакции — она объединяет интересы обеих сторон. DAU — ловушка." },
-    { q: "Какой ответ интервьюер посчитает «джуновым»?",
-      opts: [
-        { l: "A", t: "«NSM — то, что коррелирует с retention»", right: false, why: "Нормальный ответ middle-уровня." },
-        { l: "B", t: "«Зависит от продукта, давайте обсудим контекст»", right: true, why: "Это ответ-отговорка. Сильный кандидат сам выберет 1-2 подходящие NSM на лету." },
-        { l: "C", t: "«Для X я бы выбрал Y, потому что Z»", right: false, why: "Структурный ответ — то, что ждут." },
-        { l: "D", t: "«NSM = leading indicator выручки»", right: false, why: "Хороший продвинутый ответ." },
-      ],
-      explain: "На FAANG-интервью «зависит» = нет ответа. Лучше: выбрать с пометкой «допустим X, тогда NSM=Y» и быть готовым менять — но иметь позицию." }
+  const topics = [
+    { id: "nsm", label: "North Star Metric", solved: progress.checkStats?.nsm || 0 },
+    { id: "aarrr", label: "AARRR funnel", solved: progress.checkStats?.aarrr || 0 },
+    { id: "rice", label: "RICE prioritization", solved: progress.checkStats?.rice || 0 },
+    { id: "jtbd", label: "JTBD / user pain", solved: progress.checkStats?.jtbd || 0 },
   ];
+  const topicBanks = {
+    nsm: [
+      ["Какая NSM лучше для Spotify?", "Время прослушивания на активного слушателя", "Доход с подписок", "DAU", "Количество лайков", "NSM должна отражать реализованную ценность, а не vanity-активность или деньги."],
+      ["Что НЕ подходит как NSM для Airbnb?", "DAU приложения", "Забронированные ночи", "Завершённые поездки", "GMV", "Для marketplace NSM обычно привязана к реальной транзакции двух сторон."],
+      ["Как объяснить NSM на интервью?", "Leading indicator долгосрочной ценности", "Любая главная KPI бизнеса", "То же самое, что revenue", "Самая лёгкая метрика для команды", "Сильный ответ связывает value, retention и будущую выручку."],
+    ],
+    aarrr: [
+      ["Где находится activation в AARRR?", "После acquisition, до retention", "После revenue", "До acquisition", "Это то же самое, что referral", "Activation показывает первый момент полученной ценности."],
+      ["Какая метрика ближе всего к retention?", "Доля пользователей, вернувшихся через 7 дней", "CTR рекламы", "CAC", "Количество регистраций", "Retention проверяет повторное использование, а не привлечение."],
+      ["Что делать, если revenue растёт, а retention падает?", "Проверить качество монетизации и долгосрочную ценность", "Только поднять цены", "Увеличить acquisition любой ценой", "Считать продукт успешным", "Revenue может быть lagging indicator и скрывать churn."],
+    ],
+    rice: [
+      ["Что означает C в RICE?", "Confidence", "Cost", "Conversion", "Customer", "Confidence снижает вес идеи, если оценка ненадёжна."],
+      ["Какая идея получит больший RICE score?", "Высокий reach и impact при низком effort", "Высокий effort без confidence", "Низкий reach и высокий effort", "Идея, которая нравится CEO", "RICE дисциплинирует сравнение идей через reach, impact, confidence, effort."],
+      ["Главная ошибка в RICE?", "Подставить красивые числа без evidence", "Считать effort", "Сравнивать несколько идей", "Указывать confidence", "RICE полезен только настолько, насколько честны оценки."],
+    ],
+    jtbd: [
+      ["Что такое JTBD?", "Прогресс, которого пользователь хочет добиться в ситуации", "Должностная инструкция пользователя", "Список фичей", "Сегмент по возрасту", "JTBD описывает мотивацию и контекст, а не демографию."],
+      ["Сильная формулировка pain point?", "Когда я выбираю курс, боюсь ошибиться и потерять месяц", "Пользователи хотят красивый UI", "Нужна кнопка рекомендаций", "Все хотят дешевле", "Pain point должен быть конкретной проблемой пользователя."],
+      ["Зачем JTBD в product design case?", "Чтобы выбрать primary user и строить решения под настоящую задачу", "Чтобы быстрее назвать 10 фичей", "Чтобы избежать метрик", "Чтобы доказать, что рынок большой", "JTBD удерживает ответ от feature brainstorm без причины."],
+    ],
+  };
+  const makeQuestion = (row, n) => {
+    const [q, right, a, b, c, explain] = row;
+    const opts = [
+      { l: "A", t: right, right: true, why: explain },
+      { l: "B", t: a, right: false, why: "Звучит похоже, но не отвечает на ключевую логику темы." },
+      { l: "C", t: b, right: false, why: "Это типичная ловушка: метрика или формулировка слишком поверхностная." },
+      { l: "D", t: c, right: false, why: "Такой ответ обычно не показывает продуктового reasoning." },
+    ];
+    const shift = n % opts.length;
+    return { q, opts: [...opts.slice(shift), ...opts.slice(0, shift)].map((o, i) => ({ ...o, l: "ABCD"[i] })), explain };
+  };
+  const questions = Array.from({ length: 5 }, (_, i) => {
+    const bank = topicBanks[topicId];
+    return makeQuestion(bank[(i + batchSeed) % bank.length], i + batchSeed);
+  });
   const cur = questions[idx];
-  const pick = (i) => { setPicked(i); setShowExplain(true); setWhyTarget(null); };
+  const pick = (i) => {
+    setPicked(i);
+    setShowExplain(true);
+    setWhyTarget(null);
+    updateProgress((prev) => ({
+      ...prev,
+      checkStats: {
+        ...(prev.checkStats || {}),
+        [topicId]: (prev.checkStats?.[topicId] || 0) + 1,
+      },
+    }));
+  };
   const next = () => {
     if (idx < questions.length - 1) { setIdx(idx + 1); setPicked(null); setShowExplain(false); setWhyTarget(null); }
-    else { completeTask("check-nsm", 10, "case"); }
+    else { completeTask(`check-${topicId}-${Math.floor((progress.checkStats?.[topicId] || 0) / 5)}`, 10, "case"); }
+  };
+  const newBatch = () => {
+    setBatchSeed((v) => v + 1);
+    setIdx(0);
+    setPicked(null);
+    setShowExplain(false);
+    setWhyTarget(null);
+  };
+  const selectTopic = (id) => {
+    setTopicId(id);
+    setBatchSeed((v) => v + 1);
+    setIdx(0);
+    setPicked(null);
+    setShowExplain(false);
+    setWhyTarget(null);
   };
   return (
     <div className="screen" style={{ maxWidth: 880 }}>
       <Topbar crumbs={["Home", "Урок", "Check"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
-          <span className="eyebrow">Check · 3 мин · +10 XP</span>
+          <span className="eyebrow">Check · тема: {topics.find(t => t.id === topicId)?.label}</span>
           <h1>Проверь — усвоил(а)?</h1>
         </div>
         <div className="right" style={{ minWidth: 220 }}>
@@ -791,6 +836,18 @@ function CheckScreen({ go, progress, clock, completeTask }) {
             {questions.map((_, i) => <div key={i} className={`pp ${i < idx ? "done" : ""} ${i === idx ? "now" : ""}`} />)}
           </div>
         </div>
+      </div>
+      <div className="check-topic-row">
+        {topics.map((t) => (
+          <button key={t.id} className={`check-topic ${topicId === t.id ? "active" : ""}`} onClick={() => selectTopic(t.id)}>
+            <strong>{t.label}</strong>
+            <span>решено: {t.solved}</span>
+          </button>
+        ))}
+        <button className="check-topic generate" onClick={newBatch}>
+          <strong>+ ещё вопросы</strong>
+          <span>генерировать сколько угодно</span>
+        </button>
       </div>
       <div className="mcq-card">
         <span className="chip pink">Вопрос {idx + 1} из {questions.length}</span>
@@ -1112,6 +1169,106 @@ function CaseScreen({ go, progress, clock, completeTask }) {
 
 // ─── Screen: MOCK ────────────────────────────────────────────────────
 function MockScreen({ go, progress, clock, completeTask }) {
+  const rounds = [
+    {
+      id: "clarify",
+      title: "Clarify",
+      prompt: "Представь, что мы делаем Maps для детей 8-12 лет. Какие первые 3 вопроса ты задашь, прежде чем начать брейнсторм?",
+      expectedSignals: ["цель продукта", "primary user", "контекст устройства", "ограничения безопасности"],
+    },
+    {
+      id: "user",
+      title: "User & pain",
+      prompt: "Выбери primary user и опиши 2-3 боли, которые решает детский Maps.",
+      expectedSignals: ["сегментация", "JTBD", "safety pain", "parent/child trade-off"],
+    },
+    {
+      id: "solutions",
+      title: "Solutions",
+      prompt: "Предложи 3 решения. Одно должно быть MVP, одно — более смелое.",
+      expectedSignals: ["несколько идей", "связь с pain", "MVP", "trade-off"],
+    },
+    {
+      id: "metrics",
+      title: "Metrics",
+      prompt: "Какими метриками проверишь успех и какие guardrails поставишь?",
+      expectedSignals: ["activation", "retention", "safety guardrail", "parent trust"],
+    },
+  ];
+  const [roundIdx, setRoundIdx] = useState(0);
+  const [seconds, setSeconds] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [answer, setAnswer] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [scores, setScores] = useState({ clarify: 2, user: 0, solutions: 0, metrics: 0 });
+  const [transcript, setTranscript] = useState([
+    { role: "them", who: "Виктор", text: "Привет! Сегодня кейс на product design. Готова?" },
+    { role: "you", who: "Ты", text: "Да, готова. Дай 30 секунд собраться." },
+  ]);
+  const cur = rounds[roundIdx];
+  const elapsed = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+  const pace = Math.min(100, Math.round((seconds / (15 * 60)) * 100));
+  const formatFeedback = (raw) => {
+    const cleaned = raw.replace(/```(?:json)?/g, "").replace(/```/g, "").trim();
+    try {
+      const parsed = JSON.parse(cleaned);
+      return [
+        `Score: ${parsed.score ?? "—"} / 100`,
+        parsed.verdict && `Вердикт: ${parsed.verdict}`,
+        parsed.feedback && `Фидбек: ${parsed.feedback}`,
+        parsed.nextPrompt && `Следующий вопрос: ${parsed.nextPrompt}`,
+      ].filter(Boolean).join("\n");
+    } catch {
+      return raw;
+    }
+  };
+
+  useEffect(() => {
+    if (paused) return undefined;
+    const timer = setInterval(() => setSeconds((v) => v + 1), 1000);
+    return () => clearInterval(timer);
+  }, [paused]);
+
+  const submitAnswer = async () => {
+    const clean = answer.trim();
+    if (!clean || checking) return;
+    setTranscript((items) => [...items, { role: "you", who: "Ты", text: clean }]);
+    setChecking(true);
+    setFeedback("");
+    try {
+      const res = await api.checkInterview({
+        directionId: "product",
+        blockId: "product_design",
+        taskText: "Google Maps для детей 8-12 лет",
+        roundId: cur.id,
+        roundTitle: cur.title,
+        roundGoal: cur.prompt,
+        answerText: clean,
+        expectedSignals: cur.expectedSignals,
+      });
+      const formatted = formatFeedback(res.result);
+      setFeedback(formatted);
+      setScores((prev) => ({ ...prev, [cur.id]: Math.min(5, Math.max(prev[cur.id] || 0, clean.length > 120 ? 4 : 3)) }));
+      setTranscript((items) => [...items, { role: "them", who: "AI score", text: formatted.slice(0, 420) }]);
+    } catch (e) {
+      const msg = `AI-проверка не ответила: ${e.message}`;
+      setFeedback(msg);
+      setTranscript((items) => [...items, { role: "them", who: "AI score", text: msg }]);
+    } finally {
+      setAnswer("");
+      setChecking(false);
+    }
+  };
+
+  const nextRound = () => {
+    const next = Math.min(rounds.length - 1, roundIdx + 1);
+    setRoundIdx(next);
+    setFeedback("");
+    setAnswer("");
+    setTranscript((items) => [...items, { role: "them", who: "Виктор", text: rounds[next].prompt }]);
+  };
+
   return (
     <div className="screen">
       <Topbar crumbs={["Home", "Mock с AI"]} progress={progress} clock={clock} />
@@ -1122,8 +1279,8 @@ function MockScreen({ go, progress, clock, completeTask }) {
         </div>
         <div className="right">
           <span className="chip plum">🧐 Standard</span>
-          <span className="chip sun">⏱ 06:18 / 15:00</span>
-          <button className="btn ghost sm">⏸ пауза</button>
+          <span className="chip sun">⏱ {elapsed} / 15:00</span>
+          <button className="btn ghost sm" onClick={() => setPaused(!paused)}>{paused ? "▶ продолжить" : "⏸ пауза"}</button>
         </div>
       </div>
       <div className="mock-stage">
@@ -1132,23 +1289,21 @@ function MockScreen({ go, progress, clock, completeTask }) {
             <div className="interviewer-av">VK</div>
             <div className="mock-bubble">
               <div className="eyebrow" style={{ marginBottom: 4 }}>Виктор · Sr. PM @ Google</div>
-              <div>Окей, давай так — представь, что мы делаем Maps для детей 8-12 лет. <b>Какие первые 3 вопроса</b> ты задашь, прежде чем начать брейнсторм?</div>
+              <div>{cur.prompt}</div>
             </div>
           </div>
           <div className="mock-transcript">
-            <div className="mock-line note">— Mock начат: 06:18 · vol 75% · transcript on —</div>
-            <div className="mock-line them"><span className="who">Виктор:</span><span>Привет! Сегодня кейс на product design. Готова?</span></div>
-            <div className="mock-line you"><span className="who">Ты:</span><span>Да, готова. Дай 30 секунд собраться.</span></div>
-            <div className="mock-line them"><span className="who">Виктор:</span><span>Конечно. Постарайся думать вслух — мне важно слышать ход мыслей.</span></div>
-            <div className="mock-line you"><span className="who">Ты:</span><span>Понятно. Прежде чем начать, можно уточнить — мы говорим про новый продукт или фичу внутри существующего Maps?</span></div>
-            <div className="mock-line them"><span className="who">Виктор:</span><span>Хороший вопрос. Допустим, фича внутри существующего Maps.</span></div>
-            <div className="mock-line you"><span className="who">Ты:</span><span>Окей. И таргет-устройство — телефон родителя или у ребёнка свой?</span></div>
-            <div className="mock-line them"><span className="who">Виктор:</span><span>Допустим, у ребёнка свой телефон. Поехали глубже.</span></div>
+            <div className="mock-line note">— Mock начат: {elapsed} · transcript on · round {roundIdx + 1}/{rounds.length} —</div>
+            {transcript.map((line, i) => (
+              <div key={i} className={`mock-line ${line.role}`}>
+                <span className="who">{line.who}:</span><span>{line.text}</span>
+              </div>
+            ))}
           </div>
           <div className="pace-rail">
-            <h5><span>Pace-meter — ты сейчас на «User & pain», должен быть на «Solutions»</span><span className="mono" style={{ color: "var(--ph-ink-3)" }}>06:18 / 15:00</span></h5>
+            <h5><span>Pace-meter — сейчас «{cur.title}»</span><span className="mono" style={{ color: "var(--ph-ink-3)" }}>{elapsed} / 15:00</span></h5>
             <div className="pace-track">
-              <i style={{ width: "42%" }}></i>
+              <i style={{ width: `${pace}%` }}></i>
               {[13, 33, 55, 78].map((p) => <span key={p} className="tick" style={{ left: `${p}%` }}></span>)}
             </div>
             <div className="pace-labels">
@@ -1159,18 +1314,19 @@ function MockScreen({ go, progress, clock, completeTask }) {
               <span>Metrics · 3м</span>
             </div>
           </div>
+          {feedback && (
+            <div className="mcq-explain" style={{ background: "var(--ph-mint-2)" }}>
+              <h5>AI feedback</h5>
+              <p>{feedback}</p>
+            </div>
+          )}
           <div className="mic-row">
             <div className="mic-btn">{Icon.mic}</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, marginBottom: 4 }}>Слушаю… говори свободно</div>
-              <div className="mic-wave">
-                {[8,18,12,24,16,28,14,20,10,22,16,12,18,24,10,18].map((h, i) =>
-                  <i key={i} style={{ height: h, animationDelay: `${i * 0.08}s` }} />
-                )}
-              </div>
+              <textarea className="mock-answer-input" value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Ответь как на интервью. Можно коротко: 3 вопроса, структура, метрики..." />
             </div>
-            <button className="btn ghost sm">пропустить</button>
-            <button className="btn primary">завершить</button>
+            <button className="btn ghost sm" onClick={nextRound}>пропустить</button>
+            <button className="btn primary" onClick={submitAnswer} disabled={checking || !answer.trim()}>{checking ? "проверяю" : "ответить"}</button>
           </div>
         </div>
         <aside style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -1179,11 +1335,10 @@ function MockScreen({ go, progress, clock, completeTask }) {
             <div style={{ fontSize: 13, color: "var(--ph-ink-3)", marginBottom: 10 }}>обновляется в реальном времени</div>
             <div className="score-bars" style={{ marginTop: 0 }}>
               {[
-                { n: "Clarify", v: 4 },
-                { n: "User & pain", v: 3 },
-                { n: "Solutions", v: 2 },
-                { n: "Priorities", v: 0 },
-                { n: "Metrics", v: 0 },
+                { n: "Clarify", v: scores.clarify },
+                { n: "User & pain", v: scores.user },
+                { n: "Solutions", v: scores.solutions },
+                { n: "Metrics", v: scores.metrics },
               ].map(r => (
                 <div key={r.n} className="score-bar-row">
                   <div className="nm">{r.n}</div>
@@ -1541,6 +1696,7 @@ export default function PMQuestHifi({ onExit }) {
     progress,
     clock,
     completeTask,
+    updateProgress: setProgress,
   };
 
   const screens = {

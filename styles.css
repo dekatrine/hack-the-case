@@ -5708,6 +5708,41 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   background: var(--ph-card); border: var(--ph-b); border-radius: var(--ph-r-l);
   box-shadow: var(--ph-sh-l); padding: 30px 36px;
 }
+.pmq-hifi .check-topic-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.pmq-hifi .check-topic {
+  min-height: 70px;
+  padding: 10px 12px;
+  text-align: left;
+  border: 2px solid var(--ph-ink);
+  border-radius: var(--ph-r);
+  background: var(--ph-card);
+  box-shadow: 2px 2px 0 var(--ph-ink);
+}
+.pmq-hifi .check-topic:hover,
+.pmq-hifi .check-topic.active {
+  background: var(--ph-mint-2);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ph-ink);
+}
+.pmq-hifi .check-topic.generate { background: var(--ph-sun-2); }
+.pmq-hifi .check-topic strong {
+  display: block;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 14.5px;
+  line-height: 1.15;
+}
+.pmq-hifi .check-topic span {
+  display: block;
+  margin-top: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--ph-ink-3);
+  font-size: 10px;
+}
 .pmq-hifi .mcq-question { font-family: 'Bricolage Grotesque', sans-serif; font-size: 24px; font-weight: 700; margin: 8px 0 22px; letter-spacing: -0.01em; line-height: 1.25; }
 .pmq-hifi .mcq-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
 .pmq-hifi .mcq-opt {
@@ -5905,6 +5940,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 @media (max-width: 1000px) {
   .pmq-hifi .case-suggest-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pmq-hifi .case-generator-head { flex-direction: column; }
+  .pmq-hifi .check-topic-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* mock */
@@ -5951,6 +5987,21 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   display: flex; gap: 12px; align-items: center; padding: 14px;
   background: var(--ph-card-sunk); border: 2px solid var(--ph-ink);
   border-radius: var(--ph-r);
+}
+.pmq-hifi .mock-answer-input {
+  width: 100%;
+  min-height: 78px;
+  border: 2px solid var(--ph-ink);
+  border-radius: var(--ph-r);
+  background: #fff;
+  color: var(--ph-ink);
+  padding: 10px 12px;
+  resize: vertical;
+  outline: none;
+  font-family: 'Nunito', sans-serif;
+}
+.pmq-hifi .mock-answer-input:focus {
+  box-shadow: 0 0 0 3px var(--ph-sky-2);
 }
 .pmq-hifi .mic-btn {
   width: 64px; height: 64px; border-radius: 50%;
