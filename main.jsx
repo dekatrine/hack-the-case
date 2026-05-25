@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { api } from './api/client.js';
 import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from './quizData.js';
 import { PM_CHAPTERS, FLASHCARDS, PRACTICE_QUESTIONS, KEY_DEFINITIONS, LEARN_TOGETHER_CONTENT } from './courseData.js';
+import PMQuestHifi from './pmquest-hifi.jsx';
 import './styles.css';
 
 /* ───────────────────────────── Topbar ─────────────────────────────── */
@@ -138,7 +139,7 @@ const CourseContentPreview = ({ onSelectChapter, onOpenTab }) => (
   </section>
 );
 
-const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn }) => {
+const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn, onOpenPMQuest }) => {
   const stats = getLearningStats();
   const businessTrack = tracks.find((item) => item.id === 'business') || tracks[0];
 
@@ -164,6 +165,9 @@ const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn
           <button onClick={onOpenInterview}>Mock interview</button>
           <button onClick={onOpenQuiz}>Sprint quiz</button>
           <button onClick={() => onOpenLearn('All Resources')}>All resources</button>
+          {onOpenPMQuest && (
+            <button onClick={onOpenPMQuest} style={{ color: 'var(--mint)' }}>PMQuest Hi-Fi ✨</button>
+          )}
         </div>
         <div className="profile-row">
           <span className="avatar-mini">E</span>
@@ -1818,6 +1822,12 @@ const App = () => {
 
   const screenLabel = { landing: 'dojo / resources', track: `exam mode / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz', interview: 'mock interview', learn: `resources / ${learnInitialTab}` }[screen];
 
+  // PMQuest Hi-Fi is a full-page takeover: own sidebar, topbar, mascot.
+  // Render outside the regular .shell wrapper.
+  if (screen === 'pmquest-hifi') {
+    return <PMQuestHifi onExit={() => setScreen('landing')} />;
+  }
+
   return (
     <div className="shell">
       <Topbar onHome={() => setScreen('landing')} screen={screenLabel} />
@@ -1831,6 +1841,7 @@ const App = () => {
             onOpenQuiz={() => { setQuizCategory(null); setScreen('quiz'); }}
             onOpenInterview={() => setScreen('interview')}
             onOpenLearn={openLearn}
+            onOpenPMQuest={() => setScreen('pmquest-hifi')}
           />
         )}
         {screen === 'track' && track && (
