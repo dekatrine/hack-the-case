@@ -608,7 +608,7 @@ function LibraryScreen({ go, progress, clock }) {
             const checked = progress.checkStats?.[n.id] || 0;
             const progressSteps = Math.min(4, (n.s > 0 ? 1 : 0) + (checked > 0 ? 1 : 0) + (mastered ? 2 : 0));
             return (
-              <div key={n.id} className={`note-card ${n.c}`} onClick={() => go("check", { checkTopicId: n.id })}>
+              <div key={n.id} className={`note-card ${n.c}`} onClick={() => go("lesson", { lessonTopicId: n.id })}>
                 {mastered && <span className="mastered-badge">✓ освоено</span>}
                 <h4>{n.t}</h4>
                 <p className="excerpt">{n.ex}</p>
@@ -632,56 +632,58 @@ function LibraryScreen({ go, progress, clock }) {
 }
 
 // ─── Screen: LESSON ──────────────────────────────────────────────────
-function LessonScreen({ go, progress, clock, completeTask }) {
+function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm" }) {
   const [idx, setIdx] = useState(0);
+  const note = KNOWLEDGE_NOTES.find((item) => item.id === initialTopicId) || KNOWLEDGE_NOTES[1] || KNOWLEDGE_NOTES[0];
+  useEffect(() => setIdx(0), [initialTopicId]);
   const slides = [
-    { tag: "Слайд 1 · 2 мин", title: "Что такое North Star Metric?", lede: "Одна главная метрика, которая отражает ценность продукта для пользователя — а не выручку напрямую.",
+    { tag: "Слайд 1 · 2 мин", title: `Что такое ${note.t}?`, lede: note.ex,
       body: (
         <div className="body">
-          <p>NSM — это компас. Если она растёт, продукт реально становится полезнее людям. Если падает — даже растущий доход не спасёт в долгую.</p>
+          <p>{note.ex}</p>
           <div className="lesson-callout">
             <div className="ico">★</div>
             <div>
               <h4>Главное правило</h4>
-              <p>NSM описывает реализованную <b>ценность</b>, а не активность. «10 кликов» — не NSM. «Минута, потраченная пользователем с пользой» — может быть.</p>
+              <p>{note.hints[0]}. На интервью важно не назвать термин, а показать, как он помогает принять продуктовое решение.</p>
             </div>
           </div>
         </div>) },
-    { tag: "Слайд 2 · 2 мин", title: "Зачем она нужна?", lede: "Чтобы команда из 200 человек принимала похожие решения без созвонов.",
+    { tag: "Слайд 2 · 2 мин", title: "Зачем это нужно?", lede: "Чтобы отвечать структурно, а не набором фич или общих слов.",
       body: (
         <div className="body">
-          <p>NSM нужна, чтобы:</p>
+          <p>Используй тему как рабочий инструмент:</p>
           <ul>
-            <li><b>Сравнивать гипотезы</b> в одной системе координат («это поднимет NSM или нет?»)</li>
-            <li><b>Приоритизировать roadmap</b> без политики</li>
-            <li><b>Согласовать команды</b> — дизайн, инжиниринг, маркетинг смотрят на одно число</li>
+            <li><b>Сначала контекст</b>: какая цель, пользователь и ограничение.</li>
+            <li><b>Потом логика</b>: почему этот фреймворк или метрика помогает.</li>
+            <li><b>В конце пример</b>: одна фраза из реального продукта или кейса.</li>
           </ul>
           <div className="lesson-callout mint">
             <div className="ico">⚡</div>
             <div>
-              <h4>Что говорят на интервью</h4>
-              <p>«Хорошая NSM коррелирует с retention в долгую и предсказывает выручку.» — фраза, после которой джун перестаёт быть джуном.</p>
+              <h4>На собесе</h4>
+              <p>{note.hints[1] || "Дай пример и объясни trade-off."}</p>
             </div>
           </div>
         </div>) },
-    { tag: "Слайд 3 · 2 мин", title: "FAANG-примеры — что они выбрали", lede: "Три реальные NSM. У каждой — своя логика.",
+    { tag: "Слайд 3 · 2 мин", title: "Пример сильного ответа", lede: "Формула: тезис → пример → метрика/критерий.",
       body: (
         <div className="body">
           <div className="faang-cards">
             <div className="faang-card spotify">
-              <div className="name">Spotify</div>
-              <div className="metric">Время прослушивания на активного пользователя</div>
-              <p style={{ fontSize: 13, margin: "8px 0 0", color: "var(--ph-ink-2)" }}>Не клики, не лайки — а реальное «потребление продукта».</p>
+              <div className="name">Тезис</div>
+              <div className="metric">{note.t}</div>
+              <p style={{ fontSize: 13, margin: "8px 0 0", color: "var(--ph-ink-2)" }}>Я бы применил(а) это, чтобы не спорить вкусовщиной, а сравнить варианты по критериям.</p>
             </div>
             <div className="faang-card airbnb">
-              <div className="name">Airbnb</div>
-              <div className="metric">Забронированных ночей</div>
-              <p style={{ fontSize: 13, margin: "8px 0 0", color: "var(--ph-ink-2)" }}>Покрывает оба борта маркетплейса разом.</p>
+              <div className="name">Пример</div>
+              <div className="metric">реальный продукт</div>
+              <p style={{ fontSize: 13, margin: "8px 0 0", color: "var(--ph-ink-2)" }}>Например, в marketplace это помогает не перепутать активность с созданной ценностью.</p>
             </div>
             <div className="faang-card facebook">
-              <div className="name">Meta</div>
-              <div className="metric">MAU + 7 контактов за 10 дней</div>
-              <p style={{ fontSize: 13, margin: "8px 0 0", color: "var(--ph-ink-2)" }}>Не просто «зашёл», а «связался с людьми».</p>
+              <div className="name">Проверка</div>
+              <div className="metric">метрика</div>
+              <p style={{ fontSize: 13, margin: "8px 0 0", color: "var(--ph-ink-2)" }}>{note.hints[2] || "Назови метрику и guardrail."}</p>
             </div>
           </div>
         </div>) },
@@ -690,9 +692,9 @@ function LessonScreen({ go, progress, clock, completeTask }) {
         <div className="body">
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {[
-              { t: "«Наша NSM — выручка»", d: "Выручка — следствие. NSM должна предсказывать её." },
-              { t: "«DAU как NSM для маркетплейса»", d: "Активность ≠ ценность. Зашёл и ушёл — не считается." },
-              { t: "5 «равноправных» NSM", d: "Тогда у вас 0 NSM. Compass указывает в одну сторону." },
+              { t: "Термин без применения", d: "Интервьюер слышит заученность, если нет примера." },
+              { t: "«Зависит» без критериев", d: "Скажи, от чего зависит, и как бы ты выбрал(а)." },
+              { t: "Нет метрики успеха", d: "Даже сильная идея звучит слабее без способа проверки." },
             ].map((a) => (
               <div key={a.t} className="anti-pattern">
                 <div className="x">✕</div>
@@ -708,17 +710,17 @@ function LessonScreen({ go, progress, clock, completeTask }) {
   const s = slides[idx];
   return (
     <div className="screen">
-      <Topbar crumbs={["Home", "Урок", "North Star Metric"]} progress={progress} clock={clock} />
+      <Topbar crumbs={["Home", "Уроки", note.t]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Урок · 8 мин · +20 XP</span>
-          <h1>North Star Metric</h1>
+          <h1>{note.t}</h1>
         </div>
         <div className="right" style={{ minWidth: 280 }}>
           <div className="progress-pills" style={{ flex: 1 }}>
             {slides.map((_, i) => <div key={i} className={`pp ${i < idx ? "done" : ""} ${i === idx ? "now" : ""}`} />)}
           </div>
-          <button className="btn ghost sm" onClick={() => go("home")}>× выйти</button>
+          <button className="btn ghost sm" onClick={() => go("library")}>× выйти</button>
         </div>
       </div>
       <div className="lesson-stage">
@@ -733,7 +735,7 @@ function LessonScreen({ go, progress, clock, completeTask }) {
               {idx < slides.length - 1 ? (
                 <button className="btn primary lg" onClick={() => setIdx(idx + 1)}>далее {Icon.chev}</button>
               ) : (
-                <button className="btn primary lg" onClick={() => completeTask("lesson-nsm", 20, "check")}>к проверке {Icon.chev}</button>
+                <button className="btn primary lg" onClick={() => { completeTask(`lesson-${note.id}`, 20, "check"); go("check", { checkTopicId: note.id }); }}>к проверке {Icon.chev}</button>
               )}
             </div>
           </div>
@@ -743,7 +745,7 @@ function LessonScreen({ go, progress, clock, completeTask }) {
             <div key={i} className={`slide-thumb ${i === idx ? "active" : ""} ${i < idx ? "done" : ""}`} onClick={() => setIdx(i)}>
               <div className="n">{i < idx ? "✓" : i + 1}</div>
               <div>
-                <b>{["Что","Зачем","FAANG-примеры","Анти-паттерны"][i]}</b>
+                <b>{["Что","Зачем","Пример","Анти-паттерны"][i]}</b>
                 <i>{sl.tag.split(" · ")[1]}</i>
               </div>
             </div>
@@ -2282,6 +2284,7 @@ const PIM_BY_ROUTE = {
 
 export default function PMQuestHifi({ onExit }) {
   const [route, setRoute] = useState("home");
+  const [selectedLessonTopicId, setSelectedLessonTopicId] = useState("nsm");
   const [selectedTeachTopicId, setSelectedTeachTopicId] = useState("nsm");
   const [selectedCheckTopicId, setSelectedCheckTopicId] = useState("nsm");
   const [pimOpenSignal, setPimOpenSignal] = useState(0);
@@ -2293,6 +2296,7 @@ export default function PMQuestHifi({ onExit }) {
   }, [progress]);
 
   const go = (r, options = {}) => {
+    if (options.lessonTopicId) setSelectedLessonTopicId(options.lessonTopicId);
     if (options.teachTopicId) setSelectedTeachTopicId(options.teachTopicId);
     if (options.checkTopicId) setSelectedCheckTopicId(options.checkTopicId);
     setRoute(r);
@@ -2326,6 +2330,7 @@ export default function PMQuestHifi({ onExit }) {
   const screens = {
     home:    <HomeScreen go={go} openPim={() => setPimOpenSignal((v) => v + 1)} {...shared} />,
     library: <LibraryScreen go={go} {...shared} />,
+    lesson:  <LessonScreen go={go} initialTopicId={selectedLessonTopicId} {...shared} />,
     check:   <CheckScreen go={go} initialTopicId={selectedCheckTopicId} {...shared} />,
     srs:     <SRSScreen go={go} {...shared} />,
     case:    <CaseScreen go={go} {...shared} />,
