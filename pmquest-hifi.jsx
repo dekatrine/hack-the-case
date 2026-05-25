@@ -2281,11 +2281,27 @@ function CVScreen({ progress, clock, completeTask }) {
   const fileInputRef = useRef(null);
   const [fileName, setFileName] = useState("");
   const [analysisDone, setAnalysisDone] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const handleFile = (file) => {
     if (!file) return;
     setFileName(file.name);
-    setAnalysisDone(true);
+    setAnalysisDone(false);
   };
+  const runAnalysis = () => {
+    if (!fileName || analyzing) return;
+    setAnalyzing(true);
+    window.setTimeout(() => {
+      setAnalysisDone(true);
+      setAnalyzing(false);
+    }, 900);
+  };
+  const criteria = [
+    { t: "Структура", score: 78, c: "var(--ph-sun)", d: "Секции читаются, но PM-проекты лучше поднять выше education/прочего.", fix: "Переставь самый релевантный продуктовый кейс в первые ⅓ страницы." },
+    { t: "Impact & метрики", score: 52, c: "var(--ph-coral)", d: "Есть обязанности, но мало чисел результата: рост, конверсия, retention, revenue.", fix: "Добавь 2-3 цифры: X% uplift, N пользователей, экономия времени/денег." },
+    { t: "Action verbs", score: 64, c: "var(--ph-pink)", d: "Часть формулировок звучит как «занималась/помогала», а не owned.", fix: "Замени на launched, led, improved, reduced, validated, prioritized." },
+    { t: "PM fit", score: 71, c: "var(--ph-mint)", d: "Видно продуктовую траекторию, но слабее раскрыты discovery и decision-making.", fix: "Добавь bullets про user research, hypothesis, roadmap trade-offs." },
+  ];
+  const totalScore = Math.round(criteria.reduce((sum, item) => sum + item.score, 0) / criteria.length);
   return (
     <div className="screen" style={{ maxWidth: 980 }}>
       <Topbar crumbs={["Home", "Резюме"]} progress={progress} clock={clock} />
@@ -2313,12 +2329,36 @@ function CVScreen({ progress, clock, completeTask }) {
             style={{ display: "none" }}
             onChange={(e) => handleFile(e.target.files?.[0])}
           />
-          <button className="btn primary lg" onClick={() => fileInputRef.current?.click()}>выбрать файл</button>
+          <div className="cv-actions">
+            <button className="btn primary lg" onClick={() => fileInputRef.current?.click()}>выбрать файл</button>
+            {fileName && (
+              <button className="btn lg" style={{ background: "var(--ph-mint-2)", color: "var(--ph-ink)" }} onClick={runAnalysis} disabled={analyzing}>
+                {analyzing ? "оцениваю..." : "оценим!"}
+              </button>
+            )}
+          </div>
           {analysisDone && (
-            <div className="mcq-explain" style={{ marginTop: 18, textAlign: "left" }}>
-              <h5>Pim быстро посмотрел структуру</h5>
-              <p>1. Добавь цифры результата в последний PM-проект. 2. Перепиши обязанности через action verbs. 3. Подними самый релевантный кейс ближе к началу.</p>
-              <button className="btn ghost sm" onClick={() => completeTask("cv-review", 25, "home")}>забрать +25 XP</button>
+            <div className="cv-score-panel">
+              <div className="cv-score-head">
+                <div>
+                  <span className="eyebrow">Pim разобрал резюме</span>
+                  <h3>{totalScore}/100 · хороший черновик, но нужен impact</h3>
+                </div>
+                <button className="btn ghost sm" onClick={() => completeTask("cv-review", 25, "home")}>забрать +25 XP</button>
+              </div>
+              <div className="cv-criteria-grid">
+                {criteria.map((item) => (
+                  <div key={item.t} className="cv-criterion">
+                    <div className="cv-criterion-head">
+                      <b>{item.t}</b>
+                      <span>{item.score}/100</span>
+                    </div>
+                    <div className="bar tall"><i style={{ width: `${item.score}%`, background: item.c }}></i></div>
+                    <p>{item.d}</p>
+                    <small>{item.fix}</small>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

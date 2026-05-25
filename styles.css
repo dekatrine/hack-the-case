@@ -6422,6 +6422,43 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .pmq-hifi .review-card .quote { font-style: italic; color: var(--ph-ink-2); border-left: 3px solid var(--ph-coral); padding-left: 12px; margin: 8px 0; font-size: 14px; }
 .pmq-hifi .review-card .quote .who { font-style: normal; color: var(--ph-coral); font-weight: 700; font-size: 12px; display: block; margin-bottom: 4px; }
 .pmq-hifi .next-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.pmq-hifi .cv-actions {
+  display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+}
+.pmq-hifi .cv-score-panel {
+  margin-top: 20px; text-align: left; background: #fff;
+  border: 3px solid var(--ph-ink); border-radius: var(--ph-r);
+  box-shadow: var(--ph-sh-sm); padding: 18px;
+}
+.pmq-hifi .cv-score-head {
+  display: flex; justify-content: space-between; gap: 16px;
+  align-items: flex-start; margin-bottom: 16px;
+}
+.pmq-hifi .cv-score-head h3 {
+  margin: 3px 0 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 24px;
+}
+.pmq-hifi .cv-criteria-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+}
+.pmq-hifi .cv-criterion {
+  background: var(--ph-bg-warm); border: 2px solid var(--ph-ink);
+  border-radius: var(--ph-r); padding: 13px 14px;
+}
+.pmq-hifi .cv-criterion-head {
+  display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 8px;
+}
+.pmq-hifi .cv-criterion-head b {
+  font-family: 'Bricolage Grotesque', sans-serif; font-size: 17px;
+}
+.pmq-hifi .cv-criterion-head span {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ph-ink-3);
+}
+.pmq-hifi .cv-criterion p {
+  margin: 9px 0 6px; font-size: 13px; color: var(--ph-ink-2);
+}
+.pmq-hifi .cv-criterion small {
+  display: block; color: var(--ph-coral); font-weight: 800; line-height: 1.35;
+}
 
 /* library */
 .pmq-hifi .lib-stage { display: grid; grid-template-columns: 220px 1fr; gap: 24px; }
