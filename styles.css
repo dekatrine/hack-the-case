@@ -5945,6 +5945,114 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 
 /* mock */
 .pmq-hifi .mock-stage { display: grid; grid-template-columns: 1fr 360px; gap: 24px; }
+.pmq-hifi .mock-setup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 18px;
+  align-items: start;
+}
+.pmq-hifi .mock-setup-panel,
+.pmq-hifi .mock-setup-card {
+  background: var(--ph-card);
+  border: var(--ph-b);
+  border-radius: var(--ph-r);
+  box-shadow: var(--ph-sh-sm);
+  padding: 18px;
+}
+.pmq-hifi .mock-setup-panel { margin-bottom: 16px; }
+.pmq-hifi .mock-setup-card {
+  position: sticky; top: 18px;
+  display: flex; flex-direction: column; gap: 12px;
+  text-align: center;
+}
+.pmq-hifi .mock-setup-card h3 {
+  margin: 0;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 26px;
+}
+.pmq-hifi .mock-setup-card p {
+  margin: 0 0 4px;
+  color: var(--ph-ink-3);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.pmq-hifi .mock-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.pmq-hifi .mock-choice-grid.grade { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pmq-hifi .mock-choice,
+.pmq-hifi .mock-case-pick {
+  text-align: left;
+  background: var(--ph-card-sunk);
+  border: 2px solid var(--ph-ink);
+  border-radius: var(--ph-r);
+  padding: 12px 14px;
+}
+.pmq-hifi .mock-choice strong,
+.pmq-hifi .mock-case-pick b {
+  display: block;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 17px;
+}
+.pmq-hifi .mock-choice span,
+.pmq-hifi .mock-case-pick span,
+.pmq-hifi .mock-case-pick i {
+  display: block;
+  margin-top: 5px;
+  color: var(--ph-ink-3);
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+.pmq-hifi .mock-choice.active,
+.pmq-hifi .mock-case-pick.active {
+  background: var(--ph-mint-2);
+  box-shadow: 4px 4px 0 var(--ph-ink);
+}
+.pmq-hifi .mock-case-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 10px 0;
+}
+.pmq-hifi .mock-mode-switch {
+  display: inline-flex;
+  gap: 6px;
+  background: var(--ph-card-sunk);
+  border: 2px solid var(--ph-ink);
+  border-radius: 999px;
+  padding: 5px;
+  margin-top: 10px;
+}
+.pmq-hifi .mock-mode-switch button {
+  border-radius: 999px;
+  padding: 8px 13px;
+  font-weight: 800;
+  font-size: 13px;
+}
+.pmq-hifi .mock-mode-switch button.active {
+  background: var(--ph-coral);
+  color: #fff;
+}
+.pmq-hifi .mock-custom-box {
+  margin-top: 12px;
+  background: var(--ph-sky-2);
+  border: 2px solid var(--ph-ink);
+  border-radius: var(--ph-r);
+  padding: 14px;
+}
+.pmq-hifi .mock-custom-box h4 {
+  margin: 0 0 6px;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 20px;
+}
+.pmq-hifi .mock-custom-box p {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  color: var(--ph-ink-2);
+}
 .pmq-hifi .mock-room {
   background: var(--ph-card); border: var(--ph-b); border-radius: var(--ph-r-l);
   box-shadow: var(--ph-sh-l); padding: 26px 30px;
@@ -5958,6 +6066,14 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   display: flex; align-items: center; justify-content: center;
   font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px;
   color: #fff; flex-shrink: 0;
+}
+.pmq-hifi .interviewer-av.mood-thinking { background: var(--ph-sun); color: var(--ph-ink); }
+.pmq-hifi .interviewer-av.mood-push { background: var(--ph-coral); }
+.pmq-hifi .generated-case-brief.compact { padding: 12px 14px; }
+.pmq-hifi .generated-case-brief.compact pre {
+  max-height: 120px;
+  overflow: auto;
+  white-space: pre-wrap;
 }
 .pmq-hifi .mock-bubble {
   background: var(--ph-card-sunk); border: 2px solid var(--ph-ink);

@@ -1195,32 +1195,71 @@ function CaseScreen({ go, progress, clock, completeTask }) {
 
 // ─── Screen: MOCK ────────────────────────────────────────────────────
 function MockScreen({ go, progress, clock, completeTask }) {
-  const rounds = [
-    {
+  const blockOptions = [
+    { id: "product_sense", label: "Product design", tone: "про пользователей, боли, решения", direction: "product" },
+    { id: "product_execution", label: "Execution / Metrics", tone: "про диагностику, метрики, root cause", direction: "product" },
+    { id: "product_strategy", label: "Strategy / Growth", tone: "про рынок, монетизацию, trade-offs", direction: "product" },
+    { id: "consulting_opening", label: "Consulting opening", tone: "про структуру, гипотезы и clarifying", direction: "consulting" },
+  ];
+  const gradeOptions = [
+    { id: "junior", label: "Junior", persona: "добрый интервьюер", pressure: "мягко подсказывает" },
+    { id: "middle", label: "Middle", persona: "standard persona", pressure: "держит темп и просит конкретику" },
+    { id: "senior", label: "Senior", persona: "bar raiser", pressure: "перебивает, давит на trade-offs" },
+  ];
+  const casePresets = [
+    { id: "google-maps-kids", block: "product_sense", company: "Google", title: "Maps для детей 8-12", prompt: "Представь, что Google делает Maps для детей 8-12 лет. Какие вопросы задашь и какой продукт спроектируешь?", source: "IGotAnOffer / Exponent style" },
+    { id: "youtube-education", block: "product_sense", company: "YouTube", title: "Educational product", prompt: "Design an educational product for YouTube. Сфокусируйся на learner personas, engagement и safety.", source: "Exponent questions" },
+    { id: "meta-fitness", block: "product_sense", company: "Meta", title: "Fitness app", prompt: "Design a fitness app for Meta. Выбери сегмент, pain point, решение и success metrics.", source: "IGotAnOffer style" },
+    { id: "facebook-likes", block: "product_execution", company: "Meta", title: "Success of Likes", prompt: "Как бы ты измерил(а) успех Facebook Like button? Назови primary metric, guardrails и риски.", source: "PM Exercises metrics" },
+    { id: "ubereats-metric", block: "product_execution", company: "Uber", title: "UberEats NSM", prompt: "Какая самая важная метрика для UberEats и почему? Как диагностировать падение этой метрики?", source: "PM Exercises / Exponent style" },
+    { id: "premium-bank", block: "product_strategy", company: "Fintech", title: "Premium monetization", prompt: "Цифровой банк хочет увеличить прибыльность premium-сегмента. Какие варианты стратегии предложишь?", source: "Case interview style" },
+    { id: "marketplace-profit", block: "consulting_opening", company: "Marketplace", title: "Profitability drop", prompt: "Маркетплейс растёт по GMV, но прибыль падает. Сформулируй clarifying questions и дерево гипотез.", source: "Consulting case style" },
+  ];
+  const buildRounds = (blockId, casePrompt) => {
+    const commonStart = {
       id: "clarify",
       title: "Clarify",
-      prompt: "Представь, что мы делаем Maps для детей 8-12 лет. Какие первые 3 вопроса ты задашь, прежде чем начать брейнсторм?",
-      expectedSignals: ["цель продукта", "primary user", "контекст устройства", "ограничения безопасности"],
-    },
-    {
-      id: "user",
-      title: "User & pain",
-      prompt: "Выбери primary user и опиши 2-3 боли, которые решает детский Maps.",
-      expectedSignals: ["сегментация", "JTBD", "safety pain", "parent/child trade-off"],
-    },
-    {
-      id: "solutions",
-      title: "Solutions",
-      prompt: "Предложи 3 решения. Одно должно быть MVP, одно — более смелое.",
-      expectedSignals: ["несколько идей", "связь с pain", "MVP", "trade-off"],
-    },
-    {
-      id: "metrics",
-      title: "Metrics",
-      prompt: "Какими метриками проверишь успех и какие guardrails поставишь?",
-      expectedSignals: ["activation", "retention", "safety guardrail", "parent trust"],
-    },
-  ];
+      prompt: `Окей, кейс: ${casePrompt}\n\nНачни как на live-интервью: какие 3-4 уточняющих вопроса задашь перед решением?`,
+      expectedSignals: ["цель", "сегмент", "ограничения", "success criteria"],
+    };
+    const map = {
+      product_sense: [
+        commonStart,
+        { id: "user", title: "User & pain", prompt: "Выбери primary user и 2-3 настоящие боли. Почему именно этот сегмент?", expectedSignals: ["segmentation", "JTBD", "pain severity", "frequency"] },
+        { id: "solutions", title: "Solutions", prompt: "Предложи 3 решения: MVP, ambitious и low-tech. Что выберешь для V1?", expectedSignals: ["solution range", "prioritization", "trade-off", "V1 scope"] },
+        { id: "metrics", title: "Metrics", prompt: "Назови success metric, guardrails и план эксперимента.", expectedSignals: ["primary metric", "guardrails", "experiment", "risks"] },
+      ],
+      product_execution: [
+        commonStart,
+        { id: "diagnose", title: "Diagnose", prompt: "Построй дерево диагностики: какие разрезы, события и сегменты проверишь?", expectedSignals: ["funnel", "segments", "instrumentation", "root cause"] },
+        { id: "metrics", title: "Metrics", prompt: "Выбери primary metric и 3 supporting metrics. Что может исказить вывод?", expectedSignals: ["metric hierarchy", "leading/lagging", "counter-metrics"] },
+        { id: "actions", title: "Actions", prompt: "Какие 2-3 решения предложишь после диагностики и как проверишь эффект?", expectedSignals: ["experiments", "impact", "confidence", "rollout"] },
+      ],
+      product_strategy: [
+        commonStart,
+        { id: "market", title: "Market", prompt: "Оцени рынок, конкурентов и strategic fit. Где самый сильный leverage?", expectedSignals: ["market sizing", "competition", "moat", "fit"] },
+        { id: "options", title: "Options", prompt: "Дай 3 стратегические опции и trade-offs между ними.", expectedSignals: ["options", "trade-offs", "resources", "timing"] },
+        { id: "recommend", title: "Recommendation", prompt: "Сделай финальную рекомендацию: что делаем, чего не делаем, какие риски.", expectedSignals: ["clear recommendation", "risks", "next steps", "metrics"] },
+      ],
+      consulting_opening: [
+        commonStart,
+        { id: "structure", title: "Structure", prompt: "Построй issue tree: revenue, costs, mix, external factors. Где начнёшь?", expectedSignals: ["MECE", "hypothesis", "profit equation", "prioritization"] },
+        { id: "math", title: "Math setup", prompt: "Какие данные попросишь для первого расчёта и какую формулу используешь?", expectedSignals: ["unit economics", "formula", "assumptions", "sanity check"] },
+        { id: "synthesis", title: "Synthesis", prompt: "Синтезируй предварительную гипотезу и следующие шаги.", expectedSignals: ["synthesis", "confidence", "risks", "client-ready answer"] },
+      ],
+    };
+    return map[blockId] || map.product_sense;
+  };
+  const [setupDone, setSetupDone] = useState(false);
+  const [blockId, setBlockId] = useState("product_sense");
+  const [grade, setGrade] = useState("middle");
+  const [caseId, setCaseId] = useState("google-maps-kids");
+  const [customMode, setCustomMode] = useState(false);
+  const [customContext, setCustomContext] = useState("");
+  const [taskText, setTaskText] = useState(casePresets[0].prompt);
+  const [generatingCase, setGeneratingCase] = useState(false);
+  const [interviewerMood, setInterviewerMood] = useState("listening");
+  const [rounds, setRounds] = useState(() => buildRounds("product_sense", casePresets[0].prompt));
   const [roundIdx, setRoundIdx] = useState(0);
   const [seconds, setSeconds] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -1232,11 +1271,16 @@ function MockScreen({ go, progress, clock, completeTask }) {
   const [speechError, setSpeechError] = useState("");
   const [scores, setScores] = useState({ clarify: 2, user: 0, solutions: 0, metrics: 0 });
   const [transcript, setTranscript] = useState([
-    { role: "them", who: "Виктор", text: "Привет! Сегодня кейс на product design. Готова?" },
-    { role: "you", who: "Ты", text: "Да, готова. Дай 30 секунд собраться." },
+    { role: "them", who: "Виктор", text: "Привет. Выбери блок интервью и грейд — потом начнём как настоящий live mock." },
   ]);
   const recognitionRef = useRef(null);
-  const cur = rounds[roundIdx];
+  const selectedBlock = blockOptions.find((item) => item.id === blockId) || blockOptions[0];
+  const selectedGrade = gradeOptions.find((item) => item.id === grade) || gradeOptions[1];
+  const selectedCase = customMode
+    ? { id: "custom", block: blockId, company: "Custom", title: "свой собес", prompt: customContext.trim() || "Свой кастомный mock interview", source: "user topic" }
+    : (casePresets.find((item) => item.id === caseId) || casePresets[0]);
+  const availableCases = casePresets.filter((item) => item.block === blockId);
+  const cur = rounds[roundIdx] || rounds[0];
   const elapsed = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
   const pace = Math.min(100, Math.round((seconds / (15 * 60)) * 100));
   const formatFeedback = (raw) => {
@@ -1255,10 +1299,15 @@ function MockScreen({ go, progress, clock, completeTask }) {
   };
 
   useEffect(() => {
-    if (paused) return undefined;
+    if (paused || !setupDone) return undefined;
     const timer = setInterval(() => setSeconds((v) => v + 1), 1000);
     return () => clearInterval(timer);
-  }, [paused]);
+  }, [paused, setupDone]);
+
+  useEffect(() => {
+    const first = casePresets.find((item) => item.block === blockId) || casePresets[0];
+    setCaseId(first.id);
+  }, [blockId]);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1334,11 +1383,12 @@ function MockScreen({ go, progress, clock, completeTask }) {
     setTranscript((items) => [...items, { role: "you", who: "Ты", text: clean }]);
     setChecking(true);
     setFeedback("");
+    setInterviewerMood("thinking");
     try {
       const res = await api.checkInterview({
-        directionId: "product",
-        blockId: "product_design",
-        taskText: "Google Maps для детей 8-12 лет",
+        directionId: selectedBlock.direction,
+        blockId,
+        taskText,
         roundId: cur.id,
         roundTitle: cur.title,
         roundGoal: cur.prompt,
@@ -1349,10 +1399,12 @@ function MockScreen({ go, progress, clock, completeTask }) {
       setFeedback(formatted);
       setScores((prev) => ({ ...prev, [cur.id]: Math.min(5, Math.max(prev[cur.id] || 0, clean.length > 120 ? 4 : 3)) }));
       setTranscript((items) => [...items, { role: "them", who: "AI score", text: formatted.slice(0, 420) }]);
+      setInterviewerMood(formatted.toLowerCase().includes("следующий") ? "push" : "listening");
     } catch (e) {
       const msg = `AI-проверка не ответила: ${e.message}`;
       setFeedback(msg);
       setTranscript((items) => [...items, { role: "them", who: "AI score", text: msg }]);
+      setInterviewerMood("listening");
     } finally {
       setAnswer("");
       setChecking(false);
@@ -1365,18 +1417,150 @@ function MockScreen({ go, progress, clock, completeTask }) {
     setFeedback("");
     setAnswer("");
     setTranscript((items) => [...items, { role: "them", who: "Виктор", text: rounds[next].prompt }]);
+    setInterviewerMood("listening");
   };
+
+  const startMock = (caseText = selectedCase.prompt) => {
+    const nextRounds = buildRounds(blockId, caseText);
+    setTaskText(caseText);
+    setRounds(nextRounds);
+    setRoundIdx(0);
+    setSeconds(0);
+    setPaused(false);
+    setSetupDone(true);
+    setScores({ clarify: 0, user: 0, solutions: 0, metrics: 0, diagnose: 0, actions: 0, market: 0, options: 0, recommend: 0, structure: 0, math: 0, synthesis: 0 });
+    setTranscript([
+      { role: "them", who: "Виктор", text: `Окей, ${selectedGrade.label}. Я буду ${selectedGrade.pressure}. Кейс: ${caseText}` },
+      { role: "them", who: "Виктор", text: nextRounds[0].prompt },
+    ]);
+    setFeedback("");
+    setAnswer("");
+    setInterviewerMood("listening");
+  };
+
+  const generateAndStart = async () => {
+    setGeneratingCase(true);
+    setFeedback("");
+    try {
+      const res = await api.generateInterview({
+        directionId: selectedBlock.direction,
+        blockId,
+        difficulty: grade,
+        companyContext: customMode
+          ? `Кастомная тема пользователя: ${customContext.trim() || "PM mock interview по выбранному блоку"}`
+          : (customContext.trim() || `${selectedCase.company}: ${selectedCase.title}. ${selectedCase.prompt}`),
+      });
+      startMock(res.taskText || selectedCase.prompt);
+    } catch (e) {
+      setFeedback(`AI-генерация не ответила: ${e.message}. Запускаю выбранный кейс.`);
+      startMock(customContext.trim() || selectedCase.prompt);
+    } finally {
+      setGeneratingCase(false);
+    }
+  };
+
+  if (!setupDone) {
+    return (
+      <div className="screen">
+        <Topbar crumbs={["Home", "Mock с AI", "Настройка"]} progress={progress} clock={clock} />
+        <div className="screen-head">
+          <div>
+            <span className="eyebrow">Live mock setup · кейсы из публичных PM question banks</span>
+            <h1>Выбери часть интервью, грейд и кейс</h1>
+          </div>
+          <div className="right">
+            <span className="chip plum">{selectedGrade.persona}</span>
+            <span className="chip sun">{selectedBlock.label}</span>
+          </div>
+        </div>
+        <div className="mock-setup">
+          <section className="mock-setup-panel">
+            <div className="eyebrow">1 · часть mock interview</div>
+            <div className="mock-choice-grid">
+              {blockOptions.map((item) => (
+                <button key={item.id} className={`mock-choice ${blockId === item.id ? "active" : ""}`} onClick={() => setBlockId(item.id)}>
+                  <strong>{item.label}</strong>
+                  <span>{item.tone}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+          <section className="mock-setup-panel">
+            <div className="eyebrow">2 · грейд</div>
+            <div className="mock-choice-grid grade">
+              {gradeOptions.map((item) => (
+                <button key={item.id} className={`mock-choice ${grade === item.id ? "active" : ""}`} onClick={() => setGrade(item.id)}>
+                  <strong>{item.label}</strong>
+                  <span>{item.pressure}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+          <section className="mock-setup-panel">
+            <div className="eyebrow">3 · кейс</div>
+            <div className="mock-mode-switch">
+              <button className={!customMode ? "active" : ""} onClick={() => setCustomMode(false)}>готовый кейс</button>
+              <button className={customMode ? "active" : ""} onClick={() => setCustomMode(true)}>свой кастомный собес</button>
+            </div>
+            {!customMode ? (
+              <>
+                <div className="mock-case-list">
+                  {availableCases.map((item) => (
+                    <button key={item.id} className={`mock-case-pick ${caseId === item.id ? "active" : ""}`} onClick={() => setCaseId(item.id)}>
+                      <b>{item.company} · {item.title}</b>
+                      <span>{item.prompt}</span>
+                      <i>{item.source}</i>
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  className="case-topic-input"
+                  value={customContext}
+                  onChange={(e) => setCustomContext(e.target.value)}
+                  placeholder="Можно добавить контекст к выбранному кейсу: компания, продукт, рынок, ограничение..."
+                />
+              </>
+            ) : (
+              <div className="mock-custom-box">
+                <h4>Какую тему ты хочешь?</h4>
+                <p>Напиши компанию, продукт, проблему или рынок. AI превратит это в live mock под выбранный блок и грейд.</p>
+                <textarea
+                  className="case-topic-input"
+                  value={customContext}
+                  onChange={(e) => setCustomContext(e.target.value)}
+                  placeholder="Например: «AI travel planner для семей», «B2B SaaS churn», «банк теряет прибыльность в premium», «YouTube Shorts падает retention у подростков»"
+                />
+              </div>
+            )}
+            {feedback && <div className="case-generator-error">{feedback}</div>}
+          </section>
+          <aside className="mock-setup-card">
+            <PimFigure size={120} expression="teach" />
+            <h3>Виктор готов</h3>
+            <p>Он будет вести интервью по выбранному блоку: задаст opening, дождётся ответа, проверит через AI и подкинет следующий вопрос.</p>
+            <button className="btn primary lg" style={{ width: "100%" }} onClick={() => generateAndStart()} disabled={generatingCase}>
+              {generatingCase ? "AI готовит кейс..." : "AI сгенерировать и начать"}
+            </button>
+            <button className="btn ghost lg" style={{ width: "100%" }} onClick={() => startMock(customContext.trim() || selectedCase.prompt)} disabled={generatingCase}>
+              {customMode ? "начать с моей темой" : "начать с выбранным кейсом"}
+            </button>
+          </aside>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="screen">
       <Topbar crumbs={["Home", "Mock с AI"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
-          <span className="eyebrow">Mock-интервью · Standard persona · 30 мин</span>
-          <h1>Google · Product Design</h1>
+          <span className="eyebrow">Mock-интервью · {selectedGrade.label} · {selectedBlock.label} · 30 мин</span>
+          <h1>{selectedCase.company} · {selectedCase.title}</h1>
         </div>
         <div className="right">
-          <span className="chip plum">🧐 Standard</span>
+          <button className="btn ghost sm" onClick={() => setSetupDone(false)}>сменить mock</button>
+          <span className="chip plum">🧐 {selectedGrade.persona}</span>
           <span className="chip sun">⏱ {elapsed} / 15:00</span>
           <button className="btn ghost sm" onClick={() => setPaused(!paused)}>{paused ? "▶ продолжить" : "⏸ пауза"}</button>
         </div>
@@ -1384,11 +1568,15 @@ function MockScreen({ go, progress, clock, completeTask }) {
       <div className="mock-stage">
         <div className="mock-room">
           <div className="mock-interviewer">
-            <div className="interviewer-av">VK</div>
+            <div className={`interviewer-av mood-${interviewerMood}`}>VK</div>
             <div className="mock-bubble">
-              <div className="eyebrow" style={{ marginBottom: 4 }}>Виктор · Sr. PM @ Google</div>
+              <div className="eyebrow" style={{ marginBottom: 4 }}>Виктор · Sr. PM · {selectedGrade.pressure}</div>
               <div>{cur.prompt}</div>
             </div>
+          </div>
+          <div className="generated-case-brief compact">
+            <span className="eyebrow">исходный кейс</span>
+            <pre>{taskText}</pre>
           </div>
           <div className="mock-transcript">
             <div className="mock-line note">— Mock начат: {elapsed} · transcript on · round {roundIdx + 1}/{rounds.length} —</div>
@@ -1438,10 +1626,10 @@ function MockScreen({ go, progress, clock, completeTask }) {
             <div style={{ fontSize: 13, color: "var(--ph-ink-3)", marginBottom: 10 }}>обновляется в реальном времени</div>
             <div className="score-bars" style={{ marginTop: 0 }}>
               {[
-                { n: "Clarify", v: scores.clarify },
-                { n: "User & pain", v: scores.user },
-                { n: "Solutions", v: scores.solutions },
-                { n: "Metrics", v: scores.metrics },
+                { n: "Clarify", v: scores.clarify || 0 },
+                { n: cur.id === "diagnose" || scores.diagnose ? "Diagnose" : cur.id === "market" || scores.market ? "Market/User" : "User & pain", v: scores.user || scores.diagnose || scores.market || scores.structure || 0 },
+                { n: cur.id === "actions" || scores.actions ? "Actions" : cur.id === "options" || scores.options ? "Options" : "Solutions", v: scores.solutions || scores.actions || scores.options || scores.math || 0 },
+                { n: cur.id === "recommend" || scores.recommend ? "Recommend" : "Metrics", v: scores.metrics || scores.recommend || scores.synthesis || 0 },
               ].map(r => (
                 <div key={r.n} className="score-bar-row">
                   <div className="nm">{r.n}</div>
