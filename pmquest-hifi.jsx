@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { api } from './api/client.js';
 
 /* =====================================================================
    PMQuest Hi-Fi — port of Claude Design handoff bundle
@@ -149,10 +150,119 @@ function PimFigure({ size = 110, expression = "idle", className = "" }) {
   );
 }
 
-function Pim({ message, actions = [], expression = "idle", muted = false }) {
+const TODAY_KEY = () => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Moscow" }).format(new Date());
+
+const initialProgress = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem("pmquest-progress-v1") || "{}");
+    return { xp: 1240, streak: 7, completed: {}, cases: 3, cardsDue: 8, ...saved };
+  } catch {
+    return { xp: 1240, streak: 7, completed: {}, cases: 3, cardsDue: 8 };
+  }
+};
+
+const getLevel = (xp) => Math.max(1, Math.floor(xp / 300) + 1);
+const getLevelProgress = (xp) => {
+  const current = Math.floor(xp / 300) * 300;
+  return Math.min(100, Math.round(((xp - current) / 300) * 100));
+};
+
+function useMoscowClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+  return useMemo(() => {
+    const day = new Intl.DateTimeFormat("ru-RU", { weekday: "long", timeZone: "Europe/Moscow" }).format(now);
+    const date = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", timeZone: "Europe/Moscow" }).format(now);
+    const time = new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Moscow" }).format(now);
+    return {
+      day: day.charAt(0).toUpperCase() + day.slice(1),
+      date,
+      time,
+      label: `${day.charAt(0).toUpperCase() + day.slice(1)} · ${date} · ${time} МСК`,
+    };
+  }, [now]);
+}
+
+function Pim({ message, actions = [], expression = "idle", muted = false, route = "home", progress, openSignal = 0 }) {
   const [show, setShow] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [messages, setMessages] = useState([
+    { role: "coach", text: "Привет! Я Pim. Можешь спрашивать что угодно: про кейсы, метрики, интервью, резюме или конкретный ответ." },
+  ]);
+
+  const askPim = async (text) => {
+    const question = text.trim();
+    if (!question || busy) return;
+    const nextMessages = [...messages, { role: "student", text: question }];
+    setMessages(nextMessages);
+    setInput("");
+    setBusy(true);
+    try {
+      const res = await api.coach({
+        stepId: route,
+        stepTitle: `PMQuest / ${route}`,
+        stepDescription: "Свободный AI-агент Pim отвечает на вопросы пользователя внутри тренажёра PMQuest.",
+        frameworks: ["PM interview", "Product sense", "Case interview", "Metrics"],
+        caseHint: "Отвечай кратко, практически, на русском. Если вопрос общий, дай структуру и пример.",
+        caseText: "Пользователь готовится к PM/case-интервью в PMQuest.",
+        answerText: "",
+        userMessage: question,
+        chatHistory: nextMessages.slice(-8),
+        previousAnswers: {},
+        trackId: "product",
+      });
+      setMessages([...nextMessages, { role: "coach", text: res.message }]);
+    } catch (e) {
+      setMessages([
+        ...nextMessages,
+        {
+          role: "coach",
+          text: `Не смог достучаться до AI API (${e.message}). Но я рядом: переформулируй вопрос или проверь, что backend проснулся на Render.`,
+        },
+      ]);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    setShow(true);
+  }, [message]);
+
+  useEffect(() => {
+    if (openSignal > 0) setChatOpen(true);
+  }, [openSignal]);
+
   return (
     <div className={`pim-anchor ${muted ? "muted" : ""}`}>
+      {chatOpen && (
+        <div className="pim-chat">
+          <div className="pim-chat-head">
+            <div>
+              <strong>Pim AI agent</strong>
+              <span>Lvl {getLevel(progress?.xp || 0)} · {progress?.xp || 0} XP</span>
+            </div>
+            <button onClick={() => setChatOpen(false)} aria-label="close">×</button>
+          </div>
+          <div className="pim-chat-log">
+            {messages.map((m, i) => (
+              <div key={i} className={`pim-chat-msg ${m.role === "student" ? "you" : "agent"}`}>
+                {m.text}
+              </div>
+            ))}
+            {busy && <div className="pim-chat-msg agent">Думаю…</div>}
+          </div>
+          <form className="pim-chat-form" onSubmit={(e) => { e.preventDefault(); askPim(input); }}>
+            <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Спроси Pim что угодно..." />
+            <button className="pa" type="submit" disabled={busy || !input.trim()}>→</button>
+          </form>
+        </div>
+      )}
       {message && show && (
         <div className="pim-bubble">
           <button className="close-bubble" onClick={() => setShow(false)} aria-label="close">×</button>
@@ -165,19 +275,22 @@ function Pim({ message, actions = [], expression = "idle", muted = false }) {
           )}
         </div>
       )}
-      <PimFigure size={110} expression={expression} className="idle" />
+      <button className="pim-face-button" onClick={() => setChatOpen(true)} aria-label="Открыть Pim AI agent">
+        <PimFigure size={110} expression={chatOpen ? "talk" : expression} className="idle" />
+      </button>
     </div>
   );
 }
 
 // ─── Sidebar + Topbar ────────────────────────────────────────────────
-function Sidebar({ route, go }) {
+function Sidebar({ route, go, progress }) {
+  const level = getLevel(progress.xp);
   const items = [
     { k: "home",    label: "Home",          ico: Icon.home,   group: "main" },
     { k: "library", label: "Конспекты",     ico: Icon.vault,  group: "main", badge: "12" },
     { k: "lesson",  label: "Урок",          ico: Icon.book,   group: "learn" },
     { k: "check",   label: "Check · MCQ",   ico: Icon.cards,  group: "learn" },
-    { k: "srs",     label: "Карточки SRS",  ico: Icon.zap,    group: "learn", badge: "8" },
+    { k: "srs",     label: "Карточки SRS",  ico: Icon.zap,    group: "learn", badge: String(progress.cardsDue) },
     { k: "case",    label: "Кейс",          ico: Icon.case,   group: "practice" },
     { k: "mock",    label: "Mock с AI",     ico: Icon.mic,    group: "practice" },
     { k: "drill",   label: "Drill 60s",     ico: Icon.bolt,   group: "practice" },
@@ -213,14 +326,15 @@ function Sidebar({ route, go }) {
         <div className="av">К</div>
         <div>
           <div className="who">Катя</div>
-          <div className="lvl">Lvl 4 · 1240 XP</div>
+          <div className="lvl">Lvl {level} · {progress.xp} XP</div>
         </div>
       </div>
     </aside>
   );
 }
 
-function Topbar({ crumbs = [] }) {
+function Topbar({ crumbs = [], progress, clock }) {
+  const level = getLevel(progress.xp);
   return (
     <div className="topbar">
       <div className="crumbs">
@@ -233,21 +347,26 @@ function Topbar({ crumbs = [] }) {
       </div>
       <div className="grow" />
       <div className="search">{Icon.search}<span>поиск кейсов, тем, компаний</span></div>
-      <div className="stat"><span className="em">🔥</span><span>7</span></div>
-      <div className="stat" style={{ background: "var(--ph-sun-2)" }}><span className="em">✦</span><span>1 240</span></div>
-      <div className="stat" style={{ background: "var(--ph-mint-2)" }}><span className="em">★</span><span>Lvl 4</span></div>
+      <div className="stat"><span className="em">🕒</span><span>{clock.time} МСК</span></div>
+      <div className="stat"><span className="em">🔥</span><span>{progress.streak}</span></div>
+      <div className="stat" style={{ background: "var(--ph-sun-2)" }}><span className="em">✦</span><span>{progress.xp}</span></div>
+      <div className="stat" style={{ background: "var(--ph-mint-2)" }}><span className="em">★</span><span>Lvl {level}</span></div>
     </div>
   );
 }
 
 // ─── Screen: HOME (bento) ────────────────────────────────────────────
-function HomeScreen({ go }) {
+function HomeScreen({ go, progress, clock, completeTask, openPim }) {
+  const level = getLevel(progress.xp);
+  const levelProgress = getLevelProgress(progress.xp);
+  const week = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+  const todayIdx = (new Date().getDay() + 6) % 7;
   return (
     <div className="screen" style={{ maxWidth: "none" }}>
-      <Topbar crumbs={["PMQuest", "Home"]} />
+      <Topbar crumbs={["PMQuest", "Home"]} progress={progress} clock={clock} />
       <div className="screen-head" style={{ marginBottom: 18 }}>
         <div>
-          <span className="eyebrow">Понедельник · 6 неделя подготовки</span>
+          <span className="eyebrow">{clock.label} · 6 неделя подготовки</span>
           <h1 style={{ marginTop: 4 }}>Привет, Катя <span style={{ color: "var(--ph-coral)" }}>✦</span></h1>
         </div>
         <div className="right">
@@ -280,22 +399,22 @@ function HomeScreen({ go }) {
 
         <div className="tile t-streak is-sun">
           <span className="corner-ico">streak</span>
-          <h3>🔥 7 дней подряд</h3>
+          <h3>🔥 {progress.streak} дней подряд</h3>
           <p>держи темп — Пим в тебя верит</p>
           <div className="streak-row" style={{ marginTop: "auto" }}>
-            {["Пн","Вт","Ср","Чт","Пт","Сб","Вс"].map((d, i) => (
-              <div key={d + i} className={`day ${i < 6 ? "on" : ""} ${i === 6 ? "today" : ""}`}>{d[0]}</div>
+            {week.map((d, i) => (
+              <div key={d + i} className={`day ${i <= todayIdx ? "on" : ""} ${i === todayIdx ? "today" : ""}`}>{d[0]}</div>
             ))}
           </div>
         </div>
 
         <div className="tile t-xp is-cream" onClick={() => go("review")}>
-          <span className="corner-ico">level 4 → 5</span>
+          <span className="corner-ico">level {level} → {level + 1}</span>
           <h3 style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-            <span>1 240 XP</span>
-            <span className="mono" style={{ color: "var(--ph-ink-3)" }}>+260 до lvl 5</span>
+            <span>{progress.xp} XP</span>
+            <span className="mono" style={{ color: "var(--ph-ink-3)" }}>+{300 - (progress.xp % 300)} до lvl {level + 1}</span>
           </h3>
-          <div className="bar tall" style={{ marginTop: "auto" }}><i style={{ width: "62%" }}></i></div>
+          <div className="bar tall" style={{ marginTop: "auto" }}><i style={{ width: `${levelProgress}%` }}></i></div>
         </div>
 
         <div className="tile t-bank" onClick={() => go("check")}>
@@ -338,7 +457,7 @@ function HomeScreen({ go }) {
           </div>
         </div>
 
-        <div className="tile t-pim is-plum" onClick={() => go("teach")}>
+        <div className="tile t-pim is-plum" onClick={openPim}>
           <span className="corner-ico" style={{ color: "rgba(255,255,255,0.7)" }}>ai-тутор</span>
           <h3 style={{ color: "#fff" }}>Pim рядом — всегда</h3>
           <p>Спрашивай по любой теме. Отвечу с FAANG-примерами и подсветкой пробелов.</p>
@@ -352,7 +471,7 @@ function HomeScreen({ go }) {
 
         <div className="tile t-srs" onClick={() => go("srs")}>
           <span className="corner-ico">srs · повторение</span>
-          <h3>8 карточек к повтору</h3>
+          <h3>{progress.cardsDue} карточек к повтору</h3>
           <p>CIRCLES, NSM, AARM — вернулись по расписанию</p>
           <div className="footer">
             <span className="chip mint">~6 мин</span>
@@ -394,7 +513,7 @@ function HomeScreen({ go }) {
 
         <div className="tile t-com">
           <span className="corner-ico">сегодня в комьюнити</span>
-          <h3>3 джуна решают тот же кейс</h3>
+          <h3>{progress.cases + 3} джуна решают тот же кейс</h3>
           <p style={{ display: "flex", gap: 8, marginTop: "auto", alignItems: "center" }}>
             <span style={{ display: "flex" }}>
               {["М","А","Л","К","+8"].map((c, i) => (
@@ -416,7 +535,7 @@ function HomeScreen({ go }) {
 }
 
 // ─── Screen: LIBRARY ─────────────────────────────────────────────────
-function LibraryScreen({ go }) {
+function LibraryScreen({ go, progress, clock }) {
   const [cat, setCat] = useState("all");
   const cats = [
     { k: "all",       label: "Все",                  n: 32 },
@@ -443,7 +562,7 @@ function LibraryScreen({ go }) {
   const filtered = cat === "all" ? notes : notes.filter(n => n.cat === cat);
   return (
     <div className="screen" style={{ maxWidth: "none" }}>
-      <Topbar crumbs={["PMQuest", "Конспекты"]} />
+      <Topbar crumbs={["PMQuest", "Конспекты"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Хранилище — 32 урока, конспекты собираются автоматически</span>
@@ -492,7 +611,7 @@ function LibraryScreen({ go }) {
 }
 
 // ─── Screen: LESSON ──────────────────────────────────────────────────
-function LessonScreen({ go }) {
+function LessonScreen({ go, progress, clock, completeTask }) {
   const [idx, setIdx] = useState(0);
   const slides = [
     { tag: "Слайд 1 · 2 мин", title: "Что такое North Star Metric?", lede: "Одна главная метрика, которая отражает ценность продукта для пользователя — а не выручку напрямую.",
@@ -568,7 +687,7 @@ function LessonScreen({ go }) {
   const s = slides[idx];
   return (
     <div className="screen">
-      <Topbar crumbs={["Home", "Урок", "North Star Metric"]} />
+      <Topbar crumbs={["Home", "Урок", "North Star Metric"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Урок · 8 мин · +20 XP</span>
@@ -593,7 +712,7 @@ function LessonScreen({ go }) {
               {idx < slides.length - 1 ? (
                 <button className="btn primary lg" onClick={() => setIdx(idx + 1)}>далее {Icon.chev}</button>
               ) : (
-                <button className="btn primary lg" onClick={() => go("check")}>к проверке {Icon.chev}</button>
+                <button className="btn primary lg" onClick={() => completeTask("lesson-nsm", 20, "check")}>к проверке {Icon.chev}</button>
               )}
             </div>
           </div>
@@ -622,7 +741,7 @@ function LessonScreen({ go }) {
 }
 
 // ─── Screen: CHECK / MCQ ─────────────────────────────────────────────
-function CheckScreen({ go }) {
+function CheckScreen({ go, progress, clock, completeTask }) {
   const [idx, setIdx] = useState(0);
   const [picked, setPicked] = useState(null);
   const [showExplain, setShowExplain] = useState(false);
@@ -657,11 +776,11 @@ function CheckScreen({ go }) {
   const pick = (i) => { setPicked(i); setShowExplain(true); setWhyTarget(null); };
   const next = () => {
     if (idx < questions.length - 1) { setIdx(idx + 1); setPicked(null); setShowExplain(false); setWhyTarget(null); }
-    else { go("case"); }
+    else { completeTask("check-nsm", 10, "case"); }
   };
   return (
     <div className="screen" style={{ maxWidth: 880 }}>
-      <Topbar crumbs={["Home", "Урок", "Check"]} />
+      <Topbar crumbs={["Home", "Урок", "Check"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Check · 3 мин · +10 XP</span>
@@ -719,7 +838,7 @@ function CheckScreen({ go }) {
 }
 
 // ─── Screen: SRS ─────────────────────────────────────────────────────
-function SRSScreen({ go }) {
+function SRSScreen({ go, progress, clock, completeTask }) {
   const [idx, setIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const cards = [
@@ -735,7 +854,7 @@ function SRSScreen({ go }) {
   const c = cards[idx];
   return (
     <div className="screen">
-      <Topbar crumbs={["Home", "SRS · карточки"]} />
+      <Topbar crumbs={["Home", "SRS · карточки"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Spaced repetition · фреймворки и термины</span>
@@ -774,7 +893,7 @@ function SRSScreen({ go }) {
               <div key={b.k} className={`sb ${b.k}`} onClick={() => {
                 setFlipped(false);
                 if (idx < cards.length - 1) setIdx(idx + 1);
-                else go("home");
+                else completeTask("srs-today", 40, "home", { cardsDue: 0 });
               }}>
                 <div className="l">{b.l}</div>
                 <div className="t">{b.t}</div>
@@ -792,7 +911,7 @@ function SRSScreen({ go }) {
 }
 
 // ─── Screen: CASE ────────────────────────────────────────────────────
-function CaseScreen({ go }) {
+function CaseScreen({ go, progress, clock, completeTask }) {
   const [step, setStep] = useState(2);
   const [text, setText] = useState("");
   const steps = [
@@ -805,7 +924,7 @@ function CaseScreen({ go }) {
   const cur = steps[step];
   return (
     <div className="screen">
-      <Topbar crumbs={["Home", "Кейс", "Spotify — фича лайков"]} />
+      <Topbar crumbs={["Home", "Кейс", "Spotify — фича лайков"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Кейс · ~15 мин · +60 XP · FAANG product design</span>
@@ -856,7 +975,7 @@ function CaseScreen({ go }) {
               {step < steps.length - 1 ? (
                 <button className="btn primary lg" onClick={() => { setStep(step + 1); setText(""); }}>далее {Icon.chev}</button>
               ) : (
-                <button className="btn primary lg" onClick={() => go("review")}>отправить на разбор {Icon.chev}</button>
+                <button className="btn primary lg" onClick={() => completeTask("spotify-case", 60, "review", { cases: progress.cases + 1 })}>отправить на разбор {Icon.chev}</button>
               )}
             </div>
           </div>
@@ -867,10 +986,10 @@ function CaseScreen({ go }) {
 }
 
 // ─── Screen: MOCK ────────────────────────────────────────────────────
-function MockScreen({ go }) {
+function MockScreen({ go, progress, clock, completeTask }) {
   return (
     <div className="screen">
-      <Topbar crumbs={["Home", "Mock с AI"]} />
+      <Topbar crumbs={["Home", "Mock с AI"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Mock-интервью · Standard persona · 30 мин</span>
@@ -958,7 +1077,7 @@ function MockScreen({ go }) {
               <li>не назвал ни одной метрики</li>
             </ul>
           </div>
-          <button className="btn lg" style={{ width: "100%" }} onClick={() => go("review")}>завершить mock → score</button>
+          <button className="btn lg" style={{ width: "100%" }} onClick={() => completeTask("mock-google", 50, "review")}>завершить mock → score</button>
         </aside>
       </div>
     </div>
@@ -966,7 +1085,7 @@ function MockScreen({ go }) {
 }
 
 // ─── Screen: DRILL ───────────────────────────────────────────────────
-function DrillScreen({ go }) {
+function DrillScreen({ go, progress, clock, completeTask }) {
   const [qIdx, setQIdx] = useState(2);
   const total = 10;
   const questions = [
@@ -978,7 +1097,7 @@ function DrillScreen({ go }) {
   ];
   return (
     <div className="screen">
-      <Topbar crumbs={["Home", "Drill 60s · Product sense"]} />
+      <Topbar crumbs={["Home", "Drill 60s · Product sense"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Drill · 10 вопросов · ⏱ 60 сек каждый</span>
@@ -1005,7 +1124,7 @@ function DrillScreen({ go }) {
           <div style={{ marginTop: 22, display: "flex", gap: 10, justifyContent: "center" }}>
             <div className="mic-btn" style={{ background: "#fff", color: "var(--ph-coral)" }}>{Icon.mic}</div>
             <button className="btn lg" style={{ background: "var(--ph-ink)", color: "#fff", borderColor: "#fff" }}>пропустить</button>
-            <button className="btn lg" style={{ background: "#fff", color: "var(--ph-ink)" }} onClick={() => qIdx < total - 1 ? setQIdx(qIdx + 1) : go("review")}>готово →</button>
+            <button className="btn lg" style={{ background: "#fff", color: "var(--ph-ink)" }} onClick={() => qIdx < total - 1 ? setQIdx(qIdx + 1) : completeTask("drill-product-sense", 50, "review")}>готово →</button>
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
@@ -1028,10 +1147,10 @@ function DrillScreen({ go }) {
 }
 
 // ─── Screen: TEACH ───────────────────────────────────────────────────
-function TeachScreen({ go }) {
+function TeachScreen({ go, progress, clock, completeTask }) {
   return (
     <div className="screen">
-      <Topbar crumbs={["Home", "Teach the Rookie"]} />
+      <Topbar crumbs={["Home", "Teach the Rookie"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Feynman-режим · 12 мин · +50 XP</span>
@@ -1098,7 +1217,7 @@ function TeachScreen({ go }) {
               «Тима задаст ещё 2-3 вопроса. Будет один с подвохом — про NSM маркетплейсов.»
             </p>
           </div>
-          <button className="btn lg" style={{ width: "100%" }} onClick={() => go("review")}>завершить → разбор</button>
+          <button className="btn lg" style={{ width: "100%" }} onClick={() => completeTask("teach-rookie", 50, "review")}>завершить → разбор</button>
         </aside>
       </div>
     </div>
@@ -1106,18 +1225,18 @@ function TeachScreen({ go }) {
 }
 
 // ─── Screen: REVIEW ──────────────────────────────────────────────────
-function ReviewScreen({ go }) {
+function ReviewScreen({ go, progress, clock, completeTask }) {
   return (
     <div className="screen">
-      <Topbar crumbs={["Home", "Кейс", "Разбор"]} />
+      <Topbar crumbs={["Home", "Кейс", "Разбор"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Разбор · 5 мин чтения · +30 XP за прохождение</span>
           <h1>Готово. Pim разобрал твой ответ.</h1>
         </div>
         <div className="right">
-          <span className="chip mint">🔥 стрик +1 = 8</span>
-          <span className="chip sun">+150 XP</span>
+          <span className="chip mint">🔥 стрик {progress.streak}</span>
+          <span className="chip sun">{progress.xp} XP</span>
         </div>
       </div>
       <div className="review-stage">
@@ -1203,7 +1322,7 @@ function ReviewScreen({ go }) {
           </div>
           <div className="next-row">
             <button className="btn ghost" style={{ flex: 1 }} onClick={() => go("srs")}>в SRS</button>
-            <button className="btn ghost" style={{ flex: 1 }} onClick={() => go("home")}>домой</button>
+            <button className="btn ghost" style={{ flex: 1 }} onClick={() => completeTask("review-read", 30, "home")}>домой</button>
           </div>
         </div>
       </div>
@@ -1212,10 +1331,10 @@ function ReviewScreen({ go }) {
 }
 
 // ─── Screen: CV ──────────────────────────────────────────────────────
-function CVScreen() {
+function CVScreen({ progress, clock }) {
   return (
     <div className="screen" style={{ maxWidth: 980 }}>
-      <Topbar crumbs={["Home", "Резюме"]} />
+      <Topbar crumbs={["Home", "Резюме"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">CV ревью · 30 сек разбор от Pim</span>
@@ -1263,24 +1382,54 @@ const PIM_BY_ROUTE = {
 
 export default function PMQuestHifi({ onExit }) {
   const [route, setRoute] = useState("home");
-  const [pimKey, setPimKey] = useState(0);
+  const [pimOpenSignal, setPimOpenSignal] = useState(0);
+  const [progress, setProgress] = useState(initialProgress);
+  const clock = useMoscowClock();
+
+  useEffect(() => {
+    localStorage.setItem("pmquest-progress-v1", JSON.stringify(progress));
+  }, [progress]);
+
   const go = (r) => {
     setRoute(r);
-    setPimKey(k => k + 1);
     document.querySelector(".pmq-hifi .canvas")?.scrollTo(0, 0);
   };
+
+  const completeTask = (key, xp, nextRoute, patch = {}) => {
+    setProgress((prev) => {
+      const alreadyDone = Boolean(prev.completed?.[key]);
+      const today = TODAY_KEY();
+      const appliedPatch = alreadyDone ? {} : patch;
+      return {
+        ...prev,
+        ...appliedPatch,
+        xp: alreadyDone ? prev.xp : prev.xp + xp,
+        streak: prev.lastActiveDate === today ? prev.streak : prev.streak + 1,
+        lastActiveDate: today,
+        completed: { ...prev.completed, [key]: true },
+      };
+    });
+    go(nextRoute);
+  };
+
+  const shared = {
+    progress,
+    clock,
+    completeTask,
+  };
+
   const screens = {
-    home:    <HomeScreen go={go} />,
-    library: <LibraryScreen go={go} />,
-    lesson:  <LessonScreen go={go} />,
-    check:   <CheckScreen go={go} />,
-    srs:     <SRSScreen go={go} />,
-    case:    <CaseScreen go={go} />,
-    mock:    <MockScreen go={go} />,
-    drill:   <DrillScreen go={go} />,
-    teach:   <TeachScreen go={go} />,
-    review:  <ReviewScreen go={go} />,
-    cv:      <CVScreen go={go} />,
+    home:    <HomeScreen go={go} openPim={() => setPimOpenSignal((v) => v + 1)} {...shared} />,
+    library: <LibraryScreen go={go} {...shared} />,
+    lesson:  <LessonScreen go={go} {...shared} />,
+    check:   <CheckScreen go={go} {...shared} />,
+    srs:     <SRSScreen go={go} {...shared} />,
+    case:    <CaseScreen go={go} {...shared} />,
+    mock:    <MockScreen go={go} {...shared} />,
+    drill:   <DrillScreen go={go} {...shared} />,
+    teach:   <TeachScreen go={go} {...shared} />,
+    review:  <ReviewScreen go={go} {...shared} />,
+    cv:      <CVScreen go={go} {...shared} />,
   };
   const pim = PIM_BY_ROUTE[route] || PIM_BY_ROUTE.home;
   const pimActions = (pim.actions || []).map(a => ({
@@ -1294,11 +1443,19 @@ export default function PMQuestHifi({ onExit }) {
         <button className="pmq-hifi-exit" onClick={onExit}>← Выйти из Hi-Fi</button>
       )}
       <div className="app">
-        <Sidebar route={route} go={go} />
+        <Sidebar route={route} go={go} progress={progress} />
         <main className="canvas">
           {screens[route] || screens.home}
         </main>
-        <Pim key={pimKey} message={pim.msg} actions={pimActions} expression={pim.expression} muted={pim.muted} />
+        <Pim
+          message={pim.msg}
+          actions={pimActions}
+          expression={pim.expression}
+          muted={pim.muted}
+          route={route}
+          progress={progress}
+          openSignal={pimOpenSignal}
+        />
       </div>
     </div>
   );
