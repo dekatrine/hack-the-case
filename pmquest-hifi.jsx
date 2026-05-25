@@ -604,11 +604,11 @@ function LibraryScreen({ go, progress, clock }) {
         </aside>
         <div className="notes-grid">
           {filtered.map((n) => {
-            const mastered = Boolean(progress.completed?.[`teach-${n.id}`]);
+            const mastered = Boolean(progress.completed?.[`check-${n.id}`] || progress.completed?.[`teach-${n.id}`]);
             const checked = progress.checkStats?.[n.id] || 0;
             const progressSteps = Math.min(4, (n.s > 0 ? 1 : 0) + (checked > 0 ? 1 : 0) + (mastered ? 2 : 0));
             return (
-              <div key={n.id} className={`note-card ${n.c}`} onClick={() => go("teach", { teachTopicId: n.id })}>
+              <div key={n.id} className={`note-card ${n.c}`} onClick={() => go("check", { checkTopicId: n.id })}>
                 {mastered && <span className="mastered-badge">✓ освоено</span>}
                 <h4>{n.t}</h4>
                 <p className="excerpt">{n.ex}</p>
@@ -762,19 +762,19 @@ function LessonScreen({ go, progress, clock, completeTask }) {
 }
 
 // ─── Screen: CHECK / MCQ ─────────────────────────────────────────────
-function CheckScreen({ go, progress, clock, completeTask, updateProgress }) {
+function CheckScreen({ go, progress, clock, completeTask, updateProgress, initialTopicId = "nsm" }) {
   const [idx, setIdx] = useState(0);
-  const [topicId, setTopicId] = useState("nsm");
+  const [topicId, setTopicId] = useState(initialTopicId);
   const [batchSeed, setBatchSeed] = useState(0);
   const [picked, setPicked] = useState(null);
   const [showExplain, setShowExplain] = useState(false);
   const [whyTarget, setWhyTarget] = useState(null);
-  const topics = [
-    { id: "nsm", label: "North Star Metric", solved: progress.checkStats?.nsm || 0 },
-    { id: "aarrr", label: "AARRR funnel", solved: progress.checkStats?.aarrr || 0 },
-    { id: "rice", label: "RICE prioritization", solved: progress.checkStats?.rice || 0 },
-    { id: "jtbd", label: "JTBD / user pain", solved: progress.checkStats?.jtbd || 0 },
-  ];
+  const topics = KNOWLEDGE_NOTES.map((note) => ({
+    id: note.id,
+    label: note.t.replace(" — как выбрать", ""),
+    solved: progress.checkStats?.[note.id] || 0,
+    note,
+  }));
   const topicBanks = {
     nsm: [
       ["Какая NSM лучше для Spotify?", "Время прослушивания на активного слушателя", "Доход с подписок", "DAU", "Количество лайков", "NSM должна отражать реализованную ценность, а не vanity-активность или деньги."],
@@ -808,8 +808,14 @@ function CheckScreen({ go, progress, clock, completeTask, updateProgress }) {
     const shift = n % opts.length;
     return { q, opts: [...opts.slice(shift), ...opts.slice(0, shift)].map((o, i) => ({ ...o, l: "ABCD"[i] })), explain };
   };
+  const makeFallbackBank = (note) => ([
+    [`Что главное в теме «${note.t}»?`, note.ex, "Запомнить только название темы", "Использовать только на behavioral", "Всегда выбирать самую быструю фичу", `Сильный ответ объясняет смысл темы: ${note.ex}`],
+    [`Как применить «${note.t}» на PM-интервью?`, "Сначала объяснить логику, затем дать пример и метрику", "Сразу перечислить 10 фичей", "Сказать «зависит» без критериев", "Уйти в технические детали без продуктовой цели", "Интервьюер ждёт структуру, пример и связь с решением."],
+    [`Какая типичная ошибка в теме «${note.t}»?`, "Не связать концепт с пользовательской ценностью или метрикой", "Задать уточняющий вопрос", "Назвать trade-off", "Проверить гипотезу экспериментом", "Большинство ошибок возникает, когда концепт остаётся абстрактным."],
+  ]);
   const questions = Array.from({ length: 5 }, (_, i) => {
-    const bank = topicBanks[topicId];
+    const note = topics.find((t) => t.id === topicId)?.note || KNOWLEDGE_NOTES[0];
+    const bank = topicBanks[topicId] || makeFallbackBank(note);
     return makeQuestion(bank[(i + batchSeed) % bank.length], i + batchSeed);
   });
   const cur = questions[idx];
@@ -827,7 +833,7 @@ function CheckScreen({ go, progress, clock, completeTask, updateProgress }) {
   };
   const next = () => {
     if (idx < questions.length - 1) { setIdx(idx + 1); setPicked(null); setShowExplain(false); setWhyTarget(null); }
-    else { completeTask(`check-${topicId}-${Math.floor((progress.checkStats?.[topicId] || 0) / 5)}`, 10, "case"); }
+    else { completeTask(`check-${topicId}`, 10, "teach", { cardsDue: progress.cardsDue + 1 }); go("teach", { teachTopicId: topicId }); }
   };
   const newBatch = () => {
     setBatchSeed((v) => v + 1);
@@ -844,6 +850,9 @@ function CheckScreen({ go, progress, clock, completeTask, updateProgress }) {
     setShowExplain(false);
     setWhyTarget(null);
   };
+  useEffect(() => {
+    selectTopic(initialTopicId);
+  }, [initialTopicId]);
   return (
     <div className="screen" style={{ maxWidth: 880 }}>
       <Topbar crumbs={["Home", "Уроки", "Check"]} progress={progress} clock={clock} />
@@ -2274,6 +2283,7 @@ const PIM_BY_ROUTE = {
 export default function PMQuestHifi({ onExit }) {
   const [route, setRoute] = useState("home");
   const [selectedTeachTopicId, setSelectedTeachTopicId] = useState("nsm");
+  const [selectedCheckTopicId, setSelectedCheckTopicId] = useState("nsm");
   const [pimOpenSignal, setPimOpenSignal] = useState(0);
   const [progress, setProgress] = useState(initialProgress);
   const clock = useMoscowClock();
@@ -2284,6 +2294,7 @@ export default function PMQuestHifi({ onExit }) {
 
   const go = (r, options = {}) => {
     if (options.teachTopicId) setSelectedTeachTopicId(options.teachTopicId);
+    if (options.checkTopicId) setSelectedCheckTopicId(options.checkTopicId);
     setRoute(r);
     document.querySelector(".pmq-hifi .canvas")?.scrollTo(0, 0);
   };
@@ -2315,7 +2326,7 @@ export default function PMQuestHifi({ onExit }) {
   const screens = {
     home:    <HomeScreen go={go} openPim={() => setPimOpenSignal((v) => v + 1)} {...shared} />,
     library: <LibraryScreen go={go} {...shared} />,
-    check:   <CheckScreen go={go} {...shared} />,
+    check:   <CheckScreen go={go} initialTopicId={selectedCheckTopicId} {...shared} />,
     srs:     <SRSScreen go={go} {...shared} />,
     case:    <CaseScreen go={go} {...shared} />,
     mock:    <MockScreen go={go} {...shared} />,
