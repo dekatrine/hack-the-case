@@ -2101,6 +2101,68 @@ function TeachScreen({ go, progress, clock, completeTask, initialTopicId = "nsm"
 
 // ─── Screen: REVIEW ──────────────────────────────────────────────────
 function ReviewScreen({ go, progress, clock, completeTask }) {
+  const completedKeys = Object.keys(progress.completed || {});
+  const completedLessons = KNOWLEDGE_NOTES.filter((note) => progress.completed?.[`lesson-${note.id}`]);
+  const checkedLessons = KNOWLEDGE_NOTES.filter((note) => progress.completed?.[`check-${note.id}`]);
+  const practicedLessons = KNOWLEDGE_NOTES.filter((note) => progress.completed?.[`teach-${note.id}`]);
+  const hasRealPractice = completedKeys.some((key) => key.startsWith("check-") || key.startsWith("teach-") || key.startsWith("mock-") || key.startsWith("case-") || key.startsWith("drill-"));
+  const score = Math.min(10, Math.max(0, Math.round((checkedLessons.length * 0.7 + practicedLessons.length * 1.3 + (progress.completed?.["drill-product-sense"] ? 1 : 0) + (progress.completed?.["mock-google"] ? 1 : 0)) * 10) / 10));
+  if (!hasRealPractice) {
+    return (
+      <div className="screen">
+        <Topbar crumbs={["Home", "Score"]} progress={progress} clock={clock} />
+        <div className="screen-head">
+          <div>
+            <span className="eyebrow">Score · пока без фейковой оценки</span>
+            <h1>Здесь появится разбор, когда ты пройдёшь практику.</h1>
+          </div>
+          <div className="right">
+            <span className="chip sun">{progress.xp} XP</span>
+          </div>
+        </div>
+        <div className="review-stage">
+          <div className="score-hero">
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 20, alignItems: "center" }}>
+              <div>
+                <div className="eyebrow">текущий статус</div>
+                <div className="score-num" style={{ fontSize: 70 }}>0.0</div>
+                <div className="score-sub">оценка появится после Check, Teach, Drill, Mock или кейса</div>
+              </div>
+              <PimFigure size={130} expression="teach" />
+            </div>
+            <div className="score-bars">
+              {[
+                { n: "Теория", v: completedLessons.length, max: KNOWLEDGE_NOTES.length, c: "var(--ph-sun)" },
+                { n: "Check · MCQ", v: checkedLessons.length, max: KNOWLEDGE_NOTES.length, c: "var(--ph-mint)" },
+                { n: "Teach Rookie", v: practicedLessons.length, max: KNOWLEDGE_NOTES.length, c: "var(--ph-coral)" },
+              ].map(r => (
+                <div key={r.n} className="score-bar-row">
+                  <div className="nm">{r.n}</div>
+                  <div className="bar tall"><i style={{ width: `${Math.min(100, (r.v / r.max) * 100)}%`, background: r.c }}></i></div>
+                  <div className="vl">{r.v}/{r.max}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="review-side">
+            <div className="review-card pim-says">
+              <h4>Pim говорит</h4>
+              <p style={{ fontSize: 15, lineHeight: 1.5 }}>
+                «Ты права: я не должен показывать разбор, которого ещё не было. Начни с урока, потом Check — и я соберу честный score.»
+              </p>
+            </div>
+            <div className="next-row">
+              <button className="btn primary lg" style={{ flex: 1 }} onClick={() => go("library")}>к урокам →</button>
+            </div>
+            <div className="next-row">
+              <button className="btn ghost" style={{ flex: 1 }} onClick={() => go("check")}>Check · MCQ</button>
+              <button className="btn ghost" style={{ flex: 1 }} onClick={() => go("mock")}>Mock с AI</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="screen">
       <Topbar crumbs={["Home", "Кейс", "Разбор"]} progress={progress} clock={clock} />
@@ -2120,8 +2182,8 @@ function ReviewScreen({ go, progress, clock, completeTask }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
                 <div className="eyebrow">общая оценка</div>
-                <div className="score-num">7.4</div>
-                <div className="score-sub">из 10 · ниже среднего FAANG-кандидата, но это исправимо</div>
+                <div className="score-num">{score.toFixed(1)}</div>
+                <div className="score-sub">из 10 · основано на реально пройденных практиках</div>
               </div>
               <div style={{ marginRight: -10, marginTop: -10 }}>
                 <PimFigure size={120} expression="think" />
@@ -2129,11 +2191,11 @@ function ReviewScreen({ go, progress, clock, completeTask }) {
             </div>
             <div className="score-bars">
               {[
-                { n: "Clarifying Qs", v: 4, max: 5, c: "var(--ph-mint)" },
-                { n: "User & pain", v: 4, max: 5, c: "var(--ph-mint)" },
-                { n: "Solutions", v: 2, max: 5, c: "var(--ph-coral)" },
-                { n: "Priorities", v: 3, max: 5, c: "var(--ph-sun)" },
-                { n: "Metrics", v: 2, max: 5, c: "var(--ph-coral)" },
+                { n: "Теория", v: completedLessons.length, max: KNOWLEDGE_NOTES.length, c: "var(--ph-sun)" },
+                { n: "Check · MCQ", v: checkedLessons.length, max: KNOWLEDGE_NOTES.length, c: "var(--ph-mint)" },
+                { n: "Teach Rookie", v: practicedLessons.length, max: KNOWLEDGE_NOTES.length, c: "var(--ph-coral)" },
+                { n: "Drill", v: progress.completed?.["drill-product-sense"] ? 1 : 0, max: 1, c: "var(--ph-sky)" },
+                { n: "Mock", v: progress.completed?.["mock-google"] ? 1 : 0, max: 1, c: "var(--ph-plum)" },
               ].map(r => (
                 <div key={r.n} className="score-bar-row">
                   <div className="nm">{r.n}</div>
@@ -2143,37 +2205,31 @@ function ReviewScreen({ go, progress, clock, completeTask }) {
               ))}
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 20, flexWrap: "wrap" }}>
-              <span className="chip pink">+ слабо: Solutions, Metrics</span>
-              <span className="chip mint">+ сильно: User, Clarify</span>
-              <span className="chip sun">⏱ уложилась в тайминг</span>
+              <span className="chip pink">практик: {checkedLessons.length + practicedLessons.length}</span>
+              <span className="chip mint">освоено: {practicedLessons.length}</span>
+              <span className="chip sun">уроков: {completedLessons.length}</span>
             </div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 18 }}>
             <div className="review-card" style={{ background: "var(--ph-mint-2)" }}>
-              <h4>Топ-3 сильных момента</h4>
-              <div className="quote">
-                <span className="who">твои слова</span>
-                «Сегмент — активные слушатели 18-35»
-                <div style={{ fontSize: 12, color: "var(--ph-ink-3)", marginTop: 4 }}>→ конкретно, не общо.</div>
-              </div>
-              <div className="quote">
-                <span className="who">твои слова</span>
-                «Спрошу, мы решаем engagement или retention»
-                <div style={{ fontSize: 12, color: "var(--ph-ink-3)", marginTop: 4 }}>→ правильный clarifying.</div>
-              </div>
+              <h4>Что уже сделано</h4>
+              {(practicedLessons.length ? practicedLessons : checkedLessons).slice(0, 3).map((note) => (
+                <div key={note.id} className="quote">
+                  <span className="who">тема</span>
+                  {note.t}
+                  <div style={{ fontSize: 12, color: "var(--ph-ink-3)", marginTop: 4 }}>→ {progress.completed?.[`teach-${note.id}`] ? "объяснено стажёру" : "пройден Check"}</div>
+                </div>
+              ))}
             </div>
             <div className="review-card" style={{ background: "#ffe1e1" }}>
-              <h4>Топ-3 слабых момента</h4>
-              <div className="quote" style={{ borderColor: "#ff5e5e" }}>
-                <span className="who" style={{ color: "#d63333" }}>пропустила</span>
-                «Не назвала alternatives — только 2 идеи»
-                <div style={{ fontSize: 12, color: "var(--ph-ink-3)", marginTop: 4 }}>→ интервьюер ждёт 4-5.</div>
-              </div>
-              <div className="quote" style={{ borderColor: "#ff5e5e" }}>
-                <span className="who" style={{ color: "#d63333" }}>твои слова</span>
-                «Метрика — количество лайков»
-                <div style={{ fontSize: 12, color: "var(--ph-ink-3)", marginTop: 4 }}>→ это vanity-метрика.</div>
-              </div>
+              <h4>Что ещё не закрыто</h4>
+              {KNOWLEDGE_NOTES.filter((note) => !progress.completed?.[`teach-${note.id}`]).slice(0, 3).map((note) => (
+                <div key={note.id} className="quote" style={{ borderColor: "#ff5e5e" }}>
+                  <span className="who" style={{ color: "#d63333" }}>нужна практика</span>
+                  {note.t}
+                  <div style={{ fontSize: 12, color: "var(--ph-ink-3)", marginTop: 4 }}>→ объясни Тиме, чтобы отметить освоение.</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -2181,7 +2237,7 @@ function ReviewScreen({ go, progress, clock, completeTask }) {
           <div className="review-card pim-says">
             <h4>📣 Pim говорит</h4>
             <p style={{ fontSize: 15, lineHeight: 1.5 }}>
-              «Хорошая работа на user & pain — там у тебя FAANG-уровень. Слабое звено — solutions: накидывай больше идей.»
+              «Теперь score не рисуется заранее. Я считаю только то, что ты реально прошла: уроки, Check, Teach, Drill и Mock.»
             </p>
           </div>
           <div className="review-card">
