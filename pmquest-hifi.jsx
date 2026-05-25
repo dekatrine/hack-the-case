@@ -1929,29 +1929,27 @@ function TeachScreen({ go, progress, clock, completeTask }) {
       title: "North Star Metric",
       prompt: "Объясни North Star Metric стажёру",
       rookie: "Привет! Я тут читал доку и не понял — а зачем нужна одна метрика? У нас же DAU, retention, revenue, NPS — давай за всеми следить?",
+      hints: ["упомяни retention", "приведи 1 FAANG-пример", "объясни leading vs lagging"],
     },
     {
       title: "RICE prioritization",
       prompt: "Объясни RICE приоритизацию стажёру",
       rookie: "Почему мы не можем просто взять идею, которая нравится команде? Зачем эти Reach, Impact, Confidence и Effort?",
+      hints: ["покажи формулу", "объясни confidence", "скажи про evidence"],
     },
     {
       title: "JTBD",
       prompt: "Объясни JTBD стажёру",
       rookie: "Я написал сегмент: женщины 25-34. Это же и есть пользовательская задача, да?",
+      hints: ["отдели сегмент от задачи", "дай формат when/I want/so I can", "приведи пример"],
     },
   ];
   const [topicIdx, setTopicIdx] = useState(0);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const topic = topics[topicIdx];
-  const [messages, setMessages] = useState([
-    { role: "rookie", text: topics[0].rookie },
-    { role: "you", text: "Окей. North Star — это компас. Когда у команды 200 человек, без неё все тянут в разные стороны." },
-    { role: "rookie", text: "Ага, а чем тогда NSM отличается от обычной «бизнес-цели»? Это же просто KPI команды?" },
-    { role: "you", text: "Хороший вопрос. NSM — про ценность для пользователя, а не про деньги. Выручка — это следствие." },
-    { role: "rookie", text: "Окей, а как её выбрать, если есть 5 равных кандидатов? Это интуиция или есть метод?" },
-  ]);
+  const [messages, setMessages] = useState([{ role: "rookie", text: topics[0].rookie }]);
+  const answerCount = messages.filter((m) => m.role === "you").length;
   const switchTopic = () => {
     const next = (topicIdx + 1) % topics.length;
     setTopicIdx(next);
@@ -1969,12 +1967,12 @@ function TeachScreen({ go, progress, clock, completeTask }) {
       const res = await api.coach({
         stepId: "teach-rookie",
         stepTitle: topic.prompt,
-        stepDescription: "Пользователь учит стажёра PM-концепции. Ответь как любопытный стажёр и задай следующий уточняющий вопрос.",
+        stepDescription: "Пользователь в роли senior PM объясняет концепцию стажёру. Ответь только как стажёр Тима: короткая реакция и следующий наивный или каверзный вопрос.",
         frameworks: [topic.title, "Feynman technique", "Product management"],
-        caseHint: "Будь кратким стажёром: сначала реакция, потом один вопрос с подвохом. Русский язык.",
+        caseHint: "Не оценивай пользователя как ментор. Не давай лекцию. Пиши от первого лица стажёра. 1-3 предложения, в конце один вопрос. Русский язык.",
         caseText: `Тема обучения: ${topic.title}`,
         answerText: answer,
-        userMessage: answer,
+        userMessage: `Я объяснил стажёру: ${answer}. Теперь задай следующий вопрос стажёра по теме ${topic.title}.`,
         chatHistory: nextMessages.slice(-8),
         previousAnswers: {},
         trackId: "product",
@@ -2005,7 +2003,7 @@ function TeachScreen({ go, progress, clock, completeTask }) {
             <div className="ico">🎯</div>
             <div>
               <h4>Цель сессии</h4>
-              <p>Стажёр Тима пришёл в команду на этой неделе. Объясни ему тему «{topic.title}». Тима будет задавать наивные вопросы — это нормально и полезно.</p>
+              <p>Стажёр Тима начинает с первого вопроса. Ты отвечаешь как senior PM: просто, структурно, с примером. После каждого ответа Тима задаёт следующий вопрос.</p>
             </div>
           </div>
           {messages.map((m, i) => (
@@ -2028,23 +2026,28 @@ function TeachScreen({ go, progress, clock, completeTask }) {
         <aside className="teach-sidebar">
           <div className="teach-gaps">
             <h5>🔎 Что Pim замечает</h5>
-            <div className="gap-row"><b>пробел</b><span>не сказала, что NSM привязана к retention</span></div>
-            <div className="gap-row"><b>пробел</b><span>не привела ни одного FAANG-примера</span></div>
-            <div className="gap-row"><b>сильно</b><span>метафора «компас» — Тима поймёт</span></div>
-            <div className="gap-row"><b>сильно</b><span>чётко отделила NSM от выручки</span></div>
+            {answerCount === 0 ? (
+              <div className="gap-row"><b>старт</b><span>ответь на первый вопрос Тимы — после этого начну подсвечивать пробелы</span></div>
+            ) : (
+              <>
+                <div className="gap-row"><b>диалог</b><span>ответов senior: {answerCount}</span></div>
+                <div className="gap-row"><b>фокус</b><span>{topic.hints[Math.min(answerCount - 1, topic.hints.length - 1)]}</span></div>
+                <div className="gap-row"><b>сильно</b><span>строй ответ: тезис → пример → проверка понимания</span></div>
+              </>
+            )}
           </div>
           <div className="review-card">
             <h4>Подсказки тебе</h4>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span className="chip pink">упомяни retention</span>
-              <span className="chip mint">приведи 1 FAANG-пример</span>
-              <span className="chip sun">объясни «leading vs lagging»</span>
+              {topic.hints.map((hint, i) => (
+                <span key={hint} className={`chip ${["pink", "mint", "sun"][i % 3]}`}>{hint}</span>
+              ))}
             </div>
           </div>
           <div className="review-card pim-says">
             <h4>Pim говорит</h4>
             <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.9)" }}>
-              «Тима задаст ещё 2-3 вопроса. Будет один с подвохом — про NSM маркетплейсов.»
+              «Сейчас это не заготовленный чат. Диалог строится по твоим ответам: объясни как senior, а Тима уточнит слабое место.»
             </p>
           </div>
           <button className="btn lg" style={{ width: "100%" }} onClick={() => completeTask("teach-rookie", 50, "review")}>завершить → разбор</button>
