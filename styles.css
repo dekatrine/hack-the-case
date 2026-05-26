@@ -5997,7 +5997,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .pmq-hifi .mock-stage { display: grid; grid-template-columns: 1fr 360px; gap: 24px; }
 .pmq-hifi .mock-setup {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
   gap: 18px;
   align-items: start;
 }
@@ -6014,6 +6014,8 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   position: sticky; top: 18px;
   display: flex; flex-direction: column; gap: 12px;
   text-align: center;
+  min-width: 0;
+  overflow: hidden;
 }
 .pmq-hifi .mock-setup-card h3 {
   margin: 0;
@@ -6025,6 +6027,15 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   color: var(--ph-ink-3);
   font-size: 14px;
   line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.pmq-hifi .mock-setup-card .btn {
+  width: 100% !important;
+  min-width: 0;
+  white-space: normal;
+  line-height: 1.2;
+  padding-inline: 16px;
+  letter-spacing: 0.08em;
 }
 .pmq-hifi .mock-choice-grid {
   display: grid;
