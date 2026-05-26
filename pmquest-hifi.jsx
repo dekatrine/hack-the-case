@@ -682,43 +682,130 @@ function LibraryScreen({ go, progress, clock }) {
 }
 
 // ─── Screen: LESSON ──────────────────────────────────────────────────
+const LESSON_GUIDES = {
+  beginner: {
+    context: "Эта тема закрывает базовый словарь PM: без неё сложно звучать уверенно на product sense и behavioral-интервью.",
+    steps: ["Сформулируй простое определение одним предложением", "Покажи, где это встречается в работе PM", "Назови, какое решение помогает принять тема", "Заверши примером из продукта или команды"],
+    example: "На примере образовательного приложения PM сначала уточняет, какую проблему решает пользователь, затем выбирает сегмент и только после этого предлагает изменение в продукте.",
+    mistakes: [
+      { t: "Путать роль и артефакт", d: "Например, говорить только про backlog, хотя задача PM шире: ценность, пользователь и бизнес-результат." },
+      { t: "Сразу прыгать в фичи", d: "Для новичка это главный риск: фича звучит активно, но без проблемы и метрики она не доказывает reasoning." },
+      { t: "Не назвать владельца решения", d: "Интервьюер должен услышать, какую часть решения берёт на себя PM, а где подключает команду." },
+    ],
+    checklist: ["Я могу объяснить тему простым языком", "Я знаю, зачем она нужна PM", "Я могу привести пример из продукта", "Я называю метрику или критерий качества"],
+  },
+  framework: {
+    context: "Фреймворк нужен не для красивого названия, а чтобы удержать структуру ответа и не потерять важные проверки.",
+    steps: ["Назови цель фреймворка", "Разложи шаги в правильном порядке", "Покажи, где можно адаптировать структуру", "Закрой ответ рекомендацией или trade-off"],
+    example: "В product design кейсе фреймворк помогает сначала понять пользователя и контекст, затем выбрать проблему, сгенерировать варианты и оценить их по понятным критериям.",
+    mistakes: [
+      { t: "Механически перечислять шаги", d: "Интервьюеру важна логика выбора, а не заученный список терминов." },
+      { t: "Использовать фреймворк не к месту", d: "RICE не заменяет discovery, а CIRCLES не является финансовой моделью." },
+      { t: "Не сделать вывод", d: "Фреймворк должен привести к решению: что делаем, почему и как проверяем." },
+    ],
+    checklist: ["Я понимаю, какую проблему решает фреймворк", "Я могу назвать шаги без заученного тона", "Я умею показать пример", "В конце есть выбор или рекомендация"],
+  },
+  metrics: {
+    context: "Метрики превращают продуктовый разговор из мнений в проверяемые гипотезы: что изменилось, для кого и какой ценой.",
+    steps: ["Определи пользовательскую ценность", "Выбери primary metric", "Добавь proxy/input metrics", "Защити качество guardrail-метриками"],
+    example: "Для EdTech-продукта одной регистрации мало: сильнее смотреть activation, завершённые уроки, D7 retention и долю пользователей, достигших учебной цели.",
+    mistakes: [
+      { t: "Выбрать vanity metric", d: "DAU или регистрации могут расти, пока реальная ценность и retention падают." },
+      { t: "Забыть guardrails", d: "Primary metric можно улучшить вредным способом: например, поднять CTR кликбейтом и потерять доверие." },
+      { t: "Не связать метрику с действием", d: "Хорошая метрика должна подсказать, что команда будет менять завтра." },
+    ],
+    checklist: ["Есть primary metric", "Есть proxy или input metric", "Есть guardrail", "Я понимаю, какое решение приму по данным"],
+  },
+  design: {
+    context: "Product design темы помогают перейти от абстрактной идеи к конкретному пользовательскому сценарию и качественному решению.",
+    steps: ["Выбери primary user", "Опиши job/pain/context", "Найди момент в journey", "Сравни решения по impact, effort и риску"],
+    example: "Если пользователь бросает onboarding, PM не добавляет сразу десять подсказок, а ищет момент потери ценности и проверяет более короткий путь к first value.",
+    mistakes: [
+      { t: "Проектировать для всех", d: "Решение для всех обычно не попадает ни в один конкретный сценарий достаточно хорошо." },
+      { t: "Решать симптом", d: "Плохой экран может быть следствием неверного сегмента, неясной ценности или слишком позднего aha-moment." },
+      { t: "Не учитывать ограничения", d: "Даже красивая идея должна пройти проверку feasibility, privacy, cost и поддержки." },
+    ],
+    checklist: ["Назван пользователь", "Названа задача или боль", "Есть сценарий использования", "Решение сравнивается по критериям"],
+  },
+  behavioral: {
+    context: "Behavioral-уроки учат показывать не только результат, но и зрелость: ownership, коммуникацию, работу с конфликтом и выводы.",
+    steps: ["Коротко задай ситуацию", "Назови свою задачу и ставку", "Опиши действия от первого лица", "Закрой результатом и выводом"],
+    example: "Сильный ответ не звучит как 'мы всё сделали': он показывает личный вклад, влияние на команду и измеримый результат.",
+    mistakes: [
+      { t: "Спрятаться за 'мы'", d: "Командность важна, но интервьюер оценивает твой вклад и способ мышления." },
+      { t: "Уйти в драму", d: "Конфликт нужно описывать через цель, факты и решение, а не через обвинения." },
+      { t: "Не назвать урок", d: "Без вывода история выглядит как случайность, а не как рост." },
+    ],
+    checklist: ["Есть Situation и Task", "Action описан от первого лица", "Result измерим или наблюдаем", "Есть learning на будущее"],
+  },
+  sysdesign: {
+    context: "System design для PM — это язык trade-offs: скорость, стоимость, надёжность, масштабирование и пользовательский опыт.",
+    steps: ["Опиши пользовательский сценарий", "Назови системное ограничение", "Объясни trade-off простыми словами", "Предложи метрику качества и guardrail"],
+    example: "Если AI-фича медленно отвечает, PM обсуждает latency, cost, fallback, качество ответа и доверие пользователя, не уходя в код реализации.",
+    mistakes: [
+      { t: "Пытаться быть инженером", d: "PM не обязан писать архитектуру, но должен понимать последствия решений для пользователя и бизнеса." },
+      { t: "Игнорировать стоимость", d: "Самое быстрое решение может быть слишком дорогим или нестабильным при росте нагрузки." },
+      { t: "Не назвать fallback", d: "Для технических систем важно объяснить, что увидит пользователь при ошибке или задержке." },
+    ],
+    checklist: ["Есть пользовательский сценарий", "Назван trade-off", "Есть метрика качества", "Есть fallback или риск"],
+  },
+};
+
+const getLessonGuide = (note) => {
+  const guide = LESSON_GUIDES[note.cat] || LESSON_GUIDES.beginner;
+  return {
+    ...guide,
+    steps: [
+      note.hints?.[0] || guide.steps[0],
+      note.hints?.[1] || guide.steps[1],
+      note.hints?.[2] || guide.steps[2],
+      guide.steps[3],
+    ],
+  };
+};
+
 function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm" }) {
   const [idx, setIdx] = useState(0);
   const note = KNOWLEDGE_NOTES.find((item) => item.id === initialTopicId) || KNOWLEDGE_NOTES[1] || KNOWLEDGE_NOTES[0];
+  const guide = getLessonGuide(note);
   useEffect(() => setIdx(0), [initialTopicId]);
   const slides = [
-    { tag: "Слайд 1 · 2 мин", title: `Что такое ${note.t}?`, lede: note.ex,
+    { tag: "Слайд 1 · 3 мин", title: `Что такое ${note.t}?`, lede: note.ex,
       body: (
         <div className="body">
           <p>{note.ex}</p>
+          <p>{guide.context}</p>
           <div className="lesson-callout">
             <div className="ico">★</div>
             <div>
               <h4>Главное правило</h4>
-              <p>{note.hints[0]}. На интервью важно не назвать термин, а показать, как он помогает принять продуктовое решение.</p>
+              <p>{guide.steps[0]}. На интервью важно не назвать термин, а показать, как он помогает принять продуктовое решение.</p>
             </div>
           </div>
         </div>) },
-    { tag: "Слайд 2 · 2 мин", title: "Зачем это нужно?", lede: "Чтобы отвечать структурно, а не набором фич или общих слов.",
+    { tag: "Слайд 2 · 3 мин", title: "Как применять пошагово", lede: "Используй тему как рабочий инструмент, а не как заученный термин.",
       body: (
         <div className="body">
-          <p>Используй тему как рабочий инструмент:</p>
-          <ul>
-            <li><b>Сначала контекст</b>: какая цель, пользователь и ограничение.</li>
-            <li><b>Потом логика</b>: почему этот фреймворк или метрика помогает.</li>
-            <li><b>В конце пример</b>: одна фраза из реального продукта или кейса.</li>
-          </ul>
+          <div className="lesson-step-grid">
+            {guide.steps.map((step, i) => (
+              <div key={step} className="lesson-step-card">
+                <span>{i + 1}</span>
+                <p>{step}</p>
+              </div>
+            ))}
+          </div>
           <div className="lesson-callout mint">
             <div className="ico">⚡</div>
             <div>
               <h4>На собесе</h4>
-              <p>{note.hints[1] || "Дай пример и объясни trade-off."}</p>
+              <p>Сначала проговори контекст, затем логику выбора, затем пример и способ проверки. Так ответ звучит как мышление PM, а не как пересказ учебника.</p>
             </div>
           </div>
         </div>) },
-    { tag: "Слайд 3 · 2 мин", title: "Пример сильного ответа", lede: "Формула: тезис → пример → метрика/критерий.",
+    { tag: "Слайд 3 · 3 мин", title: "Пример сильного ответа", lede: "Формула: тезис → пример → критерий проверки.",
       body: (
         <div className="body">
+          <p>{guide.example}</p>
           <div className="faang-cards">
             <div className="faang-card spotify">
               <div className="name">Тезис</div>
@@ -728,7 +815,7 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
             <div className="faang-card airbnb">
               <div className="name">Пример</div>
               <div className="metric">реальный продукт</div>
-              <p style={{ fontSize: 13, margin: "8px 0 0", color: "var(--ph-ink-2)" }}>Например, в marketplace это помогает не перепутать активность с созданной ценностью.</p>
+              <p style={{ fontSize: 13, margin: "8px 0 0", color: "var(--ph-ink-2)" }}>{guide.example}</p>
             </div>
             <div className="faang-card facebook">
               <div className="name">Проверка</div>
@@ -741,11 +828,7 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
       body: (
         <div className="body">
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {[
-              { t: "Термин без применения", d: "Интервьюер слышит заученность, если нет примера." },
-              { t: "«Зависит» без критериев", d: "Скажи, от чего зависит, и как бы ты выбрал(а)." },
-              { t: "Нет метрики успеха", d: "Даже сильная идея звучит слабее без способа проверки." },
-            ].map((a) => (
+            {guide.mistakes.map((a) => (
               <div key={a.t} className="anti-pattern">
                 <div className="x">✕</div>
                 <div>
@@ -756,6 +839,25 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
             ))}
           </div>
         </div>) },
+    { tag: "Слайд 5 · 2 мин", title: "Финальный чеклист", lede: "Перед Check быстро проверь, что можешь объяснить тему вслух.",
+      body: (
+        <div className="body">
+          <div className="lesson-checklist">
+            {guide.checklist.map((item) => (
+              <div key={item} className="lesson-check-item">
+                <span>✓</span>
+                <p>{item}</p>
+              </div>
+            ))}
+          </div>
+          <div className="lesson-callout pink">
+            <div className="ico">?</div>
+            <div>
+              <h4>Мини-задание</h4>
+              <p>Сформулируй ответ на вопрос стажёра: «{note.rookie}» Используй 3 части: объяснение, пример, критерий проверки.</p>
+            </div>
+          </div>
+        </div>) },
   ];
   const s = slides[idx];
   return (
@@ -763,7 +865,7 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
       <Topbar crumbs={["Home", "Уроки", note.t]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
-          <span className="eyebrow">Урок · 8 мин · +20 XP</span>
+          <span className="eyebrow">Урок · 13 мин · +30 XP</span>
           <h1>{note.t}</h1>
         </div>
         <div className="right" style={{ minWidth: 280 }}>
@@ -785,7 +887,7 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
               {idx < slides.length - 1 ? (
                 <button className="btn primary lg" onClick={() => setIdx(idx + 1)}>далее {Icon.chev}</button>
               ) : (
-                <button className="btn primary lg" onClick={() => { completeTask(`lesson-${note.id}`, 20, "check"); go("check", { checkTopicId: note.id }); }}>к проверке {Icon.chev}</button>
+                <button className="btn primary lg" onClick={() => { completeTask(`lesson-${note.id}`, 30, "check"); go("check", { checkTopicId: note.id }); }}>к проверке {Icon.chev}</button>
               )}
             </div>
           </div>
@@ -795,7 +897,7 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
             <div key={i} className={`slide-thumb ${i === idx ? "active" : ""} ${i < idx ? "done" : ""}`} onClick={() => setIdx(i)}>
               <div className="n">{i < idx ? "✓" : i + 1}</div>
               <div>
-                <b>{["Что","Зачем","Пример","Анти-паттерны"][i]}</b>
+                <b>{["Что","Шаги","Пример","Ошибки","Чеклист"][i]}</b>
                 <i>{sl.tag.split(" · ")[1]}</i>
               </div>
             </div>

@@ -5709,6 +5709,42 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .pmq-hifi .lesson-callout h4 { margin: 0 0 4px; font-family: 'Bricolage Grotesque', sans-serif; font-size: 16px; }
 .pmq-hifi .lesson-callout p { margin: 0; font-size: 14.5px; color: var(--ph-ink-2); }
 
+.pmq-hifi .lesson-step-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px; margin: 4px 0 16px;
+}
+.pmq-hifi .lesson-step-card {
+  display: flex; gap: 12px; align-items: flex-start;
+  border: 2px solid var(--ph-ink); border-radius: var(--ph-r);
+  padding: 14px 16px; background: var(--ph-card-sunk);
+  box-shadow: var(--ph-sh-sm);
+}
+.pmq-hifi .lesson-step-card span {
+  width: 28px; height: 28px; flex-shrink: 0;
+  border-radius: 9px; background: var(--ph-sun); color: var(--ph-ink);
+  border: 2px solid var(--ph-ink);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 800;
+}
+.pmq-hifi .lesson-step-card p { margin: 0; color: var(--ph-ink-2); font-size: 14.5px; line-height: 1.45; }
+
+.pmq-hifi .lesson-checklist {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px; margin-bottom: 16px;
+}
+.pmq-hifi .lesson-check-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  border: 2px solid var(--ph-ink); border-radius: var(--ph-r);
+  padding: 12px 14px; background: var(--ph-mint-2);
+}
+.pmq-hifi .lesson-check-item span {
+  width: 24px; height: 24px; flex-shrink: 0;
+  border-radius: 50%; background: var(--ph-mint); color: var(--ph-ink);
+  border: 2px solid var(--ph-ink);
+  display: flex; align-items: center; justify-content: center; font-weight: 900;
+}
+.pmq-hifi .lesson-check-item p { margin: 0; font-size: 14.5px; line-height: 1.45; color: var(--ph-ink-2); }
+
 .pmq-hifi .faang-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .pmq-hifi .faang-card {
   border: var(--ph-b); border-radius: var(--ph-r);
