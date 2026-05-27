@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -5,10 +7,10 @@ class GenerateCaseRequest(BaseModel):
     industry: str
     difficulty: str
     extraContext: str = ""
-    trackId: str | None = None
-    chapterId: str | None = None
-    interviewType: str | None = None
-    grade: str | None = None
+    trackId: Optional[str] = None
+    chapterId: Optional[str] = None
+    interviewType: Optional[str] = None
+    grade: Optional[str] = None
 
 
 class PhaseQuestion(BaseModel):
@@ -75,8 +77,8 @@ class CoachRequest(BaseModel):
     userMessage: str
     chatHistory: list[ChatMessage] = Field(default_factory=list)
     previousAnswers: dict[str, str] = Field(default_factory=dict)
-    trackId: str | None = None
-    chapterId: str | None = None
+    trackId: Optional[str] = None
+    chapterId: Optional[str] = None
 
 
 class CoachResponse(BaseModel):
@@ -86,7 +88,7 @@ class CoachResponse(BaseModel):
 class EvaluateRequest(BaseModel):
     caseText: str
     answers: dict[str, str] = Field(default_factory=dict)
-    trackId: str | None = None
+    trackId: Optional[str] = None
 
 
 class EvaluateResponse(BaseModel):

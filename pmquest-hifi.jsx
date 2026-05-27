@@ -753,8 +753,42 @@ const LESSON_GUIDES = {
 
 const getLessonGuide = (note) => {
   const guide = LESSON_GUIDES[note.cat] || LESSON_GUIDES.beginner;
+  const categorySignals = {
+    beginner: {
+      signal: "Интервьюер должен услышать, что студент отличает роль PM от исполнителя задач: начинает с пользователя и бизнеса, а заканчивает решением и метрикой.",
+      metric: "Критерий качества ответа: есть пользователь, проблема, действие PM, бизнес-эффект и граница ответственности.",
+      drill: "Возьми любой продукт, например Spotify или Duolingo, и объясни тему через одну конкретную пользовательскую ситуацию.",
+    },
+    framework: {
+      signal: "Сильный ответ показывает, зачем выбран фреймворк, где его границы и к какому решению он приводит.",
+      metric: "Критерий качества ответа: фреймворк не висит в воздухе, а помогает сравнить варианты, выбрать приоритет или сформулировать next step.",
+      drill: "Примени фреймворк к кейсу «улучшить onboarding в B2C-приложении» и назови итоговый выбор.",
+    },
+    metrics: {
+      signal: "Сильный ответ связывает метрику с пользовательской ценностью, продуктовым рычагом и guardrail, который нельзя ухудшить.",
+      metric: "Критерий качества ответа: primary metric + input/proxy metric + guardrail + решение, которое команда примет по данным.",
+      drill: "Построй мини-дерево метрик для EdTech-продукта: activation, completion, retention, revenue и guardrails.",
+    },
+    design: {
+      signal: "Сильный ответ начинает с primary user и сценария, а не с красивой фичи.",
+      metric: "Критерий качества ответа: выбран сегмент, описан job/pain/context, сравниваются 2-3 решения и назван риск.",
+      drill: "Разбери один экран продукта: кто пользователь, что он пытается сделать, где friction и какой эксперимент проверит решение.",
+    },
+    behavioral: {
+      signal: "Сильный ответ показывает зрелость: ownership, влияние без власти, факты, результат и урок на будущее.",
+      metric: "Критерий качества ответа: Situation короткая, Action от первого лица, Result наблюдаемый или измеримый, learning конкретный.",
+      drill: "Подготовь STAR-историю на 90 секунд: конфликт, ошибка или влияние без формальной власти.",
+    },
+    sysdesign: {
+      signal: "Сильный ответ переводит технический выбор в пользовательский и бизнес trade-off.",
+      metric: "Критерий качества ответа: сценарий, ограничение, trade-off, fallback, метрика качества и cost/risk guardrail.",
+      drill: "Разбери AI-фичу: latency, качество ответа, hallucination, стоимость, trust и fallback для пользователя.",
+    },
+  };
+  const signals = categorySignals[note.cat] || categorySignals.beginner;
   return {
     ...guide,
+    ...signals,
     steps: [
       note.hints?.[0] || guide.steps[0],
       note.hints?.[1] || guide.steps[1],
@@ -824,7 +858,32 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
             </div>
           </div>
         </div>) },
-    { tag: "Слайд 4 · 2 мин", title: "Анти-паттерны — чего избегать", lede: "За эти ответы на интервью снимут баллы.",
+    { tag: "Слайд 4 · 3 мин", title: "Как понять, что ответ сильный", lede: "Проверяй тему не по памяти, а по качеству продуктового reasoning.",
+      body: (
+        <div className="body">
+          <div className="lesson-signal-card">
+            <b>Сигнал для интервьюера</b>
+            <p>{guide.signal}</p>
+          </div>
+          <div className="lesson-proof-grid">
+            <div>
+              <span>01</span>
+              <b>Что доказываем</b>
+              <p>{note.ex}</p>
+            </div>
+            <div>
+              <span>02</span>
+              <b>Как проверяем</b>
+              <p>{guide.metric}</p>
+            </div>
+            <div>
+              <span>03</span>
+              <b>Что решаем</b>
+              <p>Какой сегмент, проблему, метрику, эксперимент или trade-off выбирает PM после применения темы.</p>
+            </div>
+          </div>
+        </div>) },
+    { tag: "Слайд 5 · 2 мин", title: "Анти-паттерны — чего избегать", lede: "За эти ответы на интервью снимут баллы.",
       body: (
         <div className="body">
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -839,7 +898,31 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
             ))}
           </div>
         </div>) },
-    { tag: "Слайд 5 · 2 мин", title: "Финальный чеклист", lede: "Перед Check быстро проверь, что можешь объяснить тему вслух.",
+    { tag: "Слайд 6 · 3 мин", title: "Мини-кейс для закрепления", lede: "Собери ответ как на интервью: контекст → решение → проверка.",
+      body: (
+        <div className="body">
+          <div className="lesson-callout mint">
+            <div className="ico">▶</div>
+            <div>
+              <h4>Задание</h4>
+              <p>{guide.drill}</p>
+            </div>
+          </div>
+          <div className="lesson-answer-frame">
+            {[
+              ["Контекст", "Для какого пользователя и в какой ситуации эта тема важна?"],
+              ["Проблема", "Какая боль, риск или неопределённость мешает принять решение?"],
+              ["Действие PM", "Какой шаг, фреймворк, метрика или эксперимент выбирается?"],
+              ["Проверка", "Как команда поймёт, что решение сработало и не навредило guardrails?"],
+            ].map(([label, text]) => (
+              <div key={label}>
+                <b>{label}</b>
+                <p>{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>) },
+    { tag: "Слайд 7 · 2 мин", title: "Финальный чеклист", lede: "Перед Check быстро проверь, что можешь объяснить тему вслух.",
       body: (
         <div className="body">
           <div className="lesson-checklist">
@@ -897,7 +980,7 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
             <div key={i} className={`slide-thumb ${i === idx ? "active" : ""} ${i < idx ? "done" : ""}`} onClick={() => setIdx(i)}>
               <div className="n">{i < idx ? "✓" : i + 1}</div>
               <div>
-                <b>{["Что","Шаги","Пример","Ошибки","Чеклист"][i]}</b>
+                <b>{["Что","Шаги","Пример","Сигнал","Ошибки","Кейс","Чеклист"][i]}</b>
                 <i>{sl.tag.split(" · ")[1]}</i>
               </div>
             </div>
@@ -906,7 +989,7 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
             <div className="ico">★</div>
             <div>
               <h4>Что дальше</h4>
-              <p>После урока — Check (3 MCQ), потом кейс на этом же концепте.</p>
+              <p>После урока — Check, потом короткий кейс на этом же концепте.</p>
             </div>
           </div>
         </aside>

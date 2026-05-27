@@ -5745,6 +5745,64 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 .pmq-hifi .lesson-check-item p { margin: 0; font-size: 14.5px; line-height: 1.45; color: var(--ph-ink-2); }
 
+.pmq-hifi .lesson-signal-card {
+  border: var(--ph-b-th);
+  border-radius: var(--ph-r);
+  padding: 16px 18px;
+  background: var(--ph-sky-2);
+  box-shadow: var(--ph-sh-sm);
+  margin-bottom: 14px;
+}
+.pmq-hifi .lesson-signal-card b {
+  display: block;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+.pmq-hifi .lesson-signal-card p { margin: 0; font-size: 14.5px; line-height: 1.5; }
+.pmq-hifi .lesson-proof-grid,
+.pmq-hifi .lesson-answer-frame {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.pmq-hifi .lesson-proof-grid div,
+.pmq-hifi .lesson-answer-frame div {
+  border: var(--ph-b);
+  border-radius: var(--ph-r);
+  background: var(--ph-card-sunk);
+  padding: 14px 16px;
+  box-shadow: var(--ph-sh-sm);
+}
+.pmq-hifi .lesson-proof-grid span {
+  display: inline-flex;
+  height: 24px;
+  min-width: 24px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--ph-ink);
+  border-radius: 999px;
+  background: var(--ph-sun);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.pmq-hifi .lesson-proof-grid b,
+.pmq-hifi .lesson-answer-frame b {
+  display: block;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+.pmq-hifi .lesson-proof-grid p,
+.pmq-hifi .lesson-answer-frame p {
+  margin: 0;
+  color: var(--ph-ink-2);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
 .pmq-hifi .faang-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .pmq-hifi .faang-card {
   border: var(--ph-b); border-radius: var(--ph-r);
@@ -6736,6 +6794,17 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 .pmq-hifi .pim-anchor.muted .pim-figure { opacity: 0.6; }
 
 @media (max-width: 760px) {
+  .pmq-hifi .lesson-stage,
+  .pmq-hifi .lesson-step-grid,
+  .pmq-hifi .lesson-checklist,
+  .pmq-hifi .lesson-proof-grid,
+  .pmq-hifi .lesson-answer-frame,
+  .pmq-hifi .faang-cards {
+    grid-template-columns: 1fr;
+  }
+  .pmq-hifi .lesson-card {
+    padding: 28px 22px;
+  }
   .pmq-hifi .pim-anchor {
     right: 12px;
     bottom: 12px;

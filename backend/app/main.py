@@ -2,7 +2,7 @@ import importlib.util
 import json
 import re
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -157,7 +157,7 @@ def generate_case(payload: GenerateCaseRequest) -> GenerateCaseResponse:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
-def pick_steps_for_case(*, case_text: str, track_id: str | None, track_name: str) -> list[str]:
+def pick_steps_for_case(*, case_text: str, track_id: Optional[str], track_name: str) -> list[str]:
     """Спросить у LLM, какие шаги из каталога CASE_STEPS подходят к данному кейсу.
 
     Возвращает упорядоченный список stepIds. Если LLM не справился — пустой
@@ -225,10 +225,10 @@ GRADE_LABELS = {
 def generate_phases_for_case(
     *,
     case_text: str,
-    track_id: str | None,
+    track_id: Optional[str],
     track_name: str,
-    interview_type: str | None,
-    grade: str | None,
+    interview_type: Optional[str],
+    grade: Optional[str],
 ) -> list[CasePhase]:
     """Сгенерировать AI-фазы маршрута решения под конкретный кейс.
 

@@ -19,7 +19,7 @@ class Settings:
             origin.strip()
             for origin in self._get(
                 "ALLOWED_ORIGINS",
-                "http://localhost:5173,http://127.0.0.1:5173,https://hack-the-case-web.onrender.com",
+                "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,https://hack-the-case-web.onrender.com",
             ).split(",")
             if origin.strip()
         ]
