@@ -6137,6 +6137,47 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   font-size: 14px;
   line-height: 1.5;
 }
+.pmq-hifi .case-brief-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.pmq-hifi .case-brief-head .eyebrow { margin: 0; }
+.pmq-hifi .case-brief-head strong {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 18px;
+  color: var(--ph-ink);
+  text-align: right;
+}
+.pmq-hifi .generated-case-brief p {
+  margin: 0;
+  color: var(--ph-ink-2);
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+.pmq-hifi .case-brief-section {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--ph-ink);
+  border-radius: 12px;
+  background: #fff;
+}
+.pmq-hifi .case-brief-section b {
+  display: block;
+  margin-bottom: 6px;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 15px;
+}
+.pmq-hifi .case-brief-section ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ph-ink-2);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.pmq-hifi .case-brief-section li + li { margin-top: 4px; }
 .pmq-hifi .case-input {
   flex: 1; border: 2px solid var(--ph-ink); border-radius: var(--ph-r);
   background: var(--ph-card-sunk); padding: 18px 20px;
@@ -6297,7 +6338,11 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
 }
 .pmq-hifi .interviewer-av.mood-thinking { background: var(--ph-sun); color: var(--ph-ink); }
 .pmq-hifi .interviewer-av.mood-push { background: var(--ph-coral); }
-.pmq-hifi .generated-case-brief.compact { padding: 12px 14px; }
+.pmq-hifi .generated-case-brief.compact {
+  padding: 14px 16px;
+  max-height: 360px;
+  overflow: auto;
+}
 .pmq-hifi .generated-case-brief.compact pre {
   max-height: 120px;
   overflow: auto;
@@ -6307,6 +6352,10 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   background: var(--ph-card-sunk); border: 2px solid var(--ph-ink);
   border-radius: 16px; padding: 14px 18px; font-size: 15.5px;
   flex: 1; position: relative;
+}
+.pmq-hifi .mock-current-prompt {
+  color: var(--ph-ink-2);
+  line-height: 1.45;
 }
 .pmq-hifi .mock-bubble::before {
   content: ""; position: absolute; left: -10px; top: 18px;

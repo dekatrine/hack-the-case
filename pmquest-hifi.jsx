@@ -1594,11 +1594,75 @@ function MockScreen({ go, progress, clock, completeTask }) {
     { id: "edtech-profit", block: "consulting_opening", company: "EdTech", title: "Trial-to-paid problem", prompt: "EdTech растит trials, но trial-to-paid conversion падает. Как структурируешь диагностику и юнит-экономику?", source: "Business case mock" },
     { id: "cloud-costs", block: "consulting_opening", company: "Cloud SaaS", title: "Cloud costs spike", prompt: "Cloud SaaS резко увеличил infra costs при стабильной выручке. Какие clarifying questions и buckets анализа?", source: "Business case mock" },
   ];
+  const cleanMockText = (value = "") =>
+    value
+      .replace(/\*\*/g, "")
+      .replace(/\s*\|\s*/g, " · ")
+      .replace(/---+/g, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+
+  const getCaseBrief = (value = "") => {
+    const text = cleanMockText(value);
+    const titleMatch = text.match(/(?:Раунд|Round):?\s*([^\n.]+)/i);
+    const dataMatch = text.match(/(?:Данные|Data):?\s*([\s\S]*?)(?:Ожидаемые|Pushback|Критерии|$)/i);
+    const expectedMatch = text.match(/(?:Ожидаемые блоки ответа|Expected answer blocks):?\s*([\s\S]*?)(?:Pushback|Критерии|$)/i);
+    const pushbackMatch = text.match(/(?:Pushback интервьюера|Pushback):?\s*([\s\S]*?)(?:Критерии|$)/i);
+    const criteriaMatch = text.match(/(?:Критерии сильного ответа|Criteria):?\s*([\s\S]*)/i);
+    const intro = text
+      .replace(/(?:Данные|Data):?[\s\S]*/i, "")
+      .replace(/(?:Ожидаемые блоки ответа|Expected answer blocks):?[\s\S]*/i, "")
+      .replace(/(?:Pushback интервьюера|Pushback):?[\s\S]*/i, "")
+      .replace(/(?:Критерии сильного ответа|Criteria):?[\s\S]*/i, "")
+      .trim();
+    const toItems = (chunk = "") =>
+      cleanMockText(chunk)
+        .split(/\n|(?:\s+\d+\.\s+)/)
+        .map((item) => item.replace(/^\d+\.\s*/, "").trim())
+        .filter(Boolean)
+        .slice(0, 6);
+
+    return {
+      title: titleMatch?.[1]?.trim() || selectedCase.title,
+      intro: intro || text,
+      data: toItems(dataMatch?.[1]),
+      expected: toItems(expectedMatch?.[1]),
+      pushback: toItems(pushbackMatch?.[1]),
+      criteria: toItems(criteriaMatch?.[1]),
+    };
+  };
+
+  const MockCaseBrief = ({ text }) => {
+    const brief = getCaseBrief(text);
+    const sections = [
+      { title: "Данные", items: brief.data },
+      { title: "Ожидаемые блоки ответа", items: brief.expected },
+      { title: "Pushback", items: brief.pushback },
+      { title: "Критерии сильного ответа", items: brief.criteria },
+    ].filter((section) => section.items.length > 0);
+
+    return (
+      <div className="generated-case-brief compact">
+        <div className="case-brief-head">
+          <span className="eyebrow">исходный кейс</span>
+          <strong>{brief.title}</strong>
+        </div>
+        <p>{brief.intro}</p>
+        {sections.map((section) => (
+          <div key={section.title} className="case-brief-section">
+            <b>{section.title}</b>
+            <ul>{section.items.map((item) => <li key={item}>{item}</li>)}</ul>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const buildRounds = (blockId, casePrompt) => {
     const commonStart = {
       id: "clarify",
       title: "Clarify",
-      prompt: `Окей, кейс: ${casePrompt}\n\nНачни как на live-интервью: какие 3-4 уточняющих вопроса задашь перед решением?`,
+      prompt: "Окей, кейс открыт в briefing ниже. Начни как на live-интервью: какие 3-4 уточняющих вопроса задашь перед решением?",
       expectedSignals: ["цель", "сегмент", "ограничения", "success criteria"],
     };
     const map = {
@@ -1809,7 +1873,7 @@ function MockScreen({ go, progress, clock, completeTask }) {
     setSetupDone(true);
     setScores({ clarify: 0, user: 0, solutions: 0, metrics: 0, diagnose: 0, actions: 0, market: 0, options: 0, recommend: 0, structure: 0, math: 0, synthesis: 0 });
     setTranscript([
-      { role: "them", who: "Виктор", text: `Окей, ${selectedGrade.label}. Я буду ${selectedGrade.pressure}. Кейс: ${caseText}` },
+      { role: "them", who: "Виктор", text: `Окей, ${selectedGrade.label}. Я буду ${selectedGrade.pressure}. Кейс открыт в briefing, начнём с clarify.` },
       { role: "them", who: "Виктор", text: nextRounds[0].prompt },
     ]);
     setFeedback("");
@@ -1950,13 +2014,10 @@ function MockScreen({ go, progress, clock, completeTask }) {
             <div className={`interviewer-av mood-${interviewerMood}`}>VK</div>
             <div className="mock-bubble">
               <div className="eyebrow" style={{ marginBottom: 4 }}>Виктор · Sr. PM · {selectedGrade.pressure}</div>
-              <div>{cur.prompt}</div>
+              <div className="mock-current-prompt">{cur.prompt}</div>
             </div>
           </div>
-          <div className="generated-case-brief compact">
-            <span className="eyebrow">исходный кейс</span>
-            <pre>{taskText}</pre>
-          </div>
+          <MockCaseBrief text={taskText} />
           <div className="mock-transcript">
             <div className="mock-line note">— Mock начат: {elapsed} · transcript on · round {roundIdx + 1}/{rounds.length} —</div>
             {transcript.map((line, i) => (
