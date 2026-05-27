@@ -2040,50 +2040,199 @@ function DrillScreen({ go, progress, clock, completeTask }) {
     {
       id: "product-sense",
       label: "Product sense",
-      bank: [
-        "Назови 3 метрики для оценки качества поиска и объясни, какая главная.",
-        "Sub-2 sec latency vs full personalization — выбор и обоснование за 60 сек.",
-        "Чем NSM отличается от вторичной метрики? Дай один пример.",
-        "Опиши aha-moment для приложения для медитации.",
-        "Какой trade-off ты бы обсудил для лайков в Spotify?",
-      ],
+      hint: "Фичи, пользователи, ценность, trade-offs",
+      bank: {
+        junior: [
+          "Что такое product sense простыми словами? Ответь через пользователя, проблему и решение.",
+          "Выбери primary user для приложения заметок и назови его главную боль.",
+          "Придумай 2 улучшения для Spotify и объясни, какое выберешь первым.",
+          "Что такое aha-moment для приложения изучения языков?",
+          "Как отличить хорошую фичу от просто красивой идеи?",
+          "Назови одну метрику успеха для новой функции лайков в музыкальном приложении.",
+        ],
+        middle: [
+          "Как бы ты улучшил Google Chrome для студентов? Сегмент, боль, решение, метрика.",
+          "Sub-2 sec latency vs full personalization — какой trade-off выберешь и почему?",
+          "У приложения медитации низкий D7 retention. Дай 3 product sense гипотезы.",
+          "Как бы ты оценил идею «stories в банковском приложении»?",
+          "Выбери MVP для функции групповых плейлистов в Spotify.",
+          "Какой сегмент первым брать для нового AI calendar assistant?",
+        ],
+        senior: [
+          "Компания хочет добавить AI-assistant в mature consumer app. Как решить, стоит ли это делать?",
+          "Конкурент скопировал вашу ключевую фичу. Какой продуктовый ответ выберешь?",
+          "Как бы ты сформировал product principles для детского финансового приложения?",
+          "Новая фича повышает engagement, но снижает доверие. Как рассуждать?",
+          "Как выбрать между глубокой персонализацией и прозрачностью алгоритма?",
+          "Продукт растёт, но пользователи называют его «слишком сложным». Какой product sense план?",
+        ],
+      },
     },
     {
       id: "metrics",
       label: "Метрики",
-      bank: [
-        "Какая North Star Metric подойдёт для маркетплейса услуг и почему?",
-        "Revenue растёт, retention падает. Какие 3 проверки сделаешь первыми?",
-        "Придумай guardrail metrics для запуска AI-рекомендаций.",
-        "Чем actionable metric отличается от vanity metric? Пример.",
-        "Как измерить качество onboarding в fintech-приложении?",
-      ],
+      hint: "NSM, funnels, guardrails, диагностика",
+      bank: {
+        junior: [
+          "Чем activation отличается от acquisition? Дай пример.",
+          "Что такое vanity metric? Назови пример для EdTech.",
+          "Выбери primary metric для onboarding в fintech-приложении.",
+          "Зачем нужны guardrail metrics? Объясни на примере push-уведомлений.",
+          "Чем retention D1 отличается от retention D30?",
+          "Какая метрика покажет, что пользователь получил первую ценность?",
+        ],
+        middle: [
+          "Какая North Star Metric подойдёт для маркетплейса услуг и почему?",
+          "Revenue растёт, retention падает. Какие 3 проверки сделаешь первыми?",
+          "Придумай guardrail metrics для запуска AI-рекомендаций.",
+          "Как измерить качество onboarding в B2B SaaS?",
+          "Конверсия в оплату выросла, NPS упал. Как интерпретировать?",
+          "Как построить metric tree для подписочного EdTech?",
+        ],
+        senior: [
+          "NSM растёт, но unit economics ухудшается. Какой dashboard нужен PM?",
+          "Как выбрать метрики для marketplace liquidity в новом городе?",
+          "A/B тест улучшил primary metric, но ударил по retention через месяц. Что делать?",
+          "Как отличить сезонность от реального продуктового эффекта?",
+          "Какие leading indicators выберешь для enterprise SaaS с длинным sales cycle?",
+          "Как бы ты пересобрал систему метрик, если команда оптимизирует локальные KPI?",
+        ],
+      },
     },
     {
       id: "growth",
       label: "Growth",
-      bank: [
-        "Как бы ты искал причину падения activation после регистрации?",
-        "Предложи 3 гипотезы роста repeat purchase в маркетплейсе.",
-        "Какой эксперимент поставишь для referral-механики?",
-        "CAC вырос на 30%. Что проверишь до предложения решения?",
-        "Как отличить плохой acquisition от плохого продукта?",
-      ],
+      hint: "Activation, referral, retention, CAC",
+      bank: {
+        junior: [
+          "Что такое activation в growth-воронке? Приведи пример.",
+          "Назови 3 способа увеличить повторное использование приложения.",
+          "Чем referral отличается от paid acquisition?",
+          "Как понять, что onboarding слишком длинный?",
+          "Какая метрика покажет качество новых пользователей?",
+          "Почему нельзя просто покупать больше трафика?",
+        ],
+        middle: [
+          "Как бы ты искал причину падения activation после регистрации?",
+          "Предложи 3 гипотезы роста repeat purchase в маркетплейсе.",
+          "Какой эксперимент поставишь для referral-механики?",
+          "CAC вырос на 30%. Что проверишь до предложения решения?",
+          "Как отличить плохой acquisition от плохого продукта?",
+          "Push-кампания подняла DAU, но не revenue. Какой следующий шаг?",
+        ],
+        senior: [
+          "Growth-команда разгоняет acquisition, а Core-команда жалуется на качество пользователей. Как синхронизировать?",
+          "Как выбрать growth loop для consumer social app?",
+          "Referral даёт много пользователей с низким retention. Как решить, масштабировать ли канал?",
+          "Как построить экспериментальную программу на квартал для activation?",
+          "Платный канал масштабируется, но payback растёт с 6 до 15 месяцев. Что делать?",
+          "Как определить, что growth-проблема на самом деле является product-market fit проблемой?",
+        ],
+      },
     },
     {
       id: "strategy",
       label: "Strategy",
-      bank: [
-        "Компания хочет выйти в B2B. Какие 3 вопроса задашь перед решением?",
-        "Build vs partner для новой AI-фичи: как рассуждать?",
-        "Как выбрать сегмент для первого запуска продукта?",
-        "Конкурент копирует фичу. Что делать PM?",
-        "Какие trade-offs есть у premium-подписки в consumer app?",
-      ],
+      hint: "Сегменты, moat, build/buy/partner",
+      bank: {
+        junior: [
+          "Что значит выбрать сегмент? Почему нельзя идти во всех сразу?",
+          "Назови 3 вопроса перед запуском продукта на новом рынке.",
+          "Чем стратегия отличается от roadmap?",
+          "Что такое конкурентное преимущество простыми словами?",
+          "Когда лучше не делать фичу, даже если пользователь просит?",
+          "Как объяснить trade-off между скоростью запуска и качеством?",
+        ],
+        middle: [
+          "Компания хочет выйти в B2B. Какие 3 вопроса задашь перед решением?",
+          "Build vs partner для новой AI-фичи: как рассуждать?",
+          "Как выбрать сегмент для первого запуска продукта?",
+          "Конкурент копирует фичу. Что делать PM?",
+          "Какие trade-offs есть у premium-подписки в consumer app?",
+          "Как оценить, стоит ли запускать продукт в новой стране?",
+        ],
+        senior: [
+          "Продукт достиг плато роста. Как выбрать следующий стратегический bet?",
+          "Как решить, строить ли platform capability внутри компании?",
+          "Два сегмента прибыльные, но требуют разных продуктов. Как выбрать?",
+          "Какой moat может быть у AI productivity app и как его усилить?",
+          "Стоит ли каннибализировать текущую выручку новым self-serve продуктом?",
+          "Как сформулировать where to play / how to win для B2B SaaS?",
+        ],
+      },
+    },
+    {
+      id: "discovery",
+      label: "Discovery",
+      hint: "Интервью, JTBD, problem space",
+      bank: {
+        junior: [
+          "Что такое problem interview и чем оно отличается от продажи идеи?",
+          "Назови 3 плохих вопроса для интервью пользователя.",
+          "Как понять, что боль пользователя достаточно сильная?",
+          "Что такое JTBD простыми словами?",
+          "Почему прошлое поведение надёжнее обещаний о будущем?",
+          "Как сформулировать problem statement для приложения привычек?",
+        ],
+        middle: [
+          "Как бы ты провёл discovery для функции совместного бюджета в банке?",
+          "Пользователи говорят «нужны уведомления». Как проверить реальную проблему?",
+          "Какие сигналы покажут, что opportunity стоит брать в roadmap?",
+          "Как сегментировать пользователей не по демографии, а по jobs?",
+          "Что делать, если интервью и аналитика противоречат друг другу?",
+          "Как построить Opportunity Solution Tree для падения activation?",
+        ],
+        senior: [
+          "Как встроить continuous discovery в команду, которая живёт релизами?",
+          "Sales требует enterprise-фичу для крупного клиента. Как провести discovery без потери фокуса?",
+          "Как выбрать между несколькими opportunity areas с неполными данными?",
+          "Как доказать leadership, что команде нужно 2 недели discovery до delivery?",
+          "Какие discovery-артефакты реально помогают decision-making, а какие являются театром?",
+          "Как организовать research cadence для multi-sided marketplace?",
+        ],
+      },
+    },
+    {
+      id: "execution",
+      label: "Execution",
+      hint: "Roadmap, запуск, риски, RCA",
+      bank: {
+        junior: [
+          "Что должно быть в хорошем PRD?",
+          "Чем roadmap отличается от списка фич?",
+          "Как PM понимает, что фича готова к запуску?",
+          "Что такое rollout и зачем запускать поэтапно?",
+          "Назови 3 риска запуска новой функции.",
+          "Как объяснить engineering, зачем нужна метрика успеха?",
+        ],
+        middle: [
+          "Метрика упала после релиза. Какие первые 5 проверок сделаешь?",
+          "Как подготовить launch plan для новой функции оплаты?",
+          "Как приоритизировать баг, технический долг и новую фичу?",
+          "Что включить в pre-mortem перед крупным релизом?",
+          "Как синхронизировать roadmap между design, engineering и sales?",
+          "Команда не успевает к дедлайну. Какой trade-off предложишь?",
+        ],
+        senior: [
+          "Как построить operating cadence для команды из 4 squads?",
+          "Запуск провалился: adoption низкий, но feedback хороший. Как диагностировать?",
+          "Как удержать стратегический roadmap, когда enterprise sales постоянно меняет приоритеты?",
+          "Как решить конфликт между reliability work и growth roadmap?",
+          "Какие launch gates нужны для regulated fintech продукта?",
+          "Как понять, что execution-проблема на самом деле является strategy-проблемой?",
+        ],
+      },
     },
   ];
+  const drillLevels = [
+    { id: "junior", label: "Junior", desc: "база и простые кейсы" },
+    { id: "middle", label: "Middle", desc: "диагностика и trade-offs" },
+    { id: "senior", label: "Senior", desc: "стратегия и неоднозначность" },
+  ];
+  const getTopicBank = (item, level) => item.bank?.[level] || item.bank?.middle || [];
   const [topicId, setTopicId] = useState("product-sense");
-  const [questions, setQuestions] = useState(drillTopics[0].bank);
+  const [levelId, setLevelId] = useState("middle");
+  const [questions, setQuestions] = useState(getTopicBank(drillTopics[0], "middle"));
   const [qIdx, setQIdx] = useState(0);
   const [paused, setPaused] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(60);
@@ -2093,8 +2242,9 @@ function DrillScreen({ go, progress, clock, completeTask }) {
   const [checking, setChecking] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [checkedText, setCheckedText] = useState("");
-  const total = 10;
   const topic = drillTopics.find((item) => item.id === topicId) || drillTopics[0];
+  const level = drillLevels.find((item) => item.id === levelId) || drillLevels[1];
+  const total = questions.length;
   const currentQuestion = questions[qIdx % questions.length];
 
   useEffect(() => {
@@ -2103,7 +2253,7 @@ function DrillScreen({ go, progress, clock, completeTask }) {
       setSecondsLeft((value) => {
         if (value > 1) return value - 1;
         setStats((prev) => ({ ...prev, missed: prev.missed + 1 }));
-        setQIdx((idx) => (idx < total - 1 ? idx + 1 : idx));
+      setQIdx((idx) => (idx < total - 1 ? idx + 1 : idx));
         setAnswer("");
         setFeedback("Время вышло: засчитала как «не успел». Следующий вопрос уже открыт.");
         setCheckedText("");
@@ -2111,7 +2261,7 @@ function DrillScreen({ go, progress, clock, completeTask }) {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [paused]);
+  }, [paused, total]);
 
   useEffect(() => {
     if (paused || checking || !answer.trim() || answer.trim() === checkedText) return undefined;
@@ -2125,7 +2275,7 @@ function DrillScreen({ go, progress, clock, completeTask }) {
   const parseQuestions = (raw) => {
     const match = raw.match(/\[[\s\S]*\]/);
     const parsed = JSON.parse(match ? match[0] : raw);
-    return parsed.map((item) => (typeof item === "string" ? item : item.question)).filter(Boolean).slice(0, total);
+    return parsed.map((item) => (typeof item === "string" ? item : item.question)).filter(Boolean).slice(0, 10);
   };
 
   const generateQuestions = async (nextTopic = topic) => {
@@ -2134,26 +2284,26 @@ function DrillScreen({ go, progress, clock, completeTask }) {
     try {
       const res = await api.coach({
         stepId: "drill-generate",
-        stepTitle: `Drill questions: ${nextTopic.label}`,
+        stepTitle: `Drill questions: ${nextTopic.label} · ${level.label}`,
         stepDescription: "Сгенерируй короткие вопросы для 60-секундного PM drill.",
-        frameworks: [nextTopic.label, "PM interview", "Product thinking"],
+        frameworks: [nextTopic.label, level.label, "PM interview", "Product thinking"],
         caseHint: "Ответь только JSON-массивом из 10 строк. Без markdown.",
-        caseText: `Тема drill: ${nextTopic.label}`,
+        caseText: `Тема drill: ${nextTopic.label}. Уровень: ${level.label} (${level.desc}).`,
         answerText: "",
-        userMessage: `Сгенерируй 10 разных коротких вопросов на тему ${nextTopic.label}. Каждый вопрос должен проверять reasoning, метрики или trade-offs.`,
+        userMessage: `Сгенерируй 10 разных коротких вопросов на тему ${nextTopic.label} для уровня ${level.label}. Junior = простые базовые вопросы, Middle = диагностика и trade-offs, Senior = стратегия, неоднозначность, ownership. Каждый вопрос должен проверять reasoning, метрики или trade-offs.`,
         chatHistory: [],
         previousAnswers: {},
         trackId: "product",
       });
       const nextQuestions = parseQuestions(res.message);
-      setQuestions(nextQuestions.length ? nextQuestions : nextTopic.bank);
+      setQuestions(nextQuestions.length ? nextQuestions : getTopicBank(nextTopic, level.id));
       setQIdx(0);
       setSecondsLeft(60);
       setAnswer("");
       setCheckedText("");
       setFeedback("AI сгенерировал новый набор вопросов.");
     } catch {
-      setQuestions(nextTopic.bank);
+      setQuestions(getTopicBank(nextTopic, level.id));
       setFeedback("AI не ответил, включил локальный набор вопросов по теме.");
     } finally {
       setGenerating(false);
@@ -2163,13 +2313,24 @@ function DrillScreen({ go, progress, clock, completeTask }) {
   const selectTopic = (id) => {
     const nextTopic = drillTopics.find((item) => item.id === id) || drillTopics[0];
     setTopicId(nextTopic.id);
-    setQuestions(nextTopic.bank);
+    setQuestions(getTopicBank(nextTopic, levelId));
     setQIdx(0);
     setSecondsLeft(60);
     setAnswer("");
     setCheckedText("");
     setFeedback("");
     generateQuestions(nextTopic);
+  };
+
+  const selectLevel = (id) => {
+    const nextLevel = drillLevels.find((item) => item.id === id) || drillLevels[1];
+    setLevelId(nextLevel.id);
+    setQuestions(getTopicBank(topic, nextLevel.id));
+    setQIdx(0);
+    setSecondsLeft(60);
+    setAnswer("");
+    setCheckedText("");
+    setFeedback("");
   };
 
   const localGrade = (text) => {
@@ -2191,7 +2352,7 @@ function DrillScreen({ go, progress, clock, completeTask }) {
         stepId: "drill-check",
         stepTitle: currentQuestion,
         stepDescription: "Проверь короткий ответ на PM drill. Верни краткий вердикт.",
-        frameworks: [topic.label, "PM interview", "60-second drill"],
+        frameworks: [topic.label, level.label, "PM interview", "60-second drill"],
         caseHint: "Формат: ✅ Чисто / ⚠️ Под вопросом / ✕ Не успел, затем 1 короткая причина и 1 улучшение.",
         caseText: currentQuestion,
         answerText: clean,
@@ -2225,15 +2386,15 @@ function DrillScreen({ go, progress, clock, completeTask }) {
       setFeedback("");
       setCheckedText("");
     } else {
-      completeTask("drill-product-sense", 50, "review");
+      completeTask(`drill-${topic.id}-${level.id}`, 50, "review");
     }
   };
   return (
     <div className="screen">
-      <Topbar crumbs={["Home", "Drill 60s · Product sense"]} progress={progress} clock={clock} />
+      <Topbar crumbs={["Home", `Drill 60s · ${topic.label}`]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
-          <span className="eyebrow">Drill · 10 вопросов · ⏱ 60 сек каждый</span>
+          <span className="eyebrow">Drill · {total} вопросов · {level.label} · ⏱ 60 сек каждый</span>
           <h1>Drill-режим: {topic.label} ⚡</h1>
         </div>
         <div className="right">
@@ -2242,14 +2403,31 @@ function DrillScreen({ go, progress, clock, completeTask }) {
         </div>
       </div>
       <div className="drill-stage">
-        <div className="drill-topic-row">
-          {drillTopics.map((item) => (
-            <button key={item.id} className={`drill-topic ${topicId === item.id ? "active" : ""}`} onClick={() => selectTopic(item.id)} disabled={generating}>
-              {item.label}
-            </button>
-          ))}
+        <div className="drill-config-panel">
+          <div>
+            <span className="drill-config-label">Тема</span>
+            <div className="drill-topic-row">
+              {drillTopics.map((item) => (
+                <button key={item.id} className={`drill-topic ${topicId === item.id ? "active" : ""}`} onClick={() => selectTopic(item.id)} disabled={generating}>
+                  <strong>{item.label}</strong>
+                  <small>{item.hint}</small>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <span className="drill-config-label">Уровень</span>
+            <div className="drill-level-row">
+              {drillLevels.map((item) => (
+                <button key={item.id} className={`drill-level ${levelId === item.id ? "active" : ""}`} onClick={() => selectLevel(item.id)} disabled={generating}>
+                  <strong>{item.label}</strong>
+                  <small>{item.desc}</small>
+                </button>
+              ))}
+            </div>
+          </div>
           <button className="drill-topic generate" onClick={() => generateQuestions(topic)} disabled={generating}>
-            {generating ? "AI думает..." : "+ AI вопросы"}
+            {generating ? "AI думает..." : "+ AI вопросы под выбор"}
           </button>
         </div>
         <div className="drill-progress-row">
