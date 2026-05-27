@@ -925,13 +925,16 @@ function LearningPage() {
 
 /* ── All Resources ── */
 function AllResourcesTab({ onTabChange }) {
+  const subtopicCount = PM_CHAPTERS.reduce((sum, chapter) => sum + chapter.subtopics.length, 0);
+  const flashcardCount = Object.values(FLASHCARDS).reduce((sum, cards) => sum + cards.length, 0);
+
   return (
     <div className="allResourcesGrid">
       <h2 className="learnSectionTitle">Полный курс по продуктовому менеджменту</h2>
-      <p className="learnSectionSub">8 разделов · 45 подтем · 50+ карточек · 20 вопросов · 35 терминов</p>
+      <p className="learnSectionSub">{PM_CHAPTERS.length} разделов · {subtopicCount} подтем · {flashcardCount} карточек · {PRACTICE_QUESTIONS.length} вопросов · {KEY_DEFINITIONS.length} терминов</p>
       <div className="resourceCards">
         {[
-          { tab: 'lessons', icon: '📖', title: 'Уроки', desc: 'Структурированные учебные материалы по 8 разделам PM-курса', count: `${PM_CHAPTERS.length} разделов` },
+          { tab: 'lessons', icon: '📖', title: 'Уроки', desc: `Структурированные учебные материалы по ${PM_CHAPTERS.length} разделам PM-курса`, count: `${PM_CHAPTERS.length} разделов` },
           { tab: 'notes', icon: '📝', title: 'Конспекты', desc: 'Краткие конспекты с ключевыми концепциями и примерами', count: `${PM_CHAPTERS.reduce((s, c) => s + c.notes.length, 0)} блоков` },
           { tab: 'questionbank', icon: '❓', title: 'Банк вопросов', desc: 'Вопросы с вариантами ответов для самопроверки', count: `${PRACTICE_QUESTIONS.length} вопросов` },
           { tab: 'flashcards', icon: '🃏', title: 'Flash Cards', desc: 'Карточки с интервальными повторениями по системе Anki', count: `${Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0)} карточек` },
@@ -965,6 +968,31 @@ function AllResourcesTab({ onTabChange }) {
 }
 
 /* ── Lessons Tab ── */
+const splitLessonText = (value = '') =>
+  String(value)
+    .split(/\n\n+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const renderLessonText = (value = '') => {
+  const parts = String(value).split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+    return <React.Fragment key={index}>{part}</React.Fragment>;
+  });
+};
+
+function LessonRichBlock({ title, children, tone = 'default' }) {
+  return (
+    <section className={`lessonRichBlock lessonRichBlock--${tone}`}>
+      <div className="lessonRichBlockHead">{title}</div>
+      {children}
+    </section>
+  );
+}
+
 function LessonsTab() {
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [selectedSubtopic, setSelectedSubtopic] = useState(null);
@@ -1029,6 +1057,21 @@ function LessonsTab() {
 function LessonViewer({ chapter, subtopic, onBack }) {
   const chapterFlashcards = (FLASHCARDS[chapter.id] || []).slice(0, 3);
   const chapterQuestions = PRACTICE_QUESTIONS.filter((q) => q.chapter === chapter.id).slice(0, 2);
+  const lessonContent = LEARN_TOGETHER_CONTENT[subtopic.id] || {};
+  const lessonParagraphs = splitLessonText(lessonContent.exposition);
+  const fallbackDefinition = chapter.notes.find((note) => note.type === 'definition') || chapter.notes[0];
+  const fallbackExample = chapter.notes.find((note) => note.type === 'example');
+  const fallbackAnalogy = chapter.notes.find((note) => note.type === 'analogy');
+  const lessonMcq = lessonContent.mcq
+    ? {
+        id: `${subtopic.id}-lesson-mcq`,
+        q: lessonContent.mcq.question,
+        options: lessonContent.mcq.options,
+        answer: lessonContent.mcq.correct,
+        explanation: lessonContent.mcq.explanation,
+      }
+    : null;
+  const lessonQuestions = lessonMcq ? [lessonMcq, ...chapterQuestions].slice(0, 3) : chapterQuestions;
   const [showFlashcard, setShowFlashcard] = useState(false);
   const [fcIndex, setFcIndex] = useState(0);
   const [fcFlipped, setFcFlipped] = useState(false);
@@ -1042,16 +1085,109 @@ function LessonViewer({ chapter, subtopic, onBack }) {
         <span className="subtopicDuration">⏱ {subtopic.duration}</span>
       </div>
 
-      {/* Notes from chapter */}
-      {chapter.notes.map((note, idx) => (
-        <div key={idx} className={`noteBlock noteBlock--${note.type}`}>
-          <div className="noteBlockLabel">
-            {{ definition: '📘 Определение', example: '💡 Пример', note: '📌 Заметка', analogy: '🔗 Аналогия' }[note.type] || note.type}
+      <div className="lessonHeroCard" style={{ '--lesson-color': chapter.color }}>
+        <div className="lessonHeroKicker">Модуль {chapter.number} · подробный урок</div>
+        <h3>{lessonContent.title || subtopic.title}</h3>
+        <p>{lessonContent.definition || fallbackDefinition?.text || chapter.description}</p>
+      </div>
+
+      <LessonRichBlock title="Учебное объяснение">
+        {lessonParagraphs.length > 0 ? (
+          lessonParagraphs.map((paragraph) => <p key={paragraph}>{renderLessonText(paragraph)}</p>)
+        ) : (
+          <p>{fallbackDefinition?.text}</p>
+        )}
+      </LessonRichBlock>
+
+      {lessonContent.keyPoints?.length > 0 && (
+        <LessonRichBlock title="Ключевые выводы" tone="blue">
+          <ol className="lessonRichList">
+            {lessonContent.keyPoints.map((item) => <li key={item}>{renderLessonText(item)}</li>)}
+          </ol>
+        </LessonRichBlock>
+      )}
+
+      {lessonContent.framework && (
+        <LessonRichBlock title={lessonContent.framework.title} tone="violet">
+          <div className="lessonFrameworkGrid">
+            {lessonContent.framework.items.map((item) => (
+              <article key={item.name} className="lessonFrameworkItem">
+                <strong>{item.name}</strong>
+                <p>{renderLessonText(item.description)}</p>
+              </article>
+            ))}
           </div>
-          <h4 className="noteBlockTitle">{note.title}</h4>
-          <p className="noteBlockText">{note.text}</p>
+        </LessonRichBlock>
+      )}
+
+      {lessonContent.comparisonTable && (
+        <LessonRichBlock title={lessonContent.comparisonTable.title} tone="plain">
+          <div className="lessonTableWrap">
+            <table className="lessonTable">
+              <thead>
+                <tr>{lessonContent.comparisonTable.headers.map((header) => <th key={header}>{header}</th>)}</tr>
+              </thead>
+              <tbody>
+                {lessonContent.comparisonTable.rows.map((row, idx) => (
+                  <tr key={idx}>{row.map((cell, cellIdx) => <td key={cellIdx}>{renderLessonText(cell)}</td>)}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </LessonRichBlock>
+      )}
+
+      {lessonContent.realExamples?.length > 0 && (
+        <LessonRichBlock title="Примеры из продуктов" tone="green">
+          <div className="lessonExamplesGrid">
+            {lessonContent.realExamples.map((example) => (
+              <article key={example.product + example.situation} className="lessonExampleCard">
+                <strong>{example.product}</strong>
+                <p><b>Ситуация:</b> {example.situation}</p>
+                <p><b>Действие:</b> {example.action}</p>
+                <p><b>Результат:</b> {example.outcome}</p>
+              </article>
+            ))}
+          </div>
+        </LessonRichBlock>
+      )}
+
+      {lessonContent.commonMistakes?.length > 0 && (
+        <LessonRichBlock title="Типичные ошибки" tone="yellow">
+          <ul className="lessonRichList">
+            {lessonContent.commonMistakes.map((item) => <li key={item}>{renderLessonText(item)}</li>)}
+          </ul>
+        </LessonRichBlock>
+      )}
+
+      {lessonContent.checklist?.length > 0 && (
+        <LessonRichBlock title="Чек-лист применения" tone="blue">
+          <ul className="lessonChecklist">
+            {lessonContent.checklist.map((item) => <li key={item}>{renderLessonText(item)}</li>)}
+          </ul>
+        </LessonRichBlock>
+      )}
+
+      <div className="noteBlock noteBlock--example">
+        <div className="noteBlockLabel">💡 Контекст раздела</div>
+        <h4 className="noteBlockTitle">{fallbackExample?.title || chapter.title}</h4>
+        <p className="noteBlockText">{fallbackExample?.text || chapter.description}</p>
+      </div>
+
+      {fallbackAnalogy && (
+        <div className="noteBlock noteBlock--analogy">
+          <div className="noteBlockLabel">🔗 Аналогия</div>
+          <h4 className="noteBlockTitle">{fallbackAnalogy.title}</h4>
+          <p className="noteBlockText">{fallbackAnalogy.text}</p>
         </div>
-      ))}
+      )}
+
+      <LessonRichBlock title="Практика после урока" tone="pink">
+        <p><strong>Задание:</strong> возьми любой продукт, сформулируй сегмент, проблему, решение, метрику успеха и главный риск через тему «{subtopic.title}».</p>
+        {lessonContent.trueFalse && (
+          <p><strong>Быстрая проверка:</strong> {lessonContent.trueFalse.statement} Ответ: {lessonContent.trueFalse.correct ? 'верно' : 'неверно'}. {lessonContent.trueFalse.explanation}</p>
+        )}
+      </LessonRichBlock>
 
       {/* Inline Flashcards */}
       {chapterFlashcards.length > 0 && (
@@ -1079,10 +1215,10 @@ function LessonViewer({ chapter, subtopic, onBack }) {
       )}
 
       {/* Mini quiz */}
-      {chapterQuestions.length > 0 && (
+      {lessonQuestions.length > 0 && (
         <div className="lessonSection">
           <div className="lessonSectionHead"><span>✅ Проверь себя</span></div>
-          {chapterQuestions.map((q) => (
+          {lessonQuestions.map((q) => (
             <MiniQuizCard key={q.id} question={q} answered={answeredQ[q.id]} onAnswer={(idx) => setAnsweredQ((prev) => ({ ...prev, [q.id]: idx }))} />
           ))}
         </div>
