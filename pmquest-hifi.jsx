@@ -798,17 +798,100 @@ const getLessonGuide = (note) => {
   };
 };
 
+const LESSON_WHAT_TEMPLATES = {
+  beginner: {
+    practice: (note) => `${note.t} помогает собрать базовую PM-логику: кто пользователь, какая у него задача, почему это важно бизнесу и какое решение команда выбирает дальше.`,
+    pmValue: "PM использует эту тему, чтобы не спорить мнениями, а связать пользователя, проблему, решение, метрику и ограничения команды.",
+    interviewUse: (note) => `На интервью это звучит как короткий разбор: сначала объяснение простыми словами, затем пример из продукта, затем ответ на вопрос «${note.rookie}».`,
+    trap: "Слабый ответ остаётся на уровне определения. Сильный показывает, какое решение PM примет иначе после применения темы.",
+  },
+  framework: {
+    practice: (note) => `${note.t} — это рабочая структура мышления. Она помогает не потерять важные проверки и превратить хаотичный brainstorm в понятный путь к решению.`,
+    pmValue: "PM берёт фреймворк, когда нужно сравнить варианты, договориться о критериях, объяснить trade-off и дойти до рекомендации.",
+    interviewUse: (note) => `На интервью важно не просто назвать шаги. Нужно показать, как ${note.t} помогает пройти от контекста к выбору и next step.`,
+    trap: "Главная ловушка — звучать как учебник: перечислить аббревиатуру, но не применить её к пользователю, данным и решению.",
+  },
+  metrics: {
+    practice: (note) => `${note.t} переводит продуктовый разговор в измеримую систему: что считаем ценностью, какой рычаг двигаем и какую метрику нельзя ухудшить.`,
+    pmValue: "PM использует метрики, чтобы диагностировать проблему, выбрать приоритет, проверить гипотезу и понять, стал ли продукт реально лучше.",
+    interviewUse: (note) => `В кейсе по метрикам сильный ответ объясняет смысл показателя, источник данных, primary/proxy/input-метрики и guardrails.`,
+    trap: "Слабый ответ выбирает красивую vanity metric. Сильный связывает метрику с поведением пользователя и действием команды.",
+  },
+  design: {
+    practice: (note) => `${note.t} помогает спроектировать решение не «для всех», а для конкретного пользователя, сценария, боли и момента в journey.`,
+    pmValue: "PM применяет эту тему, чтобы сузить фокус, понять friction, сравнить решения и выбрать вариант с лучшим impact при разумном effort.",
+    interviewUse: (note) => `На product design интервью это раскрывается через primary user, job, pain point, несколько решений, критерии выбора и риск.`,
+    trap: "Главная ошибка — сразу придумывать фичи. Сначала нужно доказать проблему и объяснить, почему выбранный сценарий важнее других.",
+  },
+  behavioral: {
+    practice: (note) => `${note.t} нужен, чтобы behavioral-ответ показывал зрелость кандидата: контекст, личную ответственность, действие, результат и вывод.`,
+    pmValue: "PM постоянно работает через коммуникацию, влияние без власти и конфликт интересов; поэтому интервьюер проверяет не только знания, но и способ поведения.",
+    interviewUse: (note) => `Сильный ответ строится как история: Situation, Task, Action, Result, а затем короткий learning на будущее.`,
+    trap: "Слабый ответ уходит в пересказ событий или обвинения. Сильный показывает личный вклад, факты и изменение результата.",
+  },
+  sysdesign: {
+    practice: (note) => `${note.t} помогает PM говорить о технических решениях через пользовательский опыт, стоимость, надёжность и риски.`,
+    pmValue: "PM не обязан проектировать архитектуру, но должен понимать trade-offs: latency, масштабирование, стоимость, качество, fallback и влияние на доверие.",
+    interviewUse: (note) => `На интервью это звучит как продуктовый system design: сценарий пользователя, ограничение, компромисс, метрика качества и guardrail.`,
+    trap: "Слабый ответ пытается выглядеть инженером. Сильный переводит технический выбор в последствия для пользователя и бизнеса.",
+  },
+};
+
+const getLessonWhat = (note, guide) => {
+  const template = LESSON_WHAT_TEMPLATES[note.cat] || LESSON_WHAT_TEMPLATES.beginner;
+  return {
+    definition: note.ex,
+    practice: template.practice(note),
+    pmValue: template.pmValue,
+    interviewUse: template.interviewUse(note),
+    trap: template.trap,
+    answerFormula: [
+      `1. Объясни: ${note.ex}`,
+      `2. Примени: ${guide.steps[0]}.`,
+      `3. Проверь: ${guide.metric}`,
+    ],
+  };
+};
+
 function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm" }) {
   const [idx, setIdx] = useState(0);
   const note = KNOWLEDGE_NOTES.find((item) => item.id === initialTopicId) || KNOWLEDGE_NOTES[1] || KNOWLEDGE_NOTES[0];
   const guide = getLessonGuide(note);
+  const what = getLessonWhat(note, guide);
   useEffect(() => setIdx(0), [initialTopicId]);
   const slides = [
-    { tag: "Слайд 1 · 3 мин", title: `Что такое ${note.t}?`, lede: note.ex,
+    { tag: "Слайд 1 · 5 мин", title: `Что такое ${note.t}?`, lede: what.definition,
       body: (
-        <div className="body">
-          <p>{note.ex}</p>
-          <p>{guide.context}</p>
+        <div className="body lesson-what">
+          <div className="lesson-what-lede">
+            <b>Коротко</b>
+            <p>{what.definition}</p>
+          </div>
+          <div className="lesson-what-grid">
+            <article>
+              <span>01</span>
+              <b>Что это на практике</b>
+              <p>{what.practice}</p>
+            </article>
+            <article>
+              <span>02</span>
+              <b>Зачем это PM</b>
+              <p>{what.pmValue}</p>
+            </article>
+            <article>
+              <span>03</span>
+              <b>Как использовать на интервью</b>
+              <p>{what.interviewUse}</p>
+            </article>
+            <article>
+              <span>04</span>
+              <b>Где ловушка</b>
+              <p>{what.trap}</p>
+            </article>
+          </div>
+          <div className="lesson-answer-formula">
+            {what.answerFormula.map((item) => <p key={item}>{item}</p>)}
+          </div>
           <div className="lesson-callout">
             <div className="ico">★</div>
             <div>
