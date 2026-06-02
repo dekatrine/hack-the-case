@@ -1120,6 +1120,19 @@ function LessonViewer({ chapter, subtopic, onBack }) {
         </LessonRichBlock>
       )}
 
+      {lessonContent.formula && (
+        <LessonRichBlock title={lessonContent.formula.title} tone="plain">
+          <div className="lessonFormulaList">
+            {lessonContent.formula.items.map((item) => (
+              <article key={item.label} className="lessonFormulaItem">
+                <span>{item.label}</span>
+                <code>{item.formula}</code>
+              </article>
+            ))}
+          </div>
+        </LessonRichBlock>
+      )}
+
       {lessonContent.comparisonTable && (
         <LessonRichBlock title={lessonContent.comparisonTable.title} tone="plain">
           <div className="lessonTableWrap">

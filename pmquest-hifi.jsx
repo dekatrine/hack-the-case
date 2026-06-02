@@ -1774,7 +1774,10 @@ function MockScreen({ go, progress, clock, completeTask }) {
   const [listening, setListening] = useState(false);
   const [speechDraft, setSpeechDraft] = useState("");
   const [speechError, setSpeechError] = useState("");
-  const [scores, setScores] = useState({ clarify: 2, user: 0, solutions: 0, metrics: 0 });
+  const [roundAnswers, setRoundAnswers] = useState({});
+  const [finished, setFinished] = useState(false);
+  const [evaluating, setEvaluating] = useState(false);
+  const [finalResult, setFinalResult] = useState(null);
   const [transcript, setTranscript] = useState([
     { role: "them", who: "Виктор", text: "Привет. Выбери блок интервью и грейд — потом начнём как настоящий live mock." },
   ]);
@@ -1788,26 +1791,11 @@ function MockScreen({ go, progress, clock, completeTask }) {
   const cur = rounds[roundIdx] || rounds[0];
   const elapsed = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
   const pace = Math.min(100, Math.round((seconds / (15 * 60)) * 100));
-  const formatFeedback = (raw) => {
-    const cleaned = raw.replace(/```(?:json)?/g, "").replace(/```/g, "").trim();
-    try {
-      const parsed = JSON.parse(cleaned);
-      return [
-        `Score: ${parsed.score ?? "—"} / 100`,
-        parsed.verdict && `Вердикт: ${parsed.verdict}`,
-        parsed.feedback && `Фидбек: ${parsed.feedback}`,
-        parsed.nextPrompt && `Следующий вопрос: ${parsed.nextPrompt}`,
-      ].filter(Boolean).join("\n");
-    } catch {
-      return raw;
-    }
-  };
-
   useEffect(() => {
-    if (paused || !setupDone) return undefined;
+    if (paused || !setupDone || finished) return undefined;
     const timer = setInterval(() => setSeconds((v) => v + 1), 1000);
     return () => clearInterval(timer);
-  }, [paused, setupDone]);
+  }, [paused, setupDone, finished]);
 
   useEffect(() => {
     const first = casePresets.find((item) => item.block === blockId) || casePresets[0];
@@ -1886,6 +1874,7 @@ function MockScreen({ go, progress, clock, completeTask }) {
     const clean = answer.trim();
     if (!clean || checking) return;
     setTranscript((items) => [...items, { role: "you", who: "Ты", text: clean }]);
+    setRoundAnswers((prev) => ({ ...prev, [cur.id]: clean }));
     setChecking(true);
     setFeedback("");
     setInterviewerMood("thinking");
@@ -1899,29 +1888,67 @@ function MockScreen({ go, progress, clock, completeTask }) {
         roundGoal: cur.prompt,
         answerText: clean,
         expectedSignals: cur.expectedSignals,
+        previousAnswers: roundAnswers,
+        mode: "coach",
       });
-      const formatted = formatFeedback(res.result);
-      setFeedback(formatted);
-      setScores((prev) => ({ ...prev, [cur.id]: Math.min(5, Math.max(prev[cur.id] || 0, clean.length > 120 ? 4 : 3)) }));
-      setTranscript((items) => [...items, { role: "them", who: "AI score", text: formatted.slice(0, 420) }]);
-      setInterviewerMood(formatted.toLowerCase().includes("следующий") ? "push" : "listening");
+      const hint = res.result.trim();
+      setFeedback(hint);
+      setTranscript((items) => [...items, { role: "them", who: "Виктор", text: hint.slice(0, 480) }]);
+      setInterviewerMood("push");
     } catch (e) {
-      const msg = `AI-проверка не ответила: ${e.message}`;
+      const msg = `Виктор не ответил: ${e.message}`;
       setFeedback(msg);
-      setTranscript((items) => [...items, { role: "them", who: "AI score", text: msg }]);
+      setTranscript((items) => [...items, { role: "them", who: "Виктор", text: msg }]);
       setInterviewerMood("listening");
     } finally {
-      setAnswer("");
       setChecking(false);
     }
   };
 
   const nextRound = () => {
+    if (answer.trim()) setRoundAnswers((prev) => ({ ...prev, [cur.id]: answer.trim() }));
     const next = Math.min(rounds.length - 1, roundIdx + 1);
     setRoundIdx(next);
     setFeedback("");
     setAnswer("");
     setInterviewerMood("listening");
+  };
+
+  const finishMock = async () => {
+    if (evaluating) return;
+    const collected = { ...roundAnswers };
+    if (answer.trim()) collected[cur.id] = answer.trim();
+    const labelled = {};
+    rounds.forEach((r) => {
+      if (collected[r.id]?.trim()) labelled[r.title] = collected[r.id].trim();
+    });
+    setFinished(true);
+    setEvaluating(true);
+    setFinalResult(null);
+    try {
+      const res = await api.checkInterview({
+        directionId: selectedBlock.direction,
+        blockId,
+        taskText,
+        roundId: "final",
+        roundTitle: "Итог",
+        roundGoal: "Итоговая оценка интервью",
+        answerText: "",
+        expectedSignals: [],
+        previousAnswers: labelled,
+        mode: "final",
+      });
+      const cleaned = res.result.replace(/```(?:json)?/g, "").replace(/```/g, "").trim();
+      try {
+        setFinalResult(JSON.parse(cleaned));
+      } catch {
+        setFinalResult({ verdict: cleaned });
+      }
+    } catch (e) {
+      setFinalResult({ verdict: `Не удалось собрать разбор: ${e.message}` });
+    } finally {
+      setEvaluating(false);
+    }
   };
 
   const startMock = (caseText = selectedCase.prompt) => {
@@ -1932,7 +1959,10 @@ function MockScreen({ go, progress, clock, completeTask }) {
     setSeconds(0);
     setPaused(false);
     setSetupDone(true);
-    setScores({ clarify: 0, user: 0, solutions: 0, metrics: 0, diagnose: 0, actions: 0, market: 0, options: 0, recommend: 0, structure: 0, math: 0, synthesis: 0 });
+    setRoundAnswers({});
+    setFinished(false);
+    setFinalResult(null);
+    setEvaluating(false);
     setTranscript([
       { role: "them", who: "Виктор", text: `Окей, ${selectedGrade.label}. Я буду ${selectedGrade.pressure}. Кейс открыт в briefing, начнём с clarify.` },
     ]);
@@ -2079,6 +2109,81 @@ function MockScreen({ go, progress, clock, completeTask }) {
     );
   }
 
+  if (finished) {
+    const fr = finalResult || {};
+    return (
+      <div className="screen">
+        <Topbar crumbs={["Home", "Mock с AI", "Итог"]} progress={progress} clock={clock} />
+        <div className="screen-head">
+          <div>
+            <span className="eyebrow">Итоговый разбор · {selectedBlock.label} · {selectedGrade.label}</span>
+            <h1>{selectedCase.company} · {selectedCase.title}</h1>
+          </div>
+          <div className="right">
+            <span className="chip sun">{progress.xp} XP</span>
+          </div>
+        </div>
+        <div className="review-stage">
+          <div>
+            <div className="score-hero">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 20 }}>
+                <div>
+                  <div className="eyebrow">общая оценка</div>
+                  <div className="score-num" style={{ fontSize: 70 }}>{evaluating ? "…" : (fr.overallScore ?? "—")}</div>
+                  <div className="score-sub">{evaluating ? "AI собирает разбор…" : "из 100 · по всем раундам"}</div>
+                </div>
+                <PimFigure size={130} expression={evaluating ? "think" : "smile"} />
+              </div>
+              {fr.verdict && <p style={{ marginTop: 14, fontSize: 16, lineHeight: 1.5 }}>{fr.verdict}</p>}
+              {Array.isArray(fr.perRound) && fr.perRound.length > 0 && (
+                <div className="score-bars" style={{ marginTop: 16 }}>
+                  {fr.perRound.map((r, i) => (
+                    <div key={i} className="score-bar-row">
+                      <div className="nm">{r.round}</div>
+                      <div className="bar tall"><i style={{ width: `${Math.min(100, Number(r.score) || 0)}%`, background: (Number(r.score) || 0) >= 60 ? "var(--ph-mint)" : (Number(r.score) || 0) >= 35 ? "var(--ph-coral)" : "var(--ph-ink-4)" }}></i></div>
+                      <div className="vl">{r.score ?? "—"}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {(Array.isArray(fr.strengths) || Array.isArray(fr.gaps)) && (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 18 }}>
+                <div className="review-card" style={{ background: "var(--ph-mint-2)" }}>
+                  <h4>Сильные стороны</h4>
+                  <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 14, lineHeight: 1.6 }}>
+                    {(fr.strengths || []).map((s, i) => <li key={i}>{s}</li>)}
+                  </ul>
+                </div>
+                <div className="review-card" style={{ background: "#ffe1e1" }}>
+                  <h4>Зоны роста</h4>
+                  <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 14, lineHeight: 1.6 }}>
+                    {(fr.gaps || []).map((g, i) => <li key={i}>{g}</li>)}
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="review-side">
+            {fr.nextStep && (
+              <div className="review-card pim-says">
+                <h4>📣 Следующий шаг</h4>
+                <p style={{ fontSize: 15, lineHeight: 1.5 }}>{fr.nextStep}</p>
+              </div>
+            )}
+            <div className="next-row">
+              <button className="btn primary lg" style={{ flex: 1 }} onClick={() => completeTask(`mock-${selectedCase.id}`, 60, "home", { cases: progress.cases + 1 })}>домой →</button>
+            </div>
+            <div className="next-row">
+              <button className="btn ghost" style={{ flex: 1 }} onClick={() => { setFinished(false); setSetupDone(false); }}>ещё кейс</button>
+              <button className="btn ghost" style={{ flex: 1 }} onClick={() => go("review")}>в Score</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="screen">
       <Topbar crumbs={["Home", "Mock с AI"]} progress={progress} clock={clock} />
@@ -2197,21 +2302,19 @@ function MockScreen({ go, progress, clock, completeTask }) {
         </div>
         <aside style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div className="review-card">
-            <h4>Score-черновик</h4>
-            <div style={{ fontSize: 13, color: "var(--ph-ink-3)", marginBottom: 10 }}>обновляется в реальном времени</div>
+            <h4>Прогресс mock</h4>
+            <div style={{ fontSize: 13, color: "var(--ph-ink-3)", marginBottom: 10 }}>оценка появится после завершения</div>
             <div className="score-bars" style={{ marginTop: 0 }}>
-              {[
-                { n: "Clarify", v: scores.clarify || 0 },
-                { n: cur.id === "diagnose" || scores.diagnose ? "Diagnose" : cur.id === "market" || scores.market ? "Market/User" : "User & pain", v: scores.user || scores.diagnose || scores.market || scores.structure || 0 },
-                { n: cur.id === "actions" || scores.actions ? "Actions" : cur.id === "options" || scores.options ? "Options" : "Solutions", v: scores.solutions || scores.actions || scores.options || scores.math || 0 },
-                { n: cur.id === "recommend" || scores.recommend ? "Recommend" : "Metrics", v: scores.metrics || scores.recommend || scores.synthesis || 0 },
-              ].map(r => (
-                <div key={r.n} className="score-bar-row">
-                  <div className="nm">{r.n}</div>
-                  <div className="bar"><i style={{ width: `${r.v * 20}%`, background: r.v > 3 ? "var(--ph-mint)" : r.v > 1 ? "var(--ph-coral)" : "var(--ph-ink-4)" }}></i></div>
-                  <div className="vl">{r.v}/5</div>
+              {rounds.map((round, index) => {
+                const done = Boolean(roundAnswers[round.id]?.trim());
+                return (
+                <div key={round.id} className="score-bar-row">
+                  <div className="nm">{round.title}</div>
+                  <div className="bar"><i style={{ width: done ? "100%" : index === roundIdx ? "45%" : "0%", background: done ? "var(--ph-mint)" : "var(--ph-coral)" }}></i></div>
+                  <div className="vl">{done ? "готово" : index === roundIdx ? "сейчас" : "—"}</div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           <div className="review-card pim-says">
@@ -2223,7 +2326,7 @@ function MockScreen({ go, progress, clock, completeTask }) {
               <li>не назвал ни одной метрики</li>
             </ul>
           </div>
-          <button className="btn lg" style={{ width: "100%" }} onClick={() => completeTask("mock-google", 50, "review")}>завершить mock → score</button>
+          <button className="btn lg" style={{ width: "100%" }} onClick={finishMock}>завершить mock → разбор</button>
         </aside>
       </div>
       )}

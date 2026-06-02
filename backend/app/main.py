@@ -13,6 +13,8 @@ from .llm import call_yandex_gpt
 from .prompts import (
     CASE_GENERATION_SYSTEM,
     INTERVIEW_CHECK_SYSTEM,
+    INTERVIEW_COACH_SYSTEM,
+    INTERVIEW_FINAL_SYSTEM,
     INTERVIEW_GENERATION_SYSTEM,
     PHASE_GENERATION_SYSTEM,
     RUBRIC_SYSTEM,
@@ -413,7 +415,50 @@ def check_interview_answer(payload: CheckInterviewRequest) -> CheckInterviewResp
         for key, value in payload.previousAnswers.items()
         if value.strip()
     ]
-    prompt = f"""Проверь ответ кандидата на текущем шаге интервью.
+
+    if payload.mode == "final":
+        answers_block = (
+            chr(10).join(f"### {key}\n{value.strip()}" for key, value in payload.previousAnswers.items() if value.strip())
+            or "(кандидат не дал ни одного ответа)"
+        )
+        prompt = f"""Оцени mock interview целиком.
+
+НАПРАВЛЕНИЕ: {payload.directionId}
+БЛОК: {payload.blockId}
+
+ИСХОДНЫЙ КЕЙС:
+{payload.taskText[:3500]}
+
+ОТВЕТЫ КАНДИДАТА ПО РАУНДАМ:
+{answers_block}
+"""
+        system = INTERVIEW_FINAL_SYSTEM
+        temperature = 0.3
+    elif payload.mode == "coach":
+        prompt = f"""Кандидат отвечает на текущем раунде. Помоги наводящими подсказками, без оценки.
+
+НАПРАВЛЕНИЕ: {payload.directionId}
+БЛОК: {payload.blockId}
+
+ИСХОДНЫЙ КЕЙС:
+{payload.taskText[:3500]}
+
+ТЕКУЩИЙ РАУНД: {payload.roundTitle}
+Цель раунда: {payload.roundGoal}
+
+Ожидаемые сигналы:
+{chr(10).join(f"- {item}" for item in payload.expectedSignals) if payload.expectedSignals else "(нет явного списка)"}
+
+Предыдущие ответы:
+{chr(10).join(previous) if previous else "(пока нет)"}
+
+Текущий ответ кандидата:
+{payload.answerText.strip() or "(пусто)"}
+"""
+        system = INTERVIEW_COACH_SYSTEM
+        temperature = 0.4
+    else:
+        prompt = f"""Проверь ответ кандидата на текущем шаге интервью.
 
 НАПРАВЛЕНИЕ:
 {payload.directionId}
@@ -442,8 +487,11 @@ def check_interview_answer(payload: CheckInterviewRequest) -> CheckInterviewResp
 Письменный ответ:
 {payload.answerText.strip() or "(пусто)"}
 """
+        system = INTERVIEW_CHECK_SYSTEM
+        temperature = 0.25
+
     try:
-        result = call_yandex_gpt(INTERVIEW_CHECK_SYSTEM, prompt, temperature=0.25, max_tokens=1200)
+        result = call_yandex_gpt(system, prompt, temperature=temperature, max_tokens=1200)
         return CheckInterviewResponse(result=result)
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc

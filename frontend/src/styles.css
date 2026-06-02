@@ -1502,6 +1502,35 @@ details {
   font-size: 0.9rem;
 }
 .lessonExampleCard p { font-size: 0.86rem; margin-bottom: 7px; }
+.lessonFormulaList {
+  display: grid;
+  gap: 10px;
+}
+.lessonFormulaItem {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1.2fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+.lessonFormulaItem span {
+  font-weight: 700;
+  color: #374151;
+  font-size: 0.88rem;
+}
+.lessonFormulaItem code {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #111827;
+  color: #f9fafb;
+  font-size: 0.84rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 .lessonTableWrap { overflow-x: auto; }
 .lessonTable {
   width: 100%;
@@ -1593,6 +1622,7 @@ details {
 @media (max-width: 720px) {
   .lessonFrameworkGrid,
   .lessonExamplesGrid { grid-template-columns: 1fr; }
+  .lessonFormulaItem { grid-template-columns: 1fr; }
   .lessonViewerHeader { align-items: flex-start; flex-direction: column; gap: 6px; }
 }
 

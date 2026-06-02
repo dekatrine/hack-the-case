@@ -54,6 +54,7 @@ class CheckInterviewRequest(BaseModel):
     selectedOption: str = ""
     expectedSignals: list[str] = Field(default_factory=list)
     previousAnswers: dict[str, str] = Field(default_factory=dict)
+    mode: str = "score"
 
 
 class CheckInterviewResponse(BaseModel):

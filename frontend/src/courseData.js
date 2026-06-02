@@ -4792,3 +4792,336 @@ PM маркетплейса должен считать **юнит-эконом�
     },
   },
 };
+
+const LESSON_COMPLETENESS_ENHANCEMENTS = {
+  ch0_2: {
+    framework: {
+      title: 'Как отличать PM-роли',
+      items: [
+        { name: 'Цель роли', description: 'Core отвечает за качество и ценность основного продукта; Growth — за рост; Platform — за внутренние capabilities; B2B — за ценность для организаций.' },
+        { name: 'Главная метрика', description: 'У каждой роли свой центр тяжести: retention и engagement у Core, acquisition/activation у Growth, adoption внутренних сервисов у Platform, revenue и renewals у B2B.' },
+        { name: 'Стейкхолдеры', description: 'Core работает с пользователями и продуктовой командой, Growth — с маркетингом и аналитикой, Platform — с инженерами, B2B — с sales, success и закупочными комитетами.' },
+        { name: 'Тип решений', description: 'Core выбирает продуктовые улучшения, Growth — эксперименты воронки, Platform — API и инфраструктуру, B2B — enterprise-функции, интеграции и контракты.' },
+      ],
+    },
+    checklist: [
+      'Определи, какая роль ближе к текущей задаче: Core, Growth, Platform или B2B.',
+      'Назови главную метрику успеха для этой роли.',
+      'Перечисли 3 ключевых стейкхолдера и их ожидания.',
+      'Сформулируй, какие решения эта роль принимает сама, а где зависит от других команд.',
+    ],
+  },
+  ch1_4: {
+    framework: {
+      title: 'Переход от feature thinking к product thinking',
+      items: [
+        { name: 'Problem first', description: 'Начинай не с идеи фичи, а с боли, сегмента и текущего поведения пользователя.' },
+        { name: 'Outcome before output', description: 'Определи, какое поведение или метрика должны измениться после релиза.' },
+        { name: 'Evidence gate', description: 'Проверь, есть ли данные, интервью, аналитика или сигналы поддержки, подтверждающие проблему.' },
+        { name: 'Smallest useful solution', description: 'Выбери минимальное решение, которое проверяет гипотезу, а не самый полный список функций.' },
+      ],
+    },
+    checklist: [
+      'Перепиши любую фичу в формат: для кого, какая проблема, какой ожидаемый outcome.',
+      'Проверь, есть ли доказательство проблемы, а не только мнение команды.',
+      'Назови, какую метрику фича должна сдвинуть.',
+      'Сократи решение до минимальной проверки гипотезы.',
+    ],
+  },
+  ch1_5: {
+    framework: {
+      title: 'Outcome-driven постановка задачи',
+      items: [
+        { name: 'User behavior', description: 'Опиши конкретное изменение поведения: чаще возвращаются, быстрее завершают onboarding, чаще делятся, меньше бросают.' },
+        { name: 'Business result', description: 'Свяжи поведение с бизнесом: retention, revenue, conversion, cost reduction или risk reduction.' },
+        { name: 'Output options', description: 'Собери несколько вариантов output, которые могут привести к одному outcome.' },
+        { name: 'Learning loop', description: 'После релиза оцени не факт запуска, а то, изменился ли outcome и почему.' },
+      ],
+    },
+    checklist: [
+      'Раздели формулировку на output и outcome.',
+      'Проверь, может ли команда достичь outcome несколькими разными output.',
+      'Добавь baseline и целевое значение метрики.',
+      'Заранее реши, что делать при success, neutral и negative result.',
+    ],
+  },
+  ch2_3: {
+    framework: {
+      title: 'Дисциплина Problem Space',
+      items: [
+        { name: 'Context', description: 'Где, когда и почему возникает проблема. Без контекста боль обычно описана слишком абстрактно.' },
+        { name: 'Current workaround', description: 'Как пользователь решает задачу сейчас: инструменты, ручные действия, компромиссы, стоимость.' },
+        { name: 'Pain evidence', description: 'Что доказывает силу боли: деньги, время, частота, риск, эмоциональная фрустрация.' },
+        { name: 'Solution boundary', description: 'После problem discovery определи, какие решения допустимы, а какие не подходят из-за ограничений.' },
+      ],
+    },
+    checklist: [
+      'Запиши проблему без упоминания вашей будущей фичи.',
+      'Найди минимум 3 текущих workaround пользователя.',
+      'Оцени частоту, интенсивность и стоимость проблемы.',
+      'Не переходи к solution до подтверждения problem evidence.',
+    ],
+  },
+  ch2_4: {
+    framework: {
+      title: 'Практичная сегментация',
+      items: [
+        { name: 'Job', description: 'Сегмент должен объединять людей по прогрессу, которого они хотят добиться, а не только по демографии.' },
+        { name: 'Behavior', description: 'Добавь наблюдаемое поведение: частота, сценарий, канал, устройство, этап жизненного цикла.' },
+        { name: 'Pain intensity', description: 'Выдели тех, у кого проблема частая, дорогая или срочная. Именно они лучше подходят для раннего фокуса.' },
+        { name: 'Reachability', description: 'Проверь, можно ли найти и привлечь сегмент через понятные каналы.' },
+      ],
+    },
+    checklist: [
+      'Опиши сегмент в формате: когда пользователь в ситуации X хочет добиться Y, но мешает Z.',
+      'Добавь поведенческий признак, который можно измерить в продукте.',
+      'Оцени боль сегмента по частоте, стоимости и срочности.',
+      'Убери сегменты, до которых команда не умеет дотянуться.',
+    ],
+  },
+  ch3_2: {
+    framework: {
+      title: 'Выбор качественного метода',
+      items: [
+        { name: 'Interview', description: 'Лучше всего подходит, когда нужно понять мотивацию, прошлое поведение и критерии выбора.' },
+        { name: 'Observation', description: 'Нужно, когда пользователь плохо осознаёт процесс или забывает детали. Смотри, что он делает, а не только что говорит.' },
+        { name: 'Diary study', description: 'Полезен для длинных сценариев: обучение, здоровье, финансы, привычки, B2B-процессы.' },
+        { name: 'Usability test', description: 'Показывает, где пользователь не понимает интерфейс, но не доказывает ценность самой идеи.' },
+      ],
+    },
+    checklist: [
+      'Сформулируй research question до выбора метода.',
+      'Выбери метод под риск: мотивация, процесс, длительный сценарий или usability.',
+      'Подготовь вопросы про прошлое поведение, не про желания в будущем.',
+      'После исследования отдели факты, цитаты и интерпретации.',
+    ],
+  },
+  ch4_2: {
+    framework: {
+      title: 'Расчёт рынка без самообмана',
+      items: [
+        { name: 'TAM', description: 'Показывает потолок категории, но почти никогда не является реалистичным планом для команды.' },
+        { name: 'SAM', description: 'Сужает TAM до сегментов, географии, каналов и ограничений, которые продукт реально может обслужить.' },
+        { name: 'SOM', description: 'Реалистичная доля SAM, которую можно забрать с текущими ресурсами и GTM.' },
+        { name: 'Sensitivity check', description: 'Проверь, как результат меняется при изменении ключевых допущений: price, conversion, penetration, churn.' },
+      ],
+    },
+    checklist: [
+      'Посчитай рынок top-down и bottom-up.',
+      'Покажи все допущения явно, особенно цену, аудиторию и penetration.',
+      'Сравни результат с выручкой реальных конкурентов.',
+      'Сделай conservative, base и optimistic сценарии.',
+    ],
+  },
+  ch5_5: {
+    framework: {
+      title: 'Решение Build / Buy / Partner',
+      items: [
+        { name: 'Strategic importance', description: 'Если capability определяет how to win, чаще нужно build. Если это commodity, build обычно не оправдан.' },
+        { name: 'Time urgency', description: 'Если окно рынка короткое, buy или partner может быть сильнее, даже если дороже.' },
+        { name: 'Control need', description: 'Чем выше требования к качеству, безопасности, данным и roadmap, тем важнее build.' },
+        { name: 'Integration risk', description: 'Buy и partner сокращают время, но создают риски интеграции, зависимости и культурного mismatch.' },
+      ],
+    },
+    checklist: [
+      'Определи, является ли capability core для стратегии.',
+      'Оцени time-to-market для build, buy и partner.',
+      'Посчитай не только cost, но и control, risk и opportunity cost.',
+      'Зафиксируй exit plan для партнёрства или интеграции.',
+    ],
+  },
+  ch6_4: {
+    framework: {
+      title: 'Как использовать KPI и OKR вместе',
+      items: [
+        { name: 'KPI = здоровье', description: 'KPI показывают стабильность операционной системы: uptime, conversion, support SLA, churn, margin.' },
+        { name: 'OKR = изменение', description: 'OKR задают амбициозный outcome, который команда хочет изменить за квартал.' },
+        { name: 'Guardrails', description: 'KPI часто становятся guardrails для OKR: растим activation, но не ухудшаем retention и NPS.' },
+        { name: 'Cadence', description: 'KPI смотрят постоянно, OKR обсуждают на weekly check-in и оценивают по итогам цикла.' },
+      ],
+    },
+    checklist: [
+      'Раздели метрики на health KPI и change OKR.',
+      'Проверь, что Key Results измеряют outcome, а не список задач.',
+      'Добавь 1-2 guardrail KPI к каждому амбициозному OKR.',
+      'Не ставь больше 3-4 objectives на команду за цикл.',
+    ],
+  },
+  ch8_2: {
+    framework: {
+      title: 'Выбор метода проверки',
+      items: [
+        { name: 'Optimization risk', description: 'Если риск в выборе лучшего варианта интерфейса или текста при большом трафике — подходит A/B.' },
+        { name: 'Problem risk', description: 'Если непонятно, есть ли проблема, начинай с интервью, наблюдения или fake door.' },
+        { name: 'Adoption risk', description: 'Если нужно понять внедрение в реальной среде, используй pilot или phased rollout.' },
+        { name: 'Safety risk', description: 'Если ошибка может навредить пользователям или нарушить регуляторику, выбирай controlled rollout и экспертную проверку.' },
+      ],
+    },
+    checklist: [
+      'Назови главный риск: problem, solution, usability, adoption, pricing или safety.',
+      'Проверь, хватает ли трафика и событий для A/B.',
+      'Определи primary metric и guardrails до запуска.',
+      'Если A/B не подходит, выбери альтернативу: pilot, fake door, concierge, staged rollout.',
+    ],
+  },
+  ch9_2: {
+    framework: {
+      title: 'Как выбирать scoring method',
+      items: [
+        { name: 'RICE', description: 'Подходит, когда нужно сравнить инициативы по reach, impact, confidence и effort.' },
+        { name: 'ICE', description: 'Быстрый метод для ранних идей, но субъективнее RICE из-за отсутствия reach.' },
+        { name: 'MoSCoW', description: 'Полезен для согласования scope релиза, но слабее как инструмент стратегической приоритизации.' },
+        { name: 'Kano', description: 'Помогает понять восприятие пользователем: базовые ожидания, performance features и delight.' },
+      ],
+    },
+    checklist: [
+      'Выбери метод под задачу: strategy, experiment backlog, release scope или user delight.',
+      'Не смешивай scoring разных команд без нормализации effort и impact.',
+      'Всегда добавляй confidence, если данные слабые.',
+      'После scoring проведи sanity check: не победила ли «лёгкая, но неважная» задача.',
+    ],
+  },
+  ch9_3: {
+    framework: {
+      title: 'Применение Cost of Delay и WSJF',
+      items: [
+        { name: 'User/business value', description: 'Сколько ценности теряется, пока задача не сделана: revenue, retention, compliance, support load.' },
+        { name: 'Time criticality', description: 'Насколько быстро падает ценность: сезонность, дедлайн, конкурентное окно, регуляторный срок.' },
+        { name: 'Risk reduction / opportunity enablement', description: 'Снижает ли задача риск или открывает будущие возможности для других инициатив.' },
+        { name: 'Job size', description: 'Размер работы в denominator. Чем меньше размер при той же ценности, тем выше WSJF.' },
+      ],
+    },
+    comparisonTable: {
+      title: 'Когда использовать CoD и WSJF',
+      headers: ['Метод', 'Лучше подходит для', 'Главный риск'],
+      rows: [
+        ['Cost of Delay', 'Понимание цены ожидания и срочности', 'Слишком субъективная оценка потерь'],
+        ['WSJF', 'Приоритизация backlog с учётом размера работы', 'Недооценка job size или завышение value'],
+        ['RICE', 'Сравнение инициатив с reach и confidence', 'Игнорирование срочности'],
+        ['MoSCoW', 'Scope релиза и переговоры со стейкхолдерами', 'Не показывает экономику задержки'],
+      ],
+    },
+    checklist: [
+      'Оцени Cost of Delay по value, time criticality и risk reduction.',
+      'Оцени job size вместе с engineering, не в одиночку.',
+      'Сравни WSJF с интуитивным порядком и объясни расхождения.',
+      'Не используй WSJF как абсолютную истину: это инструмент разговора.',
+    ],
+  },
+  ch9_5: {
+    framework: {
+      title: 'Адаптация roadmap под аудиторию',
+      items: [
+        { name: 'Executives', description: 'Нужны стратегические ставки, impact, ресурсы, риски и связь с целями компании.' },
+        { name: 'Engineering', description: 'Нужны зависимости, technical risk, sequencing, capacity и ясность scope.' },
+        { name: 'Sales / CS', description: 'Нужны клиентские обещания, expected timing, сегменты, ограничения и messaging.' },
+        { name: 'Users', description: 'Нужны понятные направления развития без внутренних деталей и обещаний, которые команда не контролирует.' },
+      ],
+    },
+    checklist: [
+      'Сформулируй один roadmap narrative для каждой аудитории.',
+      'Убери точные даты там, где высокая неопределённость.',
+      'Покажи now / next / later или themes, если roadmap ещё меняется.',
+      'Отдели committed от exploratory инициатив.',
+    ],
+  },
+  ch10_2: {
+    framework: {
+      title: 'Правильный расчёт LTV',
+      items: [
+        { name: 'Revenue basis', description: 'Начинай с ARPU или ARPA, но переходи к gross profit, если оцениваешь экономику бизнеса.' },
+        { name: 'Retention / churn', description: 'LTV чувствителен к churn. Нельзя считать его без понимания удержания по когортам.' },
+        { name: 'Cohorts', description: 'Считай LTV отдельно для каналов, сегментов и тарифов: средний LTV часто скрывает плохую экономику.' },
+        { name: 'Time horizon', description: 'Ограничивай LTV реалистичным горизонтом, особенно в молодых продуктах без длинной истории.' },
+      ],
+    },
+    comparisonTable: {
+      title: 'Варианты LTV',
+      headers: ['Подход', 'Формула', 'Когда использовать'],
+      rows: [
+        ['Упрощённый', 'ARPU / churn', 'Быстрая оценка зрелой подписки'],
+        ['По gross margin', 'ARPU × GM / churn', 'Оценка прибыльности, а не только выручки'],
+        ['Когортный', 'Σ gross profit по месяцам жизни когорты', 'Когда retention нелинеен или продукт молодой'],
+        ['Segment LTV', 'LTV отдельно по каналу/сегменту', 'Для решений по CAC, pricing и GTM'],
+      ],
+    },
+    checklist: [
+      'Считай LTV по gross profit, если принимаешь бизнес-решение.',
+      'Раздели LTV по каналам, сегментам и тарифам.',
+      'Проверь, не завышает ли формула срок жизни клиента.',
+      'Сравни LTV с CAC и payback period, а не смотри изолированно.',
+    ],
+  },
+  ch10_3: {
+    framework: {
+      title: 'Диагностика CAC и payback',
+      items: [
+        { name: 'Fully loaded CAC', description: 'Включай paid spend, sales cost, tools, commissions и долю команды, если считаешь реальную экономику.' },
+        { name: 'Blended vs paid CAC', description: 'Blended показывает общую эффективность, paid CAC — качество платных каналов. Нужны оба.' },
+        { name: 'Payback period', description: 'Показывает, за сколько месяцев gross margin возвращает CAC. Для SaaS часто целятся в <12 месяцев.' },
+        { name: 'Channel quality', description: 'Дешёвый CAC бесполезен, если приводит пользователей с низким retention или низким LTV.' },
+      ],
+    },
+    checklist: [
+      'Раздели CAC на blended, paid и channel-level.',
+      'Считай payback через gross margin, не через revenue.',
+      'Сравни CAC не только с LTV, но и с retention новых когорт.',
+      'Проверь, не ухудшается ли payback при масштабировании канала.',
+    ],
+  },
+  ch10_4: {
+    framework: {
+      title: 'Экономика подписки',
+      items: [
+        { name: 'Acquisition', description: 'CAC и conversion показывают стоимость входа пользователя в подписку.' },
+        { name: 'Activation', description: 'Без ранней активации платящий пользователь быстро уходит, и LTV ломается.' },
+        { name: 'Retention', description: 'Churn — главный рычаг LTV. Даже небольшой churn compound-эффектом разрушает экономику.' },
+        { name: 'Expansion', description: 'Upsell, cross-sell и тарифные апгрейды дают NRR >100%, что меняет всю модель роста.' },
+      ],
+    },
+    checklist: [
+      'Разложи экономику подписки на acquisition, activation, retention, expansion.',
+      'Смотри monthly churn и cohort retention, а не только общий churn.',
+      'Считай NRR и GRR отдельно.',
+      'Проверь, не покупает ли рост компания слишком длинным payback.',
+    ],
+  },
+  ch10_5: {
+    framework: {
+      title: 'Экономика маркетплейса',
+      items: [
+        { name: 'Liquidity', description: 'Главная метрика: насколько быстро спрос и предложение находят друг друга.' },
+        { name: 'Take rate', description: 'Доля GMV, которую маркетплейс забирает как revenue. Слишком высокий take rate может убить supply.' },
+        { name: 'Supply / demand balance', description: 'Рост одной стороны без другой ухудшает experience: нет заказов для продавцов или нет выбора для покупателей.' },
+        { name: 'Contribution margin', description: 'GMV не равен бизнесу. Нужно учитывать subsidies, refunds, support, payments и logistics.' },
+      ],
+    },
+    checklist: [
+      'Раздели метрики на supply, demand, liquidity и monetization.',
+      'Считай revenue через GMV × take rate, но прибыль через contribution margin.',
+      'Проверь unit economics отдельно по городам, категориям или сегментам.',
+      'Следи, не маскируют ли субсидии слабую liquidity.',
+    ],
+  },
+  ch11_2: {
+    framework: {
+      title: 'Как распознать тип кейса',
+      items: [
+        { name: 'Product sense', description: 'Формулировки «улучши продукт», «придумай фичу», «как бы ты решил проблему пользователя».' },
+        { name: 'Metric drop', description: 'Формулировки «метрика упала», «conversion снизился», «retention просел». Нужна диагностика, не генерация идей.' },
+        { name: 'Growth', description: 'Формулировки «как увеличить X», «как привлечь пользователей», «как поднять activation/revenue».' },
+        { name: 'Strategy', description: 'Формулировки «стоит ли входить на рынок», «build/buy/partner», «какой сегмент выбрать».' },
+      ],
+    },
+    checklist: [
+      'В первые 30 секунд определи тип кейса.',
+      'Задай clarify questions под конкретный тип.',
+      'Выбери структуру решения до генерации идей.',
+      'Если кейс смешанный, назови primary type и secondary angle.',
+    ],
+  },
+};
+
+Object.entries(LESSON_COMPLETENESS_ENHANCEMENTS).forEach(([lessonId, enhancement]) => {
+  Object.assign(LEARN_TOGETHER_CONTENT[lessonId], enhancement);
+});
