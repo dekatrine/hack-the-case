@@ -370,11 +370,11 @@ function Sidebar({ route, go, progress }) {
         <React.Fragment key={g.key}>
           {g.label && <div className="nav-group-label">{g.label}</div>}
           {items.filter(it => it.group === g.key).map(it => (
-            <div key={it.k} className={`sb-item ${route === it.k ? "active" : ""}`} onClick={() => go(it.k)}>
+            <button type="button" key={it.k} className={`sb-item ${route === it.k ? "active" : ""}`} onClick={() => go(it.k)}>
               <span className="ico">{it.ico}</span>
               <span>{it.label}</span>
               {it.badge && <span className="badge">{it.badge}</span>}
-            </div>
+            </button>
           ))}
         </React.Fragment>
       ))}
@@ -402,7 +402,9 @@ function Topbar({ crumbs = [], progress, clock }) {
         ))}
       </div>
       <div className="grow" />
-      <div className="search">{Icon.search}<span>поиск кейсов, тем, компаний</span></div>
+      <button type="button" className="search" onClick={() => window.dispatchEvent(new CustomEvent("pmquest-open-search"))}>
+        {Icon.search}<span>поиск кейсов, тем, компаний</span>
+      </button>
       <div className="stat"><span className="em">🕒</span><span>{clock.time} МСК</span></div>
       <div className="stat"><span className="em">🔥</span><span>{progress.streak}</span></div>
       <div className="stat" style={{ background: "var(--ph-sun-2)" }}><span className="em">✦</span><span>{progress.xp}</span></div>
@@ -435,8 +437,8 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
           <h1 style={{ marginTop: 4 }}>Привет, Катя <span style={{ color: "var(--ph-coral)" }}>✦</span></h1>
         </div>
         <div className="right">
-          <button className="btn ghost sm">Мой план</button>
-          <button className="btn ghost sm">🎯 Junior PM @ FAANG · 54 дн.</button>
+          <button className="btn ghost sm" onClick={() => window.dispatchEvent(new CustomEvent("pmquest-open-plan"))}>Мой план</button>
+          <button className="btn ghost sm" onClick={() => window.dispatchEvent(new CustomEvent("pmquest-open-goal"))}>🎯 Junior PM @ FAANG · 54 дн.</button>
         </div>
       </div>
 
@@ -606,11 +608,14 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
 }
 
 // ─── Screen: LIBRARY ─────────────────────────────────────────────────
-function LibraryScreen({ go, progress, clock }) {
+function LibraryScreen({ go, progress, clock, notes = KNOWLEDGE_NOTES, onAddLesson }) {
   const [cat, setCat] = useState("all");
-  const categoryCounts = KNOWLEDGE_NOTES.reduce((acc, note) => ({ ...acc, [note.cat]: (acc[note.cat] || 0) + 1 }), {});
+  const [sortMode, setSortMode] = useState("new");
+  const [showAddLesson, setShowAddLesson] = useState(false);
+  const [lessonDraft, setLessonDraft] = useState({ title: "", summary: "", cat: "beginner" });
+  const categoryCounts = notes.reduce((acc, note) => ({ ...acc, [note.cat]: (acc[note.cat] || 0) + 1 }), {});
   const cats = [
-    { k: "all",       label: "Все",                  n: KNOWLEDGE_NOTES.length },
+    { k: "all",       label: "Все",                  n: notes.length },
     { k: "beginner",  label: "Новичку в PM",         n: categoryCounts.beginner || 0 },
     { k: "framework", label: "Фреймворки",           n: categoryCounts.framework || 0 },
     { k: "metrics",   label: "Метрики & A/B",        n: categoryCounts.metrics || 0 },
@@ -618,9 +623,30 @@ function LibraryScreen({ go, progress, clock }) {
     { k: "behavioral",label: "Behavioral / STAR",    n: categoryCounts.behavioral || 0 },
     { k: "sysdesign", label: "System design для PM", n: categoryCounts.sysdesign || 0 },
   ];
-  const notes = KNOWLEDGE_NOTES;
-  const filtered = cat === "all" ? notes : notes.filter(n => n.cat === cat);
+  const filtered = (cat === "all" ? notes : notes.filter(n => n.cat === cat))
+    .slice()
+    .sort((a, b) => {
+      if (sortMode === "az") return a.t.localeCompare(b.t);
+      if (sortMode === "mastery") {
+        const aDone = Boolean(progress.completed?.[`check-${a.id}`] || progress.completed?.[`teach-${a.id}`]);
+        const bDone = Boolean(progress.completed?.[`check-${b.id}`] || progress.completed?.[`teach-${b.id}`]);
+        return Number(bDone) - Number(aDone);
+      }
+      return Number(b.isCustom) - Number(a.isCustom);
+    });
   const masteredCount = notes.filter((n) => progress.completed?.[`teach-${n.id}`]).length;
+  const sortLabel = { new: "новые", az: "A–Я", mastery: "освоение" }[sortMode];
+  const cycleSort = () => setSortMode((current) => current === "new" ? "az" : current === "az" ? "mastery" : "new");
+  const submitLesson = () => {
+    const title = lessonDraft.title.trim();
+    const summary = lessonDraft.summary.trim();
+    if (!title || !summary) return;
+    onAddLesson?.({ title, summary, cat: lessonDraft.cat });
+    setLessonDraft({ title: "", summary: "", cat: "beginner" });
+    setShowAddLesson(false);
+    setCat("all");
+    setSortMode("new");
+  };
   return (
     <div className="screen" style={{ maxWidth: "none" }}>
       <Topbar crumbs={["PMQuest", "Уроки"]} progress={progress} clock={clock} />
@@ -630,19 +656,19 @@ function LibraryScreen({ go, progress, clock }) {
           <h1>Твои уроки</h1>
         </div>
         <div className="right">
-          <button className="btn ghost">Сортировка: новые</button>
+          <button className="btn ghost" onClick={cycleSort}>Сортировка: {sortLabel}</button>
           <span className="chip mint">освоено {masteredCount}/{notes.length}</span>
-          <button className="btn primary">＋ свой урок</button>
+          <button className="btn primary" onClick={() => setShowAddLesson(true)}>＋ свой урок</button>
         </div>
       </div>
       <div className="lib-stage">
         <aside className="lib-sidebar">
           <h5>Категории</h5>
           {cats.map(c => (
-            <div key={c.k} className={`lib-cat ${cat === c.k ? "active" : ""}`} onClick={() => setCat(c.k)}>
+            <button type="button" key={c.k} className={`lib-cat ${cat === c.k ? "active" : ""}`} onClick={() => setCat(c.k)}>
               <span>{c.label}</span>
               <span className="cnt">{c.n}</span>
-            </div>
+            </button>
           ))}
           <h5 style={{ marginTop: 14 }}>Метки</h5>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", padding: "0 6px" }}>
@@ -658,7 +684,7 @@ function LibraryScreen({ go, progress, clock }) {
             const checked = progress.checkStats?.[n.id] || 0;
             const progressSteps = Math.min(4, (n.s > 0 ? 1 : 0) + (checked > 0 ? 1 : 0) + (mastered ? 2 : 0));
             return (
-              <div key={n.id} className={`note-card ${n.c}`} onClick={() => go("lesson", { lessonTopicId: n.id })}>
+              <button type="button" key={n.id} className={`note-card ${n.c}`} onClick={() => go("lesson", { lessonTopicId: n.id })}>
                 {mastered && <span className="mastered-badge">✓ освоено</span>}
                 <h4>{n.t}</h4>
                 <p className="excerpt">{n.ex}</p>
@@ -672,11 +698,39 @@ function LibraryScreen({ go, progress, clock }) {
                     {[0,1,2,3].map(k => <i key={k} className={k < progressSteps ? "on" : ""}></i>)}
                   </span>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
       </div>
+      {showAddLesson && (
+        <div className="pmq-modal-backdrop" onClick={() => setShowAddLesson(false)}>
+          <section className="pmq-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="pmq-modal-head">
+              <div>
+                <span className="eyebrow">свой урок</span>
+                <h3>Добавить тему в библиотеку</h3>
+              </div>
+              <button className="btn ghost sm" onClick={() => setShowAddLesson(false)}>×</button>
+            </div>
+            <label className="pmq-field">
+              <span>Название темы</span>
+              <input value={lessonDraft.title} onChange={(event) => setLessonDraft((draft) => ({ ...draft, title: event.target.value }))} placeholder="Например: B2B onboarding" />
+            </label>
+            <label className="pmq-field">
+              <span>Что хочешь разобрать</span>
+              <textarea value={lessonDraft.summary} onChange={(event) => setLessonDraft((draft) => ({ ...draft, summary: event.target.value }))} placeholder="Опиши вопрос, контекст или навык. PMQuest соберёт из него урок." />
+            </label>
+            <label className="pmq-field">
+              <span>Категория</span>
+              <select value={lessonDraft.cat} onChange={(event) => setLessonDraft((draft) => ({ ...draft, cat: event.target.value }))}>
+                {cats.filter((item) => item.k !== "all").map((item) => <option key={item.k} value={item.k}>{item.label}</option>)}
+              </select>
+            </label>
+            <button className="btn primary lg" onClick={submitLesson} disabled={!lessonDraft.title.trim() || !lessonDraft.summary.trim()}>добавить урок</button>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
@@ -853,9 +907,9 @@ const getLessonWhat = (note, guide) => {
   };
 };
 
-function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm" }) {
+function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm", notes = KNOWLEDGE_NOTES }) {
   const [idx, setIdx] = useState(0);
-  const note = KNOWLEDGE_NOTES.find((item) => item.id === initialTopicId) || KNOWLEDGE_NOTES[1] || KNOWLEDGE_NOTES[0];
+  const note = notes.find((item) => item.id === initialTopicId) || notes[1] || notes[0];
   const guide = getLessonGuide(note);
   const what = getLessonWhat(note, guide);
   useEffect(() => setIdx(0), [initialTopicId]);
@@ -1593,6 +1647,12 @@ function MockScreen({ go, progress, clock, completeTask }) {
     { id: "ride-hailing-supply", block: "consulting_opening", company: "Ride-hailing", title: "Driver supply shortage", prompt: "Ride-hailing app столкнулся с нехваткой водителей в часы пик. Сформулируй opening, hypotheses и math setup.", source: "Consulting case style" },
     { id: "edtech-profit", block: "consulting_opening", company: "EdTech", title: "Trial-to-paid problem", prompt: "EdTech растит trials, но trial-to-paid conversion падает. Как структурируешь диагностику и юнит-экономику?", source: "Business case mock" },
     { id: "cloud-costs", block: "consulting_opening", company: "Cloud SaaS", title: "Cloud costs spike", prompt: "Cloud SaaS резко увеличил infra costs при стабильной выручке. Какие clarifying questions и buckets анализа?", source: "Business case mock" },
+    // Тематические пресеты по индустриям (перенесены из раздела «Кейс»)
+    { id: "ind-spotify-likes", block: "product_sense", company: "Spotify", title: "Лайки песен в плейлистах", industry: "Music streaming / Entertainment", prompt: "Spotify хочет добавить лайки песен в плейлистах. Сфокусируй кейс на activation, retention, discovery и выборе метрик.", source: "Индустрия · product design" },
+    { id: "ind-marketplace-retention", block: "product_execution", company: "Маркетплейс", title: "Падение повторных покупок", industry: "E-commerce / Маркетплейсы", prompt: "Маркетплейс видит падение повторных покупок у новых пользователей. Нужен PM case про диагностику воронки, сегменты, гипотезы роста и эксперименты.", source: "Индустрия · growth" },
+    { id: "ind-fintech-onboarding", block: "product_execution", company: "Fintech", title: "Потери на KYC/onboarding", industry: "Fintech / Банки", prompt: "Финтех-приложение теряет пользователей на KYC/onboarding. Сгенерируй кейс с данными по funnel, ограничениями compliance и выбором решения.", source: "Индустрия · execution" },
+    { id: "ind-edtech-monetization", block: "product_strategy", company: "EdTech", title: "Trial-to-paid conversion", industry: "EdTech / Образование", prompt: "EdTech хочет поднять trial-to-paid conversion без ухудшения learning outcomes. Нужен кейс про сегменты, pricing/paywall, retention и guardrail metrics.", source: "Индустрия · strategy" },
+    { id: "ind-bank-profit", block: "consulting_opening", company: "Цифровой банк", title: "Падение прибыльности", industry: "Fintech / Банки", prompt: "Цифровой банк растёт по клиентам, но прибыльность падает. Сгенерируй consulting case с экономикой, CAC, cross-sell, cost-to-serve и decision question.", source: "Индустрия · business case" },
   ];
   const cleanMockText = (value = "") =>
     value
@@ -1662,38 +1722,40 @@ function MockScreen({ go, progress, clock, completeTask }) {
     const commonStart = {
       id: "clarify",
       title: "Clarify",
-      prompt: "Окей, кейс открыт в briefing ниже. Начни как на live-интервью: какие 3-4 уточняющих вопроса задашь перед решением?",
+      prompt: "С каких 3-4 уточняющих вопросов начнёшь?",
       expectedSignals: ["цель", "сегмент", "ограничения", "success criteria"],
     };
     const map = {
       product_sense: [
         commonStart,
-        { id: "user", title: "User & pain", prompt: "Выбери primary user и 2-3 настоящие боли. Почему именно этот сегмент?", expectedSignals: ["segmentation", "JTBD", "pain severity", "frequency"] },
-        { id: "solutions", title: "Solutions", prompt: "Предложи 3 решения: MVP, ambitious и low-tech. Что выберешь для V1?", expectedSignals: ["solution range", "prioritization", "trade-off", "V1 scope"] },
-        { id: "metrics", title: "Metrics", prompt: "Назови success metric, guardrails и план эксперимента.", expectedSignals: ["primary metric", "guardrails", "experiment", "risks"] },
+        { id: "user", title: "User & pain", prompt: "Кто primary user и его 2-3 главные боли?", expectedSignals: ["segmentation", "JTBD", "pain severity", "frequency"] },
+        { id: "solutions", title: "Solutions", prompt: "Дай 3 решения (MVP / смелое / простое). Что в V1?", expectedSignals: ["solution range", "prioritization", "trade-off", "V1 scope"] },
+        { id: "metrics", title: "Metrics", prompt: "Success metric, guardrails и как проверишь?", expectedSignals: ["primary metric", "guardrails", "experiment", "risks"] },
       ],
       product_execution: [
         commonStart,
-        { id: "diagnose", title: "Diagnose", prompt: "Построй дерево диагностики: какие разрезы, события и сегменты проверишь?", expectedSignals: ["funnel", "segments", "instrumentation", "root cause"] },
-        { id: "metrics", title: "Metrics", prompt: "Выбери primary metric и 3 supporting metrics. Что может исказить вывод?", expectedSignals: ["metric hierarchy", "leading/lagging", "counter-metrics"] },
-        { id: "actions", title: "Actions", prompt: "Какие 2-3 решения предложишь после диагностики и как проверишь эффект?", expectedSignals: ["experiments", "impact", "confidence", "rollout"] },
+        { id: "diagnose", title: "Diagnose", prompt: "Какие разрезы и сегменты проверишь? Дерево диагностики.", expectedSignals: ["funnel", "segments", "instrumentation", "root cause"] },
+        { id: "metrics", title: "Metrics", prompt: "Primary metric + 3 supporting. Что исказит вывод?", expectedSignals: ["metric hierarchy", "leading/lagging", "counter-metrics"] },
+        { id: "actions", title: "Actions", prompt: "Какие 2-3 действия после диагностики и как проверишь?", expectedSignals: ["experiments", "impact", "confidence", "rollout"] },
       ],
       product_strategy: [
         commonStart,
-        { id: "market", title: "Market", prompt: "Оцени рынок, конкурентов и strategic fit. Где самый сильный leverage?", expectedSignals: ["market sizing", "competition", "moat", "fit"] },
-        { id: "options", title: "Options", prompt: "Дай 3 стратегические опции и trade-offs между ними.", expectedSignals: ["options", "trade-offs", "resources", "timing"] },
-        { id: "recommend", title: "Recommendation", prompt: "Сделай финальную рекомендацию: что делаем, чего не делаем, какие риски.", expectedSignals: ["clear recommendation", "risks", "next steps", "metrics"] },
+        { id: "market", title: "Market", prompt: "Рынок, конкуренты, fit — где главный leverage?", expectedSignals: ["market sizing", "competition", "moat", "fit"] },
+        { id: "options", title: "Options", prompt: "3 стратегические опции и trade-offs.", expectedSignals: ["options", "trade-offs", "resources", "timing"] },
+        { id: "recommend", title: "Recommendation", prompt: "Финальная рекомендация: что делаем, какие риски?", expectedSignals: ["clear recommendation", "risks", "next steps", "metrics"] },
       ],
       consulting_opening: [
         commonStart,
-        { id: "structure", title: "Structure", prompt: "Построй issue tree: revenue, costs, mix, external factors. Где начнёшь?", expectedSignals: ["MECE", "hypothesis", "profit equation", "prioritization"] },
-        { id: "math", title: "Math setup", prompt: "Какие данные попросишь для первого расчёта и какую формулу используешь?", expectedSignals: ["unit economics", "formula", "assumptions", "sanity check"] },
-        { id: "synthesis", title: "Synthesis", prompt: "Синтезируй предварительную гипотезу и следующие шаги.", expectedSignals: ["synthesis", "confidence", "risks", "client-ready answer"] },
+        { id: "structure", title: "Structure", prompt: "Issue tree: revenue / costs / mix / external. С чего начнёшь?", expectedSignals: ["MECE", "hypothesis", "profit equation", "prioritization"] },
+        { id: "math", title: "Math setup", prompt: "Какие данные и формулу возьмёшь для первого расчёта?", expectedSignals: ["unit economics", "formula", "assumptions", "sanity check"] },
+        { id: "synthesis", title: "Synthesis", prompt: "Предварительная гипотеза и следующие шаги?", expectedSignals: ["synthesis", "confidence", "risks", "client-ready answer"] },
       ],
     };
     return map[blockId] || map.product_sense;
   };
   const [setupDone, setSetupDone] = useState(false);
+  const [mode, setMode] = useState("live");
+  const [savedNotice, setSavedNotice] = useState("");
   const [blockId, setBlockId] = useState("product_sense");
   const [grade, setGrade] = useState("middle");
   const [caseId, setCaseId] = useState("google-maps-kids");
@@ -1859,7 +1921,6 @@ function MockScreen({ go, progress, clock, completeTask }) {
     setRoundIdx(next);
     setFeedback("");
     setAnswer("");
-    setTranscript((items) => [...items, { role: "them", who: "Виктор", text: rounds[next].prompt }]);
     setInterviewerMood("listening");
   };
 
@@ -1874,24 +1935,42 @@ function MockScreen({ go, progress, clock, completeTask }) {
     setScores({ clarify: 0, user: 0, solutions: 0, metrics: 0, diagnose: 0, actions: 0, market: 0, options: 0, recommend: 0, structure: 0, math: 0, synthesis: 0 });
     setTranscript([
       { role: "them", who: "Виктор", text: `Окей, ${selectedGrade.label}. Я буду ${selectedGrade.pressure}. Кейс открыт в briefing, начнём с clarify.` },
-      { role: "them", who: "Виктор", text: nextRounds[0].prompt },
     ]);
     setFeedback("");
     setAnswer("");
     setInterviewerMood("listening");
   };
 
+  const saveCase = () => {
+    const saved = JSON.parse(localStorage.getItem("pmquest-saved-cases-v1") || "[]");
+    const next = [
+      {
+        id: `${selectedCase.id}-${Date.now()}`,
+        title: `${selectedCase.company} · ${selectedCase.title}`,
+        caseText: taskText,
+        step: cur.title,
+        draft: answer,
+        savedAt: new Date().toISOString(),
+      },
+      ...saved,
+    ].slice(0, 12);
+    localStorage.setItem("pmquest-saved-cases-v1", JSON.stringify(next));
+    setSavedNotice("сохранено");
+    window.setTimeout(() => setSavedNotice(""), 1800);
+  };
+
   const generateAndStart = async () => {
     setGeneratingCase(true);
     setFeedback("");
     try {
+      const industryPrefix = selectedCase.industry ? `Индустрия: ${selectedCase.industry}. ` : "";
       const res = await api.generateInterview({
         directionId: selectedBlock.direction,
         blockId,
         difficulty: grade,
         companyContext: customMode
           ? `Кастомная тема пользователя: ${customContext.trim() || "PM mock interview по выбранному блоку"}`
-          : (customContext.trim() || `${selectedCase.company}: ${selectedCase.title}. ${selectedCase.prompt}`),
+          : (customContext.trim() || `${industryPrefix}${selectedCase.company}: ${selectedCase.title}. ${selectedCase.prompt}`),
       });
       startMock(res.taskText || selectedCase.prompt);
     } catch (e) {
@@ -1917,6 +1996,13 @@ function MockScreen({ go, progress, clock, completeTask }) {
           </div>
         </div>
         <div className="mock-setup">
+          <section className="mock-setup-panel">
+            <div className="eyebrow">режим практики</div>
+            <div className="mock-mode-switch">
+              <button className={mode === "live" ? "active" : ""} onClick={() => setMode("live")}>Live mock с микрофоном</button>
+              <button className={mode === "written" ? "active" : ""} onClick={() => setMode("written")}>Письменный разбор</button>
+            </div>
+          </section>
           <section className="mock-setup-panel">
             <div className="eyebrow">1 · часть mock interview</div>
             <div className="mock-choice-grid">
@@ -1998,16 +2084,65 @@ function MockScreen({ go, progress, clock, completeTask }) {
       <Topbar crumbs={["Home", "Mock с AI"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
-          <span className="eyebrow">Mock-интервью · {selectedGrade.label} · {selectedBlock.label} · 30 мин</span>
+          <span className="eyebrow">{mode === "written" ? "Письменный разбор" : "Mock-интервью"} · {selectedGrade.label} · {selectedBlock.label} · 30 мин</span>
           <h1>{selectedCase.company} · {selectedCase.title}</h1>
         </div>
         <div className="right">
           <button className="btn ghost sm" onClick={() => setSetupDone(false)}>сменить mock</button>
+          <button className="btn ghost sm" onClick={saveCase}>{savedNotice || "сохранить"}</button>
           <span className="chip plum">🧐 {selectedGrade.persona}</span>
-          <span className="chip sun">⏱ {elapsed} / 15:00</span>
-          <button className="btn ghost sm" onClick={() => setPaused(!paused)}>{paused ? "▶ продолжить" : "⏸ пауза"}</button>
+          {mode === "live" && <span className="chip sun">⏱ {elapsed} / 15:00</span>}
+          {mode === "live" && <button className="btn ghost sm" onClick={() => setPaused(!paused)}>{paused ? "▶ продолжить" : "⏸ пауза"}</button>}
         </div>
       </div>
+      {mode === "written" ? (
+        <div className="case-wrap">
+          <aside className="case-steps">
+            <div className="eyebrow" style={{ padding: "0 4px 4px" }}>{rounds.length} шагов разбора</div>
+            {rounds.map((r, i) => (
+              <div key={r.id} className={`case-step ${i < roundIdx ? "done" : ""} ${i === roundIdx ? "active" : ""}`} onClick={() => setRoundIdx(i)}>
+                <div className="n">{i < roundIdx ? "✓" : i + 1}</div>
+                <div>
+                  <b>{r.title}</b>
+                  <i>{r.prompt.length > 52 ? `${r.prompt.slice(0, 52)}…` : r.prompt}</i>
+                </div>
+              </div>
+            ))}
+          </aside>
+          <div className="case-stage">
+            <MockCaseBrief text={taskText} />
+            <div className="meta">
+              <span className="chip solid-ink">Шаг {roundIdx + 1} / {rounds.length}</span>
+              <span className="chip pink">{cur.title}</span>
+            </div>
+            <h2>{cur.title}</h2>
+            <p className="promptq">{cur.prompt}</p>
+            <textarea
+              className="case-input"
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              placeholder="Ответь письменно: структура, сегмент, метрики, trade-offs…"
+            />
+            {feedback && (
+              <div className="mcq-explain" style={{ background: "var(--ph-mint-2)" }}>
+                <h5>AI feedback</h5>
+                <p>{feedback}</p>
+              </div>
+            )}
+            <div className="case-actions">
+              <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
+                <button className="btn ghost" onClick={() => setRoundIdx(Math.max(0, roundIdx - 1))}>{Icon.back} назад</button>
+                <button className="btn" onClick={submitAnswer} disabled={checking || !answer.trim()}>{checking ? "проверяю" : "проверить ответ (AI)"}</button>
+                {roundIdx < rounds.length - 1 ? (
+                  <button className="btn primary lg" onClick={nextRound}>далее {Icon.chev}</button>
+                ) : (
+                  <button className="btn primary lg" onClick={() => completeTask(`mock-written-${selectedCase.id}`, 60, "review", { cases: progress.cases + 1 })}>отправить на разбор {Icon.chev}</button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
       <div className="mock-stage">
         <div className="mock-room">
           <div className="mock-interviewer">
@@ -2091,6 +2226,7 @@ function MockScreen({ go, progress, clock, completeTask }) {
           <button className="btn lg" style={{ width: "100%" }} onClick={() => completeTask("mock-google", 50, "review")}>завершить mock → score</button>
         </aside>
       </div>
+      )}
     </div>
   );
 }
@@ -2971,11 +3107,45 @@ export default function PMQuestHifi({ onExit }) {
   const [selectedCheckTopicId, setSelectedCheckTopicId] = useState("nsm");
   const [pimOpenSignal, setPimOpenSignal] = useState(0);
   const [progress, setProgress] = useState(initialProgress);
+  const [userLessons, setUserLessons] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("pmquest-user-lessons-v1") || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [overlay, setOverlay] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const clock = useMoscowClock();
+  const lessonTopics = [...userLessons, ...KNOWLEDGE_NOTES];
+  const searchResults = lessonTopics
+    .filter((note) => {
+      const query = searchQuery.trim().toLowerCase();
+      return query && `${note.t} ${note.ex} ${note.cat}`.toLowerCase().includes(query);
+    })
+    .slice(0, 8);
 
   useEffect(() => {
     localStorage.setItem("pmquest-progress-v1", JSON.stringify(progress));
   }, [progress]);
+
+  useEffect(() => {
+    localStorage.setItem("pmquest-user-lessons-v1", JSON.stringify(userLessons));
+  }, [userLessons]);
+
+  useEffect(() => {
+    const openSearch = () => setOverlay("search");
+    const openPlan = () => setOverlay("plan");
+    const openGoal = () => setOverlay("goal");
+    window.addEventListener("pmquest-open-search", openSearch);
+    window.addEventListener("pmquest-open-plan", openPlan);
+    window.addEventListener("pmquest-open-goal", openGoal);
+    return () => {
+      window.removeEventListener("pmquest-open-search", openSearch);
+      window.removeEventListener("pmquest-open-plan", openPlan);
+      window.removeEventListener("pmquest-open-goal", openGoal);
+    };
+  }, []);
 
   const go = (r, options = {}) => {
     if (options.lessonTopicId) setSelectedLessonTopicId(options.lessonTopicId);
@@ -3002,6 +3172,24 @@ export default function PMQuestHifi({ onExit }) {
     go(nextRoute);
   };
 
+  const addLesson = ({ title, summary, cat }) => {
+    const id = `custom-${Date.now()}`;
+    setUserLessons((items) => [
+      {
+        id,
+        t: title,
+        ex: summary,
+        cat,
+        c: "is-sky",
+        s: 0,
+        isCustom: true,
+        rookie: `Я хочу разобраться в теме «${title}». С чего начать и где это пригодится PM?`,
+        hints: ["объясни тему простыми словами", "дай продуктовый пример", "назови способ проверки"],
+      },
+      ...items,
+    ]);
+  };
+
   const shared = {
     progress,
     clock,
@@ -3011,8 +3199,8 @@ export default function PMQuestHifi({ onExit }) {
 
   const screens = {
     home:    <HomeScreen go={go} openPim={() => setPimOpenSignal((v) => v + 1)} {...shared} />,
-    library: <LibraryScreen go={go} {...shared} />,
-    lesson:  <LessonScreen go={go} initialTopicId={selectedLessonTopicId} {...shared} />,
+    library: <LibraryScreen go={go} notes={lessonTopics} onAddLesson={addLesson} {...shared} />,
+    lesson:  <LessonScreen go={go} notes={lessonTopics} initialTopicId={selectedLessonTopicId} {...shared} />,
     check:   <CheckScreen go={go} initialTopicId={selectedCheckTopicId} {...shared} />,
     srs:     <SRSScreen go={go} {...shared} />,
     case:    <CaseScreen go={go} {...shared} />,
@@ -3047,6 +3235,60 @@ export default function PMQuestHifi({ onExit }) {
           progress={progress}
           openSignal={pimOpenSignal}
         />
+        {overlay && (
+          <div className="pmq-modal-backdrop" onClick={() => setOverlay(null)}>
+            <section className="pmq-modal pmq-global-modal" onClick={(event) => event.stopPropagation()}>
+              <div className="pmq-modal-head">
+                <div>
+                  <span className="eyebrow">{overlay === "search" ? "быстрый поиск" : overlay === "plan" ? "маршрут подготовки" : "цель"}</span>
+                  <h3>{overlay === "search" ? "Найти тему" : overlay === "plan" ? "План на ближайшие шаги" : "Junior PM @ FAANG"}</h3>
+                </div>
+                <button className="btn ghost sm" onClick={() => setOverlay(null)}>×</button>
+              </div>
+              {overlay === "search" && (
+                <>
+                  <label className="pmq-field">
+                    <span>Урок, фреймворк или навык</span>
+                    <input autoFocus value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Например: retention, STAR, JTBD" />
+                  </label>
+                  <div className="pmq-search-results">
+                    {!searchQuery.trim() && <p>Начни вводить тему. Открою подходящий урок.</p>}
+                    {searchQuery.trim() && searchResults.length === 0 && <p>Ничего не найдено. Добавь свой урок в библиотеке.</p>}
+                    {searchResults.map((note) => (
+                      <button key={note.id} onClick={() => { setOverlay(null); setSearchQuery(""); go("lesson", { lessonTopicId: note.id }); }}>
+                        <strong>{note.t}</strong>
+                        <span>{note.ex}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              {overlay === "plan" && (
+                <div className="pmq-plan-list">
+                  {[
+                    ["1", "Урок", "Выбери одну тему из слабого места недели.", "library"],
+                    ["2", "Check · MCQ", "Ответь на вопросы и разбери ошибки.", "check"],
+                    ["3", "Drill 60s", "Потренируй короткие ответы вслух.", "drill"],
+                    ["4", "Mock с AI", "Пройди интервью целиком и получи score.", "mock"],
+                  ].map(([num, title, text, target]) => (
+                    <button key={num} onClick={() => { setOverlay(null); go(target); }}>
+                      <span>{num}</span>
+                      <div><strong>{title}</strong><p>{text}</p></div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {overlay === "goal" && (
+                <div className="pmq-goal-card">
+                  <p>Цель: подготовиться к Junior PM-интервью за 54 дня через короткий ежедневный цикл.</p>
+                  <div><b>Каждый день</b><span>1 урок → 1 Check → 1 практика</span></div>
+                  <div><b>Каждую неделю</b><span>1 Mock с AI → разбор Score → корректировка слабого места</span></div>
+                  <button className="btn primary lg" onClick={() => { setOverlay(null); go("library"); }}>начать с урока</button>
+                </div>
+              )}
+            </section>
+          </div>
+        )}
       </div>
     </div>
   );
