@@ -514,9 +514,15 @@ def ask_coach(payload: CoachRequest) -> CoachResponse:
 @app.post("/api/evaluate", response_model=EvaluateResponse)
 def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
     answers_summary = []
+    used_ids = set()
     for step in CASE_STEPS:
         answer = payload.answers.get(step["id"], "").strip()
+        if answer:
+            used_ids.add(step["id"])
         answers_summary.append(f"### {step['title']}\n{answer or '(пропущено)'}")
+    for step_id, answer in payload.answers.items():
+        if step_id not in used_ids and answer.strip():
+            answers_summary.append(f"### {step_id}\n{answer.strip()}")
 
     prompt = f"""Оцени решение бизнес-кейса.
 
