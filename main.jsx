@@ -1811,6 +1811,12 @@ const App = () => {
     }
   };
 
+  // PMQuest has local lessons and fallback practice, so it remains useful when
+  // the optional AI backend is unavailable.
+  if (screen === 'pmquest-hifi') {
+    return <PMQuestHifi />;
+  }
+
   if (err && !config) return <FullErr msg={err} />;
   if (!config) return <Loading />;
 
@@ -1821,12 +1827,6 @@ const App = () => {
   };
 
   const screenLabel = { 'pmquest-hifi': 'pmquest / home', landing: 'dojo / resources', track: `exam mode / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz', interview: 'mock interview', learn: `resources / ${learnInitialTab}` }[screen];
-
-  // PMQuest Hi-Fi is a full-page takeover: own sidebar, topbar, mascot.
-  // Render outside the regular .shell wrapper.
-  if (screen === 'pmquest-hifi') {
-    return <PMQuestHifi />;
-  }
 
   return (
     <div className="shell">

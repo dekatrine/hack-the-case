@@ -155,9 +155,9 @@ const TODAY_KEY = () => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Mos
 const initialProgress = () => {
   try {
     const saved = JSON.parse(localStorage.getItem("pmquest-progress-v1") || "{}");
-    return { xp: 1240, streak: 7, completed: {}, cases: 3, cardsDue: 8, checkStats: {}, ...saved };
+    return { xp: 0, streak: 0, completed: {}, cases: 0, cardsDue: 0, checkStats: {}, onboarded: false, ...saved };
   } catch {
-    return { xp: 1240, streak: 7, completed: {}, cases: 3, cardsDue: 8, checkStats: {} };
+    return { xp: 0, streak: 0, completed: {}, cases: 0, cardsDue: 0, checkStats: {}, onboarded: false };
   }
 };
 
@@ -242,6 +242,124 @@ const KNOWLEDGE_NOTES = [
   { id: "stakeholders", t: "Stakeholder management", cat: "behavioral", c: "is-sky", ex: "Как PM работает с конфликтами, alignment, decision log и эскалациями без политики.", s: 1, rookie: "Если дизайн и инженерка спорят, PM должен просто выбрать сторону?", hints: ["проясни цель", "раздели факты и мнения", "зафиксируй decision"] },
   { id: "ai-products", t: "AI product evaluation", cat: "metrics", c: "is-sun", ex: "Как оценивать AI-фичи: качество ответа, hallucination, latency, trust и human-in-the-loop.", s: 0, rookie: "У AI-фичи всё субъективно. Как вообще понять, что она стала лучше?", hints: ["назови offline/online метрики", "добавь human eval", "поставь trust guardrail"] },
 ];
+
+// Упорядоченный стартовый путь новичка: 7 тем по порядку, от роли PM до MVP.
+const BEGINNER_PATH = [
+  "pm-role-101",
+  "product-thinking-101",
+  "users-and-segments",
+  "problem-statement",
+  "basic-metrics",
+  "prioritization-101",
+  "mvp-basics",
+];
+
+// Глубокий контент по конкретным темам: реальные MCQ, мини-кейс, ошибки на собесе и эталон ответа.
+// Используется при наличии; иначе экраны откатываются на шаблон по категории.
+// Формат mcq-строки: [вопрос, правильный, неверный1, неверный2, неверный3, объяснение].
+const TOPIC_CONTENT = {
+  "pm-role-101": {
+    mcq: [
+      ["За что в первую очередь отвечает Product Manager?", "За ценность продукта для пользователя и бизнеса", "За то, чтобы разработчики писали код в срок", "За дизайн интерфейсов", "За найм команды", "PM владеет «что и зачем строим» и почему это важно бизнесу, а не управляет людьми напрямую."],
+      ["Что НЕ входит в зону ответственности PM?", "Прямое управление зарплатами и наймом инженеров", "Приоритизация задач", "Формулировка проблемы пользователя", "Выбор метрик успеха", "PM влияет без формальной власти; найм и зарплаты — зона руководителя, а не PM."],
+      ["Чем PM отличается от Project Manager?", "PM отвечает за ценность и направление, Project — за сроки и координацию", "Это одно и то же", "PM пишет код, Project — нет", "PM подчиняется Project Manager", "PM решает что строить и зачем; project manager следит, чтобы это доставили в срок."],
+    ],
+    miniCase: "Тебя берут PM в приложение доставки еды. CEO говорит: «сделай так, чтобы заказывали чаще». Покажи, что понимаешь роль: не прыгай в фичи, а сформулируй, чью проблему и какой бизнес-результат решаешь, и где граница ответственности твоя и команды.",
+    mistakes: [
+      { t: "Свести роль к Jira и backlog", d: "PM — это ценность, пользователь и бизнес-результат, а не только ведение задач." },
+      { t: "Брать власть, которой нет", d: "PM влияет через аргументы и данные, а не приказы дизайну и инженерии." },
+      { t: "Начать с решения", d: "Сначала чья проблема и какой бизнес-эффект, потом — что строим." },
+    ],
+    modelAnswer: "«PM отвечает за то, чтобы команда строила ценное для пользователя и выгодное бизнесу. Начинаю с проблемы и цели: например, цель — поднять частоту заказов. Выясняю, какой сегмент и почему заказывает редко, формулирую гипотезу, выбираю метрику (частота заказов на активного пользователя) и вместе с дизайном и инженерией выбираю решение. «Что и зачем» — на мне, реализацию ведёт команда.»",
+  },
+  "product-thinking-101": {
+    mcq: [
+      ["Что значит «думать продуктово»?", "Идти от проблемы пользователя к проверяемой гипотезе и эффекту", "Придумывать как можно больше фич", "Копировать конкурентов", "Делать красивый интерфейс", "Продуктовое мышление = проблема → сегмент → гипотеза → метрика, а не генерация фич."],
+      ["С чего начинается продуктовое решение?", "С проблемы и сегмента пользователей", "С выбора технологии", "С дизайна экранов", "С названия фичи", "Сначала чья и какая проблема, потом уже решение."],
+      ["Что отличает гипотезу от идеи фичи?", "Гипотеза связывает изменение, аудиторию и ожидаемую метрику", "Ничего, это синонимы", "Гипотеза всегда про дизайн", "Идея фичи всегда точнее", "Гипотеза проверяема: «если сделаем X для Y, метрика Z вырастет»."],
+    ],
+    miniCase: "У музыкального приложения новые пользователи редко возвращаются на 2-й день. Покажи продуктовое мышление: какой сегмент, какую боль подозреваешь, какую гипотезу и какую метрику проверишь — без перечисления фич.",
+    mistakes: [
+      { t: "Сразу выдать список фич", d: "Это feature brainstorm, а не мышление: нет проблемы, сегмента и метрики." },
+      { t: "Пользователь = все", d: "Без выбора сегмента гипотеза размывается и её нельзя проверить." },
+      { t: "Нет способа проверки", d: "Гипотеза без метрики и эксперимента — просто мнение." },
+    ],
+    modelAnswer: "«Взял бы сегмент новичков, кто послушал один плейлист, но не сохранил ни трека. Гипотеза: они не находят музыку под свой вкус в первый день, поэтому не возвращаются. Метрика — D1/D2 retention сегмента и доля сохранивших трек. Сначала проверю гипотезу на данных, потом предложу решение под неё.»",
+  },
+  "users-and-segments": {
+    mcq: [
+      ["Что такое сегмент пользователей?", "Группа с похожей задачей, контекстом и болью", "Все, кто пользуется продуктом", "Разбивка только по возрасту", "Люди из одного города", "Сегмент определяется задачей и поведением, а не только демографией."],
+      ["Почему нельзя сказать «наш пользователь — все»?", "Решение для всех не попадает точно ни в один сценарий", "Так говорить невежливо", "Это слишком дорого считать", "Маркетинг запрещает", "Узкий сегмент даёт фокус: понятны боль, канал и метрика."],
+      ["Хороший критерий сегментации?", "Поведение и задача (job), которую решает пользователь", "Цвет любимого бренда", "Случайный набор людей", "Только уровень дохода", "Сильная сегментация опирается на поведение/JTBD, а не поверхностную демографию."],
+    ],
+    miniCase: "Маркетплейс хочет растить повторные покупки. Вместо «наши пользователи — все покупатели» выбери конкретный приоритетный сегмент, объясни его боль и почему он выгоден бизнесу.",
+    mistakes: [
+      { t: "Сегмент = демография", d: "«Женщины 25-34» — это не задача и не боль, по такому сегменту нельзя строить решение." },
+      { t: "Сегмент «все»", d: "Теряется фокус: непонятно, чью боль и какой канал оптимизируем." },
+      { t: "Не объяснить выгоду", d: "Нужно показать, почему сегмент важен бизнесу (LTV, объём, рост)." },
+    ],
+    modelAnswer: "«Выбрал бы сегмент „новые покупатели с 1 заказом за 30 дней“: высокий потенциал повторных покупок, но привычки ещё нет. Боль — неуверенность в качестве и доставке. Сегмент выгоден: перевод во 2-3 заказ заметно поднимает retention и LTV дешевле, чем привлечение новых.»",
+  },
+  "problem-statement": {
+    mcq: [
+      ["Что описывает сильный problem statement?", "Пользователя, контекст, боль, частоту и бизнес-последствие", "Готовое решение и список фич", "Название продукта конкурента", "Технологию реализации", "Формулировка проблемы — про боль и контекст, а не про решение."],
+      ["Почему нельзя начинать с решения?", "Можно красиво решить не ту проблему", "Решение всегда дороже", "Так не принято в Agile", "Решение нельзя измерить", "Без доказанной проблемы рискуешь оптимизировать неважное."],
+      ["Чего НЕ должно быть в problem statement?", "Конкретной фичи как ответа", "Сегмента пользователя", "Частоты проблемы", "Бизнес-последствия", "Фича — это уже решение; в формулировке проблемы её быть не должно."],
+    ],
+    miniCase: "Финтех теряет пользователей на этапе KYC. Сформулируй problem statement: кто, в каком контексте, что не получается, как часто и чем это бьёт по бизнесу — без предложения решения.",
+    mistakes: [
+      { t: "Зашить решение в проблему", d: "«Нужна кнопка X» — это решение; проблема описывает боль, а не ответ." },
+      { t: "Без частоты и масштаба", d: "Непонятно, стоит ли решать: одна жалоба или 30% воронки?" },
+      { t: "Нет бизнес-последствия", d: "Проблема без связи с метрикой/деньгами не пройдёт приоритизацию." },
+    ],
+    modelAnswer: "«Новые пользователи (сегмент) при прохождении KYC (контекст) бросают заявку на шаге загрузки документов (боль); это у ~40% дошедших до KYC (частота) и режет конверсию в активацию и выручку (бизнес-последствие). Решение предложу после, под эту проблему.»",
+  },
+  "basic-metrics": {
+    mcq: [
+      ["На какой вопрос отвечает retention?", "Возвращаются ли пользователи и получают ли ценность повторно", "Сколько новых пользователей пришло", "Сколько денег принёс маркетинг", "Сколько стоит привлечение", "Retention — про повторное получение ценности, а не про привлечение."],
+      ["Что такое vanity-метрика?", "Растёт, но не отражает реальную ценность", "Любая метрика про деньги", "Метрика retention", "Метрика активации", "Vanity красиво растёт, но не помогает принять решение."],
+      ["Зачем нужна guardrail-метрика?", "Чтобы не улучшить главную метрику во вред (качество, жалобы)", "Чтобы заменить primary metric", "Чтобы считать выручку", "Чтобы измерять CAC", "Guardrail охраняет то, что нельзя уронить, пока двигаешь primary."],
+    ],
+    miniCase: "У приложения новостей вырос CTR заголовков, но упало время чтения и выросли жалобы. Разложи это на primary / proxy / guardrail метрики и скажи, действительно ли продукт стал лучше.",
+    mistakes: [
+      { t: "Гнаться за vanity", d: "Рост DAU/CTR может маскировать падение реальной ценности и retention." },
+      { t: "Забыть guardrails", d: "Primary можно улучшить вредно: кликбейт поднимает CTR, но убивает доверие." },
+      { t: "Метрика без действия", d: "Хорошая метрика подсказывает, что команда поменяет завтра." },
+    ],
+    modelAnswer: "«Primary здесь — не CTR, а вовлечённое чтение (время/завершённые статьи). CTR — proxy, его легко обмануть кликбейтом. Guardrails — жалобы и доля дочитываний. Раз CTR вырос, а чтение упало и жалобы выросли — продукт стал хуже: оптимизировали proxy в ущерб ценности.»",
+  },
+  "prioritization-101": {
+    mcq: [
+      ["Что такое приоритизация по сути?", "Выбор лучшего следующего шага под цель, а не самой приятной идеи", "Список всех идей по алфавиту", "То, что хочет CEO", "Самая дешёвая задача", "Приоритизация = осознанный выбор с учётом эффекта, усилий и риска."],
+      ["Что означает E в RICE?", "Effort (усилия)", "Engagement", "Estimate revenue", "Experience", "RICE = (Reach × Impact × Confidence) ÷ Effort."],
+      ["Главная ошибка в RICE?", "Подставить красивые числа без доказательств", "Учитывать confidence", "Сравнивать несколько идей", "Оценивать reach", "RICE полезен ровно настолько, насколько честны оценки."],
+    ],
+    miniCase: "У тебя 4 идеи и 1 спринт. Покажи, как выберешь, что делать первым: назови критерии (impact, effort, confidence, риск) и привяжи выбор к цели продукта, а не к тому, что нравится команде.",
+    mistakes: [
+      { t: "Делать то, что нравится", d: "Симпатия команды/CEO — не критерий; нужен эффект на цель." },
+      { t: "Числа без evidence", d: "RICE с выдуманными оценками создаёт иллюзию объективности." },
+      { t: "Игнорировать риск и зависимости", d: "Дешёвая на вид задача может блокироваться или быть рискованной." },
+    ],
+    modelAnswer: "«Привяжу идеи к цели (например, рост активации), оценю каждую по reach, impact, confidence и effort, отдельно помечу риск и зависимости. Выберу не самую любимую, а ту, что даёт максимум эффекта на цель при разумном усилии и проверяемой гипотезе — и проговорю trade-off остальных.»",
+  },
+  "mvp-basics": {
+    mcq: [
+      ["Что такое MVP по сути?", "Минимальный способ проверить рискованную гипотезу", "Дешёвая урезанная версия большого продукта", "Финальный релиз без багов", "Прототип для инвесторов", "MVP проверяет ключевую гипотезу ценности, а не «делает подешевле»."],
+      ["Что обязательно у хорошего MVP?", "Чёткая гипотеза и learning-метрика", "Полный набор фич", "Идеальный дизайн", "Маркетинговый бюджет", "MVP бессмыслен без того, что именно проверяем и как поймём результат."],
+      ["Когда MVP сделан правильно?", "Когда даёт обучение быстрее и дешевле полного запуска", "Когда в нём максимум функций", "Когда он красивее конкурента", "Когда его хвалит CEO", "Цель MVP — обучение и снижение риска, а не полнота."],
+    ],
+    miniCase: "Команда хочет потратить квартал на большую фичу «AI-рекомендации». Предложи MVP: какую одну гипотезу проверяешь, что минимально достаточно построить и по какой метрике поймёшь успех.",
+    mistakes: [
+      { t: "MVP = просто «дешевле»", d: "Главное не урезать, а проверить рискованную гипотезу ценности." },
+      { t: "Нет learning-метрики", d: "Без метрики MVP не отвечает на вопрос «работает ли гипотеза»." },
+      { t: "Строить сразу много", d: "Чем больше scope, тем дольше и дороже обучение." },
+    ],
+    modelAnswer: "«Сформулирую гипотезу: „персональные рекомендации поднимут долю пользователей, нашедших контент в первый день“. MVP — простые рекомендации на правилах для одного сегмента, без сложной модели. Метрика обучения — доля кликнувших по рекомендации и D1 retention сегмента. Подтвердится — инвестируем в полноценный ML.»",
+  },
+};
+
+const getBeginnerPathNotes = () =>
+  BEGINNER_PATH.map((id) => KNOWLEDGE_NOTES.find((n) => n.id === id)).filter(Boolean);
 
 function Pim({ message, actions = [], expression = "idle", muted = false, route = "home", progress, openSignal = 0 }) {
   const [show, setShow] = useState(true);
@@ -379,9 +497,9 @@ function Sidebar({ route, go, progress }) {
         </React.Fragment>
       ))}
       <div className="sb-profile">
-        <div className="av">К</div>
+        <div className="av">Я</div>
         <div>
-          <div className="who">Катя</div>
+          <div className="who">Мой прогресс</div>
           <div className="lvl">Lvl {level} · {progress.xp} XP</div>
         </div>
       </div>
@@ -416,6 +534,7 @@ function Topbar({ crumbs = [], progress, clock }) {
 // ─── Screen: HOME (bento) ────────────────────────────────────────────
 function HomeScreen({ go, progress, clock, completeTask, openPim }) {
   const level = getLevel(progress.xp);
+  const isNew = progress.xp === 0 && Object.keys(progress.completed || {}).length === 0;
   const levelProgress = getLevelProgress(progress.xp);
   const week = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
   const todayIdx = (new Date().getDay() + 6) % 7;
@@ -428,28 +547,33 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
   const casePct = Math.min(100, Math.round((progress.cases / 12) * 100));
   const storyPct = Math.min(100, Math.round((teachDone / 8) * 100));
   const srsPct = Math.max(0, Math.min(100, 100 - progress.cardsDue * 8));
+  const beginnerNotes = getBeginnerPathNotes();
+  const beginnerDoneFn = (n) => Boolean(progress.completed?.[`check-${n.id}`] || progress.completed?.[`teach-${n.id}`] || progress.completed?.[`lesson-${n.id}`]);
+  const beginnerDoneCount = beginnerNotes.filter(beginnerDoneFn).length;
+  const nextBeginner = beginnerNotes.find((n) => !beginnerDoneFn(n)) || beginnerNotes[0];
+  const pathComplete = beginnerDoneCount === beginnerNotes.length;
   return (
     <div className="screen" style={{ maxWidth: "none" }}>
       <Topbar crumbs={["PMQuest", "Home"]} progress={progress} clock={clock} />
       <div className="screen-head" style={{ marginBottom: 18 }}>
         <div>
-          <span className="eyebrow">{clock.label} · 6 неделя подготовки</span>
-          <h1 style={{ marginTop: 4 }}>Привет, Катя <span style={{ color: "var(--ph-coral)" }}>✦</span></h1>
+          <span className="eyebrow">{clock.label} · {isNew ? "первый день подготовки" : "продолжай маршрут подготовки"}</span>
+          <h1 style={{ marginTop: 4 }}>{progress.xp ? "С возвращением" : "Начнём с основ"} <span style={{ color: "var(--ph-coral)" }}>✦</span></h1>
         </div>
         <div className="right">
           <button className="btn ghost sm" onClick={() => window.dispatchEvent(new CustomEvent("pmquest-open-plan"))}>Мой план</button>
-          <button className="btn ghost sm" onClick={() => window.dispatchEvent(new CustomEvent("pmquest-open-goal"))}>🎯 Junior PM @ FAANG · 54 дн.</button>
+          <button className="btn ghost sm" onClick={() => window.dispatchEvent(new CustomEvent("pmquest-open-goal"))}>🎯 Junior PM · 54 дн.</button>
         </div>
       </div>
 
       <div className="bento">
-        <div className="tile t-mission is-coral" onClick={() => go("library")}>
-          <span className="corner-ico">миссия дня · 35 мин</span>
+        <div className="tile t-mission is-coral" onClick={() => go("lesson", { lessonTopicId: nextBeginner.id })}>
+          <span className="corner-ico">путь новичка · {beginnerDoneCount}/{beginnerNotes.length} тем</span>
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, paddingTop: 18, paddingRight: 130, position: "relative", zIndex: 2 }}>
-            <span className="chip" style={{ background: "rgba(255,255,255,0.18)", color: "#fff", border: "1.5px solid #fff", width: "fit-content" }}>FAANG product design · слабое место недели</span>
-            <h3 className="h-display" style={{ fontSize: 38, color: "#fff", margin: 0, maxWidth: "16ch" }}>Сегодня: «Spotify — фича лайков»</h3>
+            <span className="chip" style={{ background: "rgba(255,255,255,0.18)", color: "#fff", border: "1.5px solid #fff", width: "fit-content" }}>{pathComplete ? "база пройдена · переходи к практике" : `стартовый путь · тема ${beginnerDoneCount + 1} из ${beginnerNotes.length}`}</span>
+            <h3 className="h-display" style={{ fontSize: 38, color: "#fff", margin: 0, maxWidth: "16ch" }}>{pathComplete ? "Продолжи практикой: Drill и Mock" : `${beginnerDoneCount === 0 ? "Начни" : "Дальше"}: «${nextBeginner.t}»`}</h3>
             <p style={{ color: "rgba(255,255,255,0.9)", fontSize: 15, maxWidth: "44ch" }}>
-              Выбери урок → объясни стажёру → закрепи в Check/Drill → только после практики тема станет освоенной.
+              Проходи 7 базовых тем по порядку: урок → Check → объясни стажёру. После пути новичка открывай кейсы и Mock.
             </p>
           </div>
           <div className="mission-bars">
@@ -459,7 +583,7 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
           </div>
           <div className="footer" style={{ position: "relative", zIndex: 2 }}>
             <div className="mission-chips">
-              <span className="chip" style={{ background: "var(--ph-sun)", borderColor: "var(--ph-ink)" }}>+120 XP</span>
+              <span className="chip" style={{ background: "var(--ph-sun)", borderColor: "var(--ph-ink)" }}>+90 XP за цикл</span>
               <span className="chip" style={{ background: "#fff", borderColor: "var(--ph-ink)" }}>🎯 product sense</span>
             </div>
             <button className="btn lg" style={{ background: "#fff", color: "var(--ph-ink)" }}>{Icon.play}<span>Начать миссию</span></button>
@@ -475,7 +599,7 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
           <p>держи темп — Пим в тебя верит</p>
           <div className="streak-row" style={{ marginTop: "auto" }}>
             {week.map((d, i) => (
-              <div key={d + i} className={`day ${i <= todayIdx ? "on" : ""} ${i === todayIdx ? "today" : ""}`}>{d[0]}</div>
+              <div key={d + i} className={`day ${progress.streak > 0 && i <= todayIdx ? "on" : ""} ${i === todayIdx ? "today" : ""}`}>{d[0]}</div>
             ))}
           </div>
         </div>
@@ -490,16 +614,15 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
         </div>
 
         <div className="tile t-bank" onClick={() => go("check")}>
-          <span className="corner-ico">faang bank</span>
-          <h3>820 вопросов из реальных интервью</h3>
-          <p>фильтры по компаниям, уровню, типу</p>
+          <span className="corner-ico">practice bank</span>
+          <h3>Вопросы для PM-собеседований</h3>
+          <p>тренируй темы по одной, от базы к mock</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 6 }}>
             {[
-              { c: "Google",  n: 142, col: "var(--ph-sky-2)" },
-              { c: "Meta",    n: 110, col: "var(--ph-plum-2)" },
-              { c: "Amazon",  n: 188, col: "var(--ph-sun-2)" },
-              { c: "Apple",   n: 76,  col: "var(--ph-card-sunk)" },
-              { c: "Netflix", n: 38,  col: "#ffd2d2" },
+              { c: "Product sense", n: "урок → drill", col: "var(--ph-sky-2)" },
+              { c: "Execution", n: "метрики", col: "var(--ph-plum-2)" },
+              { c: "Strategy", n: "trade-offs", col: "var(--ph-sun-2)" },
+              { c: "Behavioral", n: "STAR", col: "var(--ph-card-sunk)" },
             ].map(r => (
               <div key={r.c} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 10px", borderRadius: 8, background: r.col, border: "1.5px solid var(--ph-ink)" }}>
                 <b style={{ fontSize: 13 }}>{r.c}</b>
@@ -522,7 +645,7 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
         <div className="tile t-behav is-pink" onClick={() => go("teach")}>
           <span className="corner-ico">star · behavioral</span>
           <h3>Банк историй</h3>
-          <p>30 STAR-шаблонов + твои истории</p>
+          <p>STAR-подход и тренировка твоих историй</p>
           <div className="footer">
             <div className="bar live-bar"><i style={{ width: `${storyPct}%`, background: "var(--ph-plum)" }}></i></div>
             <button className="btn sm">{Icon.chev}</button>
@@ -544,7 +667,7 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
         <div className="tile t-srs" onClick={() => go("srs")}>
           <span className="corner-ico">srs · повторение</span>
           <h3>{progress.cardsDue} карточек к повтору</h3>
-          <p>CIRCLES, NSM, AARM — вернулись по расписанию</p>
+          <p>{progress.cardsDue ? "Термины вернулись по расписанию" : "Появятся после Check и практики"}</p>
           <div className="footer">
             <span className="chip mint">~6 мин</span>
             <div className="bar live-bar"><i style={{ width: `${srsPct}%`, background: "var(--ph-mint)" }}></i></div>
@@ -554,8 +677,8 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
 
         <div className="tile t-cv is-sky" onClick={() => go("cv")}>
           <span className="corner-ico">резюме</span>
-          <h3>Загрузи CV — Pim даст 3 правки</h3>
-          <p>PDF · DOCX · 30 сек разбор</p>
+          <h3>CV-чеклист для PM-роли</h3>
+          <p>Демо · проверь структуру, impact и метрики</p>
           <div className="footer">
             <span className="chip" style={{ background: "#fff", borderColor: "var(--ph-ink)" }}>📎 drop file</span>
             <button className="btn sm">{Icon.chev}</button>
@@ -563,13 +686,13 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
         </div>
 
         <div className="tile t-plan is-cream">
-          <span className="corner-ico">8-недельный план</span>
-          <h3>Твой roadmap к интервью</h3>
+          <span className="corner-ico">8-недельный план · пример</span>
+          <h3>Примерный roadmap к интервью</h3>
           <div className="week-rail">
             {[
-              { n: "1", l: "Found.", st: "done" },
-              { n: "2", l: "Cases",  st: "done" },
-              { n: "3", l: "Cases+", st: "now" },
+              { n: "1", l: "Found.", st: isNew ? "now" : "done" },
+              { n: "2", l: "Cases",  st: isNew ? "" : "now" },
+              { n: "3", l: "Cases+", st: "" },
               { n: "4", l: "Behav.", st: "" },
               { n: "5", l: "SysD",   st: "" },
               { n: "6", l: "Metrics",st: "" },
@@ -584,22 +707,12 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
           </div>
         </div>
 
-        <div className="tile t-com">
-          <span className="corner-ico">сегодня в комьюнити</span>
-          <h3>{progress.cases + 3} джуна решают тот же кейс</h3>
-          <p style={{ display: "flex", gap: 8, marginTop: "auto", alignItems: "center" }}>
-            <span style={{ display: "flex" }}>
-              {["М","А","Л","К","+8"].map((c, i) => (
-                <span key={c + i} style={{
-                  width: 28, height: 28, borderRadius: "50%",
-                  background: ["var(--ph-sun)","var(--ph-sky)","var(--ph-pink)","var(--ph-mint)","var(--ph-plum)"][i],
-                  border: "2px solid var(--ph-ink)",
-                  marginLeft: i === 0 ? 0 : -8,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontWeight: 700, fontSize: 12, color: i === 4 ? "#fff" : "var(--ph-ink)"
-                }}>{c}</span>
-              ))}
-            </span>
+        <div className="tile t-com" style={{ opacity: 0.7 }}>
+          <span className="corner-ico">комьюнити · в разработке</span>
+          <h3>Практикуй в своём темпе</h3>
+          <p>Раздел сообщества ещё не запущен — здесь пока нечего сравнивать. Это честная заглушка, а не реальные пользователи.</p>
+          <p style={{ marginTop: "auto" }}>
+            <span className="chip" style={{ background: "var(--ph-card)", borderColor: "var(--ph-ink)" }}>появится позже</span>
           </p>
         </div>
       </div>
@@ -609,7 +722,7 @@ function HomeScreen({ go, progress, clock, completeTask, openPim }) {
 
 // ─── Screen: LIBRARY ─────────────────────────────────────────────────
 function LibraryScreen({ go, progress, clock, notes = KNOWLEDGE_NOTES, onAddLesson }) {
-  const [cat, setCat] = useState("all");
+  const [cat, setCat] = useState("beginner");
   const [sortMode, setSortMode] = useState("new");
   const [showAddLesson, setShowAddLesson] = useState(false);
   const [lessonDraft, setLessonDraft] = useState({ title: "", summary: "", cat: "beginner" });
@@ -678,6 +791,27 @@ function LibraryScreen({ go, progress, clock, notes = KNOWLEDGE_NOTES, onAddLess
             <span className="chip sky">избранное</span>
           </div>
         </aside>
+        <div>
+          {cat === "beginner" && (
+            <div className="beginner-path">
+              <span className="eyebrow">маршрут новичка · проходи по порядку</span>
+              <h3>7 базовых тем перед первой тренировкой</h3>
+              <ol className="beginner-path-list">
+                {getBeginnerPathNotes().map((n, i) => {
+                  const done = Boolean(progress.completed?.[`check-${n.id}`] || progress.completed?.[`teach-${n.id}`] || progress.completed?.[`lesson-${n.id}`]);
+                  return (
+                    <li key={n.id}>
+                      <button type="button" className={`beginner-path-step ${done ? "done" : ""}`} onClick={() => go("lesson", { lessonTopicId: n.id })}>
+                        <span className="bp-num">{done ? "✓" : i + 1}</span>
+                        <span className="bp-title">{n.t}</span>
+                        <span className="bp-go">{done ? "повторить" : "начать"} →</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          )}
         <div className="notes-grid">
           {filtered.map((n) => {
             const mastered = Boolean(progress.completed?.[`check-${n.id}`] || progress.completed?.[`teach-${n.id}`]);
@@ -701,6 +835,7 @@ function LibraryScreen({ go, progress, clock, notes = KNOWLEDGE_NOTES, onAddLess
               </button>
             );
           })}
+        </div>
         </div>
       </div>
       {showAddLesson && (
@@ -907,11 +1042,26 @@ const getLessonWhat = (note, guide) => {
   };
 };
 
+function ModelAnswer({ text }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="lesson-callout pink" style={{ marginTop: 12, flexDirection: "column", alignItems: "stretch" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <h4 style={{ margin: 0 }}>Эталон ответа</h4>
+        <button className="btn ghost sm" onClick={() => setOpen((v) => !v)}>{open ? "скрыть" : "сначала ответь сам(а) → показать"}</button>
+      </div>
+      {open && <p style={{ margin: "10px 0 0", lineHeight: 1.55 }}>{text}</p>}
+    </div>
+  );
+}
+
 function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm", notes = KNOWLEDGE_NOTES }) {
   const [idx, setIdx] = useState(0);
   const note = notes.find((item) => item.id === initialTopicId) || notes[1] || notes[0];
   const guide = getLessonGuide(note);
   const what = getLessonWhat(note, guide);
+  const rich = TOPIC_CONTENT[note.id] || {};
+  const mistakes = rich.mistakes || guide.mistakes;
   useEffect(() => setIdx(0), [initialTopicId]);
   const slides = [
     { tag: "Слайд 1 · 5 мин", title: `Что такое ${note.t}?`, lede: what.definition,
@@ -1024,7 +1174,7 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
       body: (
         <div className="body">
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {guide.mistakes.map((a) => (
+            {mistakes.map((a) => (
               <div key={a.t} className="anti-pattern">
                 <div className="x">✕</div>
                 <div>
@@ -1042,7 +1192,7 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
             <div className="ico">▶</div>
             <div>
               <h4>Задание</h4>
-              <p>{guide.drill}</p>
+              <p>{rich.miniCase || guide.drill}</p>
             </div>
           </div>
           <div className="lesson-answer-frame">
@@ -1058,6 +1208,7 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
               </div>
             ))}
           </div>
+          {rich.modelAnswer && <ModelAnswer text={rich.modelAnswer} />}
         </div>) },
     { tag: "Слайд 7 · 2 мин", title: "Финальный чеклист", lede: "Перед Check быстро проверь, что можешь объяснить тему вслух.",
       body: (
@@ -1143,6 +1294,7 @@ function CheckScreen({ go, progress, clock, completeTask, updateProgress, initia
   const [picked, setPicked] = useState(null);
   const [showExplain, setShowExplain] = useState(false);
   const [whyTarget, setWhyTarget] = useState(null);
+  const [correctCount, setCorrectCount] = useState(0);
   const topics = KNOWLEDGE_NOTES.map((note) => ({
     id: note.id,
     label: note.t.replace(" — как выбрать", ""),
@@ -1189,25 +1341,34 @@ function CheckScreen({ go, progress, clock, completeTask, updateProgress, initia
   ]);
   const questions = Array.from({ length: 5 }, (_, i) => {
     const note = topics.find((t) => t.id === topicId)?.note || KNOWLEDGE_NOTES[0];
-    const bank = topicBanks[topicId] || makeFallbackBank(note);
+    const bank = topicBanks[topicId] || TOPIC_CONTENT[topicId]?.mcq || makeFallbackBank(note);
     return makeQuestion(bank[(i + batchSeed) % bank.length], i + batchSeed);
   });
   const cur = questions[idx];
+  const visibleTopics = topics.filter((topic, index) => index < 8 || topic.id === topicId);
   const pick = (i) => {
     setPicked(i);
     setShowExplain(true);
     setWhyTarget(null);
-    updateProgress((prev) => ({
-      ...prev,
-      checkStats: {
-        ...(prev.checkStats || {}),
-        [topicId]: (prev.checkStats?.[topicId] || 0) + 1,
-      },
-    }));
+    if (cur.opts[i].right) {
+      setCorrectCount((value) => value + 1);
+      updateProgress((prev) => ({
+        ...prev,
+        checkStats: {
+          ...(prev.checkStats || {}),
+          [topicId]: (prev.checkStats?.[topicId] || 0) + 1,
+        },
+      }));
+    }
   };
   const next = () => {
     if (idx < questions.length - 1) { setIdx(idx + 1); setPicked(null); setShowExplain(false); setWhyTarget(null); }
-    else { completeTask(`check-${topicId}`, 10, "teach", { cardsDue: progress.cardsDue + 1 }); go("teach", { teachTopicId: topicId }); }
+    else if (correctCount >= 3) {
+      completeTask(`check-${topicId}`, 10, "teach", { cardsDue: progress.cardsDue + 1 });
+      go("teach", { teachTopicId: topicId });
+    } else {
+      newBatch();
+    }
   };
   const newBatch = () => {
     setBatchSeed((v) => v + 1);
@@ -1215,6 +1376,7 @@ function CheckScreen({ go, progress, clock, completeTask, updateProgress, initia
     setPicked(null);
     setShowExplain(false);
     setWhyTarget(null);
+    setCorrectCount(0);
   };
   const selectTopic = (id) => {
     setTopicId(id);
@@ -1223,6 +1385,7 @@ function CheckScreen({ go, progress, clock, completeTask, updateProgress, initia
     setPicked(null);
     setShowExplain(false);
     setWhyTarget(null);
+    setCorrectCount(0);
   };
   useEffect(() => {
     selectTopic(initialTopicId);
@@ -1242,7 +1405,7 @@ function CheckScreen({ go, progress, clock, completeTask, updateProgress, initia
         </div>
       </div>
       <div className="check-topic-row">
-        {topics.map((t) => (
+        {visibleTopics.map((t) => (
           <button key={t.id} className={`check-topic ${topicId === t.id ? "active" : ""}`} onClick={() => selectTopic(t.id)}>
             <strong>{t.label}</strong>
             <span>решено: {t.solved}</span>
@@ -1250,11 +1413,18 @@ function CheckScreen({ go, progress, clock, completeTask, updateProgress, initia
         ))}
         <button className="check-topic generate" onClick={newBatch}>
           <strong>+ ещё вопросы</strong>
-          <span>генерировать сколько угодно</span>
+          <span>новая попытка · нужно 3/5</span>
         </button>
       </div>
+      <label className="check-topic-select">
+        <span>Все темы</span>
+        <select value={topicId} onChange={(event) => selectTopic(event.target.value)}>
+          {topics.map((topic) => <option key={topic.id} value={topic.id}>{topic.label}</option>)}
+        </select>
+      </label>
       <div className="mcq-card">
         <span className="chip pink">Вопрос {idx + 1} из {questions.length}</span>
+        <span className="chip mint" style={{ marginLeft: 8 }}>правильно: {correctCount}/3</span>
         <div className="mcq-question">{cur.q}</div>
         <div className="mcq-options">
           {cur.opts.map((o, i) => {
@@ -1302,27 +1472,49 @@ function CheckScreen({ go, progress, clock, completeTask, updateProgress, initia
 function SRSScreen({ go, progress, clock, completeTask }) {
   const [idx, setIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  const cards = [
+  const curatedCards = [
     { q: "CIRCLES — что значит каждая буква?", a: "Comprehend the situation · Identify the user · Report the user's needs · Cut through prioritization · List solutions · Evaluate tradeoffs · Summarize. 7 шагов под любой product-design кейс." },
     { q: "Что такое North Star Metric?", a: "Одна метрика, отражающая реализованную ценность продукта для пользователя. Не выручка, не активность." },
-    { q: "AARRR — расшифровать", a: "Acquisition · Activation · Retention · Referral · Revenue. Воронка от \"узнал о продукте\" до \"платит и рекомендует\"." },
+    { q: "AARRR — расшифровать", a: "Acquisition · Activation · Retention · Referral · Revenue. Воронка от первого касания до «платит и рекомендует»." },
     { q: "RICE — формула приоритизации", a: "(Reach × Impact × Confidence) ÷ Effort. Число для сравнения фич." },
-    { q: "Что такое \"aha-moment\"?", a: "Действие или событие, после которого пользователь понимает ценность продукта. У Facebook — 7 друзей за 10 дней." },
+    { q: "Что такое aha-moment?", a: "Действие или событие, после которого пользователь понимает ценность продукта. У Facebook — 7 друзей за 10 дней." },
     { q: "STAR-метод — формула", a: "Situation · Task · Action · Result. Action = что сделал лично ты, Result = с цифрами." },
     { q: "MDE в A/B-тесте — что это", a: "Minimum Detectable Effect — минимальный размер эффекта, который тест способен заметить." },
     { q: "Чем product sense ≠ user empathy?", a: "Empathy — про эмоции. Product sense — empathy + интуиция по бизнесу + умение видеть, какая фича сдвинет метрику." },
   ];
+  // По одной карточке на каждый урок из базы знаний — чтобы SRS покрывал все темы, а не 8 захардкоженных.
+  const lessonCards = KNOWLEDGE_NOTES.map((note) => ({ q: `Объясни простыми словами: ${note.t}`, a: note.ex }));
+  const seen = new Set();
+  const allCards = [...curatedCards, ...lessonCards].filter((card) => {
+    if (seen.has(card.q)) return false;
+    seen.add(card.q);
+    return true;
+  });
+  const cards = allCards.slice(0, Math.min(allCards.length, progress.cardsDue));
   const c = cards[idx];
+  if (!c) {
+    return (
+      <div className="screen">
+        <Topbar crumbs={["Home", "SRS · карточки"]} progress={progress} clock={clock} />
+        <div className="score-hero">
+          <span className="eyebrow">Spaced repetition</span>
+          <h1>Пока нечего повторять</h1>
+          <p>Карточки появятся после Check и практики по урокам. Начни с первой базовой темы.</p>
+          <button className="btn primary lg" onClick={() => go("lesson", { lessonTopicId: "pm-role-101" })}>к первому уроку →</button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="screen">
       <Topbar crumbs={["Home", "SRS · карточки"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
           <span className="eyebrow">Spaced repetition · фреймворки и термины</span>
-          <h1>8 карточек к повтору</h1>
+          <h1>{cards.length} карточек к повтору</h1>
         </div>
         <div className="right">
-          <span className="chip mint">сегодня запланировано: 8</span>
+          <span className="chip mint">сегодня запланировано: {cards.length}</span>
           <span className="chip sun">~6 мин</span>
         </div>
       </div>
@@ -1373,8 +1565,11 @@ function SRSScreen({ go, progress, clock, completeTask }) {
 
 // ─── Screen: CASE ────────────────────────────────────────────────────
 function CaseScreen({ go, progress, clock, completeTask }) {
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(0);
   const [text, setText] = useState("");
+  const [answers, setAnswers] = useState({});
+  const [evaluation, setEvaluation] = useState("");
+  const [evaluating, setEvaluating] = useState(false);
   const [savedNotice, setSavedNotice] = useState("");
   const caseSuggestions = [
     {
@@ -1440,6 +1635,32 @@ function CaseScreen({ go, progress, clock, completeTask }) {
     { n: "5", title: "Metrics & success", desc: "как поймёшь, что сработало", prompt: "Какие метрики? Какие предсказывают долгосрочный успех?", placeholder: "Лидирующая метрика: …" },
   ];
   const cur = steps[step];
+  const saveCurrentAnswer = () => {
+    const clean = text.trim();
+    if (clean) setAnswers((prev) => ({ ...prev, [cur.title]: clean }));
+    return clean;
+  };
+  const goToStep = (nextStep) => {
+    const clean = saveCurrentAnswer();
+    const collected = { ...answers, ...(clean ? { [cur.title]: clean } : {}) };
+    setStep(nextStep);
+    setText(collected[steps[nextStep].title] || "");
+  };
+  const finishCase = async () => {
+    const clean = saveCurrentAnswer();
+    const collected = { ...answers, ...(clean ? { [cur.title]: clean } : {}) };
+    if (Object.keys(collected).length < steps.length) return;
+    setEvaluating(true);
+    try {
+      const res = await api.evaluate({ caseText, answers: collected, trackId: selectedSuggestion.trackId });
+      setEvaluation(res.evaluation);
+      completeTask(`case-${selectedSuggestion.id}`, 60, "case", { cases: progress.cases + 1 });
+    } catch (e) {
+      setEvaluation(`Не удалось собрать AI-разбор: ${e.message}`);
+    } finally {
+      setEvaluating(false);
+    }
+  };
   const saveCase = () => {
     const saved = JSON.parse(localStorage.getItem("pmquest-saved-cases-v1") || "[]");
     const next = [
@@ -1485,6 +1706,8 @@ function CaseScreen({ go, progress, clock, completeTask }) {
       setCaseTitle(customTopic.trim() || suggestion.label);
       setStep(0);
       setText("");
+      setAnswers({});
+      setEvaluation("");
     } catch (e) {
       setGenErr(e.message);
     } finally {
@@ -1548,8 +1771,8 @@ function CaseScreen({ go, progress, clock, completeTask }) {
         <aside className="case-steps">
           <div className="eyebrow" style={{ padding: "0 4px 4px" }}>5 шагов кейса</div>
           {steps.map((s, i) => (
-            <div key={i} className={`case-step ${i < step ? "done" : ""} ${i === step ? "active" : ""}`} onClick={() => setStep(i)}>
-              <div className="n">{i < step ? "✓" : s.n}</div>
+            <div key={i} className={`case-step ${answers[s.title] ? "done" : ""} ${i === step ? "active" : ""}`} onClick={() => goToStep(i)}>
+              <div className="n">{answers[s.title] ? "✓" : s.n}</div>
               <div>
                 <b>{s.title}</b>
                 <i>{s.desc}</i>
@@ -1575,6 +1798,12 @@ function CaseScreen({ go, progress, clock, completeTask }) {
           <h2>{cur.title}</h2>
           <p className="promptq">{cur.prompt}</p>
           <textarea className="case-input" placeholder={cur.placeholder} value={text} onChange={(e) => setText(e.target.value)} />
+          {evaluation && (
+            <div className="mcq-explain" style={{ background: "var(--ph-mint-2)" }}>
+              <h5>AI-разбор кейса</h5>
+              <p style={{ whiteSpace: "pre-wrap" }}>{evaluation}</p>
+            </div>
+          )}
           <div className="case-actions">
             <div className="case-hints">
               <span className="eyebrow" style={{ marginRight: 4 }}>подсказки Pim:</span>
@@ -1583,11 +1812,11 @@ function CaseScreen({ go, progress, clock, completeTask }) {
               <button className="hint-pill" onClick={() => applyHint("mistakes")}>типичные ошибки джунов</button>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn ghost" onClick={() => setStep(Math.max(0, step - 1))}>{Icon.back} назад</button>
+              <button className="btn ghost" onClick={() => goToStep(Math.max(0, step - 1))} disabled={step === 0}>{Icon.back} назад</button>
               {step < steps.length - 1 ? (
-                <button className="btn primary lg" onClick={() => { setStep(step + 1); setText(""); }}>далее {Icon.chev}</button>
+                <button className="btn primary lg" onClick={() => goToStep(step + 1)} disabled={text.trim().length < 20}>сохранить и далее {Icon.chev}</button>
               ) : (
-                <button className="btn primary lg" onClick={() => completeTask(`case-${selectedSuggestion.id}`, 60, "review", { cases: progress.cases + 1 })}>отправить на разбор {Icon.chev}</button>
+                <button className="btn primary lg" onClick={finishCase} disabled={evaluating || text.trim().length < 20 || Object.keys(answers).length < steps.length - 1}>{evaluating ? "собираю разбор..." : "отправить на разбор"} {Icon.chev}</button>
               )}
             </div>
           </div>
@@ -1910,14 +2139,26 @@ function MockScreen({ go, progress, clock, completeTask }) {
     const next = Math.min(rounds.length - 1, roundIdx + 1);
     setRoundIdx(next);
     setFeedback("");
-    setAnswer("");
+    setAnswer(roundAnswers[rounds[next]?.id] || "");
     setInterviewerMood("listening");
+  };
+  const selectRound = (index) => {
+    const clean = answer.trim();
+    const collected = { ...roundAnswers, ...(clean ? { [cur.id]: clean } : {}) };
+    if (clean) setRoundAnswers(collected);
+    setRoundIdx(index);
+    setFeedback("");
+    setAnswer(collected[rounds[index]?.id] || "");
   };
 
   const finishMock = async () => {
     if (evaluating) return;
     const collected = { ...roundAnswers };
     if (answer.trim()) collected[cur.id] = answer.trim();
+    if (rounds.some((round) => !collected[round.id]?.trim())) {
+      setFeedback("Ответь на каждый раунд перед итоговым разбором. Если застрял, дай короткую структуру и переходи дальше.");
+      return;
+    }
     const labelled = {};
     rounds.forEach((r) => {
       if (collected[r.id]?.trim()) labelled[r.title] = collected[r.id].trim();
@@ -1964,7 +2205,7 @@ function MockScreen({ go, progress, clock, completeTask }) {
     setFinalResult(null);
     setEvaluating(false);
     setTranscript([
-      { role: "them", who: "Виктор", text: `Окей, ${selectedGrade.label}. Я буду ${selectedGrade.pressure}. Кейс открыт в briefing, начнём с clarify.` },
+      { role: "them", who: "Виктор", text: `Окей, ${selectedGrade.label}. Я ${selectedGrade.pressure}. Кейс открыт в briefing, начнём с clarify.` },
     ]);
     setFeedback("");
     setAnswer("");
@@ -2189,7 +2430,7 @@ function MockScreen({ go, progress, clock, completeTask }) {
       <Topbar crumbs={["Home", "Mock с AI"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
-          <span className="eyebrow">{mode === "written" ? "Письменный разбор" : "Mock-интервью"} · {selectedGrade.label} · {selectedBlock.label} · 30 мин</span>
+          <span className="eyebrow">{mode === "written" ? "Письменный разбор" : "Mock-интервью"} · {selectedGrade.label} · {selectedBlock.label} · 15 мин</span>
           <h1>{selectedCase.company} · {selectedCase.title}</h1>
         </div>
         <div className="right">
@@ -2205,8 +2446,8 @@ function MockScreen({ go, progress, clock, completeTask }) {
           <aside className="case-steps">
             <div className="eyebrow" style={{ padding: "0 4px 4px" }}>{rounds.length} шагов разбора</div>
             {rounds.map((r, i) => (
-              <div key={r.id} className={`case-step ${i < roundIdx ? "done" : ""} ${i === roundIdx ? "active" : ""}`} onClick={() => setRoundIdx(i)}>
-                <div className="n">{i < roundIdx ? "✓" : i + 1}</div>
+              <div key={r.id} className={`case-step ${roundAnswers[r.id] ? "done" : ""} ${i === roundIdx ? "active" : ""}`} onClick={() => selectRound(i)}>
+                <div className="n">{roundAnswers[r.id] ? "✓" : i + 1}</div>
                 <div>
                   <b>{r.title}</b>
                   <i>{r.prompt.length > 52 ? `${r.prompt.slice(0, 52)}…` : r.prompt}</i>
@@ -2236,12 +2477,12 @@ function MockScreen({ go, progress, clock, completeTask }) {
             )}
             <div className="case-actions">
               <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
-                <button className="btn ghost" onClick={() => setRoundIdx(Math.max(0, roundIdx - 1))}>{Icon.back} назад</button>
+                <button className="btn ghost" onClick={() => selectRound(Math.max(0, roundIdx - 1))} disabled={roundIdx === 0}>{Icon.back} назад</button>
                 <button className="btn" onClick={submitAnswer} disabled={checking || !answer.trim()}>{checking ? "проверяю" : "проверить ответ (AI)"}</button>
                 {roundIdx < rounds.length - 1 ? (
-                  <button className="btn primary lg" onClick={nextRound}>далее {Icon.chev}</button>
+                  <button className="btn primary lg" onClick={nextRound} disabled={!answer.trim() && !roundAnswers[cur.id]?.trim()}>далее {Icon.chev}</button>
                 ) : (
-                  <button className="btn primary lg" onClick={() => completeTask(`mock-written-${selectedCase.id}`, 60, "review", { cases: progress.cases + 1 })}>отправить на разбор {Icon.chev}</button>
+                  <button className="btn primary lg" onClick={finishMock} disabled={!answer.trim() && !roundAnswers[cur.id]?.trim()}>отправить на разбор {Icon.chev}</button>
                 )}
               </div>
             </div>
@@ -2273,11 +2514,7 @@ function MockScreen({ go, progress, clock, completeTask }) {
               {[13, 33, 55, 78].map((p) => <span key={p} className="tick" style={{ left: `${p}%` }}></span>)}
             </div>
             <div className="pace-labels">
-              <span>Clarify · 2м</span>
-              <span>User · 3м</span>
-              <span>Solutions · 4м</span>
-              <span>Priorities · 3м</span>
-              <span>Metrics · 3м</span>
+              {rounds.map((round) => <span key={round.id}>{round.title}</span>)}
             </div>
           </div>
           {feedback && (
@@ -2326,7 +2563,7 @@ function MockScreen({ go, progress, clock, completeTask }) {
               <li>не назвал ни одной метрики</li>
             </ul>
           </div>
-          <button className="btn lg" style={{ width: "100%" }} onClick={finishMock}>завершить mock → разбор</button>
+          <button className="btn lg" style={{ width: "100%" }} onClick={finishMock} disabled={rounds.some((round) => !roundAnswers[round.id]?.trim() && round.id !== cur.id) || (!roundAnswers[cur.id]?.trim() && !answer.trim())}>завершить mock → разбор</button>
         </aside>
       </div>
       )}
@@ -2686,7 +2923,9 @@ function DrillScreen({ go, progress, clock, completeTask }) {
       setFeedback("");
       setCheckedText("");
     } else {
-      completeTask(`drill-${topic.id}-${level.id}`, 50, "review");
+      const answered = stats.clean + stats.shaky + (checkedText ? 1 : 0);
+      if (answered >= Math.ceil(total / 2)) completeTask(`drill-${topic.id}-${level.id}`, 50, "review");
+      else setFeedback("Ответь хотя бы на половину вопросов, чтобы завершить drill и получить разбор.");
     }
   };
   return (
@@ -2757,7 +2996,7 @@ function DrillScreen({ go, progress, clock, completeTask }) {
           {feedback && <div className="drill-feedback">{feedback}</div>}
           <div style={{ marginTop: 18, display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
             <button className="btn lg" style={{ background: "var(--ph-ink)", color: "#fff", borderColor: "#fff" }} onClick={() => finishQuestion("missed")}>пропустить</button>
-            <button className="btn lg" style={{ background: "#fff", color: "var(--ph-ink)" }} onClick={() => finishQuestion()}>дальше →</button>
+            <button className="btn lg" style={{ background: "#fff", color: "var(--ph-ink)" }} onClick={() => finishQuestion()} disabled={!checkedText}>дальше →</button>
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
@@ -2917,7 +3156,9 @@ function TeachScreen({ go, progress, clock, completeTask, initialTopicId = "nsm"
               «Сейчас это не заготовленный чат. Диалог строится по твоим ответам: объясни как senior, а Тима уточнит слабое место.»
             </p>
           </div>
-          <button className="btn lg" style={{ width: "100%" }} onClick={() => completeTask(`teach-${topic.id}`, 50, "review", { cardsDue: progress.cardsDue + 1 })}>завершить → разбор</button>
+          <button className="btn lg" style={{ width: "100%" }} disabled={answerCount < 2 || busy} onClick={() => completeTask(`teach-${topic.id}`, 50, "review", { cardsDue: progress.cardsDue + 1 })}>
+            {answerCount < 2 ? `ещё ${2 - answerCount} ответ(а) до разбора` : "завершить → разбор"}
+          </button>
         </aside>
       </div>
     </div>
@@ -2931,7 +3172,20 @@ function ReviewScreen({ go, progress, clock, completeTask }) {
   const checkedLessons = KNOWLEDGE_NOTES.filter((note) => progress.completed?.[`check-${note.id}`]);
   const practicedLessons = KNOWLEDGE_NOTES.filter((note) => progress.completed?.[`teach-${note.id}`]);
   const hasRealPractice = completedKeys.some((key) => key.startsWith("check-") || key.startsWith("teach-") || key.startsWith("mock-") || key.startsWith("case-") || key.startsWith("drill-"));
-  const score = Math.min(10, Math.max(0, Math.round((checkedLessons.length * 0.7 + practicedLessons.length * 1.3 + (progress.completed?.["drill-product-sense"] ? 1 : 0) + (progress.completed?.["mock-google"] ? 1 : 0)) * 10) / 10));
+  const drillDone = completedKeys.some((key) => key.startsWith("drill-"));
+  const mockDone = completedKeys.some((key) => key.startsWith("mock-"));
+  const caseDone = completedKeys.some((key) => key.startsWith("case-"));
+  const score = Math.min(10, Math.max(0, Math.round((checkedLessons.length * 0.7 + practicedLessons.length * 1.3 + Number(drillDone) + Number(mockDone) + Number(caseDone)) * 10) / 10));
+  const CATEGORY_LABELS = { beginner: "База PM", framework: "Фреймворки", metrics: "Метрики", design: "Product design", behavioral: "Behavioral", sysdesign: "System design" };
+  const categoryStats = Object.keys(CATEGORY_LABELS)
+    .map((cat) => {
+      const inCat = KNOWLEDGE_NOTES.filter((n) => n.cat === cat);
+      const mastered = inCat.filter((n) => progress.completed?.[`check-${n.id}`] || progress.completed?.[`teach-${n.id}`]).length;
+      return { cat, label: CATEGORY_LABELS[cat], total: inCat.length, mastered, pct: inCat.length ? Math.round((mastered / inCat.length) * 100) : 0 };
+    })
+    .filter((c) => c.total > 0)
+    .sort((a, b) => a.pct - b.pct);
+  const weakest = categoryStats[0];
   if (!hasRealPractice) {
     return (
       <div className="screen">
@@ -3019,8 +3273,9 @@ function ReviewScreen({ go, progress, clock, completeTask }) {
                 { n: "Теория", v: completedLessons.length, max: KNOWLEDGE_NOTES.length, c: "var(--ph-sun)" },
                 { n: "Check · MCQ", v: checkedLessons.length, max: KNOWLEDGE_NOTES.length, c: "var(--ph-mint)" },
                 { n: "Teach Rookie", v: practicedLessons.length, max: KNOWLEDGE_NOTES.length, c: "var(--ph-coral)" },
-                { n: "Drill", v: progress.completed?.["drill-product-sense"] ? 1 : 0, max: 1, c: "var(--ph-sky)" },
-                { n: "Mock", v: progress.completed?.["mock-google"] ? 1 : 0, max: 1, c: "var(--ph-plum)" },
+                { n: "Drill", v: drillDone ? 1 : 0, max: 1, c: "var(--ph-sky)" },
+                { n: "Mock", v: mockDone ? 1 : 0, max: 1, c: "var(--ph-plum)" },
+                { n: "Кейс", v: caseDone ? 1 : 0, max: 1, c: "var(--ph-coral)" },
               ].map(r => (
                 <div key={r.n} className="score-bar-row">
                   <div className="nm">{r.n}</div>
@@ -3034,6 +3289,26 @@ function ReviewScreen({ go, progress, clock, completeTask }) {
               <span className="chip mint">освоено: {practicedLessons.length}</span>
               <span className="chip sun">уроков: {completedLessons.length}</span>
             </div>
+          </div>
+          <div className="review-card" style={{ marginTop: 18 }}>
+            <h4>Слабые зоны по темам</h4>
+            <p style={{ margin: "0 0 12px", fontSize: 13, color: "var(--ph-ink-3)" }}>
+              Освоение = пройден Check или объяснение стажёру. {weakest && weakest.pct < 100 ? `Подтяни сначала: ${weakest.label}.` : "Ровный прогресс по категориям — добивай оставшиеся темы."}
+            </p>
+            <div className="score-bars">
+              {categoryStats.map((c) => (
+                <div key={c.cat} className="score-bar-row">
+                  <div className="nm">{c.label}</div>
+                  <div className="bar tall"><i style={{ width: `${c.pct}%`, background: c.pct >= 66 ? "var(--ph-mint)" : c.pct >= 33 ? "var(--ph-sun)" : "var(--ph-coral)" }}></i></div>
+                  <div className="vl">{c.mastered}/{c.total}</div>
+                </div>
+              ))}
+            </div>
+            {weakest && weakest.pct < 100 && (
+              <div className="next-row" style={{ marginTop: 12 }}>
+                <button className="btn ghost" onClick={() => go("library")}>открыть темы «{weakest.label}» →</button>
+              </div>
+            )}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 18 }}>
             <div className="review-card" style={{ background: "var(--ph-mint-2)" }}>
@@ -3088,102 +3363,57 @@ function ReviewScreen({ go, progress, clock, completeTask }) {
 
 // ─── Screen: CV ──────────────────────────────────────────────────────
 function CVScreen({ progress, clock, completeTask }) {
-  const fileInputRef = useRef(null);
-  const [fileName, setFileName] = useState("");
-  const [analysisDone, setAnalysisDone] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
-  const handleFile = (file) => {
-    if (!file) return;
-    setFileName(file.name);
-    setAnalysisDone(false);
-  };
-  const runAnalysis = () => {
-    if (!fileName || analyzing) return;
-    setAnalyzing(true);
-    window.setTimeout(() => {
-      setAnalysisDone(true);
-      setAnalyzing(false);
-    }, 900);
-  };
   const criteria = [
-    { t: "Структура", score: 78, c: "var(--ph-sun)", d: "Секции читаются, но PM-проекты лучше поднять выше education/прочего.", fix: "Переставь самый релевантный продуктовый кейс в первые ⅓ страницы." },
-    { t: "Impact & метрики", score: 52, c: "var(--ph-coral)", d: "Есть обязанности, но мало чисел результата: рост, конверсия, retention, revenue.", fix: "Добавь 2-3 цифры: X% uplift, N пользователей, экономия времени/денег." },
-    { t: "Action verbs", score: 64, c: "var(--ph-pink)", d: "Часть формулировок звучит как «занималась/помогала», а не owned.", fix: "Замени на launched, led, improved, reduced, validated, prioritized." },
-    { t: "PM fit", score: 71, c: "var(--ph-mint)", d: "Видно продуктовую траекторию, но слабее раскрыты discovery и decision-making.", fix: "Добавь bullets про user research, hypothesis, roadmap trade-offs." },
+    { t: "Структура", d: "Подними самые релевантные PM-проекты выше education и второстепенного опыта." },
+    { t: "Impact & метрики", d: "Проверь, есть ли в bullets цифры результата: uplift, пользователи, деньги или экономия времени." },
+    { t: "Action verbs", d: "Замени «занимался» и «помогал» на owned-действия: launched, led, improved, reduced, validated." },
+    { t: "PM fit", d: "Добавь evidence про discovery, гипотезы, приоритизацию и решения с trade-offs." },
   ];
-  const totalScore = Math.round(criteria.reduce((sum, item) => sum + item.score, 0) / criteria.length);
+  const [checked, setChecked] = useState({});
+  const doneCount = criteria.filter((_, i) => checked[i]).length;
+  const toggle = (i) => setChecked((prev) => ({ ...prev, [i]: !prev[i] }));
   return (
     <div className="screen" style={{ maxWidth: 980 }}>
       <Topbar crumbs={["Home", "Резюме"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
-          <span className="eyebrow">CV ревью · 30 сек разбор от Pim</span>
-          <h1>Загрузи резюме — Pim даст 3 правки</h1>
+          <span className="eyebrow">Самопроверка резюме · без загрузки файла и AI</span>
+          <h1>Чеклист резюме перед PM-собеседованием</h1>
+        </div>
+        <div className="right">
+          <span className="chip mint">{doneCount}/{criteria.length} проверок</span>
         </div>
       </div>
-      <div className="mcq-card" style={{ textAlign: "center" }}>
-        <div
-          style={{ border: "3px dashed var(--ph-ink-4)", borderRadius: 18, padding: "60px 30px", background: "var(--ph-bg-warm)" }}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files?.[0]); }}
-        >
-          <div style={{ display: "inline-block" }}><PimFigure size={120} expression="cheer" /></div>
-          <h2 style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 26, fontWeight: 800, margin: "16px 0 8px" }}>Перетащи сюда PDF или DOCX</h2>
-          <p style={{ color: "var(--ph-ink-3)", margin: "0 0 22px" }}>
-            {fileName ? `Выбран файл: ${fileName}` : "или нажми, чтобы выбрать файл с компьютера"}
-          </p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.doc,.docx"
-            style={{ display: "none" }}
-            onChange={(e) => handleFile(e.target.files?.[0])}
-          />
-          <div className="cv-actions">
-            <button className="btn primary lg" onClick={() => fileInputRef.current?.click()}>выбрать файл</button>
-            {fileName && (
-              <button className="btn lg" style={{ background: "var(--ph-mint-2)", color: "var(--ph-ink)" }} onClick={runAnalysis} disabled={analyzing}>
-                {analyzing ? "оцениваю..." : "оценим!"}
-              </button>
-            )}
-          </div>
-          {analysisDone && (
-            <div className="cv-score-panel">
-              <div className="cv-score-head">
-                <div>
-                  <span className="eyebrow">Pim разобрал резюме</span>
-                  <h3>{totalScore}/100 · хороший черновик, но нужен impact</h3>
-                </div>
-                <button className="btn ghost sm" onClick={() => completeTask("cv-review", 25, "home")}>забрать +25 XP</button>
+      <div className="notice" style={{ marginBottom: 16 }}>
+        Это ручной чеклист: загрузки и AI-анализа резюме пока нет. Открой своё резюме рядом и пройди 4 проверки сам(а), отмечая выполненные.
+      </div>
+      <div className="mcq-card">
+        <div className="cv-criteria-grid">
+          {criteria.map((item, i) => (
+            <button
+              type="button"
+              key={item.t}
+              className="cv-criterion"
+              onClick={() => toggle(i)}
+              style={{ textAlign: "left", cursor: "pointer", border: "var(--ph-b)", borderRadius: 14, padding: 16, background: checked[i] ? "var(--ph-mint-2)" : "var(--ph-card)" }}
+            >
+              <div className="cv-criterion-head" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ width: 24, height: 24, borderRadius: 7, border: "var(--ph-b)", display: "flex", alignItems: "center", justifyContent: "center", background: checked[i] ? "var(--ph-mint)" : "#fff", fontWeight: 800 }}>{checked[i] ? "✓" : ""}</span>
+                <b>{item.t}</b>
               </div>
-              <div className="cv-criteria-grid">
-                {criteria.map((item) => (
-                  <div key={item.t} className="cv-criterion">
-                    <div className="cv-criterion-head">
-                      <b>{item.t}</b>
-                      <span>{item.score}/100</span>
-                    </div>
-                    <div className="bar tall"><i style={{ width: `${item.score}%`, background: item.c }}></i></div>
-                    <p>{item.d}</p>
-                    <small>{item.fix}</small>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-        <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-          {[
-            { t: "Структура", d: "проверю порядок секций под PM-роль" },
-            { t: "Action verbs", d: "найду 'занимался', заменю на сильные глаголы" },
-            { t: "Метрики", d: "подсвечу проекты без цифр результата" },
-          ].map((c, i) => (
-            <div key={i} className="review-card" style={{ background: ["var(--ph-sun-2)","var(--ph-mint-2)","var(--ph-pink-2)"][i] }}>
-              <h4>{c.t}</h4>
-              <p style={{ margin: 0, fontSize: 13.5, color: "var(--ph-ink-2)" }}>{c.d}</p>
-            </div>
+              <p style={{ margin: "8px 0 0", color: "var(--ph-ink-2)" }}>{item.d}</p>
+            </button>
           ))}
         </div>
+        {doneCount === criteria.length && (
+          <div className="lesson-callout mint" style={{ marginTop: 16 }}>
+            <div className="ico">✓</div>
+            <div>
+              <h4>Готово</h4>
+              <p>Все 4 проверки пройдены. Перечитай резюме вслух за 30 секунд: видно ли роль, impact и PM-мышление сразу.</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -3191,7 +3421,7 @@ function CVScreen({ progress, clock, completeTask }) {
 
 // ─── App router + persistent Pim ─────────────────────────────────────
 const PIM_BY_ROUTE = {
-  home:    { msg: "С возвращением, Катя! Слабое место недели — product design. Я подобрал урок и практику под него.", actions: [{ label: "Открыть уроки", on: "library" }], expression: "smile" },
+  home:    { msg: "Начни с базового урока, затем проверь себя и только потом переходи к кейсам.", actions: [{ label: "Открыть уроки", on: "library" }], expression: "smile" },
   library: { msg: "Урок считается освоенным только после практики. Выбери тему и объясни её Тиме.", actions: [{ label: "Открыть SRS", on: "srs" }], expression: "wink" },
   check:   { msg: "3 вопроса. Один с подвохом. После каждого — кнопка «почему».", actions: [], expression: "think" },
   case:    { msg: "Не торопись с решениями. Сильные кандидаты тратят 30% времени на clarify + user.", actions: [], expression: "think" },
@@ -3200,7 +3430,7 @@ const PIM_BY_ROUTE = {
   teach:   { msg: "Тима задаст ещё 2-3 каверзных вопроса. Главное — не отвечать общими словами.", actions: [], expression: "teach" },
   srs:     { msg: "Честно оцени, как помнил(а). Если «Снова» — ничего страшного, лучше так, чем «легко» и забыть.", actions: [], expression: "smile" },
   review:  { msg: "Хороший разбор. Сильные стороны выписал в банк историй — пригодится в behavioral.", actions: [], expression: "cheer" },
-  cv:      { msg: "Загрузи PDF — за 30 сек найду 3 главных правки. Без воды.", actions: [], expression: "smile" },
+  cv:      { msg: "Сейчас это демо-чеклист: файл не читаю, но покажу, что проверить перед отправкой.", actions: [], expression: "smile" },
 };
 
 export default function PMQuestHifi({ onExit }) {
@@ -3292,6 +3522,10 @@ export default function PMQuestHifi({ onExit }) {
       ...items,
     ]);
   };
+  const finishOnboarding = () => {
+    setProgress((prev) => ({ ...prev, onboarded: true }));
+    go("lesson", { lessonTopicId: "pm-role-101" });
+  };
 
   const shared = {
     progress,
@@ -3338,13 +3572,28 @@ export default function PMQuestHifi({ onExit }) {
           progress={progress}
           openSignal={pimOpenSignal}
         />
+        {!progress.onboarded && (
+          <div className="pmq-modal-backdrop">
+            <section className="pmq-modal pmq-onboarding">
+              <span className="eyebrow">первый вход · 1 минута</span>
+              <h2>Освой PM-теорию и научись проходить собеседования</h2>
+              <p>Здесь не нужно знать термины заранее. Начнём с роли PM, затем закрепим знания вопросами и постепенно дойдём до mock-интервью.</p>
+              <div className="pmq-onboarding-grid">
+                <article><b>1. Теория</b><span>Короткие уроки от основ к фреймворкам.</span></article>
+                <article><b>2. Практика</b><span>Check, объяснение стажёру и кейсы.</span></article>
+                <article><b>3. Собеседование</b><span>Mock с AI и разбор зон роста.</span></article>
+              </div>
+              <button className="btn primary lg" onClick={finishOnboarding}>начать с первого урока →</button>
+            </section>
+          </div>
+        )}
         {overlay && (
           <div className="pmq-modal-backdrop" onClick={() => setOverlay(null)}>
             <section className="pmq-modal pmq-global-modal" onClick={(event) => event.stopPropagation()}>
               <div className="pmq-modal-head">
                 <div>
                   <span className="eyebrow">{overlay === "search" ? "быстрый поиск" : overlay === "plan" ? "маршрут подготовки" : "цель"}</span>
-                  <h3>{overlay === "search" ? "Найти тему" : overlay === "plan" ? "План на ближайшие шаги" : "Junior PM @ FAANG"}</h3>
+                  <h3>{overlay === "search" ? "Найти тему" : overlay === "plan" ? "План на ближайшие шаги" : "Junior PM interview"}</h3>
                 </div>
                 <button className="btn ghost sm" onClick={() => setOverlay(null)}>×</button>
               </div>
