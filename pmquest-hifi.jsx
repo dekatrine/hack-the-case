@@ -2267,6 +2267,7 @@ function MockScreen({ go, progress, clock, completeTask }) {
           </div>
         </div>
         <div className="mock-setup">
+          <div className="mock-setup-main">
           <section className="mock-setup-panel">
             <div className="eyebrow">режим практики</div>
             <div className="mock-mode-switch">
@@ -2334,6 +2335,7 @@ function MockScreen({ go, progress, clock, completeTask }) {
             )}
             {feedback && <div className="case-generator-error">{feedback}</div>}
           </section>
+          </div>
           <aside className="mock-setup-card">
             <PimFigure size={120} expression="teach" />
             <h3>Виктор готов</h3>
