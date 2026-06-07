@@ -1564,6 +1564,30 @@ function SRSScreen({ go, progress, clock, completeTask }) {
 }
 
 // ─── Screen: CASE ────────────────────────────────────────────────────
+// Лёгкий рендер кейс-условия: убираем markdown-мусор (**жирный**, ---, лишние пустые строки)
+// и подсвечиваем строки-заголовки вида «Компания:», «Данные:».
+function renderCaseBrief(raw = "") {
+  const clean = raw
+    .replace(/\*\*/g, "")
+    .replace(/^#{1,6}\s*/gm, "")
+    .replace(/^-{3,}$/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return clean.split("\n").map((line, i) => {
+    const t = line.trim();
+    if (!t) return <div key={i} style={{ height: 8 }} />;
+    const m = t.match(/^([A-Za-zА-Яа-я ёЁ/]{3,40}):\s*(.*)$/);
+    if (m) {
+      return (
+        <p key={i} style={{ margin: "0 0 6px" }}>
+          <b>{m[1]}:</b>{m[2] ? ` ${m[2]}` : ""}
+        </p>
+      );
+    }
+    return <p key={i} style={{ margin: "0 0 6px" }}>{t}</p>;
+  });
+}
+
 function CaseScreen({ go, progress, clock, completeTask }) {
   const [step, setStep] = useState(0);
   const [text, setText] = useState("");
@@ -1571,6 +1595,7 @@ function CaseScreen({ go, progress, clock, completeTask }) {
   const [evaluation, setEvaluation] = useState("");
   const [evaluating, setEvaluating] = useState(false);
   const [savedNotice, setSavedNotice] = useState("");
+  const [showHint, setShowHint] = useState(false);
   const caseSuggestions = [
     {
       id: "spotify-likes",
@@ -1627,12 +1652,13 @@ function CaseScreen({ go, progress, clock, completeTask }) {
   const [caseText, setCaseText] = useState(fallbackCaseText);
   const [genBusy, setGenBusy] = useState(false);
   const [genErr, setGenErr] = useState("");
+  // Шаги нейтральны к конкретному кейсу: подходят и под Spotify, и под маркетплейс, и под банк.
   const steps = [
-    { n: "1", title: "Clarifying questions", desc: "уточни цели и контекст", prompt: "Что хочешь уточнить у интервьюера?", placeholder: "1. Какая цель — engagement, retention или revenue?\n2. На каких устройствах…" },
-    { n: "2", title: "User & pain points", desc: "выбери сегмент, опиши боли", prompt: "Кто целевой пользователь? Какую проблему ему решает «лайк песен»?", placeholder: "Сегмент: «активные слушатели» 18-35.\nБоли: …" },
-    { n: "3", title: "Solutions", desc: "3-5 идей под боль", prompt: "Сгенерируй 3-5 решений. Один должен быть «дикий», один — минимальный.", placeholder: "1. Сердечко рядом с треком\n2. Свайп вправо = like\n3. …" },
-    { n: "4", title: "Priorities & trade-offs", desc: "приоритизируй с обоснованием", prompt: "Какой выбираешь и почему? Какие компромиссы?", placeholder: "Выбираю #1 — самый дешёвый и понятный.\nTrade-off: …" },
-    { n: "5", title: "Metrics & success", desc: "как поймёшь, что сработало", prompt: "Какие метрики? Какие предсказывают долгосрочный успех?", placeholder: "Лидирующая метрика: …" },
+    { n: "1", title: "Clarifying questions", desc: "уточни цели и контекст", prompt: "Что уточнишь у интервьюера перед решением этого кейса?", placeholder: "1. Какая главная цель и метрика успеха?\n2. Какой сегмент / рынок в фокусе?\n3. Какие ограничения по срокам, бюджету, регуляторике?", hint: "Сильные кандидаты тратят ~30% времени на clarify + понимание пользователя, прежде чем предлагать решения." },
+    { n: "2", title: "User & pain points", desc: "выбери сегмент, опиши боли", prompt: "Кто приоритетный пользователь в этом кейсе и какую его боль решаем?", placeholder: "Сегмент: …\nЗадача (JTBD): …\nБоли: …", hint: "Не «все пользователи». Выбери один сегмент по задаче/поведению и объясни, почему он важен бизнесу." },
+    { n: "3", title: "Solutions", desc: "3-5 идей под боль", prompt: "Предложи 3-5 решений под выбранную боль. Один — смелый, один — минимальный (MVP).", placeholder: "1. …\n2. …\n3. …", hint: "Сначала покажи диапазон идей, потом выбирай. Каждое решение должно бить в названную боль, а не быть «фичей ради фичи»." },
+    { n: "4", title: "Priorities & trade-offs", desc: "приоритизируй с обоснованием", prompt: "Что выберешь для V1 и почему? Какие trade-offs?", placeholder: "Выбираю …, потому что …\nTrade-off: …\nЧем жертвуем: …", hint: "Привяжи выбор к цели и критериям (impact / effort / риск), а не к тому, что «нравится»." },
+    { n: "5", title: "Metrics & success", desc: "как поймёшь, что сработало", prompt: "Какими метриками измеришь успех? Что нельзя уронить (guardrails)?", placeholder: "Primary metric: …\nProxy / leading: …\nGuardrails: …", hint: "Нужны primary + proxy + guardrail и решение, которое команда примет по данным." },
   ];
   const cur = steps[step];
   const saveCurrentAnswer = () => {
@@ -1645,6 +1671,7 @@ function CaseScreen({ go, progress, clock, completeTask }) {
     const collected = { ...answers, ...(clean ? { [cur.title]: clean } : {}) };
     setStep(nextStep);
     setText(collected[steps[nextStep].title] || "");
+    setShowHint(false);
   };
   const finishCase = async () => {
     const clean = saveCurrentAnswer();
@@ -1678,14 +1705,6 @@ function CaseScreen({ go, progress, clock, completeTask }) {
     setSavedNotice("сохранено");
     window.setTimeout(() => setSavedNotice(""), 1800);
   };
-  const applyHint = (kind) => {
-    const hintText = {
-      framework: `Фреймворк: сначала цель и success metric, затем primary user/JTBD, после этого 3-5 решений, trade-offs и experiment plan.`,
-      example: `Сильный пример: "Я бы начал(а) с цели. Если цель retention, сфокусируюсь на новых пользователях, которые слушают плейлисты, но не сохраняют треки..."`,
-      mistakes: `Типичные ошибки: сразу предлагать фичи, не выбрать сегмент, назвать vanity metric и не проговорить риски запуска.`,
-    }[kind];
-    setText((prev) => (prev.trim() ? `${prev}\n\n${hintText}` : hintText));
-  };
   const generateCase = async (suggestion = selectedSuggestion) => {
     setGenBusy(true);
     setGenErr("");
@@ -1708,8 +1727,9 @@ function CaseScreen({ go, progress, clock, completeTask }) {
       setText("");
       setAnswers({});
       setEvaluation("");
+      setShowHint(false);
     } catch (e) {
-      setGenErr(e.message);
+      setGenErr(`Не удалось сгенерировать кейс (${e.message}). Показан пример-заглушка — нажми «сгенерировать» ещё раз.`);
     } finally {
       setGenBusy(false);
     }
@@ -1720,7 +1740,7 @@ function CaseScreen({ go, progress, clock, completeTask }) {
       <Topbar crumbs={["Home", "Кейс", caseTitle]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
-          <span className="eyebrow">Кейс · ~15 мин · +60 XP · FAANG product design</span>
+          <span className="eyebrow">Кейс · ~15 мин · +60 XP · {selectedSuggestion.trackId === "business" ? "consulting / business" : "product"} · {difficulty}</span>
           <h1>{caseTitle}</h1>
         </div>
         <div className="right">
@@ -1788,7 +1808,7 @@ function CaseScreen({ go, progress, clock, completeTask }) {
         <div className="case-stage">
           <div className="generated-case-brief">
             <span className="eyebrow">условие кейса</span>
-            <pre>{caseText}</pre>
+            <div className="case-brief-body">{renderCaseBrief(caseText)}</div>
           </div>
           <div className="meta">
             <span className="chip solid-ink">Шаг {step + 1} / 5</span>
@@ -1801,17 +1821,17 @@ function CaseScreen({ go, progress, clock, completeTask }) {
           {evaluation && (
             <div className="mcq-explain" style={{ background: "var(--ph-mint-2)" }}>
               <h5>AI-разбор кейса</h5>
-              <p style={{ whiteSpace: "pre-wrap" }}>{evaluation}</p>
+              <div className="case-brief-body">{renderCaseBrief(evaluation)}</div>
             </div>
           )}
+          <div className="case-hint-row">
+            <button className="hint-pill" onClick={() => setShowHint((v) => !v)}>
+              {showHint ? "скрыть подсказку" : "💡 подсказка по шагу"}
+            </button>
+            {showHint && <div className="case-hint-box">{cur.hint}</div>}
+          </div>
           <div className="case-actions">
-            <div className="case-hints">
-              <span className="eyebrow" style={{ marginRight: 4 }}>подсказки Pim:</span>
-              <button className="hint-pill" onClick={() => applyHint("framework")}>подсказать фреймворк</button>
-              <button className="hint-pill" onClick={() => applyHint("example")}>пример сильного ответа</button>
-              <button className="hint-pill" onClick={() => applyHint("mistakes")}>типичные ошибки джунов</button>
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
               <button className="btn ghost" onClick={() => goToStep(Math.max(0, step - 1))} disabled={step === 0}>{Icon.back} назад</button>
               {step < steps.length - 1 ? (
                 <button className="btn primary lg" onClick={() => goToStep(step + 1)} disabled={text.trim().length < 20}>сохранить и далее {Icon.chev}</button>
@@ -3426,7 +3446,7 @@ const PIM_BY_ROUTE = {
   home:    { msg: "Начни с базового урока, затем проверь себя и только потом переходи к кейсам.", actions: [{ label: "Открыть уроки", on: "library" }], expression: "smile" },
   library: { msg: "Урок считается освоенным только после практики. Выбери тему и объясни её Тиме.", actions: [{ label: "Открыть SRS", on: "srs" }], expression: "wink" },
   check:   { msg: "3 вопроса. Один с подвохом. После каждого — кнопка «почему».", actions: [], expression: "think" },
-  case:    { msg: "Не торопись с решениями. Сильные кандидаты тратят 30% времени на clarify + user.", actions: [], expression: "think" },
+  case:    { msg: "Иди по шагам слева. На каждом шаге есть кнопка «подсказка по шагу», если застрял(а).", actions: [], expression: "think" },
   mock:    { msg: "На mock я в фоне — слежу за таймингом и шепну, если выйдешь за лимит шага.", actions: [], expression: "wink", muted: true },
   drill:   { msg: "Не думай долго — это drill. Главное темп и «думаешь вслух».", actions: [], expression: "cheer" },
   teach:   { msg: "Тима задаст ещё 2-3 каверзных вопроса. Главное — не отвечать общими словами.", actions: [], expression: "teach" },

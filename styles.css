@@ -6178,6 +6178,24 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   line-height: 1.45;
 }
 .pmq-hifi .case-brief-section li + li { margin-top: 4px; }
+.pmq-hifi .case-brief-body {
+  max-height: 230px;
+  overflow: auto;
+  color: var(--ph-ink-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.pmq-hifi .case-brief-body b { color: var(--ph-ink); }
+.pmq-hifi .case-hint-row { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.pmq-hifi .case-hint-box {
+  padding: 10px 14px;
+  border: 1.5px dashed var(--ph-ink-4);
+  border-radius: 12px;
+  background: var(--ph-sun-2);
+  color: var(--ph-ink-2);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
 .pmq-hifi .case-input {
   flex: 1; border: 2px solid var(--ph-ink); border-radius: var(--ph-r);
   background: var(--ph-card-sunk); padding: 18px 20px;
