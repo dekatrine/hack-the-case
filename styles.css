@@ -5458,7 +5458,7 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
     radial-gradient(circle at 90% 10%, var(--ph-pink-2) 0, transparent 30%),
     radial-gradient(circle at 80% 90%, var(--ph-sky-2) 0, transparent 30%),
     var(--ph-bg);
-  padding: 22px 32px 80px;
+  padding: 22px 32px 140px;
   overflow-y: auto;
 }
 
@@ -6196,6 +6196,16 @@ h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacin
   font-size: 13.5px;
   line-height: 1.5;
 }
+.pmq-hifi .saved-cases { margin-top: 12px; }
+.pmq-hifi .saved-cases-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.pmq-hifi .saved-case-row { display: flex; align-items: stretch; gap: 8px; }
+.pmq-hifi .saved-case-open {
+  flex: 1; text-align: left; cursor: pointer; font: inherit;
+  border: var(--ph-b); border-radius: 12px; background: var(--ph-card); padding: 10px 12px;
+}
+.pmq-hifi .saved-case-open:hover { background: var(--ph-bg-warm); }
+.pmq-hifi .saved-case-open b { display: block; font-family: 'Bricolage Grotesque', sans-serif; }
+.pmq-hifi .saved-case-open span { display: block; margin-top: 3px; color: var(--ph-ink-3); font-size: 12.5px; }
 .pmq-hifi .case-input {
   flex: 1; border: 2px solid var(--ph-ink); border-radius: var(--ph-r);
   background: var(--ph-card-sunk); padding: 18px 20px;

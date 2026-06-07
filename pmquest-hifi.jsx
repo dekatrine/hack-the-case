@@ -356,6 +356,132 @@ const TOPIC_CONTENT = {
     ],
     modelAnswer: "«Сформулирую гипотезу: „персональные рекомендации поднимут долю пользователей, нашедших контент в первый день“. MVP — простые рекомендации на правилах для одного сегмента, без сложной модели. Метрика обучения — доля кликнувших по рекомендации и D1 retention сегмента. Подтвердится — инвестируем в полноценный ML.»",
   },
+  "nsm": {
+    mcq: [
+      ["Что такое North Star Metric?", "Метрика реализованной ценности для пользователя, ведущая к росту", "Главная метрика выручки", "Самая большая по абсолюту метрика", "Любимая метрика CEO", "NSM отражает ценность для пользователя и предсказывает долгосрочный рост, а не просто деньги."],
+      ["Хорошая NSM для Spotify?", "Время активного прослушивания на пользователя", "Число регистраций", "Кол-во скачиваний приложения", "Выручка за месяц", "NSM = повторно получаемая ценность, а не разовое привлечение или деньги."],
+      ["Почему revenue — плохая NSM?", "Это lagging-метрика, может расти при падении ценности", "Её нельзя измерить", "Она не важна бизнесу", "Её сложно объяснить", "Выручка отстаёт и маскирует отток; NSM должна быть leading-индикатором ценности."],
+    ],
+    miniCase: "Стриминг хочет одну метрику, которая объединит команды вокруг ценности. Предложи NSM, объясни, почему не выручка и не DAU, и какие input-метрики её двигают.",
+    mistakes: [
+      { t: "Взять выручку или DAU", d: "Это lagging/vanity: растут и при ухудшении продукта." },
+      { t: "NSM без input-метрик", d: "NSM нужна декомпозиция на рычаги, иначе ей нельзя управлять." },
+      { t: "Несколько «главных» метрик", d: "NSM одна — иначе фокуса нет." },
+    ],
+    modelAnswer: "«NSM — время активного прослушивания на активного пользователя в неделю: это реализованная ценность, которая ведёт к retention и подписке. Не выручка (lagging, маскирует отток) и не DAU (vanity). Input-метрики: доля нашедших трек по вкусу в первый день, число сохранённых треков, частота сессий.»",
+  },
+  "aarrr": {
+    mcq: [
+      ["Что проверяет Activation в AARRR?", "Получил ли пользователь ценность в первый раз", "Сколько пользователей пришло", "Сколько заплатили", "Сколько привели друзей", "Activation — момент первой полученной ценности (aha), до retention."],
+      ["Где чаще всего «течёт» воронка у нового продукта?", "Activation: пришли, но не дошли до ценности", "Referral", "Revenue", "Awareness", "У большинства продуктов главная утечка между acquisition и activation."],
+      ["Зачем PM нужна AARRR?", "Локализовать, на каком этапе теряем пользователей", "Чтобы посчитать выручку", "Заменить product discovery", "Для маркетингового отчёта", "AARRR — каркас диагностики: где именно ломается путь."],
+    ],
+    miniCase: "У приложения доставки растёт acquisition, но выручка стоит. Разложи путь по AARRR и скажи, на каком этапе вероятнее всего проблема и как это проверить данными.",
+    mistakes: [
+      { t: "Лить трафик в дырявую воронку", d: "Рост acquisition без activation/retention сжигает бюджет." },
+      { t: "Путать activation и retention", d: "Activation — первая ценность, retention — повторная." },
+      { t: "Смотреть только на revenue", d: "Деньги — следствие; чинить надо ранний этап утечки." },
+    ],
+    modelAnswer: "«Разложу: Acquisition (трафик есть) → Activation (дошли ли до первого заказа за N минут?) → Retention (повтор за 30 дней) → Revenue. Гипотеза: проблема в activation — пришли, но не сделали первый заказ. Проверю долю завершивших первый заказ по сегментам и шагам онбординга, найду шаг с максимальной утечкой.»",
+  },
+  "rice": {
+    mcq: [
+      ["Расшифруй RICE.", "Reach × Impact × Confidence ÷ Effort", "Revenue × Impact × Cost × Effort", "Reach × Income × Confidence × Effort", "Risk × Impact × Cost × Effort", "RICE = (Reach × Impact × Confidence) ÷ Effort."],
+      ["Зачем в RICE Confidence?", "Штрафует идеи со слабыми доказательствами", "Увеличивает любую оценку", "Считает деньги", "Заменяет Reach", "Confidence снижает балл, если оценки не подкреплены данными."],
+      ["Главная ловушка RICE?", "Выдуманные числа создают иллюзию объективности", "Слишком долго считать", "Нельзя сравнить идеи", "Не учитывает effort", "RICE честен ровно настолько, насколько честны входные оценки."],
+    ],
+    miniCase: "У тебя 5 идей на квартал. Покажи, как через RICE выберешь топ-2, и где честно проставишь низкий Confidence из-за нехватки данных.",
+    mistakes: [
+      { t: "Числа без evidence", d: "RICE с фантазийными оценками — ложная точность." },
+      { t: "Игнорировать Confidence", d: "Без него рискованные идеи всплывают наверх незаслуженно." },
+      { t: "Считать RICE священным", d: "Это инструмент сравнения, а не замена стратегии и здравого смысла." },
+    ],
+    modelAnswer: "«Для каждой идеи оценю Reach (сколько пользователей за период), Impact (1–3), Confidence (доля, по данным/гипотезе) и Effort (человеко-недели), посчитаю (R×I×C)/E. Идеям без данных честно поставлю Confidence 50%. Возьму топ-2 по баллу, но проговорю риск и зависимости — RICE помогает сравнить, решение всё равно за мной.»",
+  },
+  "jtbd": {
+    mcq: [
+      ["Что описывает JTBD?", "Прогресс, которого пользователь хочет достичь в ситуации", "Демографию пользователя", "Список фич продукта", "Должность пользователя", "JTBD — про задачу и контекст, а не про то, кто человек по паспорту."],
+      ["Сильная формулировка job?", "«Когда …, я хочу …, чтобы …»", "«Пользователи 25-34»", "«Нужна кнопка лайка»", "«Сделать как у конкурента»", "Формат when/I want/so I can фиксирует ситуацию, мотив и желаемый результат."],
+      ["Зачем JTBD в product design?", "Чтобы строить решение под реальную задачу, а не под фичу", "Чтобы показать большой рынок", "Чтобы избежать метрик", "Чтобы быстрее накидать фич", "JTBD удерживает от feature-brainstorm без причины."],
+    ],
+    miniCase: "Тебя просят «добавить ленту рекомендаций». Переформулируй это через JTBD: какую работу пользователь нанимает продукт сделать и в какой ситуации, прежде чем проектировать фичу.",
+    mistakes: [
+      { t: "Job = демография", d: "«Женщины 25-34» — это не задача и не ситуация." },
+      { t: "Сразу фича вместо job", d: "«Нужна лента» — решение; сначала какая работа за ним." },
+      { t: "Job без контекста", d: "Без ситуации (когда/где) job не отличить от лозунга." },
+    ],
+    modelAnswer: "«Переформулирую: „Когда у меня мало времени вечером, я хочу быстро найти, что посмотреть, чтобы не листать полчаса“. Это job. Лента рекомендаций — лишь одно из решений; теперь я могу сравнить его с другими (быстрые подборки, продолжить просмотр) по тому, как хорошо они закрывают эту работу.»",
+  },
+  "root-cause": {
+    mcq: [
+      ["С чего начать диагностику падения метрики?", "Разложить метрику на драйверы и найти, где именно просадка", "Сразу запустить промо", "Добавить новых фич", "Поднять рекламный бюджет", "Сначала локализуй слом по дереву метрик и сегментам, потом лечи."],
+      ["Что важно проверить во времени?", "Что изменилось прямо перед падением (релиз, цена, канал)", "Среднюю метрику за год", "Прогноз на 3 года", "Мнение CEO", "Change log выявляет триггер падения."],
+      ["Как сузить причину?", "Сравнить сегменты/каналы/устройства: где есть просадка, где нет", "Усреднить всё вместе", "Спросить маркетинг", "Сделать редизайн", "Segment isolation показывает, где именно сломалось."],
+    ],
+    miniCase: "Продажи маркетплейса упали на 20% за неделю. Построй диагностику: дерево метрик, какие разрезы проверишь и что искал бы в change log — до любых решений.",
+    mistakes: [
+      { t: "Лечить симптом скидками", d: "Не доказав, где сломалась воронка, тратишь деньги вслепую." },
+      { t: "Смотреть только среднее", d: "Среднее прячет, что упал один сегмент/канал/платформа." },
+      { t: "Игнорировать change log", d: "Чаще всего падение совпадает с конкретным изменением." },
+    ],
+    modelAnswer: "«Разложу: заказы = трафик × конверсия × частота. Сравню по сегментам, каналам, устройствам, гео и периодам — найду, где именно −20%. Посмотрю change log: релизы, цены, изменения поиска/оплаты в дни падения. Сформулирую root cause как проверяемую гипотезу (например, «упала конверсия в оплату на Android после релиза X») и проверю на данных, прежде чем предлагать решение.»",
+  },
+  "ab-power": {
+    mcq: [
+      ["Что такое MDE?", "Минимальный эффект, который тест способен задетектить", "Среднее по выборке", "Максимальный эффект фичи", "Доверительный интервал", "MDE — насколько метрика должна измениться, чтобы тест это увидел."],
+      ["Зачем A/A-тест?", "Проверить корректность сплитования и метрик", "Удвоить эффект", "Заменить A/B", "Поднять конверсию", "A/A: две одинаковые группы не должны системно различаться."],
+      ["«Серый» результат теста — это…", "Нет значимого роста и нет падения guardrails", "Однозначный успех", "Однозначный провал", "Ошибка данных", "Серый тест требует проверить мощность, баги, сегменты и новые гипотезы."],
+    ],
+    miniCase: "Хочешь проверить, что подсказки на карточке поднимут конверсию в контакт. Спроектируй A/B: целевая метрика, guardrails, единица рандомизации, MDE и правило решения.",
+    mistakes: [
+      { t: "Нет расчёта мощности/MDE", d: "Тест без MDE может «ничего не показать» просто из-за малой выборки." },
+      { t: "Подсматривать и останавливать рано", d: "Peeking раздувает ложноположительные; фиксируй длительность заранее." },
+      { t: "Забыть guardrails", d: "Можно поднять целевую метрику, уронив жалобы/латентность/маржу." },
+    ],
+    modelAnswer: "«Гипотеза: подсказки на карточке поднимут конверсию в контакт. Целевая — contact rate; guardrails — жалобы и время на странице. Рандомизация по пользователю, MDE 3% при 80% мощности задаёт нужную выборку и срок (~2 недели). Правило: катим, если +3% по целевой при стабильных guardrails; иначе — серый/красный и разбор причин.»",
+  },
+  "estimation": {
+    mcq: [
+      ["Что важнее в estimation на собесе?", "Прозрачная логика и допущения, а не точная цифра", "Угадать точное число", "Большая формула", "Знание реальных данных рынка", "Оценивают ход мысли и явные допущения, а не точность."],
+      ["Top-down оценка — это…", "От большой базы вниз: население → сегмент → доля → частота", "От одной единицы вверх", "Случайное число", "Только онлайн-данные", "Top-down идёт от рынка к сегменту."],
+      ["Что обязательно сделать в конце?", "Sanity check порядка величины", "Назвать только итог", "Усложнить формулу", "Извиниться за неточность", "Проверка на здравый смысл показывает зрелость оценки."],
+    ],
+    miniCase: "Оцени число заказов доставки еды в городе на 1 млн жителей за месяц. Покажи базу, сегменты, допущения, формулу, диапазон и sanity check.",
+    mistakes: [
+      { t: "Одно «точное» число", d: "Без сегментации и допущений это угадайка, а не оценка." },
+      { t: "Молча взять допущение", d: "Каждое допущение проговаривай — его и проверяют." },
+      { t: "Нет sanity check", d: "Без проверки порядка величины легко ошибиться в 10×." },
+    ],
+    modelAnswer: "«Top-down: 1 млн жителей × 60% взрослых смартфон-юзеров × 30% пользуются доставкой × 4 заказа/мес ≈ 720 тыс. заказов/мес. Допущения проговариваю явно (penetration, частота). Диапазон ±30% из-за частоты. Sanity check: ~0,7 заказа на жителя в месяц — правдоподобно для крупного города. Самое чувствительное допущение — penetration доставки.»",
+  },
+  "star": {
+    mcq: [
+      ["Что значит STAR?", "Situation · Task · Action · Result", "Strategy · Tactic · Action · Review", "Story · Task · Aim · Result", "Situation · Time · Action · Risk", "STAR: ситуация, задача, действия (от первого лица), результат."],
+      ["Где джуны теряют баллы в STAR?", "Говорят «мы» вместо личного вклада в Action", "Слишком короткая Situation", "Называют результат", "Структурируют ответ", "Интервьюер оценивает твой личный вклад, а не «мы всё сделали»."],
+      ["Что усиливает Result?", "Конкретная цифра/наблюдаемый эффект + вывод", "Длинное описание процесса", "Список всех участников", "Эмоции", "Result должен быть измерим и завершаться learning."],
+    ],
+    miniCase: "Подготовь STAR-историю на 90 секунд про конфликт с дизайном или инженерией: коротко ситуация, твоя задача, твои действия от первого лица, измеримый результат и вывод.",
+    mistakes: [
+      { t: "Прятаться за «мы»", d: "Action должен показать твой личный вклад и решения." },
+      { t: "Уйти в драму", d: "Конфликт — через цель, факты и решение, без обвинений." },
+      { t: "Нет learning", d: "Без вывода история выглядит как случайность, а не рост." },
+    ],
+    modelAnswer: "«S: дизайн и инженерия спорили о scope релиза, дедлайн горел. T: мне как PM нужно было выровнять команду и не сорвать срок. A: я свёл спор к цели релиза, развёл факты и мнения, предложил резать scope по критерию impact/effort и зафиксировал decision log. R: вышли в срок, конверсия онбординга +12%. Learning: ранний decision log снимает половину споров.»",
+  },
+  "guardrails": {
+    mcq: [
+      ["Что такое guardrail-метрика?", "Метрика, которую нельзя ухудшить, улучшая основную", "Главная метрика роста", "Метрика выручки", "Vanity-метрика", "Guardrail охраняет качество/доверие, пока двигаешь primary."],
+      ["Пример guardrail при росте CTR?", "Жалобы и доля дочитываний", "Число показов", "Бюджет рекламы", "Размер команды", "CTR можно поднять кликбейтом — guardrail ловит вред."],
+      ["Зачем guardrails в эксперименте?", "Чтобы не выкатить улучшение, которое вредит в другом месте", "Чтобы ускорить тест", "Чтобы заменить primary", "Для отчёта маркетингу", "Guardrails не дают оптимизировать метрику во вред продукту."],
+    ],
+    miniCase: "Команда хочет растить time-in-app. Назови риск метрики и подбери 2-3 guardrail, которые не дадут «накрутить» вовлечённость во вред пользователю.",
+    mistakes: [
+      { t: "Только primary-метрика", d: "Её часто можно улучшить вредным способом." },
+      { t: "Guardrail без порога", d: "Нужно явно: что считаем «нельзя уронить»." },
+      { t: "Путать guardrail и proxy", d: "Proxy предсказывает успех, guardrail охраняет от вреда." },
+    ],
+    modelAnswer: "«Time-in-app легко накрутить тёмными паттернами, поэтому к нему ставлю guardrails: доля пользователей с жалобами/uninstall, доля «бесцельных» сессий и retention следующей недели. Расту time-in-app, только если guardrails не ухудшаются — иначе это вред под видом вовлечённости.»",
+  },
 };
 
 const getBeginnerPathNotes = () =>
@@ -407,6 +533,9 @@ function Pim({ message, actions = [], expression = "idle", muted = false, route 
 
   useEffect(() => {
     setShow(true);
+    // Авто-сворачивание пузыря, чтобы маскот не висел поверх контента постоянно.
+    const t = window.setTimeout(() => setShow(false), 9000);
+    return () => window.clearTimeout(t);
   }, [message]);
 
   useEffect(() => {
@@ -820,6 +949,7 @@ function LibraryScreen({ go, progress, clock, notes = KNOWLEDGE_NOTES, onAddLess
             return (
               <button type="button" key={n.id} className={`note-card ${n.c}`} onClick={() => go("lesson", { lessonTopicId: n.id })}>
                 {mastered && <span className="mastered-badge">✓ освоено</span>}
+                {n.isCustom && <span className="mastered-badge" style={{ background: "var(--ph-sky-2)", right: "auto", left: 12 }}>моя заметка</span>}
                 <h4>{n.t}</h4>
                 <p className="excerpt">{n.ex}</p>
                 <div className="lesson-progress">
@@ -843,18 +973,21 @@ function LibraryScreen({ go, progress, clock, notes = KNOWLEDGE_NOTES, onAddLess
           <section className="pmq-modal" onClick={(event) => event.stopPropagation()}>
             <div className="pmq-modal-head">
               <div>
-                <span className="eyebrow">свой урок</span>
-                <h3>Добавить тему в библиотеку</h3>
+                <span className="eyebrow">своя заметка</span>
+                <h3>Добавить свою тему-заметку</h3>
               </div>
               <button className="btn ghost sm" onClick={() => setShowAddLesson(false)}>×</button>
             </div>
+            <p style={{ margin: "0 0 12px", color: "var(--ph-ink-3)", fontSize: 13.5 }}>
+              Это твоя личная заметка, а не AI-урок: сохраним название и твой текст, чтобы вернуться позже. Готовый разбор по шагам есть только у встроенных тем.
+            </p>
             <label className="pmq-field">
               <span>Название темы</span>
               <input value={lessonDraft.title} onChange={(event) => setLessonDraft((draft) => ({ ...draft, title: event.target.value }))} placeholder="Например: B2B onboarding" />
             </label>
             <label className="pmq-field">
-              <span>Что хочешь разобрать</span>
-              <textarea value={lessonDraft.summary} onChange={(event) => setLessonDraft((draft) => ({ ...draft, summary: event.target.value }))} placeholder="Опиши вопрос, контекст или навык. PMQuest соберёт из него урок." />
+              <span>Твоя заметка по теме</span>
+              <textarea value={lessonDraft.summary} onChange={(event) => setLessonDraft((draft) => ({ ...draft, summary: event.target.value }))} placeholder="Запиши своими словами: что это, зачем PM, пример, на что обратить внимание." />
             </label>
             <label className="pmq-field">
               <span>Категория</span>
@@ -862,7 +995,7 @@ function LibraryScreen({ go, progress, clock, notes = KNOWLEDGE_NOTES, onAddLess
                 {cats.filter((item) => item.k !== "all").map((item) => <option key={item.k} value={item.k}>{item.label}</option>)}
               </select>
             </label>
-            <button className="btn primary lg" onClick={submitLesson} disabled={!lessonDraft.title.trim() || !lessonDraft.summary.trim()}>добавить урок</button>
+            <button className="btn primary lg" onClick={submitLesson} disabled={!lessonDraft.title.trim() || !lessonDraft.summary.trim()}>сохранить заметку</button>
           </section>
         </div>
       )}
@@ -1248,6 +1381,12 @@ function LessonScreen({ go, progress, clock, completeTask, initialTopicId = "nsm
       </div>
       <div className="lesson-stage">
         <div className="lesson-card">
+          {note.isCustom && (
+            <div className="lesson-callout" style={{ marginBottom: 12, background: "var(--ph-sky-2)" }}>
+              <div className="ico">✎</div>
+              <div><h4>Твоя заметка</h4><p>Это тема, которую ты добавил(а) сам(а). Слайды ниже — общий шаблон-подсказка; твой текст: «{note.ex}»</p></div>
+            </div>
+          )}
           <span className="slide-tag">{s.tag}</span>
           <h2>{s.title}</h2>
           <p className="lede">{s.lede}</p>
@@ -1510,13 +1649,16 @@ function SRSScreen({ go, progress, clock, completeTask }) {
       <Topbar crumbs={["Home", "SRS · карточки"]} progress={progress} clock={clock} />
       <div className="screen-head">
         <div>
-          <span className="eyebrow">Spaced repetition · фреймворки и термины</span>
-          <h1>{cards.length} карточек к повтору</h1>
+          <span className="eyebrow">Повторение · термины и фреймворки</span>
+          <h1>{cards.length} карточек на сегодня</h1>
         </div>
         <div className="right">
-          <span className="chip mint">сегодня запланировано: {cards.length}</span>
+          <span className="chip mint">в сессии: {cards.length}</span>
           <span className="chip sun">~6 мин</span>
         </div>
+      </div>
+      <div className="notice" style={{ marginBottom: 14 }}>
+        Упрощённое повторение: проходим все карточки сессии за один заход. Интервалы на кнопках — ориентир, по которому стоит вернуться к теме (полноценный SRS-график пока не реализован).
       </div>
       <div className="srs-stage">
         <div className="srs-flash" onClick={() => setFlipped(!flipped)} style={{ cursor: "pointer" }}>
@@ -1596,6 +1738,11 @@ function CaseScreen({ go, progress, clock, completeTask }) {
   const [evaluating, setEvaluating] = useState(false);
   const [savedNotice, setSavedNotice] = useState("");
   const [showHint, setShowHint] = useState(false);
+  const [briefOpen, setBriefOpen] = useState(true);
+  const [showSaved, setShowSaved] = useState(false);
+  const [savedCases, setSavedCases] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("pmquest-saved-cases-v1") || "[]"); } catch { return []; }
+  });
   const caseSuggestions = [
     {
       id: "spotify-likes",
@@ -1688,8 +1835,11 @@ function CaseScreen({ go, progress, clock, completeTask }) {
       setEvaluating(false);
     }
   };
+  const readSaved = () => {
+    try { return JSON.parse(localStorage.getItem("pmquest-saved-cases-v1") || "[]"); } catch { return []; }
+  };
   const saveCase = () => {
-    const saved = JSON.parse(localStorage.getItem("pmquest-saved-cases-v1") || "[]");
+    const saved = readSaved();
     const next = [
       {
         id: `${selectedSuggestion.id}-${Date.now()}`,
@@ -1702,8 +1852,24 @@ function CaseScreen({ go, progress, clock, completeTask }) {
       ...saved,
     ].slice(0, 12);
     localStorage.setItem("pmquest-saved-cases-v1", JSON.stringify(next));
+    setSavedCases(next);
     setSavedNotice("сохранено");
     window.setTimeout(() => setSavedNotice(""), 1800);
+  };
+  const openSavedCase = (item) => {
+    setCaseText(item.caseText || "");
+    setCaseTitle(item.title || "Сохранённый кейс");
+    setStep(0);
+    setText(item.draft || "");
+    setAnswers({});
+    setEvaluation("");
+    setShowSaved(false);
+    setBriefOpen(true);
+  };
+  const deleteSavedCase = (id) => {
+    const next = readSaved().filter((c) => c.id !== id);
+    localStorage.setItem("pmquest-saved-cases-v1", JSON.stringify(next));
+    setSavedCases(next);
   };
   const generateCase = async (suggestion = selectedSuggestion) => {
     setGenBusy(true);
@@ -1786,6 +1952,28 @@ function CaseScreen({ go, progress, clock, completeTask }) {
           placeholder="Своя тематика: например, «AI travel planner для семей», «B2B SaaS churn», «доставка еды: рост среднего чека», «банк теряет прибыльность в premium-сегменте»"
         />
         {genErr && <div className="case-generator-error">{genErr}</div>}
+        <div className="saved-cases">
+          <button className="btn ghost sm" onClick={() => setShowSaved((v) => !v)}>
+            {showSaved ? "скрыть сохранённые" : `сохранённые кейсы (${savedCases.length})`}
+          </button>
+          {showSaved && (
+            savedCases.length === 0 ? (
+              <p style={{ margin: "10px 2px 0", color: "var(--ph-ink-3)", fontSize: 13.5 }}>Пока ничего не сохранено. Нажми «сохранить» в шапке во время работы над кейсом.</p>
+            ) : (
+              <div className="saved-cases-list">
+                {savedCases.map((item) => (
+                  <div key={item.id} className="saved-case-row">
+                    <button className="saved-case-open" onClick={() => openSavedCase(item)}>
+                      <b>{item.title}</b>
+                      <span>шаг: {item.step || "—"}</span>
+                    </button>
+                    <button className="btn ghost sm" onClick={() => deleteSavedCase(item.id)} aria-label="удалить">×</button>
+                  </div>
+                ))}
+              </div>
+            )
+          )}
+        </div>
       </section>
       <div className="case-wrap">
         <aside className="case-steps">
@@ -1807,8 +1995,11 @@ function CaseScreen({ go, progress, clock, completeTask }) {
         </aside>
         <div className="case-stage">
           <div className="generated-case-brief">
-            <span className="eyebrow">условие кейса</span>
-            <div className="case-brief-body">{renderCaseBrief(caseText)}</div>
+            <div className="case-brief-head" style={{ alignItems: "center" }}>
+              <span className="eyebrow">условие кейса</span>
+              <button className="btn ghost sm" onClick={() => setBriefOpen((v) => !v)}>{briefOpen ? "свернуть ▲" : "развернуть ▼"}</button>
+            </div>
+            {briefOpen && <div className="case-brief-body">{renderCaseBrief(caseText)}</div>}
           </div>
           <div className="meta">
             <span className="chip solid-ink">Шаг {step + 1} / 5</span>
@@ -2145,7 +2336,7 @@ function MockScreen({ go, progress, clock, completeTask }) {
       setTranscript((items) => [...items, { role: "them", who: "Виктор", text: hint.slice(0, 480) }]);
       setInterviewerMood("push");
     } catch (e) {
-      const msg = `Виктор не ответил: ${e.message}`;
+      const msg = `Виктор не ответил (${e.message}). Если это первый запрос — бэкенд мог засыпать, разбудится за ~30 сек, попробуй ещё раз.`;
       setFeedback(msg);
       setTranscript((items) => [...items, { role: "them", who: "Виктор", text: msg }]);
       setInterviewerMood("listening");
@@ -2206,7 +2397,7 @@ function MockScreen({ go, progress, clock, completeTask }) {
         setFinalResult({ verdict: cleaned });
       }
     } catch (e) {
-      setFinalResult({ verdict: `Не удалось собрать разбор: ${e.message}` });
+      setFinalResult({ verdict: `Не удалось собрать разбор (${e.message}). Если бэкенд просыпался — подожди ~30 сек и нажми «завершить» ещё раз.` });
     } finally {
       setEvaluating(false);
     }
@@ -2265,7 +2456,7 @@ function MockScreen({ go, progress, clock, completeTask }) {
       });
       startMock(res.taskText || selectedCase.prompt);
     } catch (e) {
-      setFeedback(`AI-генерация не ответила: ${e.message}. Запускаю выбранный кейс.`);
+      setFeedback(`AI не сгенерировал кейс (${e.message}). Запускаю выбранный готовый кейс. Если это был первый запрос — бэкенд мог засыпать (~30 сек), можешь вернуться и нажать AI-генерацию снова.`);
       startMock(customContext.trim() || selectedCase.prompt);
     } finally {
       setGeneratingCase(false);
@@ -2822,15 +3013,6 @@ function DrillScreen({ go, progress, clock, completeTask }) {
     return () => clearInterval(timer);
   }, [paused, total]);
 
-  useEffect(() => {
-    if (paused || checking || !answer.trim() || answer.trim() === checkedText) return undefined;
-    if (answer.trim().length < 24) return undefined;
-    const timer = setTimeout(() => {
-      checkAnswer();
-    }, 900);
-    return () => clearTimeout(timer);
-  }, [answer, paused, checking, checkedText]);
-
   const parseQuestions = (raw) => {
     const match = raw.match(/\[[\s\S]*\]/);
     const parsed = JSON.parse(match ? match[0] : raw);
@@ -2892,15 +3074,6 @@ function DrillScreen({ go, progress, clock, completeTask }) {
     setFeedback("");
   };
 
-  const localGrade = (text) => {
-    const clean = text.trim().toLowerCase();
-    const hasStructure = /1|2|3|во-первых|сначала|затем|метрик|сегмент|польз/.test(clean);
-    const hasReason = /потому|так как|чтобы|если|trade|риск|retention|activation|конверс|value|ценност/.test(clean);
-    if (clean.length > 110 && hasStructure && hasReason) return "clean";
-    if (clean.length > 45 && (hasStructure || hasReason)) return "shaky";
-    return "missed";
-  };
-
   const checkAnswer = async () => {
     const clean = answer.trim();
     if (!clean || checking || clean === checkedText) return;
@@ -2928,9 +3101,9 @@ function DrillScreen({ go, progress, clock, completeTask }) {
       setStats((prev) => ({ ...prev, [verdict]: prev[verdict] + 1 }));
       setFeedback(res.message);
     } catch {
-      const verdict = localGrade(clean);
-      setStats((prev) => ({ ...prev, [verdict]: prev[verdict] + 1 }));
-      setFeedback(verdict === "clean" ? "✅ Чисто: есть структура и причина. Можно идти дальше." : verdict === "shaky" ? "⚠️ Под вопросом: мысль есть, но добавь метрику, сегмент или trade-off." : "✕ Не успел: ответ слишком короткий. Дай хотя бы структуру из 2-3 пунктов.");
+      // Без AI честно не оцениваем качество: засчитываем как «отвечено», но без вердикта.
+      setStats((prev) => ({ ...prev, shaky: prev.shaky + 1 }));
+      setFeedback("AI-проверка недоступна (возможно, бэкенд просыпается — до 30 сек). Ответ засчитан как «отвечено», но без оценки качества. Сверься с чеклистом: цель → сегмент → решение → метрика/риск.");
     } finally {
       setChecking(false);
     }
@@ -3002,7 +3175,7 @@ function DrillScreen({ go, progress, clock, completeTask }) {
             <div className="drill-timer-ring" style={{ background: paused ? "var(--ph-sun-2)" : "#fff", color: "var(--ph-ink)" }}>{secondsLeft}</div>
           </div>
           <h2>{currentQuestion}</h2>
-          <p>{paused ? "пауза включена" : "пиши коротко: структура, причина, метрика или trade-off. Проверю автоматически."}</p>
+          <p>{paused ? "пауза включена" : "пиши коротко: структура, причина, метрика или trade-off. Нажми «проверить» или Enter, когда готов(а)."}</p>
           <div className="drill-answer-row">
             <input
               value={answer}
@@ -3057,6 +3230,9 @@ function TeachScreen({ go, progress, clock, completeTask, initialTopicId = "nsm"
   const topic = topics.find((item) => item.id === topicId) || topics[0];
   const [messages, setMessages] = useState([{ role: "rookie", text: topics.find((item) => item.id === "nsm")?.rookie || topics[0].rookie }]);
   const answerCount = messages.filter((m) => m.role === "you").length;
+  // Засчитываем только содержательные объяснения (не «ааа»), чтобы XP/карточка были за реальную практику.
+  const meaningfulAnswers = messages.filter((m) => m.role === "you" && m.text.trim().length >= 40).length;
+  const canFinish = meaningfulAnswers >= 2;
   useEffect(() => {
     const nextTopic = topics.find((item) => item.id === initialTopicId) || topics[0];
     setTopicId(nextTopic.id);
@@ -3178,8 +3354,8 @@ function TeachScreen({ go, progress, clock, completeTask, initialTopicId = "nsm"
               «Сейчас это не заготовленный чат. Диалог строится по твоим ответам: объясни как senior, а Тима уточнит слабое место.»
             </p>
           </div>
-          <button className="btn lg" style={{ width: "100%" }} disabled={answerCount < 2 || busy} onClick={() => completeTask(`teach-${topic.id}`, 50, "review", { cardsDue: progress.cardsDue + 1 })}>
-            {answerCount < 2 ? `ещё ${2 - answerCount} ответ(а) до разбора` : "завершить → разбор"}
+          <button className="btn lg" style={{ width: "100%" }} disabled={!canFinish || busy} onClick={() => completeTask(`teach-${topic.id}`, 50, "review", { cardsDue: progress.cardsDue + 1 })}>
+            {!canFinish ? `ещё ${2 - meaningfulAnswers} развёрнутых объяснени(я) до разбора` : "завершить → разбор"}
           </button>
         </aside>
       </div>
@@ -3284,12 +3460,19 @@ function ReviewScreen({ go, progress, clock, completeTask }) {
               <div>
                 <div className="eyebrow">общая оценка</div>
                 <div className="score-num">{score.toFixed(1)}</div>
-                <div className="score-sub">из 10 · основано на реально пройденных практиках</div>
+                <div className="score-sub">из 10 · это не балл за качество ответов, а индекс активности по практикам</div>
               </div>
               <div style={{ marginRight: -10, marginTop: -10 }}>
                 <PimFigure size={120} expression="think" />
               </div>
             </div>
+            <details style={{ marginTop: 10 }}>
+              <summary style={{ cursor: "pointer", color: "var(--ph-ink-3)", fontSize: 13 }}>как считается этот балл</summary>
+              <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--ph-ink-2)", lineHeight: 1.5 }}>
+                Балл = 0.7 × (тем с Check) + 1.3 × (тем с Teach) + по 1 за пройденные Drill, Mock и Кейс, всё ограничено сверху 10.
+                Это индекс охвата практик, а не оценка качества решений. Смотри блок «слабые зоны» ниже — он показывает, что подтянуть.
+              </p>
+            </details>
             <div className="score-bars">
               {[
                 { n: "Теория", v: completedLessons.length, max: KNOWLEDGE_NOTES.length, c: "var(--ph-sun)" },
@@ -3363,11 +3546,15 @@ function ReviewScreen({ go, progress, clock, completeTask }) {
             </p>
           </div>
           <div className="review-card">
-            <h4>Что закрепляем</h4>
-            <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--ph-ink-3)" }}>уйдёт в SRS, вернётся через 1 день</p>
+            <h4>Что закрепить в SRS</h4>
+            <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--ph-ink-3)" }}>карточки по пройденным темам ждут в разделе «Карточки SRS»</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span className="chip" style={{ background: "var(--ph-sun-2)", borderColor: "var(--ph-ink)" }}>● Trade-off матрица</span>
-              <span className="chip" style={{ background: "var(--ph-sun-2)", borderColor: "var(--ph-ink)" }}>● Vanity vs actionable метрики</span>
+              {(practicedLessons.length ? practicedLessons : checkedLessons).slice(0, 3).map((note) => (
+                <span key={note.id} className="chip" style={{ background: "var(--ph-sun-2)", borderColor: "var(--ph-ink)" }}>● {note.t}</span>
+              ))}
+              {practicedLessons.length === 0 && checkedLessons.length === 0 && (
+                <span className="chip" style={{ background: "var(--ph-card)", borderColor: "var(--ph-ink)" }}>пройди Check/Teach — появятся карточки</span>
+              )}
             </div>
           </div>
           <div className="next-row">
@@ -3473,12 +3660,19 @@ export default function PMQuestHifi({ onExit }) {
   const [searchQuery, setSearchQuery] = useState("");
   const clock = useMoscowClock();
   const lessonTopics = [...userLessons, ...KNOWLEDGE_NOTES];
-  const searchResults = lessonTopics
-    .filter((note) => {
-      const query = searchQuery.trim().toLowerCase();
-      return query && `${note.t} ${note.ex} ${note.cat}`.toLowerCase().includes(query);
-    })
-    .slice(0, 8);
+  const query = searchQuery.trim().toLowerCase();
+  // Поиск по урокам + быстрые переходы в практику (Кейс/Mock), чтобы плейсхолдер не врал.
+  const practiceShortcuts = [
+    { id: "go-case", t: "Кейс-тренажёр", ex: "Сгенерируй и реши бизнес/продуктовый кейс по шагам.", route: "case", kw: "кейс case кейсы маркетплейс spotify банк fintech edtech генерат" },
+    { id: "go-mock", t: "Mock с AI", ex: "Live или письменный разбор интервью с AI-проверкой.", route: "mock", kw: "mock мок интервью собес компания google meta uber netflix живой" },
+    { id: "go-drill", t: "Drill 60s", ex: "Короткие ответы на скорость по темам PM.", route: "drill", kw: "drill дрилл скорость быстро" },
+  ];
+  const lessonResults = lessonTopics
+    .filter((note) => query && `${note.t} ${note.ex} ${note.cat}`.toLowerCase().includes(query))
+    .slice(0, 6)
+    .map((note) => ({ id: note.id, t: note.t, ex: note.ex, route: "lesson", lessonId: note.id }));
+  const shortcutResults = practiceShortcuts.filter((s) => query && `${s.t} ${s.kw}`.toLowerCase().includes(query));
+  const searchResults = [...shortcutResults, ...lessonResults].slice(0, 8);
 
   useEffect(() => {
     localStorage.setItem("pmquest-progress-v1", JSON.stringify(progress));
@@ -3622,16 +3816,16 @@ export default function PMQuestHifi({ onExit }) {
               {overlay === "search" && (
                 <>
                   <label className="pmq-field">
-                    <span>Урок, фреймворк или навык</span>
-                    <input autoFocus value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Например: retention, STAR, JTBD" />
+                    <span>Урок, тема или практика (Кейс / Mock / Drill)</span>
+                    <input autoFocus value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Например: retention, STAR, JTBD, кейс, mock" />
                   </label>
                   <div className="pmq-search-results">
-                    {!searchQuery.trim() && <p>Начни вводить тему. Открою подходящий урок.</p>}
+                    {!searchQuery.trim() && <p>Начни вводить тему или «кейс»/«mock». Открою подходящий урок или тренажёр.</p>}
                     {searchQuery.trim() && searchResults.length === 0 && <p>Ничего не найдено. Добавь свой урок в библиотеке.</p>}
-                    {searchResults.map((note) => (
-                      <button key={note.id} onClick={() => { setOverlay(null); setSearchQuery(""); go("lesson", { lessonTopicId: note.id }); }}>
-                        <strong>{note.t}</strong>
-                        <span>{note.ex}</span>
+                    {searchResults.map((item) => (
+                      <button key={item.id} onClick={() => { setOverlay(null); setSearchQuery(""); item.route === "lesson" ? go("lesson", { lessonTopicId: item.lessonId }) : go(item.route); }}>
+                        <strong>{item.t}</strong>
+                        <span>{item.ex}</span>
                       </button>
                     ))}
                   </div>
