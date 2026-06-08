@@ -1761,6 +1761,51 @@ function renderCaseBrief(raw = "") {
   });
 }
 
+// Каркасы решения под тип интервью. Каждый трек учит своей последовательности —
+// как на реальном интервью, а не одному универсальному флоу.
+// Ключи совпадают с interviewType пресетов; "" / business → консалтинговый каркас.
+const STEP_FLOWS = {
+  // Product Sense / Design — продумать фичу от пользователя до метрик.
+  product_sense: [
+    { title: "Clarifying questions", desc: "уточни цели и контекст", prompt: "Что уточнишь у интервьюера перед решением этого кейса?", placeholder: "1. Какая главная цель и метрика успеха?\n2. Какой сегмент / рынок в фокусе?\n3. Какие ограничения по срокам, бюджету, регуляторике?", hint: "Сильные кандидаты тратят ~30% времени на clarify, прежде чем предлагать решения. Не больше 3-4 точных вопросов." },
+    { title: "Structure", desc: "как разложишь задачу", prompt: "Назови структуру своего ответа: на какие части разложишь кейс и в каком порядке пойдёшь?", placeholder: "Пойду так:\n1. Пользователь и его боль\n2. Варианты решения\n3. Приоритизация\n4. Метрики успеха", hint: "30 секунд структуры в начале = интервьюер видит системное мышление и легче следит за ответом." },
+    { title: "User & pain points", desc: "выбери сегмент, опиши боли", prompt: "Кто приоритетный пользователь в этом кейсе и какую его боль решаем?", placeholder: "Сегмент: …\nЗадача (JTBD): …\nБоли: …", hint: "Не «все пользователи». Выбери один сегмент по задаче/поведению и объясни, почему он важен бизнесу." },
+    { title: "Solutions", desc: "3-5 идей под боль", prompt: "Предложи 3-5 решений под выбранную боль. Один — смелый, один — минимальный (MVP).", placeholder: "1. …\n2. …\n3. …", hint: "Сначала покажи диапазон идей, потом выбирай. Каждое решение бьёт в названную боль, а не «фича ради фичи»." },
+    { title: "Priorities & trade-offs", desc: "приоритизируй с обоснованием", prompt: "Что выберешь для V1 и почему? Какие trade-offs?", placeholder: "Выбираю …, потому что …\nTrade-off: …\nЧем жертвуем: …", hint: "Привяжи выбор к цели и критериям (impact / effort / риск), а не к тому, что «нравится»." },
+    { title: "Metrics & success", desc: "как поймёшь, что сработало", prompt: "Какими метриками измеришь успех? Что нельзя уронить (guardrails)?", placeholder: "Primary metric: …\nProxy / leading: …\nGuardrails: …", hint: "Нужны primary + proxy + guardrail и решение, которое команда примет по данным." },
+  ],
+  // Execution / Metrics — диагностика «метрика упала / не растёт».
+  product_execution: [
+    { title: "Clarifying questions", desc: "уточни метрику и контекст", prompt: "Что уточнишь, прежде чем диагностировать? Что именно изменилось, где и когда?", placeholder: "1. Какая именно метрика и как считается?\n2. Насколько упала, за какой период?\n3. Это все пользователи или сегмент / гео / платформа?", hint: "Сначала точно определи метрику и масштаб изменения — иначе будешь искать причину не там." },
+    { title: "Metric tree", desc: "разложи метрику на драйверы", prompt: "Разложи метрику на формулу/драйверы. Из чего она состоит?", placeholder: "Метрика = A × B × C\nнапр. Orders = Visitors × Conversion × Repeat rate", hint: "Дерево метрик показывает, какие компоненты могли просесть. Без него гипотезы — пальцем в небо." },
+    { title: "Segment & isolate", desc: "сузь до сегмента/разреза", prompt: "Какие разрезы проверишь, чтобы локализовать проблему (сегмент, гео, платформа, новые/старые, канал)?", placeholder: "Проверю разрезы: …\nГипотеза локализации: проблема в …", hint: "Падение почти всегда сидит в конкретном разрезе. Найди, где именно, прежде чем объяснять почему." },
+    { title: "Hypotheses & root cause", desc: "гипотезы и проверка", prompt: "Сформулируй гипотезы причины и как проверишь каждую по данным (internal / external / change log).", placeholder: "Гипотеза 1: … → проверю …\nГипотеза 2: … → проверю …\nСамая вероятная: …", hint: "Раздели на: продуктовые изменения (релизы), внешние (сезонность, конкурент), технические (баг, трекинг)." },
+    { title: "Action & metrics", desc: "что делать и как мерить", prompt: "Что предложишь сделать после диагностики и как измеришь, что это сработало?", placeholder: "Действие: …\nМетрика проверки: …\nGuardrails: …", hint: "Диагностика без рекомендации — половина ответа. Свяжи действие с найденной root cause." },
+  ],
+  // Strategy / Growth — рынок, монетизация, trade-offs.
+  product_strategy: [
+    { title: "Clarifying questions", desc: "уточни цель и горизонт", prompt: "Что уточнишь? Какая цель компании, горизонт и в чём ограничения?", placeholder: "1. Какая бизнес-цель (рост, маржа, доля)?\n2. Горизонт — квартал или 1-3 года?\n3. Какие ресурсы / ограничения?", hint: "Стратегия без цели и горизонта — это набор идей. Сначала зафиксируй, к чему идём." },
+    { title: "Context & landscape", desc: "рынок, игроки, тренды", prompt: "Опиши контекст: рынок, ключевые игроки, тренды и где сейчас наш продукт.", placeholder: "Рынок: …\nКонкуренты: …\nТренд / сдвиг: …\nНаша позиция: …", hint: "Покажи, что понимаешь поле игры. Стратегия рождается из контекста, а не из вакуума." },
+    { title: "Options", desc: "2-4 стратегических варианта", prompt: "Назови 2-4 стратегических варианта достижения цели (напр. сегменты, модели монетизации, GTM-пути).", placeholder: "Вариант A: …\nВариант B: …\nВариант C: …", hint: "Варианты должны быть взаимоисключающими ставками, а не списком фич. Покажи развилку." },
+    { title: "Decision & trade-offs", desc: "выбор с обоснованием", prompt: "Какой вариант выбираешь и почему? Какие trade-offs и от чего отказываешься?", placeholder: "Выбираю …, потому что …\nTrade-off: …\nРиск: …", hint: "Сильный ответ делает явный выбор и честно называет, чем жертвует. Не «всё сразу»." },
+    { title: "Metrics & guardrails", desc: "как мерить стратегию", prompt: "Какими метриками отследишь, что стратегия работает? Что нельзя уронить?", placeholder: "North Star: …\nInput / leading: …\nGuardrails: …", hint: "Свяжи метрики с горизонтом: leading-индикаторы покажут раньше, чем lagging-выручка." },
+  ],
+  // Consulting / Business — структура, экономика, рекомендация.
+  business: [
+    { title: "Clarifying & objective", desc: "уточни и зафиксируй цель", prompt: "Что уточнишь и какова цель кейса? Сформулируй ключевой вопрос для решения.", placeholder: "Цель: …\nКлючевой вопрос: …\nЧто уточню: 1. … 2. …", hint: "Консалтинг начинается с одного чёткого вопроса. Зафиксируй objective прежде чем структурировать." },
+    { title: "Structure (issue tree)", desc: "разложи на ветки MECE", prompt: "Построй структуру решения: на какие ветки разложишь проблему (MECE)?", placeholder: "Проблема\n├─ Выручка (цена × объём)\n├─ Издержки (fixed / variable)\n└─ Внешнее (рынок, конкуренты)", hint: "MECE-дерево — ядро консалтингового ответа. Ветки не пересекаются и покрывают всё." },
+    { title: "Analysis & math", desc: "экономика и расчёты", prompt: "Разбери экономику по веткам: какие расчёты сделаешь (unit economics, CAC/LTV, маржа)?", placeholder: "Unit economics: …\nCAC / LTV / payback: …\nГде теряем деньги: …", hint: "Покажи структуру расчёта вслух, даже без точных цифр. Логика важнее арифметики." },
+    { title: "Recommendation", desc: "ответ на вопрос кейса", prompt: "Дай чёткую рекомендацию: что делать? Ответь прямо на вопрос кейса с обоснованием.", placeholder: "Рекомендую …, потому что …\nОжидаемый эффект: …", hint: "Начни с ответа («да/нет/делаем X»), потом обоснование. Не заставляй интервьюера гадать." },
+    { title: "Risks & next steps", desc: "риски и план", prompt: "Какие риски у рекомендации и какие следующие шаги? Как проверишь гипотезы?", placeholder: "Риски: …\nМитигация: …\nNext steps: …", hint: "Сильный финал показывает, что ты думаешь о реализации и о том, что может пойти не так." },
+  ],
+};
+
+function flowForSuggestion(suggestion) {
+  if (!suggestion) return STEP_FLOWS.product_sense;
+  if (suggestion.trackId === "business") return STEP_FLOWS.business;
+  return STEP_FLOWS[suggestion.interviewType] || STEP_FLOWS.product_sense;
+}
+
 function CaseScreen({ go, progress, clock, completeTask }) {
   const [step, setStep] = useState(0);
   const [text, setText] = useState("");
@@ -1774,43 +1819,57 @@ function CaseScreen({ go, progress, clock, completeTask }) {
   const [savedCases, setSavedCases] = useState(() => {
     try { return JSON.parse(localStorage.getItem("pmquest-saved-cases-v1") || "[]"); } catch { return []; }
   });
+  // Пять пресетов = пять разных треков интервью на пяти разных индустриях.
+  // tag — короткая подпись под чипом (на одном языке, одна гранулярность).
+  // interviewType — канон из MockScreen.blockOptions (product_sense/execution/strategy),
+  // пустой только для consulting; уходит в API как есть.
   const caseSuggestions = [
     {
       id: "spotify-likes",
-      label: "Spotify · лайки",
-      theme: "Music streaming / Entertainment",
+      label: "Music · design",
+      tag: "product design",
+      title: "Spotify — фича лайков",
+      theme: "Music streaming",
       trackId: "product",
-      interviewType: "product_design",
+      interviewType: "product_sense",
       prompt: "Spotify хочет добавить лайки песен в плейлистах. Сфокусируй кейс на activation, retention, discovery и выборе метрик.",
     },
     {
       id: "marketplace-retention",
-      label: "Маркетплейс · retention",
-      theme: "E-commerce / Маркетплейсы",
+      label: "E-commerce · execution",
+      tag: "product execution",
+      title: "Маркетплейс — повторные покупки",
+      theme: "E-commerce",
       trackId: "product",
-      interviewType: "product_growth",
+      interviewType: "product_execution",
       prompt: "Маркетплейс видит падение повторных покупок у новых пользователей. Нужен PM case про диагностику воронки, сегменты, гипотезы роста и эксперименты.",
     },
     {
       id: "fintech-onboarding",
-      label: "Fintech · onboarding",
-      theme: "Fintech / Банки",
+      label: "Fintech · execution",
+      tag: "product execution",
+      title: "Финтех — онбординг и KYC",
+      theme: "Fintech",
       trackId: "product",
       interviewType: "product_execution",
       prompt: "Финтех-приложение теряет пользователей на KYC/onboarding. Сгенерируй кейс с данными по funnel, ограничениями compliance и выбором решения.",
     },
     {
       id: "edtech-monetization",
-      label: "EdTech · monetization",
-      theme: "EdTech / Образование",
+      label: "EdTech · strategy",
+      tag: "product strategy",
+      title: "EdTech — trial-to-paid",
+      theme: "EdTech",
       trackId: "product",
       interviewType: "product_strategy",
       prompt: "EdTech хочет поднять trial-to-paid conversion без ухудшения learning outcomes. Нужен кейс про сегменты, pricing/paywall, retention и guardrail metrics.",
     },
     {
       id: "consulting-profit",
-      label: "Банк · прибыльность",
-      theme: "Fintech / Банки",
+      label: "Banking · business",
+      tag: "business case",
+      title: "Цифровой банк — прибыльность",
+      theme: "Banking",
       trackId: "business",
       interviewType: "",
       prompt: "Цифровой банк растёт по клиентам, но прибыльность падает. Сгенерируй consulting case с экономикой, CAC, cross-sell, cost-to-serve и decision question.",
@@ -1830,14 +1889,9 @@ function CaseScreen({ go, progress, clock, completeTask }) {
   const [caseText, setCaseText] = useState(fallbackCaseText);
   const [genBusy, setGenBusy] = useState(false);
   const [genErr, setGenErr] = useState("");
-  // Шаги нейтральны к конкретному кейсу: подходят и под Spotify, и под маркетплейс, и под банк.
-  const steps = [
-    { n: "1", title: "Clarifying questions", desc: "уточни цели и контекст", prompt: "Что уточнишь у интервьюера перед решением этого кейса?", placeholder: "1. Какая главная цель и метрика успеха?\n2. Какой сегмент / рынок в фокусе?\n3. Какие ограничения по срокам, бюджету, регуляторике?", hint: "Сильные кандидаты тратят ~30% времени на clarify + понимание пользователя, прежде чем предлагать решения." },
-    { n: "2", title: "User & pain points", desc: "выбери сегмент, опиши боли", prompt: "Кто приоритетный пользователь в этом кейсе и какую его боль решаем?", placeholder: "Сегмент: …\nЗадача (JTBD): …\nБоли: …", hint: "Не «все пользователи». Выбери один сегмент по задаче/поведению и объясни, почему он важен бизнесу." },
-    { n: "3", title: "Solutions", desc: "3-5 идей под боль", prompt: "Предложи 3-5 решений под выбранную боль. Один — смелый, один — минимальный (MVP).", placeholder: "1. …\n2. …\n3. …", hint: "Сначала покажи диапазон идей, потом выбирай. Каждое решение должно бить в названную боль, а не быть «фичей ради фичи»." },
-    { n: "4", title: "Priorities & trade-offs", desc: "приоритизируй с обоснованием", prompt: "Что выберешь для V1 и почему? Какие trade-offs?", placeholder: "Выбираю …, потому что …\nTrade-off: …\nЧем жертвуем: …", hint: "Привяжи выбор к цели и критериям (impact / effort / риск), а не к тому, что «нравится»." },
-    { n: "5", title: "Metrics & success", desc: "как поймёшь, что сработало", prompt: "Какими метриками измеришь успех? Что нельзя уронить (guardrails)?", placeholder: "Primary metric: …\nProxy / leading: …\nGuardrails: …", hint: "Нужны primary + proxy + guardrail и решение, которое команда примет по данным." },
-  ];
+  // Шаги зависят от типа кейса: design / execution / strategy / business —
+  // у каждого свой каркас решения (см. STEP_FLOWS). Пересчитывается при смене пресета.
+  const steps = useMemo(() => flowForSuggestion(selectedSuggestion), [selectedSuggestion]);
   const cur = steps[step];
   const saveCurrentAnswer = () => {
     const clean = text.trim();
@@ -1919,7 +1973,7 @@ function CaseScreen({ go, progress, clock, completeTask }) {
         grade: "middle",
       });
       setCaseText(res.caseText || fallbackCaseText);
-      setCaseTitle(customTopic.trim() || suggestion.label);
+      setCaseTitle(customTopic.trim() || suggestion.title || suggestion.label);
       setStep(0);
       setText("");
       setAnswers({});
@@ -1972,7 +2026,7 @@ function CaseScreen({ go, progress, clock, completeTask }) {
               disabled={genBusy}
             >
               <strong>{item.label}</strong>
-              <span>{item.trackId === "business" ? "business" : item.interviewType.replace("product_", "")}</span>
+              <span>{item.tag}</span>
             </button>
           ))}
         </div>
@@ -2008,10 +2062,10 @@ function CaseScreen({ go, progress, clock, completeTask }) {
       </section>
       <div className="case-wrap">
         <aside className="case-steps">
-          <div className="eyebrow" style={{ padding: "0 4px 4px" }}>5 шагов кейса</div>
+          <div className="eyebrow" style={{ padding: "0 4px 4px" }}>{steps.length} шагов кейса</div>
           {steps.map((s, i) => (
             <div key={i} className={`case-step ${answers[s.title] ? "done" : ""} ${i === step ? "active" : ""}`} onClick={() => goToStep(i)}>
-              <div className="n">{answers[s.title] ? "✓" : s.n}</div>
+              <div className="n">{answers[s.title] ? "✓" : i + 1}</div>
               <div>
                 <b>{s.title}</b>
                 <i>{s.desc}</i>
@@ -2033,7 +2087,7 @@ function CaseScreen({ go, progress, clock, completeTask }) {
             {briefOpen && <div className="case-brief-body">{renderCaseBrief(caseText)}</div>}
           </div>
           <div className="meta">
-            <span className="chip solid-ink">Шаг {step + 1} / 5</span>
+            <span className="chip solid-ink">Шаг {step + 1} / {steps.length}</span>
             <span className="chip pink">{cur.title}</span>
             <span className="chip">⏱ ~3 мин</span>
           </div>
