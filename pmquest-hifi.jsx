@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from './api/client.js';
+import { getLinkCode, claimLinkCode } from './api/sync.js';
 
 /* =====================================================================
    PMQuest Hi-Fi — port of Claude Design handoff bundle
@@ -630,6 +631,36 @@ function Sidebar({ route, go, progress }) {
         <div>
           <div className="who">Мой прогресс</div>
           <div className="lvl">Lvl {level} · {progress.xp} XP</div>
+          <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+            <button
+              type="button"
+              title="Получить код для переноса прогресса на другое устройство"
+              style={{ fontSize: 10, padding: "2px 6px", cursor: "pointer" }}
+              onClick={async () => {
+                try {
+                  const { code } = await getLinkCode();
+                  window.prompt("Код переноса (действует 10 минут). Введи его на другом устройстве:", code);
+                } catch {
+                  window.alert("Не получилось создать код — проверь соединение.");
+                }
+              }}
+            >⇄ код</button>
+            <button
+              type="button"
+              title="Ввести код с другого устройства, чтобы забрать прогресс"
+              style={{ fontSize: 10, padding: "2px 6px", cursor: "pointer" }}
+              onClick={async () => {
+                const code = window.prompt("Введи код переноса с другого устройства:");
+                if (!code) return;
+                try {
+                  await claimLinkCode(code.trim());
+                  window.location.reload();
+                } catch {
+                  window.alert("Код не найден или истёк.");
+                }
+              }}
+            >ввести</button>
+          </div>
         </div>
       </div>
     </aside>

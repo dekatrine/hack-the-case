@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { createRoot } from 'react-dom/client';
 import { api } from './api/client.js';
 import { initAnalytics } from './api/analytics.js';
+import { initSync } from './api/sync.js';
 import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from './quizData.js';
 import { PM_CHAPTERS, FLASHCARDS, PRACTICE_QUESTIONS, KEY_DEFINITIONS, LEARN_TOGETHER_CONTENT } from './courseData.js';
 import PMQuestHifi from './pmquest-hifi.jsx';
@@ -4043,4 +4044,8 @@ class ErrorBoundary extends React.Component {
 }
 
 initAnalytics();
-createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>);
+// Сначала подтягиваем прогресс с сервера (если он новее локального),
+// потом рендерим — компоненты читают localStorage при инициализации.
+initSync().finally(() => {
+  createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>);
+});
