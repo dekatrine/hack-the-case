@@ -4,9 +4,10 @@ import re
 from pathlib import Path
 from typing import Optional, Union
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from . import db
 from .config import get_settings
 from .ratelimit import build_rate_limit_middleware
 from .data import CASE_STEPS, COURSE_MODULES, DIFFICULTY_LEVELS, INDUSTRIES, SOURCE_NOTES
@@ -60,7 +61,7 @@ app.add_middleware(
     allow_origins=settings.allowed_origins,
     allow_origin_regex=settings.allowed_origin_regex,
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PUT"],
     allow_headers=["*"],
 )
 
@@ -88,6 +89,54 @@ def debug_settings() -> dict[str, Union[str, bool]]:
         "model": settings.yandex_model,
         "allowedOriginRegex": settings.allowed_origin_regex,
     }
+
+
+def _require_user(authorization: str) -> str:
+    token = authorization.removeprefix("Bearer ").strip() if authorization else ""
+    user_id = db.user_by_token(token)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Не авторизован")
+    return user_id
+
+
+@app.post("/api/auth/anonymous")
+def auth_anonymous() -> dict:
+    """Создаёт анонимный аккаунт и возвращает токен для синхронизации прогресса."""
+    return db.create_anonymous_user()
+
+
+@app.post("/api/auth/link-code")
+def auth_link_code(authorization: str = Header(default="")) -> dict:
+    """Короткий код (10 минут) для переноса аккаунта на другое устройство."""
+    user_id = _require_user(authorization)
+    return db.create_link_code(user_id)
+
+
+@app.post("/api/auth/claim-code")
+def auth_claim_code(payload: dict = Body(...)) -> dict:
+    result = db.claim_link_code(str(payload.get("code", "")))
+    if not result:
+        raise HTTPException(status_code=404, detail="Код не найден или истёк")
+    return result
+
+
+@app.get("/api/progress")
+def read_progress(authorization: str = Header(default="")) -> dict:
+    user_id = _require_user(authorization)
+    return db.get_progress(user_id)
+
+
+@app.put("/api/progress")
+def write_progress(
+    payload: dict = Body(...), authorization: str = Header(default="")
+) -> dict:
+    user_id = _require_user(authorization)
+    data = payload.get("data")
+    if not isinstance(data, str) or len(data) > 512_000:
+        raise HTTPException(status_code=422, detail="Некорректные данные прогресса")
+    updated_at = int(payload.get("updatedAt") or 0)
+    db.put_progress(user_id, data, updated_at)
+    return {"ok": True}
 
 
 @app.get("/api/config")
