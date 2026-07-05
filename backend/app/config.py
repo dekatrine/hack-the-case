@@ -27,6 +27,14 @@ class Settings:
             "ALLOWED_ORIGIN_REGEX",
             r"https://hack-the-case-web(-[a-z0-9]+)?\.onrender\.com",
         )
+        # Debug endpoints are disabled unless DEBUG=1 is set explicitly.
+        self.debug = self._get("DEBUG", "") in {"1", "true", "True"}
+        # Per-IP rate limits (requests per minute). LLM endpoints are expensive,
+        # so they get a tighter budget than plain reads.
+        self.rate_limit_per_minute = int(self._get("RATE_LIMIT_PER_MINUTE", "60"))
+        self.rate_limit_llm_per_minute = int(
+            self._get("RATE_LIMIT_LLM_PER_MINUTE", "10")
+        )
 
     def _get(self, key: str, default: str) -> str:
         env_value = os.getenv(key)

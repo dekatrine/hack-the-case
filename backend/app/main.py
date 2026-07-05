@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
+from .ratelimit import build_rate_limit_middleware
 from .data import CASE_STEPS, COURSE_MODULES, DIFFICULTY_LEVELS, INDUSTRIES, SOURCE_NOTES
 from .llm import call_yandex_gpt
 from .prompts import (
@@ -59,8 +60,15 @@ app.add_middleware(
     allow_origins=settings.allowed_origins,
     allow_origin_regex=settings.allowed_origin_regex,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
+)
+
+app.middleware("http")(
+    build_rate_limit_middleware(
+        general_limit=settings.rate_limit_per_minute,
+        llm_limit=settings.rate_limit_llm_per_minute,
+    )
 )
 
 
@@ -72,13 +80,12 @@ def health() -> dict[str, str]:
 @app.get("/debug/settings")
 def debug_settings() -> dict[str, Union[str, bool]]:
     settings = get_settings()
+    if not settings.debug:
+        # Не раскрываем конфигурацию в production: включается только DEBUG=1.
+        raise HTTPException(status_code=404, detail="Not found")
     return {
         "hasApiKey": bool(settings.yandex_api_key),
-        "apiKeyPrefix": settings.yandex_api_key[:6] if settings.yandex_api_key else "",
-        "apiKeySuffix": settings.yandex_api_key[-4:] if settings.yandex_api_key else "",
-        "folderId": settings.yandex_folder_id,
         "model": settings.yandex_model,
-        "modelUri": f"gpt://{settings.yandex_folder_id}/{settings.yandex_model}/latest",
         "allowedOriginRegex": settings.allowed_origin_regex,
     }
 
