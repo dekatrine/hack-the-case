@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { api } from './api/client.js';
 import { initAnalytics } from './api/analytics.js';
 import { initSync } from './api/sync.js';
+import { ScoreBadge } from './components/ui/score-badge.jsx';
+import { Progress } from './components/ui/progress.jsx';
 import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from './quizData.js';
 import { PM_CHAPTERS, FLASHCARDS, PRACTICE_QUESTIONS, KEY_DEFINITIONS, LEARN_TOGETHER_CONTENT } from './courseData.js';
 import PMQuestHifi from './pmquest-hifi.jsx';
@@ -1448,18 +1450,20 @@ const EvaluationCard = ({ evaluation }) => {
   return (
     <div className="eval">
       <div className="eyebrow"><span className="num">∑</span> Оценка решения</div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginBottom: 24 }}>
-        <span className="score">{parsed.totalScore}</span>
-        <span className="score-meta">/ 100 баллов</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+        <ScoreBadge score={parsed.totalScore ?? 0} />
       </div>
       {parsed.skills && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'center', marginBottom: 24 }}>
           <SkillRadar skills={parsed.skills} prevSkills={prevSkills} />
           <div style={{ minWidth: 200 }}>
             {SKILL_AXES.map((axis) => (
-              <div key={axis.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14, marginBottom: 4 }}>
-                <span>{axis.label}</span>
-                <strong>{parsed.skills[axis.id] ?? 0} / 3</strong>
+              <div key={axis.id} style={{ marginBottom: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14, marginBottom: 2 }}>
+                  <span>{axis.label}</span>
+                  <strong>{parsed.skills[axis.id] ?? 0} / 3</strong>
+                </div>
+                <Progress value={((parsed.skills[axis.id] ?? 0) / 3) * 100} />
               </div>
             ))}
             {skillDelta !== null && (
