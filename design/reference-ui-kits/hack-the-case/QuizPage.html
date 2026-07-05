@@ -1,0 +1,82 @@
+<!-- @dsCard group="Hack the Case" viewport="1280x780" name="QuizPage" subtitle="New-case setup wizard — industry, difficulty" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body, #root { margin:0; padding:0; min-height:100%; background: var(--surface-page); }
+  body { font-family: var(--font-body-clean); color: var(--text-primary); }
+  .main { max-width: 900px; margin:0 auto; padding: 48px 32px 96px; }
+  .eyebrow { font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color: var(--text-tertiary); margin-bottom:10px; }
+  h1 { font-family: var(--font-display-clean); font-weight:600; font-size:34px; letter-spacing: var(--tracking-tight); margin:0 0 10px; }
+  .sub { color: var(--text-secondary); font-size:15px; margin: 0 0 32px; }
+  .section-label { font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color: var(--text-tertiary); margin-bottom:12px; }
+  section { margin-bottom: 32px; }
+  .track-banner { display:flex; align-items:center; gap:14px; border:1px solid var(--border-hairline); border-radius: var(--r-clean-card); padding:16px 20px; margin-bottom:32px; background: var(--c-white); }
+  .track-banner .dot { width:10px; height:10px; border-radius:50%; background: var(--accent-primary); flex:0 0 auto; }
+  .track-banner b { font-size:15px; font-weight:700; margin-right:8px; }
+  .track-banner span { font-size:13.5px; color: var(--text-secondary); }
+  .pills { display:flex; flex-wrap:wrap; gap:10px; }
+  .pill { padding: 12px 20px; border-radius:999px; border:1px solid var(--border-hairline); font-size:14px; font-weight:600; cursor:pointer; transition: background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard); }
+  .pill.active { background: var(--c-black); color:#fff; border-color: var(--c-black); box-shadow: var(--shadow-clean-1); }
+  .diffs { display:grid; grid-template-columns: repeat(3,1fr); gap:12px; }
+  .diff-card { border:1px solid var(--border-hairline); border-radius: var(--r-clean-card); padding:20px; background: var(--c-white); transition: background var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard); }
+  .diff-card.active { background: var(--c-black); color:#fff; border-color: var(--c-black); box-shadow: var(--shadow-clean-2); }
+  .diff-card b { display:block; font-size:17px; margin-bottom:6px; }
+  .diff-card span { font-size:13px; opacity:0.75; }
+  textarea.ctx { width:100%; min-height:110px; padding:16px; border:1px solid var(--border-hairline); border-radius: var(--r-clean-card); font-family: var(--font-body-clean); font-size:14.5px; resize:vertical; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { Chip, Card, Button } = window.HackTheCaseDesignSystem_476677;
+const SparkIcon = <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>;
+const INDUSTRIES = ['E-commerce','Финтех','SaaS / B2B','Ритейл','Логистика','Медиа и стриминг','EdTech','HealthTech','Авиаперевозки','Телеком','FMCG','Автопром'];
+function QuizPage(){
+  return (
+    <div className="main">
+      <div className="eyebrow">Новый кейс</div>
+      <h1>Настрой параметры</h1>
+      <p className="sub">ИИ сгенерирует свежий кейс под твои настройки и подберёт 5–7 шагов решения.</p>
+
+      <div className="track-banner">
+        <div className="dot"></div>
+        <div><b>Product Manager</b><span>Product Sense · Метрики · Эксперименты — кейс подбирается под этот трек</span></div>
+      </div>
+
+      <section>
+        <div className="section-label">Индустрия</div>
+        <div className="pills">
+          {INDUSTRIES.map((ind,i) => <div key={ind} className={`pill ${i===0 ? 'active' : ''}`}>{ind}</div>)}
+        </div>
+      </section>
+
+      <section>
+        <div className="section-label">Сложность</div>
+        <div className="diffs">
+          <div className="diff-card"><b>Junior</b><span>1 очевидный ответ, простая арифметика</span></div>
+          <div className="diff-card active"><b>Middle</b><span>Многофакторный анализ, трейд-оффы</span></div>
+          <div className="diff-card"><b>Senior</b><span>Стратегия, ambiguity, защита рекомендации</span></div>
+        </div>
+      </section>
+
+      <section>
+        <div className="section-label">Дополнительный контекст (опционально)</div>
+        <textarea className="ctx" placeholder="Например: кейс про запуск нового тарифа для регионального банка"></textarea>
+      </section>
+
+      <Button face="clean" variant="accent" size="lg" fullWidth icon={SparkIcon}>Сгенерировать кейс →</Button>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<QuizPage/>);
+</script>
+</body>
+</html>

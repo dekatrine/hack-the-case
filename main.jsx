@@ -8,7 +8,9 @@ import { Progress } from './components/ui/progress.jsx';
 import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from './quizData.js';
 import { PM_CHAPTERS, FLASHCARDS, PRACTICE_QUESTIONS, KEY_DEFINITIONS, LEARN_TOGETHER_CONTENT } from './courseData.js';
 import PMQuestHifi from './pmquest-hifi.jsx';
+import CleanHome from './CleanHome.jsx';
 import './styles.css';
+import './design/clean-tokens.css';
 
 /* ───────────────────────────── Topbar ─────────────────────────────── */
 const Topbar = ({ onHome, screen }) => (
@@ -1869,7 +1871,7 @@ const InterviewSectionBody = ({ section, data = false, compact = false }) => {
 const App = () => {
   const [config, setConfig] = useState(null);
   const [err, setErr] = useState(null);
-  const [screen, setScreen] = useState('pmquest-hifi'); // pmquest-hifi | landing | track | workspace | quiz | interview | learn
+  const [screen, setScreen] = useState('home'); // home (clean) | pmquest-hifi | landing | track | workspace | quiz | interview | learn
   const [quizCategory, setQuizCategory] = useState(null);
   const [learnInitialTab, setLearnInitialTab] = useState('All Resources');
   const [learnAutoReview, setLearnAutoReview] = useState(false);
@@ -1929,6 +1931,18 @@ const App = () => {
     }
   };
 
+  // CleanHome — новый основной экран (clean-дизайн из Claude Design), full-page.
+  if (screen === 'home') {
+    return (
+      <CleanHome
+        onNewCase={() => setScreen('landing')}
+        onOpenLearn={() => { setLearnInitialTab('Notes'); setLearnAutoReview(false); setScreen('learn'); }}
+        onOpenInterview={() => setScreen('interview')}
+        onOpenLegacy={() => setScreen('pmquest-hifi')}
+      />
+    );
+  }
+
   // PMQuest has local lessons and fallback practice, so it remains useful when
   // the optional AI backend is unavailable.
   if (screen === 'pmquest-hifi') {
@@ -1948,7 +1962,7 @@ const App = () => {
 
   return (
     <div className="shell">
-      <Topbar onHome={() => setScreen('landing')} screen={screenLabel} />
+      <Topbar onHome={() => setScreen('home')} screen={screenLabel} />
       <main className="main">
         {busy && <BusyBanner screen={screen} />}
         {busy && genPreview && (

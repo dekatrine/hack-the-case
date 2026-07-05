@@ -1,0 +1,143 @@
+<!-- @dsCard group="Hack the Case" viewport="1280x800" name="StartPage" subtitle="Homepage — streak/level, weekly goal, recent cases" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body, #root { margin:0; padding:0; min-height:100%; background: var(--surface-page); }
+  body { font-family: var(--font-body-clean); color: var(--text-primary); font-size:15px; }
+  .shell { display:grid; grid-template-columns: 240px 1fr; min-height:100vh; }
+  .sidebar { position:sticky; top:0; height:100vh; border-right:1px solid var(--border-hairline); padding: 24px 16px; display:flex; flex-direction:column; gap:2px; background: var(--c-white); }
+  .brand { display:flex; align-items:center; gap:10px; padding: 0 8px 20px; }
+  .brand .mark { width:36px; height:36px; border-radius:50%; background: var(--accent-primary); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; box-shadow: var(--shadow-clean-1); }
+  .brand b { display:block; font-size:15px; font-weight:700; }
+  .brand-subtitle { display:block; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color: var(--text-tertiary); font-weight:600; }
+  .main { padding: 40px 48px 80px; max-width: 1040px; }
+  .eyebrow { font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color: var(--text-tertiary); margin-bottom:10px; }
+  .hero-row { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; margin-bottom: 28px; }
+  h1 { font-family: var(--font-display-clean); font-weight:700; font-size: 42px; letter-spacing: var(--tracking-tight); margin:0 0 10px; }
+  .track-line { display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+  .track-line .track-name { font-weight:700; font-size:14px; }
+  .track-line .track-focus { font-size:13px; color: var(--text-tertiary); }
+  .stats { display:flex; gap:10px; }
+  .stat { position:relative; border:1px solid var(--border-hairline); border-radius: 16px; padding:8px 16px; text-align:center; min-width:88px; background: var(--c-white); box-shadow: var(--shadow-clean-1); }
+  .stat b { display:block; font-size:18px; font-weight:800; }
+  .stat span { font-size:10px; color: var(--text-tertiary); text-transform:uppercase; letter-spacing:.06em; font-weight:600; }
+  .freeze-btn { position:absolute; top:-8px; right:-8px; width:22px; height:22px; border-radius:50%; background:var(--c-white); border:1px solid var(--border-hairline); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-tertiary); box-shadow: var(--shadow-clean-1); transition: color var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard); }
+  .freeze-btn:hover { color: var(--text-primary); border-color: var(--border-hairline-strong); }
+  .progress-row { display:flex; justify-content:space-between; font-size:13px; color: var(--text-secondary); margin-bottom:8px; }
+  .goal-section { display:flex; align-items:center; gap:32px; border:1px solid var(--border-hairline); border-radius: var(--r-clean-card); padding:22px 28px; background: var(--c-white); box-shadow: var(--shadow-clean-1); margin-bottom:36px; }
+  .goal-divider { width:1px; align-self:stretch; background: var(--border-hairline); }
+  .goal-xp { flex:1; }
+  .week-summary { display:grid; grid-template-columns: repeat(3,1fr); gap:0; border:1px solid var(--border-hairline); border-radius: var(--r-clean-card); background: var(--c-white); box-shadow: var(--shadow-clean-1); overflow:hidden; }
+  .week-summary .cell { padding:20px 24px; text-align:center; }
+  .week-summary .cell + .cell { border-left:1px solid var(--border-hairline); }
+  .week-summary .cell b { display:block; font-family: var(--font-display-clean); font-size:26px; font-weight:700; letter-spacing: var(--tracking-tight); }
+  .week-summary .cell span { font-size:11px; color: var(--text-tertiary); text-transform:uppercase; letter-spacing:.06em; font-weight:600; }
+  h2 { font-family: var(--font-display-clean); font-weight:600; font-size:22px; letter-spacing: var(--tracking-tight); margin: 0 0 16px; }
+  section { margin-bottom:36px; }
+  .track-card { display:flex; flex-direction:column; gap:8px; }
+  .track-card .top { display:flex; justify-content:space-between; align-items:flex-start; }
+  .track-card h3 { font-size:24px; margin: 6px 0 0; font-weight:700; letter-spacing: var(--tracking-tight); font-family: var(--font-display-clean); }
+  .track-card p { color: var(--text-secondary); font-size:14px; line-height:1.5; margin:0; }
+  .recent-card { display:flex; flex-direction:column; gap:10px; }
+  .recent-tags { display:flex; gap:8px; align-items:center; }
+  .recent-card h3 { font-size:18px; margin:0; font-weight:700; }
+  .library-card { display:flex; align-items:center; gap:16px; }
+  .library-card .ico { width:44px; height:44px; border-radius:50%; background:var(--c-black); color:#fff; display:flex; align-items:center; justify-content:center; flex:0 0 auto; box-shadow: var(--shadow-clean-1); }
+  .library-card .body { flex:1; }
+  .library-card b { display:block; font-size:16px; }
+  .library-card p { margin:2px 0 0; color: var(--text-secondary); font-size:13px; }
+  .library-card .open { font-size:13px; font-weight:700; color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { Chip, Button, Card, ProgressBar, SidebarNavItem, StatRing } = window.HackTheCaseDesignSystem_476677;
+const HomeIcon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z"/></svg>;
+const BookIcon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 3h13a3 3 0 0 1 3 3v15H7a3 3 0 0 1-3-3z"/><path d="M4 18h16"/></svg>;
+const PlayIcon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><polygon points="10 8 16 12 10 16" fill="currentColor"/></svg>;
+const ArrowIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>;
+const SnowflakeIcon = <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M4.9 4.9l14.2 14.2M19.1 4.9 4.9 19.1M2 12h20M6 6l3 3M18 18l-3-3M6 18l3-3M18 6l-3 3"/></svg>;
+
+function StartPage(){
+  return (
+    <div className="shell">
+      <aside className="sidebar">
+        <div className="brand">
+          <div className="mark">H</div>
+          <div><b>Hack the Case</b><span className="brand-subtitle">Тренажёр</span></div>
+        </div>
+        <SidebarNavItem icon={HomeIcon} label="Главная" active />
+        <SidebarNavItem icon={BookIcon} label="Уроки" />
+        <SidebarNavItem icon={PlayIcon} label="Новый кейс" />
+      </aside>
+      <main className="main">
+        <div className="eyebrow">Привет!</div>
+        <div className="hero-row">
+          <div>
+            <div className="track-line"><span className="track-name">Product Manager</span><span className="track-focus">· Product Sense, Метрики, Эксперименты</span></div>
+            <h1>Готов разобрать кейс сегодня?</h1>
+          </div>
+          <div className="stats">
+            <div className="stat">
+              <div className="freeze-btn" title="Заморозить стрик на день">{SnowflakeIcon}</div>
+              <b>4 дн.</b><span>Стрик</span>
+            </div>
+            <div className="stat"><b>Ур. 3</b><span>Уровень</span></div>
+            <div className="stat"><b>74</b><span>Средний балл</span></div>
+          </div>
+        </div>
+        <div className="goal-section">
+          <StatRing value={3} max={5} label="3/5" sublabel="кейса на этой неделе" />
+          <div className="goal-divider"></div>
+          <div className="goal-xp">
+            <div className="progress-row"><span>Прогресс уровня</span><span>180 / 300 XP</span></div>
+            <ProgressBar face="clean" value={60} />
+          </div>
+        </div>
+        <section>
+          <Button face="clean" variant="primary" size="lg" icon={PlayIcon}>Начать новый кейс →</Button>
+        </section>
+        <section>
+          <h2>Твоя неделя</h2>
+          <div className="week-summary">
+            <div className="cell"><b>3</b><span>Кейса решено</span></div>
+            <div className="cell"><b>74</b><span>Средний балл</span></div>
+            <div className="cell"><b>Приоритизация</b><span>Сильнее всего</span></div>
+          </div>
+        </section>
+        <section>
+          <h2>Недавние кейсы</h2>
+          <Card face="clean" style={{marginBottom:12}} className="recent-card">
+            <div className="recent-tags">
+              <Chip face="clean" tone="accent">Product Sense</Chip>
+              <Chip face="clean" tone="neutral">E-commerce</Chip>
+            </div>
+            <h3>Компания «TrendPoint» — крупный омниканальный рит...</h3>
+            <ProgressBar face="clean" value={14} />
+          </Card>
+          <Card face="clean" className="library-card">
+            <div className="ico">{BookIcon}</div>
+            <div className="body">
+              <b>Библиотека уроков</b>
+              <p>Фреймворки, метрики, поведенческие вопросы — короткие карточки.</p>
+            </div>
+            <div className="open">Открыть →</div>
+          </Card>
+        </section>
+      </main>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<StartPage/>);
+</script>
+</body>
+</html>

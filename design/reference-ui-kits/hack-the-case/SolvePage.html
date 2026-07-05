@@ -1,0 +1,117 @@
+<!-- @dsCard group="Hack the Case" viewport="420x860" name="SolvePage" subtitle="Case workspace — mobile-first layout" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body, #root { margin:0; padding:0; min-height:100%; background: var(--surface-page); }
+  body { font-family: var(--font-body-clean); color: var(--text-primary); max-width:420px; margin:0 auto; font-size:15px; }
+  .main { padding: 20px 18px 110px; }
+  .topline { display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px; font-size:12px; }
+  .exit { color: var(--text-tertiary); font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+  .meta { color: var(--text-tertiary); font-weight:600; }
+  .progress-strip { display:flex; gap:5px; margin-bottom:12px; }
+  .progress-strip i { flex:1; height:5px; border-radius:999px; background: var(--c-gray-200); display:block; }
+  .progress-strip i.done { background: var(--c-black); }
+  .step-label { display:flex; justify-content:space-between; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color: var(--text-tertiary); margin-bottom: 16px; }
+  .case-panel { border:1px solid var(--border-hairline); border-radius: var(--r-clean-card); padding:18px; margin-bottom:20px; background: var(--c-white); box-shadow: var(--shadow-clean-1); }
+  .case-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .case-head span { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color: var(--text-tertiary); }
+  .case-head a { font-size:11px; font-weight:700; color: var(--text-primary); }
+  .case-body p { margin:0 0 10px; line-height:1.6; font-size:14px; }
+  .case-body b { display:block; margin: 12px 0 4px; font-size:14px; }
+  h2 { font-family: var(--font-display-clean); font-weight:600; font-size:20px; letter-spacing: var(--tracking-tight); margin: 0 0 6px; }
+  .sub { color: var(--text-secondary); font-size:13.5px; margin: 0 0 12px; line-height:1.5; }
+  .tag-row { display:flex; gap:8px; margin-bottom:14px; }
+  .guidance-panel { border:1px solid var(--border-hairline); border-radius: var(--r-clean-card); padding:18px; margin-bottom:20px; background: var(--c-white); box-shadow: var(--shadow-clean-1); }
+  .g-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color: var(--text-tertiary); margin-bottom:5px; }
+  .g-val { font-size:13.5px; line-height:1.5; }
+  .guidance-row > div + div { margin-top:12px; }
+  .tip { display:flex; gap:6px; color: var(--text-secondary); font-size:12.5px; font-style:italic; margin-top:12px; line-height:1.4; }
+  textarea.answer { width:100%; min-height:120px; margin-top:6px; padding:14px; border:1px solid var(--border-hairline); border-radius: var(--r-clean-card); font-family: var(--font-body-clean); font-size:14px; line-height:1.55; resize:vertical; transition: border-color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard); }
+  textarea.answer:focus { outline:none; border-color: var(--c-black); box-shadow: var(--shadow-clean-1); }
+  .answer-label { font-family: var(--font-display-clean); font-weight:800; font-size:15px; margin: 0 0 4px; }
+  .bottombar { position:fixed; left:50%; transform:translateX(-50%); bottom:16px; width: calc(100% - 32px); max-width: 388px; background: rgba(29,29,31,0.86); backdrop-filter: var(--blur-material); -webkit-backdrop-filter: var(--blur-material); border-radius: 999px; padding:6px; display:flex; align-items:center; gap:4px; box-shadow: var(--shadow-clean-3); }
+  .bb-circle { width:38px; height:38px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; color:#fff; flex:0 0 auto; }
+  .bb-coach { display:flex; align-items:center; gap:5px; padding: 10px 12px; color:#fff; font-weight:700; font-size:12.5px; }
+  .bb-next { flex:1; text-align:center; color:#fff; font-weight:700; font-size:13.5px; padding: 10px; display:flex; gap:6px; align-items:center; justify-content:center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { Chip } = window.HackTheCaseDesignSystem_476677;
+const BackIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>;
+const ChatIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.38 8.38 0 0 1-4-1L3 21l1.5-5.5A8.38 8.38 0 0 1 4.5 11 8.38 8.38 0 0 1 13 3a8.4 8.4 0 0 1 8 8.5z"/></svg>;
+const ArrowIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>;
+
+function SolvePage(){
+  return (
+    <div className="main">
+      <div className="topline">
+        <span className="exit">← Выйти</span>
+        <span className="meta">E-commerce · middle</span>
+      </div>
+      <div className="progress-strip">
+        {Array.from({length:7}).map((_,i) => <i key={i} className={i===0 ? 'done' : ''}></i>)}
+      </div>
+      <div className="step-label"><span>Шаг 1 из 7</span><span>Уточнение цели</span></div>
+
+      <div className="case-panel">
+        <div className="case-head"><span>Описание кейса</span><a>Развернуть</a></div>
+        <div className="case-body">
+          <p>Компания «TrendHub» — крупный мультикатегорийный маркетплейс на рынке Восточной Европы. Компания росла на 40% YoY, но столкнулась со снижением маржинальности.</p>
+          <b>Текущий контекст:</b>
+          <p>GMV 1,2 млрд € в год · средний чек упал на 15% (45 €) · CAC вырос с 8 до 12 €.</p>
+          <b>Финальный вопрос:</b>
+          <p>Разработай стратегию выхода на безубыточность за 18 месяцев, сохранив рост выручки от 15% в год.</p>
+        </div>
+      </div>
+
+      <h2>Уточнение цели</h2>
+      <p className="sub">Переформулируй задачу своими словами. Что измеряем успехом? Горизонт и ограничения?</p>
+      <div className="tag-row">
+        <Chip face="clean" tone="accent">Goal statement</Chip>
+        <Chip face="clean" tone="accent">SMART</Chip>
+      </div>
+
+      <div className="guidance-panel">
+        <div className="guidance-row">
+          <div>
+            <div className="g-label">Цель шага</div>
+            <div className="g-val">Понять, какое решение и метрику мы оптимизируем.</div>
+          </div>
+          <div>
+            <div className="g-label">Шаблон ответа</div>
+            <div className="g-val">Наша цель — [метрика] на горизонте [срок] при [ограничения]. Успех = [число].</div>
+          </div>
+          <div>
+            <div className="g-label">Частая ошибка</div>
+            <div className="g-val">Прыгать в анализ, не проверив, ту ли цель мы решаем.</div>
+          </div>
+        </div>
+        <div className="tip">💡 Сначала цель — потом методы.</div>
+      </div>
+
+      <div className="answer-label">Твой ответ</div>
+      <textarea className="answer" placeholder="Гипотеза → аргумент → цифры → вывод"></textarea>
+
+      <div className="bottombar">
+        <div className="bb-circle">{BackIcon}</div>
+        <div className="bb-coach">{ChatIcon}<span>Коуч</span></div>
+        <div className="bb-next"><span>Дальше</span>{ArrowIcon}</div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<SolvePage/>);
+</script>
+</body>
+</html>
