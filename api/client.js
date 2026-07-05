@@ -1,3 +1,5 @@
+import { track } from './analytics.js';
+
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
 const API_BASE_URL =
   configuredApiBaseUrl?.replace(/\/+$/, '') ||
@@ -14,47 +16,85 @@ async function request(path, options = {}) {
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
+    track('api_error', { path, status: response.status });
     throw new Error(body.detail || `Ошибка API: ${response.status}`);
   }
 
   return response.json();
 }
 
+// Событие продукта для каждого вызова ядра. Отправляем ПОСЛЕ успешного
+// ответа, чтобы события отражали реальные завершённые действия.
+function withEvent(promise, event, params) {
+  return promise.then((data) => {
+    track(event, params);
+    return data;
+  });
+}
+
 export const api = {
   config: () => request('/api/config'),
   generate: (payload) =>
-    request('/api/cases/generate', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+    withEvent(
+      request('/api/cases/generate', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+      'case_started',
+      { trackId: payload?.trackId, difficulty: payload?.difficulty },
+    ),
   generateInterview: (payload) =>
-    request('/api/interviews/generate', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+    withEvent(
+      request('/api/interviews/generate', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+      'interview_started',
+      { blockId: payload?.blockId, difficulty: payload?.difficulty },
+    ),
   checkInterview: (payload) =>
-    request('/api/interviews/check', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+    withEvent(
+      request('/api/interviews/check', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+      'interview_checked',
+      { blockId: payload?.blockId },
+    ),
   coach: (payload) =>
-    request('/api/coach', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+    withEvent(
+      request('/api/coach', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+      'coach_used',
+      { stepId: payload?.stepId, trackId: payload?.trackId },
+    ),
   evaluate: (payload) =>
-    request('/api/evaluate', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+    withEvent(
+      request('/api/evaluate', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+      'evaluate_received',
+      { trackId: payload?.trackId },
+    ),
   learnExplain: (payload) =>
-    request('/api/learn/explain', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+    withEvent(
+      request('/api/learn/explain', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+      'learn_used',
+      { kind: 'explain' },
+    ),
   learnSession: (payload) =>
-    request('/api/learn/session', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+    withEvent(
+      request('/api/learn/session', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+      'learn_used',
+      { kind: 'session' },
+    ),
 };
