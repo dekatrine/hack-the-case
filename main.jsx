@@ -1776,6 +1776,7 @@ const App = () => {
   const [aiStepIds, setAiStepIds] = useState([]);
   const [aiPhases, setAiPhases] = useState([]);
   const [busy, setBusy] = useState(false);
+  const [genPreview, setGenPreview] = useState('');
   const [evaluation, setEvaluation] = useState(null);
 
   useEffect(() => {
@@ -1786,8 +1787,20 @@ const App = () => {
     setBusy(true);
     setErr(null);
     setEvaluation(null);
+    setGenPreview('');
     try {
-      const res = await api.generate(params);
+      let res;
+      try {
+        // Стриминг: текст кейса появляется по мере генерации.
+        let preview = '';
+        res = await api.generateStream(params, (delta) => {
+          preview += delta;
+          setGenPreview(preview);
+        });
+      } catch {
+        // Фолбэк на обычную генерацию, если стрим недоступен.
+        res = await api.generate(params);
+      }
       setCaseText(res.caseText);
       setAiStepIds(Array.isArray(res.suggestedStepIds) ? res.suggestedStepIds : []);
       setAiPhases(Array.isArray(res.phases) ? res.phases : []);
@@ -1796,6 +1809,7 @@ const App = () => {
       setErr(e.message);
     } finally {
       setBusy(false);
+      setGenPreview('');
     }
   };
 
@@ -1835,6 +1849,25 @@ const App = () => {
       <Topbar onHome={() => setScreen('landing')} screen={screenLabel} />
       <main className="main">
         {busy && <BusyBanner screen={screen} />}
+        {busy && genPreview && (
+          <div
+            style={{
+              margin: '12px 0',
+              padding: '14px 16px',
+              border: '1px dashed var(--ink, #222)',
+              borderRadius: 12,
+              whiteSpace: 'pre-wrap',
+              fontSize: 14,
+              lineHeight: 1.5,
+              opacity: 0.85,
+              maxHeight: 320,
+              overflowY: 'auto',
+            }}
+          >
+            {genPreview}
+            <span className="spinner" style={{ marginLeft: 6 }} />
+          </div>
+        )}
         {err && <div className="error">{err}</div>}
         {screen === 'landing' && (
           <Landing

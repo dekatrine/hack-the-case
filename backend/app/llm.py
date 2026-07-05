@@ -67,3 +67,63 @@ def call_yandex_gpt(
             time.sleep(2**attempt)
 
     raise RuntimeError(f"Не удалось получить ответ от YandexGPT: {last_error}")
+
+
+def stream_yandex_gpt(
+    system_prompt: str,
+    user_prompt: str,
+    temperature: float = 0.6,
+    max_tokens: int = 4000,
+):
+    """Стриминговый вызов YandexGPT: генератор дельт текста.
+
+    Yandex Foundation Models при stream=true шлёт JSON-объекты построчно,
+    где message.text — накопленный текст. Превращаем в дельты.
+    Ошибка до первого чанка -> RuntimeError (можно откатиться на обычный вызов).
+    """
+    settings = get_settings()
+    if not settings.yandex_api_key or not settings.yandex_folder_id:
+        raise RuntimeError("YANDEX_API_KEY and YANDEX_FOLDER_ID are required")
+
+    model_uri = f"gpt://{settings.yandex_folder_id}/{settings.yandex_model}/latest"
+    headers = {
+        "Authorization": f"Api-Key {settings.yandex_api_key}",
+        "Content-Type": "application/json",
+    }
+    body = {
+        "modelUri": model_uri,
+        "completionOptions": {
+            "stream": True,
+            "temperature": temperature,
+            "maxTokens": max_tokens,
+        },
+        "messages": [
+            {"role": "system", "text": system_prompt},
+            {"role": "user", "text": user_prompt},
+        ],
+    }
+
+    try:
+        response = requests.post(
+            YANDEX_GPT_URL, headers=headers, json=body, timeout=90, stream=True
+        )
+        response.raise_for_status()
+    except requests.exceptions.RequestException as exc:
+        raise RuntimeError(f"Не удалось получить ответ от YandexGPT: {exc}") from exc
+
+    emitted = ""
+    for line in response.iter_lines(decode_unicode=True):
+        if not line:
+            continue
+        try:
+            data = json.loads(line)
+            cumulative = data["result"]["alternatives"][0]["message"]["text"]
+        except (KeyError, IndexError, json.JSONDecodeError):
+            continue
+        if cumulative.startswith(emitted):
+            delta = cumulative[len(emitted):]
+        else:
+            delta = cumulative  # модель переписала текст — отдаём как есть
+        emitted = cumulative
+        if delta:
+            yield delta

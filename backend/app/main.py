@@ -6,12 +6,13 @@ from typing import Optional, Union
 
 from fastapi import Body, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 from . import db
 from .config import get_settings
 from .ratelimit import build_rate_limit_middleware
 from .data import CASE_STEPS, COURSE_MODULES, DIFFICULTY_LEVELS, INDUSTRIES, SOURCE_NOTES
-from .llm import call_yandex_gpt
+from .llm import call_yandex_gpt, stream_yandex_gpt
 from .prompts import (
     CASE_GENERATION_SYSTEM,
     INTERVIEW_CHECK_SYSTEM,
@@ -151,8 +152,8 @@ def get_app_config() -> dict:
     }
 
 
-@app.post("/api/cases/generate", response_model=GenerateCaseResponse)
-def generate_case(payload: GenerateCaseRequest) -> GenerateCaseResponse:
+def _case_prompt(payload: GenerateCaseRequest) -> tuple[str, str]:
+    """Возвращает (track_name, prompt) для генерации кейса."""
     track = next((item for item in TRACKS if item.get("id") == payload.trackId), None)
     track_name = track["name"] if track else "Бизнес-кейсы"
     case_kind = (
@@ -179,33 +180,35 @@ def generate_case(payload: GenerateCaseRequest) -> GenerateCaseResponse:
         )
     if payload.extraContext.strip():
         prompt += f"\nДополнительный контекст: {payload.extraContext.strip()}"
+    return track_name, prompt
 
+
+def _route_for_case(payload: GenerateCaseRequest, track_name: str, case_text: str):
+    """AI-маршрут (phases + step selection) — только для product-трека."""
+    if payload.trackId != "product":
+        return [], []
+    phases = generate_phases_for_case(
+        case_text=case_text,
+        track_id=payload.trackId,
+        track_name=track_name,
+        interview_type=payload.interviewType,
+        grade=payload.grade,
+    )
+    if phases:
+        return phases, []
+    return [], pick_steps_for_case(
+        case_text=case_text,
+        track_id=payload.trackId,
+        track_name=track_name,
+    )
+
+
+@app.post("/api/cases/generate", response_model=GenerateCaseResponse)
+def generate_case(payload: GenerateCaseRequest) -> GenerateCaseResponse:
+    track_name, prompt = _case_prompt(payload)
     try:
         case_text = call_yandex_gpt(CASE_GENERATION_SYSTEM, prompt, temperature=0.8)
-
-        # AI-маршрут (phases + step selection) — только для product-трека.
-        # Для business-трека возвращаем кейс «как есть»: фронт использует
-        # статические stepIds из track.chapters.
-        if payload.trackId == "product":
-            phases = generate_phases_for_case(
-                case_text=case_text,
-                track_id=payload.trackId,
-                track_name=track_name,
-                interview_type=payload.interviewType,
-                grade=payload.grade,
-            )
-            if phases:
-                suggested_step_ids: list[str] = []
-            else:
-                suggested_step_ids = pick_steps_for_case(
-                    case_text=case_text,
-                    track_id=payload.trackId,
-                    track_name=track_name,
-                )
-        else:
-            phases = []
-            suggested_step_ids = []
-
+        phases, suggested_step_ids = _route_for_case(payload, track_name, case_text)
         return GenerateCaseResponse(
             caseText=case_text,
             suggestedStepIds=suggested_step_ids,
@@ -213,6 +216,51 @@ def generate_case(payload: GenerateCaseRequest) -> GenerateCaseResponse:
         )
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post("/api/cases/generate/stream")
+def generate_case_stream(payload: GenerateCaseRequest) -> StreamingResponse:
+    """SSE-версия генерации: текст кейса приходит по мере генерации.
+
+    События: {"type":"chunk","text":...} — дельты текста кейса;
+    {"type":"status"} — подготовка маршрута; {"type":"done", ...} — финал
+    в формате обычного ответа; {"type":"error","detail":...} — ошибка.
+    """
+    track_name, prompt = _case_prompt(payload)
+
+    def sse(obj: dict) -> str:
+        return f"data: {json.dumps(obj, ensure_ascii=False)}\n\n"
+
+    def event_stream():
+        case_text = ""
+        try:
+            for delta in stream_yandex_gpt(
+                CASE_GENERATION_SYSTEM, prompt, temperature=0.8
+            ):
+                case_text += delta
+                yield sse({"type": "chunk", "text": delta})
+            if not case_text.strip():
+                raise RuntimeError("пустой ответ модели")
+            yield sse({"type": "status", "stage": "route"})
+            phases, suggested_step_ids = _route_for_case(payload, track_name, case_text)
+            yield sse(
+                {
+                    "type": "done",
+                    "caseText": case_text,
+                    "suggestedStepIds": suggested_step_ids,
+                    "phases": [
+                        p.dict() if hasattr(p, "dict") else p for p in phases
+                    ],
+                }
+            )
+        except RuntimeError as exc:
+            yield sse({"type": "error", "detail": str(exc)})
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 def pick_steps_for_case(*, case_text: str, track_id: Optional[str], track_name: str) -> list[str]:

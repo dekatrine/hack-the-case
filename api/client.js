@@ -32,8 +32,55 @@ function withEvent(promise, event, params) {
   });
 }
 
+// Стриминговая генерация кейса (SSE). onChunk(text) вызывается на каждую
+// дельту; резолвится финальным объектом {caseText, suggestedStepIds, phases}.
+// Бросает ошибку, если стрим не удался — вызывающий может откатиться на
+// обычный api.generate().
+async function generateStream(payload, onChunk) {
+  const response = await fetch(`${API_BASE_URL}/api/cases/generate/stream`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok || !response.body) {
+    throw new Error(`Ошибка API: ${response.status}`);
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let result = null;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split('\n\n');
+    buffer = parts.pop() ?? '';
+    for (const part of parts) {
+      const line = part.trim();
+      if (!line.startsWith('data:')) continue;
+      let event;
+      try {
+        event = JSON.parse(line.slice(5).trim());
+      } catch {
+        continue;
+      }
+      if (event.type === 'chunk' && typeof event.text === 'string') {
+        onChunk?.(event.text);
+      } else if (event.type === 'done') {
+        result = event;
+      } else if (event.type === 'error') {
+        throw new Error(event.detail || 'Ошибка генерации');
+      }
+    }
+  }
+  if (!result) throw new Error('Стрим оборвался без результата');
+  track('case_started', { trackId: payload?.trackId, difficulty: payload?.difficulty, stream: true });
+  return result;
+}
+
 export const api = {
   config: () => request('/api/config'),
+  generateStream,
   generate: (payload) =>
     withEvent(
       request('/api/cases/generate', {
