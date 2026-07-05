@@ -5,7 +5,10 @@ AI-симулятор решения бизнес-кейсов. Проект с�
 - `backend/` — Python FastAPI API с интеграцией YandexGPT;
 - корень репозитория — актуальный React + Vite frontend, который деплоится на Render.
 
-Папка `frontend/` осталась как старая копия интерфейса и сейчас не используется в `render.yaml`.
+Аналитика: задай `VITE_METRIKA_ID` (счётчик Яндекс.Метрики) — события ядра
+(case_started, coach_used, evaluate_received и др.) начнут отправляться автоматически.
+Backend защищён rate limiting (настройки `RATE_LIMIT_PER_MINUTE`, `RATE_LIMIT_LLM_PER_MINUTE`),
+`/debug/settings` доступен только при `DEBUG=1`.
 
 ## Backend
 
