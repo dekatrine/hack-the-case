@@ -18,6 +18,7 @@ const SYNC_KEYS = [
   'hc_fc_v2',
   'hc_saved_q_v2',
   'hack-the-case-quiz-progress-v1',
+  'htc_skill_history_v1',
 ];
 
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();

@@ -1354,6 +1354,70 @@ const CoachPanel = ({ step, caseText, answer, previousAnswers, trackId }) => {
 };
 
 /* ──────────────────────────── Evaluation ─────────────────────────────── */
+/* ── Skill-радар: 6 компетенций из research/CASE_SKILL_SCORING.md ────── */
+const SKILL_AXES = [
+  { id: 'understanding', label: 'Понимание' },
+  { id: 'structure', label: 'Структура' },
+  { id: 'analysis', label: 'Анализ' },
+  { id: 'solution', label: 'Решение' },
+  { id: 'metrics', label: 'Метрики' },
+  { id: 'recommendation', label: 'Рекомендация' },
+];
+const SKILL_HISTORY_KEY = 'htc_skill_history_v1';
+
+const loadSkillHistory = () => {
+  try { return JSON.parse(localStorage.getItem(SKILL_HISTORY_KEY) || '[]'); } catch { return []; }
+};
+
+const saveSkillAttempt = (skills, totalScore) => {
+  const history = loadSkillHistory();
+  history.push({ ts: Date.now(), skills, totalScore });
+  localStorage.setItem(SKILL_HISTORY_KEY, JSON.stringify(history.slice(-50)));
+};
+
+const SkillRadar = ({ skills, prevSkills }) => {
+  const size = 260;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = 92;
+  const point = (i, value) => {
+    const angle = (Math.PI * 2 * i) / SKILL_AXES.length - Math.PI / 2;
+    const k = Math.max(0, Math.min(3, value)) / 3;
+    return [cx + r * k * Math.cos(angle), cy + r * k * Math.sin(angle)];
+  };
+  const polygon = (values) =>
+    SKILL_AXES.map((axis, i) => point(i, values?.[axis.id] ?? 0).join(',')).join(' ');
+  const gridPolygon = (k) =>
+    SKILL_AXES.map((_, i) => {
+      const angle = (Math.PI * 2 * i) / SKILL_AXES.length - Math.PI / 2;
+      return `${cx + r * k * Math.cos(angle)},${cy + r * k * Math.sin(angle)}`;
+    }).join(' ');
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Радар компетенций">
+      {[1 / 3, 2 / 3, 1].map((k) => (
+        <polygon key={k} points={gridPolygon(k)} fill="none" stroke="currentColor" strokeOpacity="0.15" />
+      ))}
+      {SKILL_AXES.map((axis, i) => {
+        const [x, y] = point(i, 3);
+        const [lx, ly] = [cx + (x - cx) * 1.22, cy + (y - cy) * 1.22];
+        return (
+          <g key={axis.id}>
+            <line x1={cx} y1={cy} x2={x} y2={y} stroke="currentColor" strokeOpacity="0.15" />
+            <text x={lx} y={ly} textAnchor="middle" dominantBaseline="middle" fontSize="11" fill="currentColor" opacity="0.8">
+              {axis.label}
+            </text>
+          </g>
+        );
+      })}
+      {prevSkills && (
+        <polygon points={polygon(prevSkills)} fill="none" stroke="var(--amber, #f0a020)" strokeWidth="1.5" strokeDasharray="4 3" />
+      )}
+      <polygon points={polygon(skills)} fill="var(--mint, #b8ff5c)" fillOpacity="0.25" stroke="var(--mint, #b8ff5c)" strokeWidth="2" />
+    </svg>
+  );
+};
+
 const EvaluationCard = ({ evaluation }) => {
   const parsed = useMemo(() => {
     try {
@@ -1364,7 +1428,22 @@ const EvaluationCard = ({ evaluation }) => {
     }
   }, [evaluation]);
 
+  // Прошлая попытка — до сохранения текущей; сохраняем один раз на оценку.
+  const [prevSkills, setPrevSkills] = useState(null);
+  const savedRef = useRef(null);
+  useEffect(() => {
+    if (!parsed?.skills || savedRef.current === evaluation) return;
+    const history = loadSkillHistory();
+    setPrevSkills(history.length ? history[history.length - 1].skills : null);
+    saveSkillAttempt(parsed.skills, parsed.totalScore);
+    savedRef.current = evaluation;
+  }, [parsed, evaluation]);
+
   if (!parsed) return <div className="eval"><pre>{evaluation}</pre></div>;
+
+  const skillDelta = prevSkills && parsed.skills
+    ? SKILL_AXES.reduce((sum, a) => sum + ((parsed.skills[a.id] ?? 0) - (prevSkills[a.id] ?? 0)), 0)
+    : null;
 
   return (
     <div className="eval">
@@ -1373,6 +1452,25 @@ const EvaluationCard = ({ evaluation }) => {
         <span className="score">{parsed.totalScore}</span>
         <span className="score-meta">/ 100 баллов</span>
       </div>
+      {parsed.skills && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'center', marginBottom: 24 }}>
+          <SkillRadar skills={parsed.skills} prevSkills={prevSkills} />
+          <div style={{ minWidth: 200 }}>
+            {SKILL_AXES.map((axis) => (
+              <div key={axis.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14, marginBottom: 4 }}>
+                <span>{axis.label}</span>
+                <strong>{parsed.skills[axis.id] ?? 0} / 3</strong>
+              </div>
+            ))}
+            {skillDelta !== null && (
+              <div style={{ marginTop: 8, fontSize: 13, opacity: 0.85 }}>
+                {skillDelta > 0 ? `▲ +${skillDelta} к прошлой попытке` : skillDelta < 0 ? `▼ ${skillDelta} к прошлой попытке` : '= как в прошлой попытке'}
+                {prevSkills && <span style={{ display: 'block', opacity: 0.7 }}>пунктир — прошлая попытка</span>}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {parsed.summary && <p style={{ color: 'var(--paper-dim)', marginBottom: 24 }}>{parsed.summary}</p>}
       {parsed.strengths?.length > 0 && (
         <Section title="Сильные стороны" items={parsed.strengths} accent="var(--mint)" />
