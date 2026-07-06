@@ -4,11 +4,44 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Hack the Case</title>
+    <style>
+      /* Мгновенный сплэш-экран загрузки — показывается сразу (до загрузки JS),
+         React заменяет #root при монтировании. */
+      #app-splash {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+        background: #ffffff;
+        font-family: -apple-system, 'Inter', system-ui, sans-serif;
+        transition: opacity 0.3s ease;
+      }
+      #app-splash .m {
+        width: 56px; height: 56px; border-radius: 50%;
+        background: #d7ff3f; color: #1d1d1f;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      }
+      #app-splash .n { font-weight: 700; font-size: 15px; color: #1d1d1f; }
+      #app-splash .s { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #86868b; font-weight: 600; margin-top: -12px; }
+      #app-splash .spin {
+        width: 22px; height: 22px; border-radius: 50%;
+        border: 2.5px solid #e8e8ed; border-top-color: #1d1d1f;
+        animation: htc-spin 0.7s linear infinite; margin-top: 4px;
+      }
+      @keyframes htc-spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="app-splash">
+      <div class="m">H</div>
+      <div class="n">Hack the Case</div>
+      <div class="s">Тренажёр</div>
+      <div class="spin"></div>
+    </div>
     <script type="module" src="/main.jsx"></script>
   </body>
 </html>

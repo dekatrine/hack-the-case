@@ -4346,8 +4346,20 @@ class ErrorBoundary extends React.Component {
 }
 
 initAnalytics();
-// Сначала подтягиваем прогресс с сервера (если он новее локального),
-// потом рендерим — компоненты читают localStorage при инициализации.
-initSync().finally(() => {
+
+function mountApp() {
   createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>);
-});
+  // Убираем стартовый сплэш (плавно) после монтирования.
+  const splash = document.getElementById('app-splash');
+  if (splash) {
+    splash.style.opacity = '0';
+    setTimeout(() => splash.remove(), 320);
+  }
+}
+
+// Пытаемся подтянуть прогресс с сервера, НО не блокируем рендер дольше 2.5с
+// (на free-tier бэкенд может «просыпаться» до минуты — не держим сплэш всё это время).
+Promise.race([
+  initSync(),
+  new Promise((resolve) => setTimeout(resolve, 2500)),
+]).finally(mountApp);
