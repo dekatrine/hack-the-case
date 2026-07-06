@@ -245,6 +245,7 @@
    section recolors at once (orange --mint → lime, Fraunces --serif →
    Inter, dark-brown --paper → near-black, cream bg → white/gray).
    ============================================================ */
+.clean-legacy,
 .clean-learn {
   min-height: 100vh;
   background: var(--surface-page);
@@ -270,6 +271,7 @@
   --serif: var(--font-display-clean);
 }
 /* heading accent words (italic <em>) must stay high-contrast, not lime-on-white */
+.clean-legacy h1 em, .clean-legacy h2 em, .clean-legacy h3 em,
 .clean-learn h1 em, .clean-learn h2 em, .clean-learn h3 em { color: var(--text-primary); font-style: italic; }
 /* pill tabs / active + hover states used a hardcoded orange rgba tint → light lime */
 .clean-learn .learnTab.active,
@@ -284,6 +286,23 @@
   color: var(--text-primary);
 }
 .clean-learn .learnTab.active { color: var(--text-primary); border-bottom-color: var(--accent-primary-deep); }
+
+/* The legacy "revision dojo" theme paints these cards dark (rgba(5,8,7,.52)).
+   Force clean white surfaces inside the clean wrappers (quiz has no learnLight). */
+.clean-legacy .quizCard, .clean-legacy .quizResultCard,
+.clean-legacy .resourcesOverview, .clean-legacy .resourcesHero,
+.clean-legacy .qbCard, .clean-legacy .defCard,
+.clean-legacy .quizOpt {
+  background: var(--c-white);
+  border-color: var(--border-hairline);
+}
+.clean-legacy .quizCard { box-shadow: var(--shadow-clean-1); }
+.clean-legacy .quizOpt.dim { opacity: .5; }
+/* correct/wrong tints in clean semantics (were hardcoded orange rgba) */
+.clean-legacy .quizOpt.correct { border-color: var(--accent-primary-deep) !important; background: color-mix(in srgb, var(--accent-primary) 22%, var(--c-white)) !important; }
+.clean-legacy .quizOpt.wrong { border-color: var(--semantic-danger) !important; background: color-mix(in srgb, var(--semantic-danger) 8%, var(--c-white)) !important; }
+.clean-legacy .quizOpt.wrong .quizLetter { background: var(--semantic-danger); color: #fff; }
+.clean-legacy .quizOpt.correct .quizLetter { background: var(--accent-primary); color: var(--text-on-accent); }
 
 /* evaluation card (inline in workspace) */
 .clean-screen .eval { border: 1px solid var(--border-hairline); border-radius: var(--r-clean-card); background: var(--c-white); box-shadow: var(--shadow-clean-1); padding: 24px; margin-top: 20px; }

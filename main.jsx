@@ -158,7 +158,7 @@ const BackIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" str
 const ChatIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.38 8.38 0 0 1-4-1L3 21l1.5-5.5A8.38 8.38 0 0 1 4.5 11 8.38 8.38 0 0 1 13 3a8.4 8.4 0 0 1 8 8.5z"/></svg>;
 const SparkIcon = <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>;
 
-const Landing = ({ tracks, onPickTrack, onOpenInterview, onOpenLearn, onHome }) => {
+const Landing = ({ tracks, onPickTrack, onOpenInterview, onOpenLearn, onOpenQuiz, onHome }) => {
   const trackTag = (id) => (id === 'product' ? 'Product Manager' : id === 'business' ? 'Consulting' : 'Case');
   return (
     <div className="clean-screen">
@@ -197,6 +197,13 @@ const Landing = ({ tracks, onPickTrack, onOpenInterview, onOpenLearn, onHome }) 
                 <div><b>Библиотека уроков</b><p>Фреймворки, метрики, банк вопросов, карточки.</p></div>
               </div>
             </button>
+            {onOpenQuiz && (
+              <button className="cs-tile-btn" onClick={onOpenQuiz}>
+                <div className="cs-tile"><div className="ico accent">{SparkIcon}</div>
+                  <div><b>Спринт-квиз</b><p>10 вопросов, 4 варианта, мгновенный разбор.</p></div>
+                </div>
+              </button>
+            )}
           </div>
         </section>
       </div>
@@ -1953,6 +1960,7 @@ const App = () => {
         onPickTrack={(t) => { setTrack(t); setScreen('track'); }}
         onOpenInterview={() => setScreen('interview')}
         onOpenLearn={openLearn}
+        onOpenQuiz={() => { setQuizCategory(null); setScreen('quiz'); }}
         onHome={() => setScreen('home')}
       />
     );
@@ -1961,6 +1969,17 @@ const App = () => {
   // Mock-интервью — clean full-page.
   if (screen === 'interview') {
     return <InterviewTogether onBack={() => setScreen('home')} />;
+  }
+
+  // Sprint quiz (MCQ) — clean full-page.
+  if (screen === 'quiz') {
+    return (
+      <QuizPage
+        category={quizCategory}
+        onSelectCategory={setQuizCategory}
+        onBack={() => { setQuizCategory(null); setScreen('home'); }}
+      />
+    );
   }
 
   // Learn-хаб (уроки, банк вопросов, карточки, глоссарий) — clean full-page.
@@ -2022,13 +2041,6 @@ const App = () => {
           </div>
         )}
         {err && <div className="error">{err}</div>}
-        {screen === 'quiz' && (
-          <QuizPage
-            category={quizCategory}
-            onSelectCategory={setQuizCategory}
-            onBack={() => { setQuizCategory(null); setScreen('landing'); }}
-          />
-        )}
         {screen === 'workspace' && (
           <Workspace
             caseText={caseText}
@@ -2153,7 +2165,7 @@ function QuizPage({ category, onSelectCategory, onBack }) {
 function QuizCategoryPicker({ onSelect, onBack }) {
   const progress = loadQuizProgress();
   return (
-    <div className="fade-in quizPicker">
+    <div className="clean-legacy fade-in quizPicker">
       <button className="btn btn-ghost" onClick={onBack} style={{ marginBottom: 32 }}>← На главную</button>
       <div className="eyebrow"><span className="num">00 /</span> Выбери тему</div>
       <h1 className="hero" style={{ fontSize: 'clamp(32px, 5vw, 56px)' }}>
@@ -2239,7 +2251,7 @@ function QuizSession({ category, onBack }) {
   }
 
   return (
-    <div className="fade-in quizSession">
+    <div className="clean-legacy fade-in quizSession">
       <div className="quizSessionHead">
         <button className="btn btn-ghost" onClick={onBack}>← Темы</button>
         <span className="quizSessionMeta">{category.icon} {category.title}</span>
@@ -2304,7 +2316,7 @@ function QuizResult({ score, total, category, mistakes, xpGain, streak, onRetry,
     'Тема требует проработки. Пройди ещё раз.';
 
   return (
-    <div className="fade-in quizResult">
+    <div className="clean-legacy fade-in quizResult">
       <div className="quizResultCard">
         <span style={{ fontSize: '3rem' }}>{medal}</span>
         <h2 className="quizResultScore">{score}/{total}</h2>
