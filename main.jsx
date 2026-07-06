@@ -15,6 +15,7 @@ import { ScoreDisplay as CleanScore } from './design/components/ScoreDisplay.jsx
 import { ChatBubble as CleanChatBubble } from './design/components/ChatBubble.jsx';
 import { SidebarNavItem as CleanNavItem } from './design/components/SidebarNavItem.jsx';
 import { Card as CleanCard } from './design/components/Card.jsx';
+import { StepRailItem as CleanStepRail } from './design/components/StepRailItem.jsx';
 import './styles.css';
 import './design/clean-tokens.css';
 import './design/clean-screens.css';
@@ -3515,7 +3516,63 @@ function NoteCallout({ callout }) {
   );
 }
 
+const ClockIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>;
+const CheckIconSm = <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M4 12l5 5L20 6"/></svg>;
+const SearchIconSm = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>;
+
+/* Библиотека уроков (макет LearningPage) — показывается на вкладке «Конспекты»,
+   пока конкретный урок не выбран. Клик по карточке открывает конспект (NoteDetail). */
+function LessonLibrary({ onOpen }) {
+  const [q, setQ] = useState('');
+  const fc = loadFcProgress();
+  const lessons = PM_CHAPTERS.map((ch) => {
+    const cards = FLASHCARDS[ch.id] || [];
+    const rev = cards.filter((c) => fc[c.id]).length;
+    const done = cards.length > 0 && rev >= cards.length;
+    return { ch, state: done ? 'done' : 'pending' };
+  });
+  const firstPending = lessons.find((l) => l.state === 'pending');
+  if (firstPending) firstPending.state = 'active';
+  const doneCount = lessons.filter((l) => l.state === 'done').length;
+  const cont = lessons.find((l) => l.state === 'active') || lessons[0];
+  const visible = q ? lessons.filter(({ ch }) => (`${ch.number} ${ch.title} ${ch.description}`).toLowerCase().includes(q.toLowerCase())) : lessons;
+
+  return (
+    <div className="cs-lessons-lib">
+      <div className="cs-search" style={{ maxWidth: 340 }}>{SearchIconSm}<input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Поиск по названию…" style={{ border: 'none', background: 'none', outline: 'none', font: 'inherit', width: '100%', color: 'var(--text-primary)' }} /></div>
+
+      <CleanCard face="clean" className="cs-path-card">
+        <div className="cs-path-head">
+          <div><b>Твой путь</b> <span>· {doneCount} из {PM_CHAPTERS.length} уроков пройдено</span></div>
+          {cont && <CleanButton face="clean" variant="primary" icon={ArrowIcon} onClick={() => onOpen(cont.ch)}>Продолжить</CleanButton>}
+        </div>
+        {lessons.slice(0, 6).map((l, i) => (
+          <div key={l.ch.id} onClick={() => onOpen(l.ch)} style={{ cursor: 'pointer' }}>
+            <CleanStepRail index={l.state === 'done' ? CheckIconSm : i + 1} name={`${l.ch.number}. ${l.ch.title}`} state={l.state} />
+          </div>
+        ))}
+      </CleanCard>
+
+      <div className="cs-lessons-grid">
+        {visible.map(({ ch, state }) => (
+          <CleanCard key={ch.id} face="clean" interactive onClick={() => onOpen(ch)} className={`cs-lesson-card${state === 'done' ? ' is-done' : ''}${state === 'active' ? ' is-active' : ''}`}>
+            <div className="cs-lesson-top">
+              <CleanChip face="clean" tone="neutral">Модуль {ch.number}</CleanChip>
+              <span className="cs-lesson-time">{ClockIcon}{(ch.subtopics?.length || 5) * 5} мин</span>
+            </div>
+            <h3 className="cs-lesson-title">{ch.title}</h3>
+            <p className="cs-lesson-desc">{ch.description}</p>
+            {state === 'done' && <div className="cs-lesson-check">{CheckIconSm}</div>}
+            {state === 'active' && <div className="cs-lesson-next"><CleanChip face="clean" tone="accent">Следующий</CleanChip></div>}
+          </CleanCard>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
+  if (!chapter) return <LessonLibrary onOpen={(ch) => onSelectChapter(ch)} />;
   const activeChapter = chapter || PM_CHAPTERS.find((item) => item.id === 'ch1') || PM_CHAPTERS[0];
   const article = getNotesArticle(activeChapter);
   const lesson = selectedSubtopic ? getSubtopicTextbookLesson(activeChapter, selectedSubtopic) : null;
