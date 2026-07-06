@@ -964,10 +964,12 @@ const Workspace = ({ caseText, steps, track, aiStepIds, aiPhases, onEvaluate, ev
   }, []);
 
   return (
-    <div className="fade-in">
-      <button className="btn btn-ghost" onClick={onBack} style={{ marginBottom: 24 }}>
-        ← Изменить параметры
-      </button>
+    <div className="clean-screen">
+      <div className="cs-main w1040">
+      <div className="cs-topline">
+        <button className="cs-exit" onClick={onBack}>← Изменить параметры</button>
+        <span className="cs-meta">{track?.name || 'Кейс'}</span>
+      </div>
 
       <MobileStepStrip steps={trackSteps} activeIdx={activeIdx} answers={answers} onPick={setActiveIdx} />
 
@@ -1027,6 +1029,7 @@ const Workspace = ({ caseText, steps, track, aiStepIds, aiPhases, onEvaluate, ev
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
@@ -1199,13 +1202,6 @@ const LearningFlow = ({ steps }) => (
 );
 
 const StepBlock = ({ step, chapter, idx, total, answer, onAnswer, allAnswers, onAnswerById, onNext, onPrev, isLast, onEvaluate }) => {
-  const inputStyle = {
-    width: '100%', minHeight: 120, padding: 16,
-    background: 'var(--ink-soft)', color: 'var(--paper)',
-    border: '1px solid var(--hair)', borderRadius: 6,
-    fontFamily: 'var(--sans)', fontSize: 14, lineHeight: 1.6, resize: 'vertical',
-  };
-
   return (
     <div className="step-block" key={step.id}>
       <div className="step-meta">
@@ -1235,8 +1231,7 @@ const StepBlock = ({ step, chapter, idx, total, answer, onAnswer, allAnswers, on
                   </div>
                 </div>
                 <textarea
-                  className="answer-input"
-                  style={inputStyle}
+                  className="answer-input cs-input"
                   placeholder="Ответ на этот вопрос — кратко, с опорой на данные кейса…"
                   value={allAnswers?.[key] || ''}
                   onChange={(e) => onAnswerById(key, e.target.value)}
@@ -1247,8 +1242,8 @@ const StepBlock = ({ step, chapter, idx, total, answer, onAnswer, allAnswers, on
         </div>
       ) : (
         <textarea
-          className="answer-input"
-          style={{ ...inputStyle, minHeight: 180 }}
+          className="answer-input cs-input"
+          style={{ minHeight: 180 }}
           placeholder="Запиши ответ — структурно, с опорой на данные кейса…"
           value={answer}
           onChange={(e) => onAnswer(e.target.value)}
@@ -1402,9 +1397,9 @@ const SkillRadar = ({ skills, prevSkills }) => {
         );
       })}
       {prevSkills && (
-        <polygon points={polygon(prevSkills)} fill="none" stroke="var(--amber, #f0a020)" strokeWidth="1.5" strokeDasharray="4 3" />
+        <polygon points={polygon(prevSkills)} fill="none" stroke="var(--c-gray-400, #a1a1a6)" strokeWidth="1.5" strokeDasharray="4 3" />
       )}
-      <polygon points={polygon(skills)} fill="var(--mint, #b8ff5c)" fillOpacity="0.25" stroke="var(--mint, #b8ff5c)" strokeWidth="2" />
+      <polygon points={polygon(skills)} fill="var(--accent-primary, #d7ff3f)" fillOpacity="0.35" stroke="var(--accent-primary-deep, #c2eb2a)" strokeWidth="2" />
     </svg>
   );
 };
@@ -1438,7 +1433,7 @@ const EvaluationCard = ({ evaluation }) => {
 
   return (
     <div className="eval">
-      <div className="eyebrow"><span className="num">∑</span> Оценка решения</div>
+      <div className="cs-eyebrow">∑ Оценка решения</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
         <ScoreBadge score={parsed.totalScore ?? 0} />
       </div>
@@ -1464,15 +1459,15 @@ const EvaluationCard = ({ evaluation }) => {
           </div>
         </div>
       )}
-      {parsed.summary && <p style={{ color: 'var(--paper-dim)', marginBottom: 24 }}>{parsed.summary}</p>}
+      {parsed.summary && <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>{parsed.summary}</p>}
       {parsed.strengths?.length > 0 && (
-        <Section title="Сильные стороны" items={parsed.strengths} accent="var(--mint)" />
+        <Section title="Сильные стороны" items={parsed.strengths} accent="var(--semantic-success)" />
       )}
       {parsed.improvements?.length > 0 && (
-        <Section title="Что улучшить" items={parsed.improvements} accent="var(--amber)" />
+        <Section title="Что улучшить" items={parsed.improvements} accent="var(--semantic-warning)" />
       )}
       {parsed.topTips?.length > 0 && (
-        <Section title="Top-3 совета" items={parsed.topTips} accent="var(--rust)" />
+        <Section title="Top-3 совета" items={parsed.topTips} accent="var(--accent-primary-deep)" />
       )}
     </div>
   );
@@ -1480,8 +1475,8 @@ const EvaluationCard = ({ evaluation }) => {
 
 const Section = ({ title, items, accent }) => (
   <div style={{ marginBottom: 20 }}>
-    <h4 style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: accent, margin: '0 0 12px' }}>{title}</h4>
-    <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--paper-dim)', fontSize: 14, lineHeight: 1.6 }}>
+    <h4 style={{ fontFamily: 'var(--font-label-clean)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: accent, margin: '0 0 12px', fontWeight: 700 }}>{title}</h4>
+    <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6 }}>
       {items.map((it, i) => <li key={i} style={{ marginBottom: 6 }}>{it}</li>)}
     </ul>
   </div>
