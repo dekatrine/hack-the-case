@@ -255,6 +255,7 @@
    CLEAN OVERRIDES for the Mock Interview flow — recolor only.
    ============================================================ */
 .clean-screen .interviewHero h1 { font-family: var(--font-display-clean); font-weight: 600; letter-spacing: var(--tracking-tight); }
+.clean-screen .interviewHero h1 em { color: var(--text-primary); font-family: var(--font-display-clean); font-style: italic; }
 .clean-screen .interviewHero .hero-sub { color: var(--text-secondary); font-size: 15px; line-height: 1.5; }
 .clean-screen .interviewHero .eyebrow, .clean-screen .interviewSectionHead > span, .clean-screen .interviewAgentBadge { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-tertiary); }
 .clean-screen .interviewHero .eyebrow .num { color: var(--accent-primary-deep); }
@@ -262,9 +263,10 @@
 /* direction switch tabs */
 .clean-screen .directionSwitch { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
 .clean-screen .directionSwitch button { border: 1px solid var(--border-hairline); border-radius: var(--r-clean-sm); background: var(--c-white); padding: 10px 16px; cursor: pointer; text-align: left; color: var(--text-primary); transition: background var(--dur-fast) var(--ease-standard); }
-.clean-screen .directionSwitch button span { display: block; font-weight: 700; font-size: 14px; }
+.clean-screen .directionSwitch button span { display: block; font-weight: 700; font-size: 14px; color: var(--text-primary); }
 .clean-screen .directionSwitch button em { font-style: normal; font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .05em; }
 .clean-screen .directionSwitch button.active { background: var(--c-black); color: #fff; border-color: var(--c-black); }
+.clean-screen .directionSwitch button.active span { color: #fff; }
 .clean-screen .directionSwitch button.active em { color: rgba(255,255,255,.6); }
 
 .clean-screen .interviewSectionHead { margin: 32px 0 16px; }
