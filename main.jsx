@@ -1515,8 +1515,12 @@ const InterviewTogether = ({ onBack }) => {
   };
 
   return (
-    <div className="fade-in interviewPage">
-      <button className="btn btn-ghost" onClick={onBack} style={{ marginBottom: 28 }}>← На главную</button>
+    <div className="clean-screen">
+      <div className="cs-main w1040 interviewPage">
+      <div className="cs-topline">
+        <button className="cs-exit" onClick={onBack}>← На главную</button>
+        <span className="cs-meta">Mock interview</span>
+      </div>
 
       <section className="interviewHero">
         <div className="interviewHeroCopy">
@@ -1604,6 +1608,7 @@ const InterviewTogether = ({ onBack }) => {
       </section>
 
       <InterviewTask taskText={taskText} direction={direction} block={block} />
+      </div>
     </div>
   );
 };
@@ -1953,6 +1958,11 @@ const App = () => {
     );
   }
 
+  // Mock-интервью — clean full-page.
+  if (screen === 'interview') {
+    return <InterviewTogether onBack={() => setScreen('home')} />;
+  }
+
   // Настройка кейса — clean full-page (макет QuizPage). Экран генерации тоже здесь (busy).
   if (screen === 'track' && track) {
     return (
@@ -2002,9 +2012,6 @@ const App = () => {
             onSelectCategory={setQuizCategory}
             onBack={() => { setQuizCategory(null); setScreen('landing'); }}
           />
-        )}
-        {screen === 'interview' && (
-          <InterviewTogether onBack={() => setScreen('landing')} />
         )}
         {screen === 'workspace' && (
           <Workspace
