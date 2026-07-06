@@ -134,6 +134,18 @@
 .cs-tile p { margin: 0; color: var(--text-secondary); font-size: 13px; line-height: 1.45; }
 .cs-tile .m { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; margin-top: 6px; }
 
+/* ---- track picker cards ---- */
+.cs-track-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.cs-track-card { text-align: left; border: 1px solid var(--border-hairline); border-radius: var(--r-clean-card); padding: 24px; background: var(--c-white); box-shadow: var(--shadow-clean-1); cursor: pointer; color: inherit; font: inherit; transition: transform var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard); }
+.cs-track-card:hover { transform: translateY(var(--hover-lift)); box-shadow: var(--shadow-clean-2); }
+.cs-track-card h3 { margin: 10px 0 6px; font-size: 20px; }
+.cs-track-card p { margin: 0 0 14px; color: var(--text-secondary); font-size: 14px; line-height: 1.5; }
+.cs-track-card .open { font-size: 13px; font-weight: 700; }
+
+/* ---- clickable tile button (secondary entry points) ---- */
+.cs-tile-btn { text-align: left; border: 1px solid var(--border-hairline); border-radius: var(--r-clean-card); padding: 18px; background: var(--c-white); box-shadow: var(--shadow-clean-1); cursor: pointer; color: inherit; font: inherit; display: flex; gap: 14px; align-items: flex-start; transition: transform var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard); }
+.cs-tile-btn:hover { transform: translateY(var(--hover-lift)); box-shadow: var(--shadow-clean-2); }
+
 /* ---- generic action-right row ---- */
 .cs-actions-right { display: flex; justify-content: flex-end; margin-top: 24px; }
 

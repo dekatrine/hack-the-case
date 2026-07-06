@@ -150,109 +150,56 @@ const CourseContentPreview = ({ onSelectChapter, onOpenTab }) => (
   </section>
 );
 
-const Landing = ({ tracks, onPickTrack, onOpenQuiz, onOpenInterview, onOpenLearn, onOpenPMQuest }) => {
-  const stats = getLearningStats();
-  const businessTrack = tracks.find((item) => item.id === 'business') || tracks[0];
+/* ─── Shared clean-screen icons (Lucide-style, 24×24, stroke 2) ─── */
+const BookIcon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 3h13a3 3 0 0 1 3 3v15H7a3 3 0 0 1-3-3z"/><path d="M4 18h16"/></svg>;
+const MicIcon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg>;
+const ArrowIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>;
+const BackIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>;
+const ChatIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.38 8.38 0 0 1-4-1L3 21l1.5-5.5A8.38 8.38 0 0 1 4.5 11 8.38 8.38 0 0 1 13 3a8.4 8.4 0 0 1 8 8.5z"/></svg>;
+const SparkIcon = <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>;
 
+const Landing = ({ tracks, onPickTrack, onOpenInterview, onOpenLearn, onHome }) => {
+  const trackTag = (id) => (id === 'product' ? 'Product Manager' : id === 'business' ? 'Consulting' : 'Case');
   return (
-    <div className="home-dashboard fade-in">
-      <aside className="home-sidebar">
-        <div className="workspace-pill">
-          <span className="user-dot">PM</span>
-          <div>
-            <strong>Product Academy</strong>
-            <span>free track</span>
-          </div>
+    <div className="clean-screen">
+      <div className="cs-main w900">
+        <div className="cs-topline">
+          <button className="cs-exit" onClick={onHome}>← Главная</button>
+          <span className="cs-meta">Новый кейс</span>
         </div>
-        <nav className="home-menu" aria-label="Учебная навигация">
-          <button className="active">Home</button>
-          <button onClick={() => onOpenLearn('Notes')}>Lessons</button>
-          <button onClick={() => onOpenLearn('Questionbank')}>Question Bank</button>
-          <button onClick={() => onOpenLearn('Flashcards')}>Flashcards</button>
-          <button onClick={() => onOpenLearn('Key Definitions')}>Glossary</button>
-        </nav>
-        <div className="home-menu-group">
-          <span>Tools</span>
-          <button onClick={onOpenInterview}>Mock interview</button>
-          <button onClick={onOpenQuiz}>Sprint quiz</button>
-          <button onClick={() => onOpenLearn('All Resources')}>All resources</button>
-          {onOpenPMQuest && (
-            <button onClick={onOpenPMQuest} style={{ color: 'var(--mint)' }}>PMQuest Hi-Fi ✨</button>
-          )}
-        </div>
-        <div className="profile-row">
-          <span className="avatar-mini">E</span>
-          <strong>Ekaterina</strong>
-        </div>
-      </aside>
+        <div className="cs-eyebrow">Практика</div>
+        <h1>Выбери направление</h1>
+        <p className="cs-sub">Каждый трек учит своему каркасу решения — как на реальном интервью. Выбери, и ИИ соберёт кейс под него.</p>
 
-      <section className="home-main">
-        <div className="home-toolbar">
-          <label className="home-search">
-            <span>⌕</span>
-            <input placeholder="Найти урок, термин или кейс..." />
-          </label>
-          <div className="home-xp">
-            <span>3 cases</span>
-            <span>22 XP</span>
-            <span>{stats.cards} cards</span>
-          </div>
-        </div>
-
-        <section className="home-hero-panel">
-          <div>
-            <p className="eyebrow"><span className="num">home /</span> case prep resources</p>
-            <h1>Добрый вечер,<br/><em>Ekaterina</em></h1>
-            <p>Учись как в LMS: уроки, банк вопросов, карточки, термины, mock interview и полноценный кейс собраны в одном рабочем столе.</p>
-          </div>
-          <div className="hero-progress">
-            <strong>{stats.chapters}</strong>
-            <span>модулей академии</span>
+        <section>
+          <div className="cs-track-cards">
+            {tracks.map((track) => (
+              <button key={track.id} className="cs-track-card" onClick={() => onPickTrack(track)}>
+                <div className="cs-tag-row"><CleanChip face="clean" tone="accent">{trackTag(track.id)}</CleanChip></div>
+                <h3>{track.name}</h3>
+                <p>{track.tagline}</p>
+                <span className="open">Выбрать →</span>
+              </button>
+            ))}
           </div>
         </section>
 
-        <section className="home-sale">
-          <strong>PM Interview Sprint</strong>
-          <span>Маршрут: конспект, question bank и карточки для закрепления.</span>
-          <button onClick={() => onOpenLearn('All Resources')}>Открыть LMS <span className="arrow">→</span></button>
-        </section>
-
-        <div className="home-section-head">
-          <h2>Мои треки</h2>
-          <button onClick={() => onOpenLearn('Notes')}>Учебный курс <span className="arrow">→</span></button>
-        </div>
-        <div className="home-subjects">
-          {tracks.map((track, idx) => (
-            <button
-              key={track.id}
-              className={`subject-card ${track.id}`}
-              onClick={() => onPickTrack(track)}
-            >
-              <span>{idx + 1 < 10 ? `0${idx + 1}` : idx + 1}</span>
-              <h3>{track.name}</h3>
-              <p>{track.tagline}</p>
-              <em>Open →</em>
+        <section>
+          <div className="cs-section-label">Ещё</div>
+          <div className="cs-tile-grid">
+            <button className="cs-tile-btn" onClick={onOpenInterview}>
+              <div className="cs-tile"><div className="ico accent">{MicIcon}</div>
+                <div><b>Mock-интервью</b><p>5 раундов с ИИ-интервьюером и разбором.</p></div>
+              </div>
             </button>
-          ))}
-        </div>
-
-        <section className="home-info-card">
-          <div>
-            <h2>Добро пожаловать в Hack the Case</h2>
-            <p>Для старта подходит раздел Lessons. Для практики доступны треки с генерацией кейсов.</p>
+            <button className="cs-tile-btn" onClick={() => onOpenLearn('All Resources')}>
+              <div className="cs-tile"><div className="ico">{BookIcon}</div>
+                <div><b>Библиотека уроков</b><p>Фреймворки, метрики, банк вопросов, карточки.</p></div>
+              </div>
+            </button>
           </div>
-          <button className="btn btn-primary" onClick={() => onOpenLearn('Notes')}>Начать обучение</button>
         </section>
-
-        <section className="home-study-plan">
-          <div>
-            <span>Study plan</span>
-            <h2>Собери недельный маршрут и не теряй прогресс</h2>
-            <p>{stats.questions} вопросов, {stats.cards} карточек, {stats.definitions} терминов и mock interview связаны в один путь.</p>
-          </div>
-          <button className="btn btn-ghost" onClick={() => businessTrack && onPickTrack(businessTrack)}>Собрать кейс</button>
-        </section>
-      </section>
+      </div>
     </div>
   );
 };
@@ -301,8 +248,6 @@ const GRADES = [
   { id: 'middle', label: 'Middle', sub: '3–5 лет, ownership продукта' },
   { id: 'senior', label: 'Senior', sub: '5+, strategy + leadership' },
 ];
-
-const SparkIcon = <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>;
 
 const TrackDetail = ({ track, industries, difficulties, onStart, onBack, busy, genPreview, err }) => {
   const isProductTrack = track.id === 'product';
@@ -2000,6 +1945,19 @@ const App = () => {
     setScreen('learn');
   };
 
+  // Выбор направления — clean full-page (track picker).
+  if (screen === 'landing') {
+    return (
+      <Landing
+        tracks={config.tracks}
+        onPickTrack={(t) => { setTrack(t); setScreen('track'); }}
+        onOpenInterview={() => setScreen('interview')}
+        onOpenLearn={openLearn}
+        onHome={() => setScreen('home')}
+      />
+    );
+  }
+
   // Настройка кейса — clean full-page (макет QuizPage). Экран генерации тоже здесь (busy).
   if (screen === 'track' && track) {
     return (
@@ -2043,16 +2001,6 @@ const App = () => {
           </div>
         )}
         {err && <div className="error">{err}</div>}
-        {screen === 'landing' && (
-          <Landing
-            tracks={config.tracks}
-            onPickTrack={(t) => { setTrack(t); setScreen('track'); }}
-            onOpenQuiz={() => { setQuizCategory(null); setScreen('quiz'); }}
-            onOpenInterview={() => setScreen('interview')}
-            onOpenLearn={openLearn}
-            onOpenPMQuest={() => setScreen('pmquest-hifi')}
-          />
-        )}
         {screen === 'quiz' && (
           <QuizPage
             category={quizCategory}
