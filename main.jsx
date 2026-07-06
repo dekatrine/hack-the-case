@@ -1963,6 +1963,22 @@ const App = () => {
     return <InterviewTogether onBack={() => setScreen('home')} />;
   }
 
+  // Learn-хаб (уроки, банк вопросов, карточки, глоссарий) — clean full-page.
+  if (screen === 'learn') {
+    return (
+      <LearningScreen
+        onBack={() => setScreen('home')}
+        initialTab={learnInitialTab}
+        autoOpenReview={learnAutoReview}
+        onOpenExam={() => {
+          const nextTrack = config.tracks.find((item) => item.id === 'business') || config.tracks[0];
+          setTrack(nextTrack);
+          setScreen('track');
+        }}
+      />
+    );
+  }
+
   // Настройка кейса — clean full-page (макет QuizPage). Экран генерации тоже здесь (busy).
   if (screen === 'track' && track) {
     return (
@@ -2023,18 +2039,6 @@ const App = () => {
             onEvaluate={evaluate}
             evaluation={evaluation}
             onBack={() => setScreen('track')}
-          />
-        )}
-        {screen === 'learn' && (
-          <LearningScreen
-            onBack={() => setScreen('landing')}
-            initialTab={learnInitialTab}
-            autoOpenReview={learnAutoReview}
-            onOpenExam={() => {
-              const nextTrack = config.tracks.find((item) => item.id === 'business') || config.tracks[0];
-              setTrack(nextTrack);
-              setScreen('track');
-            }}
           />
         )}
       </main>
@@ -2364,7 +2368,7 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
   }, []);
 
   return (
-    <div className="learnScreen fade-in">
+    <div className="clean-learn shell--learnLight learnScreen fade-in">
       <div className="learnScreenHeader">
         <button className="btn btn-ghost" onClick={onBack}>← Главная</button>
         <div>

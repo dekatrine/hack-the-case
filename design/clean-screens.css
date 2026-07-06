@@ -238,6 +238,53 @@
 .clean-screen .coach-input input { flex: 1; padding: 10px 14px; border-radius: 999px; border: 1px solid var(--border-hairline); background: var(--surface-sunk); font-family: var(--font-body-clean); font-size: 14px; }
 .clean-screen .coach-input input:focus { outline: none; border-color: var(--c-black); background: var(--c-white); }
 
+/* ============================================================
+   CLEAN LEARN — the Learn hub + its 5 tabs + sidebar + review modal
+   are a huge legacy tree. Instead of per-class overrides we remap the
+   legacy CSS variables to clean values inside .clean-learn, so the whole
+   section recolors at once (orange --mint → lime, Fraunces --serif →
+   Inter, dark-brown --paper → near-black, cream bg → white/gray).
+   ============================================================ */
+.clean-learn {
+  min-height: 100vh;
+  background: var(--surface-page);
+  /* accents → lime */
+  --mint: var(--accent-primary);
+  --mint-deep: var(--accent-primary-deep);
+  --accent: var(--accent-primary);
+  /* text → clean neutrals */
+  --paper: var(--text-primary);
+  --paper-dim: var(--text-secondary);
+  --paper-faint: var(--text-tertiary);
+  /* surfaces → white / light */
+  --ink: var(--surface-page);
+  --ink-soft: var(--c-white);
+  --ink-card: var(--c-white);
+  --hair: var(--border-hairline);
+  --hair-strong: var(--border-hairline-strong);
+  --canvas: var(--c-black);
+  /* semantic */
+  --amber: var(--semantic-warning);
+  --rust: var(--semantic-danger);
+  /* type — drop Fraunces serif for the clean grotesque */
+  --serif: var(--font-display-clean);
+}
+/* heading accent words (italic <em>) must stay high-contrast, not lime-on-white */
+.clean-learn h1 em, .clean-learn h2 em, .clean-learn h3 em { color: var(--text-primary); font-style: italic; }
+/* pill tabs / active + hover states used a hardcoded orange rgba tint → light lime */
+.clean-learn .learnTab.active,
+.clean-learn .learnTab:hover,
+.clean-learn .learnSidebarItem.active,
+.clean-learn .sidebarChapterHead.active,
+.clean-learn .sidebarSubtopic:hover,
+.clean-learn .home-menu button:hover,
+.clean-learn .home-menu button.active,
+.clean-learn .home-menu-group button:hover {
+  background: color-mix(in srgb, var(--accent-primary) 30%, var(--c-white));
+  color: var(--text-primary);
+}
+.clean-learn .learnTab.active { color: var(--text-primary); border-bottom-color: var(--accent-primary-deep); }
+
 /* evaluation card (inline in workspace) */
 .clean-screen .eval { border: 1px solid var(--border-hairline); border-radius: var(--r-clean-card); background: var(--c-white); box-shadow: var(--shadow-clean-1); padding: 24px; margin-top: 20px; }
 .clean-screen .eval pre { white-space: pre-wrap; font-family: var(--font-body-clean); font-size: 13.5px; line-height: 1.6; }
