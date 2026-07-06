@@ -3691,8 +3691,8 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
 
           <section className="noteArticleDefinition">
             <span>Определение</span>
-            <strong>{lesson.definitionTitle}</strong>
-            <p>{renderTextbookText(`**${lesson.definition}**`)}</p>
+            {lesson.definitionTitle && lesson.definitionTitle !== lesson.title && <strong>{lesson.definitionTitle}</strong>}
+            <p>{renderTextbookText(lesson.definition)}</p>
           </section>
 
           <TextbookSketch title={`Визуальная модель: ${lesson.definitionTitle}`} chapterId={activeChapter.id} subtopicId={selectedSubtopic.id} />
