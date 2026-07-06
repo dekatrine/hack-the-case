@@ -1990,23 +1990,40 @@ const App = () => {
   return null; // все экраны отрисованы через early-return выше
 };
 
-const Loading = () => (
-  <div className="shell">
-    <main className="main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-      <div style={{ textAlign: 'center', color: 'var(--paper-dim)' }}>
-        <span className="spinner" /> загрузка конфигурации…
+const Loading = () => {
+  // Бэкенд на free-tier Render засыпает после простоя и просыпается ~30–60с.
+  // Через 4с показываем честное пояснение вместо «бесконечной» загрузки.
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setSlow(true), 4000);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div className="clean-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center', maxWidth: 380, padding: 24 }}>
+        <span className="spinner" />
+        <p style={{ margin: '16px 0 0', fontWeight: 600, fontSize: 16 }}>Загружаю тренажёр…</p>
+        {slow && (
+          <p className="cs-sub" style={{ margin: '10px 0 0' }}>
+            Бэкенд на бесплатном хостинге просыпается после простоя — это может занять до минуты. Дальше всё будет быстро.
+          </p>
+        )}
       </div>
-    </main>
-  </div>
-);
+    </div>
+  );
+};
 
 const FullErr = ({ msg }) => (
-  <div className="shell">
-    <main className="main">
-      <h2>Не удалось подключиться к API</h2>
-      <div className="error">{msg}</div>
-      <p style={{ color: 'var(--paper-dim)' }}>Проверь VITE_API_BASE_URL и доступность backend.</p>
-    </main>
+  <div className="clean-screen">
+    <div className="cs-main w760">
+      <div className="cs-eyebrow">Ошибка</div>
+      <h1>Не удалось подключиться к API</h1>
+      <div className="error" style={{ margin: '12px 0' }}>{msg}</div>
+      <p className="cs-sub">
+        Возможно, бэкенд на бесплатном хостинге ещё просыпается — обнови страницу через минуту.
+        Если не помогает, проверь доступность backend и VITE_API_BASE_URL.
+      </p>
+    </div>
   </div>
 );
 
