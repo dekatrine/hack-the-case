@@ -5356,42 +5356,48 @@ h3 { font-family: var(--sans); font-weight: 600; font-size: 18px; letter-spacing
    PMQuest Hi-Fi — "Pim's Studio" — scoped to .pmq-hifi
    ============================================================ */
 .pmq-hifi {
-  --ph-bg:        #fcf6ec;
-  --ph-bg-warm:   #f7ecdb;
+  /* Re-skinned to the CLEAN design (was the neo-brutalist "quest" candy theme):
+     white surfaces, near-black ink, single lime accent, hairline borders +
+     soft layered shadows instead of hard 2.5px borders and offset shadows. */
+  --ph-bg:        #ffffff;
+  --ph-bg-warm:   #fafafa;
   --ph-card:      #ffffff;
-  --ph-card-sunk: #f5efe3;
+  --ph-card-sunk: #f5f5f7;
 
-  --ph-ink:       #181628;
-  --ph-ink-2:     #3a3550;
-  --ph-ink-3:     #6b6680;
-  --ph-ink-4:     #b3aec2;
+  --ph-ink:       #1d1d1f;
+  --ph-ink-2:     #6e6e73;
+  --ph-ink-3:     #86868b;
+  --ph-ink-4:     #a1a1a6;
 
-  --ph-coral:     #ff6b3d;
-  --ph-coral-2:   #ffae8a;
-  --ph-plum:      #5b4bd6;
-  --ph-plum-2:    #c9b6f0;
-  --ph-mint:      #7cd6a0;
-  --ph-mint-2:    #c9efd6;
-  --ph-sun:       #ffd23f;
-  --ph-sun-2:     #fff0ad;
-  --ph-sky:       #7ec8e3;
-  --ph-sky-2:     #c9e7f5;
-  --ph-pink:      #ff9bb8;
-  --ph-pink-2:    #ffd6e1;
+  /* accents → lime is the one brand accent; the rest collapse to
+     black (for fills/borders) + light gray (for pastel tile backgrounds),
+     matching the invert-to-black pattern used across the app. */
+  --ph-coral:     #d7ff3f;
+  --ph-coral-2:   #eaffb0;
+  --ph-plum:      #1d1d1f;
+  --ph-plum-2:    #eef0f3;
+  --ph-mint:      #d7ff3f;
+  --ph-mint-2:    #eaffb0;
+  --ph-sun:       #1d1d1f;
+  --ph-sun-2:     #f5f5f7;
+  --ph-sky:       #1d1d1f;
+  --ph-sky-2:     #eef0f3;
+  --ph-pink:      #1d1d1f;
+  --ph-pink-2:    #f5f5f7;
 
   --ph-r:   18px;
-  --ph-r-l: 26px;
+  --ph-r-l: 24px;
   --ph-r-s: 12px;
 
-  --ph-b:    2.5px solid var(--ph-ink);
-  --ph-b-th: 1.6px solid var(--ph-ink);
-  --ph-sh:    4px 4px 0 var(--ph-ink);
-  --ph-sh-l:  6px 6px 0 var(--ph-ink);
-  --ph-sh-sm: 3px 3px 0 var(--ph-ink);
+  --ph-b:    1px solid #e8e8ed;
+  --ph-b-th: 1px solid #e8e8ed;
+  --ph-sh:    0 2px 8px rgba(0, 0, 0, 0.06);
+  --ph-sh-l:  0 12px 28px -8px rgba(0, 0, 0, 0.12);
+  --ph-sh-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   background: var(--ph-bg);
   color: var(--ph-ink);
-  font-family: 'Nunito', system-ui, sans-serif;
+  font-family: -apple-system, 'Inter', system-ui, sans-serif;
   font-size: 15px; line-height: 1.5;
   min-height: 100vh;
   position: relative;
