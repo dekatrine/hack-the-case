@@ -53,21 +53,6 @@ export default function CleanHome({ onNewCase, onOpenLearn, onOpenInterview, onO
   const lastCase = savedCases.length ? savedCases[savedCases.length - 1] : null;
 
   return (
-    <div className="clean-shell">
-      <aside className="clean-sidebar">
-        <div className="clean-brand">
-          <div className="mark">H</div>
-          <div><b>Hack the Case</b><span className="sub">Тренажёр</span></div>
-        </div>
-        <SidebarNavItem icon={HomeIcon} label="Главная" active />
-        <SidebarNavItem icon={PlayIcon} label="Новый кейс" onClick={onNewCase} />
-        <SidebarNavItem icon={BookIcon} label="Уроки" onClick={onOpenLearn} />
-        <SidebarNavItem icon={MicIcon} label="Mock-интервью" onClick={onOpenInterview} />
-        <button type="button" className="clean-legacy-link" onClick={onOpenLegacy}>
-          PMQuest (классический режим) →
-        </button>
-      </aside>
-
       <main className="clean-main">
         <div className="clean-eyebrow">Привет!</div>
         <div className="clean-hero-row">
@@ -139,6 +124,5 @@ export default function CleanHome({ onNewCase, onOpenLearn, onOpenInterview, onO
           </Card>
         </section>
       </main>
-    </div>
   );
 }

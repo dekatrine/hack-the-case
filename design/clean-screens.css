@@ -7,6 +7,19 @@
    Один экран приложения = <div className="clean-screen"> …
    ============================================================ */
 
+/* Persistent app shell: fixed left sidebar + screen content column. */
+.clean-appshell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; background: var(--surface-page); }
+.clean-appmain { min-width: 0; }
+.clean-appshell .clean-screen,
+.clean-appshell .clean-learn,
+.clean-appshell .clean-legacy { min-height: calc(100vh - 0px); }
+@media (max-width: 860px) {
+  .clean-appshell { grid-template-columns: 1fr; }
+  .clean-appshell .clean-sidebar { position: static; height: auto; flex-direction: row; align-items: center; border-right: none; border-bottom: 1px solid var(--border-hairline); overflow-x: auto; gap: 8px; padding: 12px 16px; }
+  .clean-appshell .clean-brand { padding: 0 8px 0 0; }
+  .clean-appshell .clean-legacy-link { margin-top: 0; margin-left: auto; white-space: nowrap; }
+}
+
 .clean-screen { min-height: 100vh; background: var(--surface-page); color: var(--text-primary); font-family: var(--font-body-clean); font-size: 15px; }
 .clean-screen *, .clean-screen *::before, .clean-screen *::after { box-sizing: border-box; }
 
@@ -485,6 +498,7 @@
 /* hero/banner panels had orange+indigo/blue gradients → clean white w/ faint lime */
 .clean-learn .learnBanner,
 .clean-learn .notesContent,
+.clean-learn .resourcesHero,
 .clean-learn .noteArticleHero {
   background:
     radial-gradient(320px 180px at 88% 0%, rgba(215, 255, 63, 0.10), transparent 60%),

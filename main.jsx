@@ -13,6 +13,7 @@ import { Button as CleanButton } from './design/components/Button.jsx';
 import { Chip as CleanChip } from './design/components/Chip.jsx';
 import { ScoreDisplay as CleanScore } from './design/components/ScoreDisplay.jsx';
 import { ChatBubble as CleanChatBubble } from './design/components/ChatBubble.jsx';
+import { SidebarNavItem as CleanNavItem } from './design/components/SidebarNavItem.jsx';
 import './styles.css';
 import './design/clean-tokens.css';
 import './design/clean-screens.css';
@@ -138,12 +139,49 @@ const CourseContentPreview = ({ onSelectChapter, onOpenTab }) => (
 );
 
 /* ─── Shared clean-screen icons (Lucide-style, 24×24, stroke 2) ─── */
+const HomeIcon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z"/></svg>;
+const PlayIcon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><polygon points="10 8 16 12 10 16" fill="currentColor"/></svg>;
 const BookIcon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 3h13a3 3 0 0 1 3 3v15H7a3 3 0 0 1-3-3z"/><path d="M4 18h16"/></svg>;
 const MicIcon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg>;
 const ArrowIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>;
 const BackIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>;
 const ChatIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.38 8.38 0 0 1-4-1L3 21l1.5-5.5A8.38 8.38 0 0 1 4.5 11 8.38 8.38 0 0 1 13 3a8.4 8.4 0 0 1 8 8.5z"/></svg>;
 const SparkIcon = <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>;
+
+/* Общий каркас с постоянным левым меню — оборачивает все clean-экраны. */
+const SHELL_NAV = [
+  { key: 'home', label: 'Главная', icon: HomeIcon },
+  { key: 'landing', label: 'Новый кейс', icon: PlayIcon },
+  { key: 'learn', label: 'Уроки', icon: BookIcon },
+  { key: 'interview', label: 'Mock-интервью', icon: MicIcon },
+];
+function CleanShell({ active, onNav, onLegacy, children }) {
+  return (
+    <div className="clean-appshell">
+      <aside className="clean-sidebar">
+        <div className="clean-brand">
+          <div className="mark">H</div>
+          <div><b>Hack the Case</b><span className="sub">Тренажёр</span></div>
+        </div>
+        {SHELL_NAV.map((item) => (
+          <CleanNavItem
+            key={item.key}
+            icon={item.icon}
+            label={item.label}
+            active={active === item.key}
+            onClick={() => onNav(item.key)}
+          />
+        ))}
+        {onLegacy && (
+          <button type="button" className="clean-legacy-link" onClick={onLegacy}>
+            PMQuest (классический режим) →
+          </button>
+        )}
+      </aside>
+      <div className="clean-appmain">{children}</div>
+    </div>
+  );
+}
 
 const Landing = ({ tracks, onPickTrack, onOpenInterview, onOpenLearn, onOpenQuiz, onHome }) => {
   const trackTag = (id) => (id === 'product' ? 'Product Manager' : id === 'business' ? 'Consulting' : 'Case');
@@ -1943,15 +1981,21 @@ const App = () => {
     }
   };
 
-  // CleanHome — новый основной экран (clean-дизайн из Claude Design), full-page.
+  // Постоянный левый сайдбар на всех clean-экранах.
+  const shellNav = (key) => setScreen(key);
+  const openLegacy = () => setScreen('pmquest-hifi');
+
+  // CleanHome — новый основной экран (clean-дизайн из Claude Design).
   if (screen === 'home') {
     return (
-      <CleanHome
-        onNewCase={() => setScreen('landing')}
-        onOpenLearn={() => { setLearnInitialTab('Notes'); setLearnAutoReview(false); setScreen('learn'); }}
-        onOpenInterview={() => setScreen('interview')}
-        onOpenLegacy={() => setScreen('pmquest-hifi')}
-      />
+      <CleanShell active="home" onNav={shellNav} onLegacy={openLegacy}>
+        <CleanHome
+          onNewCase={() => setScreen('landing')}
+          onOpenLearn={() => { setLearnInitialTab('Notes'); setLearnAutoReview(false); setScreen('learn'); }}
+          onOpenInterview={() => setScreen('interview')}
+          onOpenLegacy={openLegacy}
+        />
+      </CleanShell>
     );
   }
 
@@ -1970,83 +2014,97 @@ const App = () => {
     setScreen('learn');
   };
 
-  // Выбор направления — clean full-page (track picker).
+  // Выбор направления — track picker.
   if (screen === 'landing') {
     return (
-      <Landing
-        tracks={config.tracks}
-        onPickTrack={(t) => { setTrack(t); setScreen('track'); }}
-        onOpenInterview={() => setScreen('interview')}
-        onOpenLearn={openLearn}
-        onOpenQuiz={() => { setQuizCategory(null); setScreen('quiz'); }}
-        onHome={() => setScreen('home')}
-      />
+      <CleanShell active="landing" onNav={shellNav} onLegacy={openLegacy}>
+        <Landing
+          tracks={config.tracks}
+          onPickTrack={(t) => { setTrack(t); setScreen('track'); }}
+          onOpenInterview={() => setScreen('interview')}
+          onOpenLearn={openLearn}
+          onOpenQuiz={() => { setQuizCategory(null); setScreen('quiz'); }}
+          onHome={() => setScreen('home')}
+        />
+      </CleanShell>
     );
   }
 
-  // Mock-интервью — clean full-page.
+  // Mock-интервью.
   if (screen === 'interview') {
-    return <InterviewTogether onBack={() => setScreen('home')} />;
+    return (
+      <CleanShell active="interview" onNav={shellNav} onLegacy={openLegacy}>
+        <InterviewTogether onBack={() => setScreen('home')} />
+      </CleanShell>
+    );
   }
 
-  // Sprint quiz (MCQ) — clean full-page.
+  // Sprint quiz (MCQ).
   if (screen === 'quiz') {
     return (
-      <QuizPage
-        category={quizCategory}
-        onSelectCategory={setQuizCategory}
-        onBack={() => { setQuizCategory(null); setScreen('home'); }}
-      />
+      <CleanShell active="landing" onNav={shellNav} onLegacy={openLegacy}>
+        <QuizPage
+          category={quizCategory}
+          onSelectCategory={setQuizCategory}
+          onBack={() => { setQuizCategory(null); setScreen('home'); }}
+        />
+      </CleanShell>
     );
   }
 
-  // Learn-хаб (уроки, банк вопросов, карточки, глоссарий) — clean full-page.
+  // Learn-хаб (уроки, банк вопросов, карточки, глоссарий).
   if (screen === 'learn') {
     return (
-      <LearningScreen
-        onBack={() => setScreen('home')}
-        initialTab={learnInitialTab}
-        autoOpenReview={learnAutoReview}
-        onOpenExam={() => {
-          const nextTrack = config.tracks.find((item) => item.id === 'business') || config.tracks[0];
-          setTrack(nextTrack);
-          setScreen('track');
-        }}
-      />
+      <CleanShell active="learn" onNav={shellNav} onLegacy={openLegacy}>
+        <LearningScreen
+          onBack={() => setScreen('home')}
+          initialTab={learnInitialTab}
+          autoOpenReview={learnAutoReview}
+          onOpenExam={() => {
+            const nextTrack = config.tracks.find((item) => item.id === 'business') || config.tracks[0];
+            setTrack(nextTrack);
+            setScreen('track');
+          }}
+        />
+      </CleanShell>
     );
   }
 
-  // Настройка кейса — clean full-page (макет QuizPage). Экран генерации тоже здесь (busy).
+  // Настройка кейса (макет QuizPage). Экран генерации тоже здесь (busy).
   if (screen === 'track' && track) {
     return (
-      <TrackDetail
-        track={track}
-        industries={config.industries}
-        difficulties={config.difficultyLevels}
-        onStart={startSimulation}
-        onBack={() => setScreen('landing')}
-        busy={busy}
-        genPreview={genPreview}
-        err={err}
-      />
+      <CleanShell active="landing" onNav={shellNav} onLegacy={openLegacy}>
+        <TrackDetail
+          track={track}
+          industries={config.industries}
+          difficulties={config.difficultyLevels}
+          onStart={startSimulation}
+          onBack={() => setScreen('landing')}
+          busy={busy}
+          genPreview={genPreview}
+          err={err}
+        />
+      </CleanShell>
     );
   }
 
-  // Решение кейса — clean full-page (макет SolvePage). Последний экран.
+  // Решение кейса (макет SolvePage).
   if (screen === 'workspace') {
     return (
-      <Workspace
-        caseText={caseText}
-        steps={config.steps}
-        track={track}
-        aiStepIds={aiStepIds}
-        aiPhases={aiPhases}
-        onEvaluate={evaluate}
-        evaluation={evaluation}
-        onBack={() => setScreen('track')}
-        busy={busy}
-        err={err}
-      />
+      <CleanShell active="landing" onNav={shellNav} onLegacy={openLegacy}>
+        <Workspace
+          caseText={caseText}
+          steps={config.steps}
+          track={track}
+          aiStepIds={aiStepIds}
+          aiPhases={aiPhases}
+          onEvaluate={evaluate}
+          evaluation={evaluation}
+          onBack={() => setScreen('track')}
+          busy={busy}
+          err={err}
+        />
+      </CleanShell>
     );
   }
 

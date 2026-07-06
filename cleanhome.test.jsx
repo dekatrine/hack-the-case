@@ -9,6 +9,6 @@ describe('CleanHome', () => {
     expect(screen.getByText('Готов разобрать кейс сегодня?')).toBeTruthy();
     expect(screen.getByText('Начать новый кейс →')).toBeTruthy();
     expect(screen.getByText('Библиотека уроков')).toBeTruthy();
-    expect(screen.getByText('PMQuest (классический режим) →')).toBeTruthy();
+    // Навигация (в т.ч. ссылка на PMQuest) теперь в общем каркасе CleanShell, а не в CleanHome.
   });
 });
