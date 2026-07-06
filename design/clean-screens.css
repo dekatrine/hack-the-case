@@ -204,12 +204,13 @@
 .clean-screen .case-fact { background: var(--surface-sunk); border-radius: var(--r-clean-sm); padding: 10px 12px; }
 .clean-screen .case-fact span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-tertiary); font-weight: 600; margin-bottom: 2px; }
 .clean-screen .case-fact strong { font-size: 13.5px; }
-.clean-screen .case-section { border-top: 1px solid var(--border-hairline); padding-top: 14px; margin-top: 14px; }
+.clean-screen .case-section { background: var(--surface-sunk); border: 1px solid var(--border-hairline); border-radius: var(--r-clean-sm); padding: 16px 18px; margin-top: 14px; }
 .clean-screen .case-section-head { display: flex; justify-content: space-between; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-tertiary); font-weight: 700; margin-bottom: 8px; }
 .clean-screen .case-emphasis { font-weight: 600; }
-.clean-screen .case-data-grid { display: grid; gap: 6px; }
-.clean-screen .case-data-point { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; padding: 6px 0; border-bottom: 1px dashed var(--border-hairline); }
-.clean-screen .case-data-point span { color: var(--text-secondary); }
+.clean-screen .case-data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.clean-screen .case-data-point { display: block; padding: 12px 14px; background: var(--surface-sunk); border: 1px solid var(--border-hairline); border-radius: var(--r-clean-sm); }
+.clean-screen .case-data-point span { display: block; margin-bottom: 4px; color: var(--text-tertiary); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.clean-screen .case-data-point strong { color: var(--text-primary); font-size: 15px; font-weight: 600; }
 
 /* learning flow + terms */
 .clean-screen .learning-flow { background: var(--surface-sunk); border-radius: var(--r-clean-sm); padding: 14px; margin: 12px 0; }
