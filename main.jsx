@@ -4052,46 +4052,32 @@ function FlashCardsContent({ chapter, onSelectChapter }) {
   );
 
   const card = cards[cardIndex];
-  const chPct = cards.length > 0 ? Math.round((cardIndex / cards.length) * 100) : 0;
 
   return (
-    <div className="fcSession">
-      <div className="fcSessionMeta">
-        <span className="fcSessionChapter">{chapter.icon} {chapter.title}</span>
-        <span className="fcSessionCounter">{cardIndex + 1} / {cards.length}</span>
-      </div>
-      <div className="fcSessionBar"><div style={{ width: `${chPct}%` }} /></div>
-
-      <div className={`fcCard${flipped ? ' flipped' : ''}`} onClick={() => setFlipped((f) => !f)}>
-        <div className="fcFront">
-          <p className="fcCardText">{card.front}</p>
-          <span className="fcHint">Spacebar / нажми чтобы перевернуть</span>
-        </div>
-        <div className="fcBack">
-          <p className="fcCardText">{card.back}</p>
-        </div>
+    <div className="cs-fc-session">
+      <div className="cs-topline">
+        <button className="cs-exit" onClick={() => onSelectChapter(null)}>← Карточки</button>
+        <span className="cs-meta">{chapter.title} · {cardIndex + 1} из {cards.length}</span>
       </div>
 
-      {flipped && (
-        <div className="fcRating">
-          <p className="fcRatingHint">Насколько хорошо ты знал ответ?</p>
-          <div className="fcRatingRow">
-            {[['again', '✗ Снова', '10 мин', 'var(--rust)'], ['hard', '~ Сложно', '45 мин', 'var(--amber)'], ['good', '✓ Хорошо', '1 день', '#60a5fa'], ['easy', '★ Легко', '4 дня', 'var(--mint)']].map(([key, label, sub, col]) => (
-              <button key={key} className="fcRatingBtn" style={{ '--col': col }} onClick={() => rate(key)}>
-                <span className="fcRatingLabel">{label}</span>
-                <span className="fcRatingInterval">{sub}</span>
-              </button>
-            ))}
-          </div>
+      <div className="cs-flip-card" onClick={() => setFlipped((f) => !f)}>
+        <CleanChip face="clean" tone="neutral">{chapter.title}</CleanChip>
+        <h2 className="cs-fc-q">{flipped ? card.back : card.front}</h2>
+        <p className="cs-fc-hint">{flipped ? 'Нажми, чтобы вернуться к вопросу' : 'Нажми (или Spacebar), чтобы перевернуть'}</p>
+      </div>
+
+      {flipped ? (
+        <div className="cs-srs-actions">
+          <button className="cs-srs-btn again" onClick={() => rate('again')}>Забыл</button>
+          <button className="cs-srs-btn hard" onClick={() => rate('hard')}>Сложно</button>
+          <button className="cs-srs-btn good" onClick={() => rate('good')}>Хорошо</button>
+          <button className="cs-srs-btn easy" onClick={() => rate('easy')}>Легко</button>
         </div>
+      ) : (
+        <p className="cs-fc-progress">Нажми на карточку, чтобы увидеть ответ</p>
       )}
-      {!flipped && <p className="aliceDim" style={{ textAlign: 'center', marginTop: 16 }}>Нажми на карточку или Spacebar чтобы увидеть ответ</p>}
 
-      <div className="fcProgressBox">
-        <div className="fcProgressBoxLabel">Spaced Repetition Progress</div>
-        <div className="fcProgressBoxBar"><div style={{ width: `${confAll}%` }} /></div>
-        <div className="fcProgressBoxSub">{confAll}% confidence · {reviewedAll}/{totalAll} карточек</div>
-      </div>
+      <p className="cs-fc-progress">{confAll}% изучено · {reviewedAll}/{totalAll} карточек</p>
     </div>
   );
 }
@@ -4220,28 +4206,26 @@ function DefinitionsContent() {
     .sort((a, b) => a.term.localeCompare(b.term));
 
   return (
-    <div className="defsContent">
-      <div className="defsHeader">
-        <input className="defsSearch" placeholder="Поиск термина…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select className="defsSelect" value={cat} onChange={(e) => setCat(e.target.value)}>
-          {cats.map((c) => <option key={c} value={c}>{c === 'all' ? 'Все категории' : c}</option>)}
-        </select>
+    <div className="cs-glossary">
+      <input className="cs-search" placeholder="Поиск термина…" value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className="cs-pills" style={{ marginBottom: 20 }}>
+        {cats.map((c) => (
+          <button key={c} type="button" className={`cs-pill${cat === c ? ' active' : ''}`} onClick={() => setCat(c)}>
+            {c === 'all' ? 'Все' : c}
+          </button>
+        ))}
       </div>
-      <div className="defsList">
-        {filtered.map((def) => {
-          const ch = PM_CHAPTERS.find((c) => c.id === def.chapter);
-          return (
-            <div key={def.term} className="defCard">
-              <div className="defCardTop">
-                <strong className="defTerm">{def.term}</strong>
-                <span className="defCat">{def.category}</span>
-              </div>
-              <p className="defText">{def.definition}</p>
-              {ch && <div className="defChapter" style={{ color: ch.color }}>{ch.icon} {ch.title}</div>}
+      <div>
+        {filtered.map((def) => (
+          <div key={def.term} className="cs-term-row">
+            <div className="name">{def.term}</div>
+            <div className="def">
+              {def.definition}
+              <span className="cs-term-cat">{def.category}</span>
             </div>
-          );
-        })}
-        {filtered.length === 0 && <p className="aliceDim">Ничего не найдено для «{search}»</p>}
+          </div>
+        ))}
+        {filtered.length === 0 && <p className="cs-sub" style={{ margin: '16px 0 0' }}>Ничего не найдено для «{search}»</p>}
       </div>
     </div>
   );
