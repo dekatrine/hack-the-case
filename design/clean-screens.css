@@ -157,6 +157,8 @@
 .cs-tile b { display: block; font-size: 15px; margin-bottom: 3px; }
 .cs-tile p { margin: 0; color: var(--text-secondary); font-size: 13px; line-height: 1.45; }
 .cs-tile .m { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; margin-top: 6px; }
+.cs-hub-group { margin-bottom: 32px; }
+.cs-hub-group:last-child { margin-bottom: 0; }
 
 /* ---- track picker cards ---- */
 .cs-track-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }

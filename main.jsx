@@ -14,6 +14,7 @@ import { Chip as CleanChip } from './design/components/Chip.jsx';
 import { ScoreDisplay as CleanScore } from './design/components/ScoreDisplay.jsx';
 import { ChatBubble as CleanChatBubble } from './design/components/ChatBubble.jsx';
 import { SidebarNavItem as CleanNavItem } from './design/components/SidebarNavItem.jsx';
+import { Card as CleanCard } from './design/components/Card.jsx';
 import './styles.css';
 import './design/clean-tokens.css';
 import './design/clean-screens.css';
@@ -2486,25 +2487,57 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
   );
 };
 
+const HubIcons = {
+  q: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.1 9a3 3 0 1 1 4.2 2.7c-.8.4-1.3 1-1.3 1.9v.4"/><circle cx="12" cy="18" r=".6" fill="currentColor"/></svg>,
+  build: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7h18M3 12h12M3 17h8"/></svg>,
+  notes: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 3h13a3 3 0 0 1 3 3v15H7a3 3 0 0 1-3-3z"/><path d="M4 18h16"/></svg>,
+  ai: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>,
+  cards: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v11"/></svg>,
+  term: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 5h16M4 12h16M4 19h10"/></svg>,
+};
+
 function ResourcesOverview({ onSelectChapter, onOpenTab, onOpenReview, onOpenExam }) {
-  const stats = getLearningStats();
+  const cardCount = Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0);
+  const groups = [
+    {
+      label: 'Практика',
+      items: [
+        { icon: HubIcons.q, title: 'Банк вопросов', desc: 'Практика с вариантами ответа и разбором от AI.', meta: `${PRACTICE_QUESTIONS.length} вопросов`, onClick: () => onOpenTab('Questionbank') },
+        { icon: HubIcons.build, title: 'Конструктор кейса', desc: 'Собери пробный кейс под конкретное интервью.', meta: 'AI-сценарий', onClick: onOpenExam },
+      ],
+    },
+    {
+      label: 'Учёба',
+      items: [
+        { icon: HubIcons.notes, title: 'Конспекты', desc: 'Теория, фреймворки и примеры сильных ответов.', meta: `${PM_CHAPTERS.length} модулей`, onClick: () => onOpenTab('Notes') },
+        { icon: HubIcons.ai, accent: true, isNew: true, title: 'AI-наставник', desc: 'Объясни тему своими словами и получи проверку.', meta: 'Review-сессия', onClick: onOpenReview },
+        { icon: HubIcons.cards, title: 'Карточки', desc: 'Активное вспоминание и интервальное повторение.', meta: `${cardCount} карточек`, onClick: () => onOpenTab('Flashcards') },
+        { icon: HubIcons.term, title: 'Ключевые термины', desc: 'Короткие определения для быстрого повторения.', meta: `${KEY_DEFINITIONS.length} терминов`, onClick: () => onOpenTab('Key Definitions') },
+      ],
+    },
+  ];
   return (
-    <div className="resourcesOverview">
-      <div className="resourcesHero">
-        <div>
-          <span className="resourcesKicker">Все ресурсы</span>
-          <h2>Case prep resources</h2>
-          <p>Полный учебный кабинет по Product Management: быстрый вход в вопросы, конспекты, карточки, термины и AI-повторение.</p>
+    <div className="cs-hub">
+      <p className="cs-sub">Всё для подготовки к продуктовому интервью в одном месте: теория, практика и разбор с AI.</p>
+      {groups.map((g) => (
+        <div className="cs-hub-group" key={g.label}>
+          <div className="cs-section-label">{g.label}</div>
+          <div className="cs-tile-grid">
+            {g.items.map((t) => (
+              <CleanCard key={t.title} face="clean" interactive onClick={t.onClick}>
+                <div className="cs-tile">
+                  <div className={`ico${t.accent ? ' accent' : ''}`}>{t.icon}</div>
+                  <div>
+                    <b>{t.title}{t.isNew && <CleanChip face="clean" tone="accent" style={{ marginLeft: 8 }}>New</CleanChip>}</b>
+                    <p>{t.desc}</p>
+                    <div className="m">{t.meta}</div>
+                  </div>
+                </div>
+              </CleanCard>
+            ))}
+          </div>
         </div>
-        <button className="btn btn-primary" onClick={onOpenReview}>AI-повторение</button>
-      </div>
-      <CasePrepMenu
-        stats={stats}
-        onOpenTab={onOpenTab}
-        onOpenReview={onOpenReview}
-        onOpenExam={onOpenExam}
-      />
-      <CourseContentPreview onSelectChapter={onSelectChapter} onOpenTab={onOpenTab} />
+      ))}
     </div>
   );
 }
