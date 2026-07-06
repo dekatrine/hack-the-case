@@ -567,6 +567,43 @@
 .clean-learn .qbAiBlock p { color: rgba(255,255,255,0.92); }
 .clean-learn .qbAiTip { color: var(--accent-primary); }
 
+/* NoteDetail callouts → clean white Card blocks (macet .callout style) */
+.clean-learn .noteArticleCallout,
+.clean-learn .noteCalloutTable,
+.clean-learn .noteCalloutFlow,
+.clean-learn .noteCalloutComparison,
+.clean-learn .noteCalloutFormula {
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--r-clean-card);
+  background: var(--c-white);
+  box-shadow: var(--shadow-clean-1);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+.clean-learn .noteArticleDefinition { border-radius: var(--r-clean-card); padding: 20px 22px; margin-bottom: 16px; box-shadow: var(--shadow-clean-1); }
+.clean-learn .noteArticleCalloutLabel,
+.clean-learn .noteCalloutTableTitle,
+.clean-learn .noteCalloutFlowTitle,
+.clean-learn .noteCalloutComparisonTitle,
+.clean-learn .noteCalloutFormulaTitle {
+  font-size: 16px; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); text-transform: none; letter-spacing: 0;
+}
+.clean-learn .noteArticleCallout ul, .clean-learn .noteArticleCallout p { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--text-secondary); }
+.clean-learn .noteArticleCallout ul { padding-left: 18px; }
+.clean-learn .noteArticleCallout li { margin-bottom: 5px; }
+/* diagram frame (venn / canvas) — macet: sunk frame inside a card */
+.clean-learn .textbookVisual, .clean-learn .productCaseCanvas { border: 1px solid var(--border-hairline); border-radius: var(--r-clean-card); background: var(--surface-sunk); padding: 28px 24px; margin-bottom: 20px; box-shadow: var(--shadow-clean-1); }
+.clean-learn .textbookVisualTitle { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-tertiary); margin-bottom: 14px; }
+/* TextbookSketch SVG had a dark grid bg (rgba(5,8,7,.46)) → clean light frame */
+.clean-learn .textbookSketch { background: var(--c-white); border-color: var(--border-hairline); border-radius: var(--r-clean-card); }
+.clean-learn .textbookSketch svg { background: linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px), var(--surface-sunk); background-size: 42px 42px; border-color: var(--border-hairline); }
+.clean-learn .textbookSketch text { fill: var(--text-primary); }
+.clean-learn .textbookSketch .sketchAccent { fill: var(--accent-primary-deep); }
+.clean-learn .textbookSketch .sketchLine, .clean-learn .textbookSketch .sketchArrow, .clean-learn .textbookSketch .sketchDashed { stroke: var(--text-tertiary); }
+.clean-learn .textbookSketch .sketchBox { fill: var(--c-white); stroke: var(--c-black); }
+.clean-learn .textbookSketch .sketchDot { fill: var(--accent-primary-deep); }
+.clean-learn .textbookSketch figcaption { color: var(--text-tertiary); font-size: 13px; }
+
 /* compact, tighter lesson text */
 .clean-learn .textbookParagraph, .clean-learn .noteArticleBody p, .clean-learn .noteArticleText p { margin: 0 0 8px; line-height: 1.5; font-size: 14.5px; }
 .clean-learn .noteArticleBody ul, .clean-learn .noteArticleBody ol, .clean-learn .textbookList { margin: 8px 0; padding-left: 20px; }
