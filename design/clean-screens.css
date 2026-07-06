@@ -246,7 +246,8 @@
    Inter, dark-brown --paper → near-black, cream bg → white/gray).
    ============================================================ */
 .clean-legacy,
-.clean-learn {
+.clean-learn,
+.clean-screen {
   min-height: 100vh;
   background: var(--surface-page);
   /* accents → lime */
@@ -272,7 +273,19 @@
 }
 /* heading accent words (italic <em>) must stay high-contrast, not lime-on-white */
 .clean-legacy h1 em, .clean-legacy h2 em, .clean-legacy h3 em,
-.clean-learn h1 em, .clean-learn h2 em, .clean-learn h3 em { color: var(--text-primary); font-style: italic; }
+.clean-learn h1 em, .clean-learn h2 em, .clean-learn h3 em,
+.clean-screen h1 em, .clean-screen h2 em, .clean-screen h3 em { color: var(--text-primary); font-style: italic; }
+
+/* After the --mint→lime remap, legacy elements that used orange for HEADINGS
+   or small LABELS would turn lime (unreadable on white). Keep headings black
+   and labels gray; only true accents (borders, active/done pills) stay lime. */
+.clean-screen .case-card h3, .clean-screen .method-panel h3,
+.clean-legacy .case-card h3, .clean-legacy .method-panel h3 { color: var(--text-primary); }
+.clean-screen .case-section-head span,
+.clean-screen .steps-rail h4,
+.clean-screen .step-block .step-meta .idx,
+.clean-screen .interviewRoundTop span,
+.clean-screen .casePrepMenuText small { color: var(--text-tertiary); }
 /* pill tabs / active + hover states used a hardcoded orange rgba tint → light lime */
 .clean-learn .learnTab.active,
 .clean-learn .learnTab:hover,
