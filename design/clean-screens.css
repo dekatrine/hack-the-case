@@ -603,6 +603,9 @@
   margin-bottom: 16px;
 }
 .clean-learn .noteArticleDefinition { border-radius: var(--r-clean-card); padding: 20px 22px; margin-bottom: 16px; box-shadow: var(--shadow-clean-1); }
+.clean-learn .noteArticleDefinition p { font-size: 15px; line-height: 1.6; font-weight: 400; color: var(--text-secondary); margin: 6px 0 0; }
+.clean-learn .noteArticleDefinition p strong { font-weight: 700; color: var(--text-primary); }
+.clean-learn .noteArticleDefinition span { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-primary-deep); }
 .clean-learn .noteArticleCalloutLabel,
 .clean-learn .noteCalloutTableTitle,
 .clean-learn .noteCalloutFlowTitle,

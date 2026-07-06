@@ -3691,12 +3691,10 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
 
           <section className="noteArticleDefinition">
             <span>Определение</span>
-            {lesson.definitionTitle && lesson.definitionTitle !== lesson.title && <strong>{lesson.definitionTitle}</strong>}
             <p>{renderTextbookText(lesson.definition)}</p>
           </section>
 
           <TextbookSketch title={`Визуальная модель: ${lesson.definitionTitle}`} chapterId={activeChapter.id} subtopicId={selectedSubtopic.id} />
-          <ProductCaseCanvas chapterId={activeChapter.id} title="Карта применения в продуктовой задаче" />
 
           <section className="noteArticleSection">
             <h3>Учебное объяснение</h3>
@@ -3766,16 +3764,6 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
           )}
 
           {lesson.visuals.map((visual) => <TextbookVisual key={visual.title} visual={visual} />)}
-          <PracticumStudyBlocks blocks={studyBlocks} />
-
-          <div className="noteArticleDiagram textbookDiagram">
-            <span>Схема применения</span>
-            <div>
-              {lesson.diagramSteps.map((item) => (
-                <strong key={item}>{item}</strong>
-              ))}
-            </div>
-          </div>
 
           <section className="noteArticleCallout example textbookExample">
             <div className="noteArticleCalloutLabel">Пример</div>
@@ -3839,19 +3827,16 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
       </div>
 
       <article className="noteArticleBody">
-        <h3>{article.introTitle}</h3>
+        <h2 className="section-h">{article.introTitle}</h2>
         <div className="noteArticleDefinition">
           <span>Определение</span>
-          <strong>{article.definitionTitle}</strong>
           <p>{renderTextbookText(article.definition)}</p>
         </div>
 
         <TextbookSketch title={`Визуальная модель: ${article.definitionTitle}`} chapterId={activeChapter.id} />
-        <ProductCaseCanvas chapterId={activeChapter.id} title="Карта применения в продуктовой задаче" />
 
-        <ol className="noteArticleList">
-          {article.bullets.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}
-        </ol>
+        {article.callouts.map((callout, index) => <NoteCallout key={callout.title || `${callout.type}-${index}`} callout={callout} />)}
+
         {article.sections.map((section) => (
           <section key={section.title} className="noteArticleSection">
             <h3>{section.title}</h3>
@@ -3860,20 +3845,6 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
             </ol>
           </section>
         ))}
-
-        {(article.visuals || []).map((visual) => <TextbookVisual key={visual.title} visual={visual} />)}
-        <PracticumStudyBlocks blocks={studyBlocks} />
-
-        <div className="noteArticleDiagram">
-          <span>{article.diagramLabel || 'Логика ответа на кейс'}</span>
-          <div>
-            {(article.diagramSteps || ['Пользователь', 'Проблема', 'Данные', 'Варианты', 'Компромисс', 'Метрика', 'Следующий тест']).map((item) => (
-              <strong key={item}>{item}</strong>
-            ))}
-          </div>
-        </div>
-
-        {article.callouts.map((callout, index) => <NoteCallout key={callout.title || `${callout.type}-${index}`} callout={callout} />)}
 
         <section className="noteArticlePractice">
           <h3>Как отработать конспект</h3>
