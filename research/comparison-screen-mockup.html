@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Маркет — Сравнение товаров (прототип)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'YS Text', 'Helvetica Neue', sans-serif;
+      background: #F5F5F5;
+      color: #1A1A1A;
+      max-width: 390px;
+      margin: 0 auto;
+      font-size: 14px;
+    }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      background: #FFCC00;
+      padding: 10px 16px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: #FFCC00;
+      padding: 8px 16px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-back {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .header-title {
+      font-size: 17px;
+      font-weight: 700;
+      flex: 1;
+    }
+    .header-share {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.08);
+      font-size: 16px;
+      cursor: pointer;
+      position: relative;
+    }
+    .header-share::after {
+      content: 'Поделиться';
+      position: absolute;
+      bottom: -20px;
+      right: -4px;
+      font-size: 9px;
+      font-weight: 600;
+      color: #1A1A1A;
+      white-space: nowrap;
+    }
+
+    /* ── TOGGLE BAR ── */
+    .toggle-bar {
+      background: #fff;
+      padding: 10px 16px;
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid #EBEBEB;
+    }
+    .toggle-btn {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .toggle-btn.active {
+      background: #FFCC00;
+      color: #1A1A1A;
+    }
+    .toggle-btn.inactive {
+      background: #F5F5F5;
+      color: #767676;
+    }
+
+    /* ── AI BANNER ── */
+    .ai-banner {
+      background: linear-gradient(135deg, #EEF2FF 0%, #F5F0FF 100%);
+      border: 1.5px solid #C7C2FF;
+      border-radius: 12px;
+      margin: 12px 16px 0;
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .ai-icon {
+      width: 32px; height: 32px;
+      background: #5B52F5;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .ai-banner-text { flex: 1; }
+    .ai-banner-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #3B36CC;
+      margin-bottom: 2px;
+    }
+    .ai-banner-sub {
+      font-size: 12px;
+      color: #5B57A8;
+      line-height: 1.4;
+    }
+    .ai-banner-btn {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 5px 12px;
+      background: #5B52F5;
+      color: white;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+
+    /* ── COMPARISON TABLE WRAPPER ── */
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 12px;
+    }
+    .compare-table {
+      display: grid;
+      grid-template-columns: 130px repeat(3, 160px);
+      min-width: calc(130px + 3 * 160px);
+    }
+
+    /* ── PRODUCT HEADERS ── */
+    .col-label {
+      position: sticky;
+      left: 0;
+      background: #F5F5F5;
+      z-index: 10;
+    }
+    .product-header {
+      background: #FFFFFF;
+      border-right: 1px solid #EBEBEB;
+      border-bottom: 2px solid #EBEBEB;
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+    }
+    .product-header:last-child { border-right: none; }
+
+    .badge-original {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: #E8F5E9;
+      color: #2E7D32;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 5px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .badge-sponsored {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: #FFF3E0;
+      color: #E65100;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 5px;
+    }
+
+    .product-image {
+      width: 90px;
+      height: 90px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #F0F0F0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      flex-shrink: 0;
+    }
+    .product-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: #1A1A1A;
+      text-align: center;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .product-price {
+      font-size: 16px;
+      font-weight: 800;
+      color: #1A1A1A;
+    }
+    .product-price-old {
+      font-size: 11px;
+      color: #999;
+      text-decoration: line-through;
+    }
+    .product-price-history {
+      font-size: 10px;
+      color: #2E7D32;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+    }
+    .product-price-history:hover { text-decoration: underline; }
+
+    /* Stars */
+    .stars-row {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .stars {
+      color: #FFCC00;
+      font-size: 11px;
+      letter-spacing: -1px;
+    }
+    .stars-count {
+      font-size: 11px;
+      font-weight: 600;
+      color: #1A1A1A;
+    }
+    .stars-total {
+      font-size: 10px;
+      color: #999;
+    }
+
+    /* Delivery chip */
+    .delivery-chip {
+      background: #E8F5E9;
+      color: #2E7D32;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 7px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .delivery-chip.slow {
+      background: #FFF3E0;
+      color: #BF360C;
+    }
+
+    /* Delete button */
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #999;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .delete-btn:hover { color: #E53935; background: #FFEBEE; }
+
+    .add-to-cart-btn {
+      width: 100%;
+      padding: 8px 6px;
+      background: #FFCC00;
+      color: #1A1A1A;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .add-to-cart-btn:hover { background: #FFD600; }
+
+    /* ── SECTION ROWS ── */
+    .section-header-row {
+      display: contents;
+    }
+    .section-header-cell {
+      background: #F5F5F5;
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #767676;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-top: 1px solid #EBEBEB;
+    }
+    .section-header-cell.span-all {
+      grid-column: 1 / -1;
+    }
+    .section-header-cell.sticky {
+      position: sticky;
+      left: 0;
+      z-index: 9;
+    }
+
+    /* ── PARAM ROW ── */
+    .param-label-cell {
+      position: sticky;
+      left: 0;
+      background: #FFFFFF;
+      z-index: 8;
+      padding: 12px 10px 12px 16px;
+      font-size: 12px;
+      color: #767676;
+      border-right: 1px solid #F0F0F0;
+      border-bottom: 1px solid #F0F0F0;
+      display: flex;
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .param-label-text {
+      font-weight: 500;
+    }
+    .param-info-btn {
+      font-size: 10px;
+      color: #5B52F5;
+      cursor: pointer;
+      text-decoration: underline dotted;
+    }
+
+    .param-value-cell {
+      background: #FFFFFF;
+      padding: 12px 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #1A1A1A;
+      border-right: 1px solid #F0F0F0;
+      border-bottom: 1px solid #F0F0F0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .param-value-cell:last-child { border-right: none; }
+    .param-value-cell.highlight {
+      background: #FFFDE7;
+      font-weight: 700;
+    }
+    .param-value-cell.empty { color: #C8C8C8; font-style: italic; font-size: 11px; }
+
+    /* ── REVIEW PHOTO ROW ── */
+    .review-photos-cell {
+      background: #FFFFFF;
+      padding: 10px;
+      border-right: 1px solid #F0F0F0;
+      border-bottom: 1px solid #F0F0F0;
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .review-photo {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      background: #F0F0F0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      border: 1px solid #EBEBEB;
+    }
+    .review-photo-more {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      background: #F5F5F5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #767676;
+      border: 1px solid #EBEBEB;
+      cursor: pointer;
+    }
+
+    /* ── AI EXPLAIN ROW ── */
+    .ai-explain-cell {
+      background: #F9F8FF;
+      padding: 10px;
+      border-right: 1px solid #E8E5FF;
+      border-bottom: 1px solid #E8E5FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ai-explain-btn {
+      background: none;
+      border: 1.5px solid #5B52F5;
+      color: #5B52F5;
+      border-radius: 20px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .ai-explain-label {
+      background: #F9F8FF;
+      padding: 10px 10px 10px 16px;
+      border-right: 1px solid #E8E5FF;
+      border-bottom: 1px solid #E8E5FF;
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: #5B52F5;
+      font-weight: 600;
+      position: sticky;
+      left: 0;
+      z-index: 8;
+    }
+
+    /* ── PRICE HISTORY POPUP ── */
+    .price-popup {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      max-width: 390px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      padding: 20px 20px 32px;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+      z-index: 200;
+      display: none;
+    }
+    .price-popup.open { display: block; }
+    .popup-handle {
+      width: 36px; height: 4px;
+      background: #E0E0E0;
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+    .popup-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .price-chart {
+      background: #F9F9F9;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .price-chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 60px;
+    }
+    .price-bar-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .price-bar {
+      width: 100%;
+      border-radius: 4px 4px 0 0;
+      min-height: 4px;
+    }
+    .price-bar-label {
+      font-size: 9px;
+      color: #999;
+      text-align: center;
+    }
+    .price-min-note {
+      font-size: 12px;
+      color: #2E7D32;
+      font-weight: 600;
+    }
+    .popup-close {
+      display: block;
+      width: 100%;
+      margin-top: 16px;
+      padding: 14px;
+      background: #FFCC00;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ── AI TOOLTIP ── */
+    .ai-tooltip {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      max-width: 390px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      padding: 20px 20px 32px;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+      z-index: 200;
+      display: none;
+    }
+    .ai-tooltip.open { display: block; }
+
+    /* ── OVERLAY ── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 150;
+      display: none;
+    }
+    .overlay.open { display: block; }
+
+    /* ── STICKY ADD BAR ── */
+    .sticky-add-bar {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      border-top: 1px solid #EBEBEB;
+      padding: 10px 16px 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      z-index: 50;
+    }
+    .sticky-add-bar-label {
+      display: none;
+    }
+
+    /* Annotation labels */
+    .annotation {
+      background: #FF6B6B;
+      color: white;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      white-space: nowrap;
+      display: inline-block;
+    }
+    .annotation.new { background: #5B52F5; }
+    .annotation.improved { background: #2E7D32; }
+
+    /* Winner chip */
+    .winner-chip {
+      background: #E8F5E9;
+      color: #2E7D32;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 6px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    /* Label header (first column, first row) */
+    .corner-cell {
+      position: sticky;
+      left: 0;
+      background: #F5F5F5;
+      z-index: 11;
+      padding: 12px 16px;
+      border-bottom: 2px solid #EBEBEB;
+      display: flex;
+      align-items: flex-end;
+    }
+    .corner-cell span {
+      font-size: 10px;
+      color: #999;
+      font-style: italic;
+    }
+
+    /* Difference highlight */
+    .diff-badge {
+      display: inline-block;
+      background: #FFF3E0;
+      color: #E65100;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 4px;
+      margin-left: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <span>9:41</span>
+  <span>📶 🔋</span>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-back">←</div>
+  <div class="header-title">Сравнение (3) <span class="annotation new" style="font-size:9px; vertical-align:middle;">NEW</span></div>
+  <!-- H17: Поделиться сравнением -->
+  <div class="header-share" onclick="showTooltip('share')">🔗</div>
+</div>
+
+<!-- TOGGLE: Все / Отличия -->
+<div class="toggle-bar">
+  <button class="toggle-btn active" onclick="switchToggle(this)">Все характеристики</button>
+  <!-- H7: Переименован переключатель -->
+  <button class="toggle-btn inactive" onclick="switchToggle(this)">✦ Только различия</button>
+</div>
+
+<!-- H15: AI-баннер «Объясни разницу» -->
+<div class="ai-banner">
+  <div class="ai-icon">✦</div>
+  <div class="ai-banner-text">
+    <div class="ai-banner-title">ИИ-анализ готов</div>
+    <div class="ai-banner-sub">Маркет изучил характеристики и отзывы — нашёл ключевые отличия.</div>
+    <button class="ai-banner-btn" onclick="showTooltip('ai-summary')">Показать разбор</button>
+  </div>
+</div>
+
+<!-- COMPARISON TABLE -->
+<div class="table-wrapper">
+  <div class="compare-table">
+
+    <!-- ═══════════════ PRODUCT HEADERS ═══════════════ -->
+    <div class="corner-cell"><span>прокрути →</span></div>
+
+    <!-- Product 1 -->
+    <div class="product-header">
+      <!-- H21: Бейдж оригинала -->
+      <div class="badge-original">✓ Оригинал</div>
+      <div class="product-image">🎧</div>
+      <div class="product-name">Sony WH-1000XM5 Беспроводные наушники</div>
+      <!-- H3: Рейтинг в шапке -->
+      <div class="stars-row">
+        <span class="stars">★★★★★</span>
+        <span class="stars-count">4.8</span>
+        <span class="stars-total">(2 341)</span>
+      </div>
+      <div class="product-price">24 990 ₽</div>
+      <div class="product-price-old">29 990 ₽</div>
+      <!-- H19: История цены -->
+      <div class="product-price-history" onclick="openPriceHistory()">
+        📉 Мин. за 30 дн: 23 500 ₽
+      </div>
+      <!-- H4: Срок доставки -->
+      <div class="delivery-chip">🚚 Завтра, 10 июля</div>
+      <div class="winner-chip">🏆 Выбор редакции</div>
+      <button class="delete-btn">✕ Убрать</button>
+    </div>
+
+    <!-- Product 2 -->
+    <div class="product-header">
+      <div class="badge-sponsored">Реклама</div>
+      <div class="product-image">🎧</div>
+      <div class="product-name">Bose QuietComfort 45 Noise Cancelling</div>
+      <div class="stars-row">
+        <span class="stars">★★★★☆</span>
+        <span class="stars-count">4.6</span>
+        <span class="stars-total">(1 089)</span>
+      </div>
+      <div class="product-price">21 500 ₽</div>
+      <div class="product-price-old"></div>
+      <div class="product-price-history" onclick="openPriceHistory()">
+        📉 Мин. за 30 дн: 21 500 ₽
+      </div>
+      <div class="delivery-chip">🚚 Послезавтра</div>
+      <div style="height:20px;"></div>
+      <button class="delete-btn">✕ Убрать</button>
+    </div>
+
+    <!-- Product 3 -->
+    <div class="product-header">
+      <div class="product-image">🎧</div>
+      <div class="product-name">Apple AirPods Max Space Gray</div>
+      <div class="stars-row">
+        <span class="stars">★★★★★</span>
+        <span class="stars-count">4.9</span>
+        <span class="stars-total">(547)</span>
+      </div>
+      <div class="product-price">45 990 ₽</div>
+      <div class="product-price-old">49 990 ₽</div>
+      <div class="product-price-history" onclick="openPriceHistory()">
+        📉 Мин. за 30 дн: 43 000 ₽
+      </div>
+      <div class="delivery-chip slow">📦 Из-за рубежа · ~14 дн</div>
+      <div style="height:20px;"></div>
+      <button class="delete-btn">✕ Убрать</button>
+    </div>
+
+    <!-- ═══════════════ SECTION: ФОТО ИЗ ОТЗЫВОВ ═══════════════ -->
+    <!-- H14: Фото из отзывов -->
+    <div class="section-header-cell sticky">Отзывы с фото <span class="annotation new">NEW</span></div>
+    <div class="section-header-cell" style="background:#F5F5F5; border-top:1px solid #EBEBEB; grid-column: 2 / -1; padding: 10px 12px; font-size: 11px; font-weight: 700; color: #767676; text-transform: uppercase; letter-spacing: 0.5px;"></div>
+
+    <div class="param-label-cell" style="font-size:11px; color: #999; font-style: italic;">реальные фото от покупателей</div>
+    <div class="review-photos-cell">
+      <div class="review-photo">👤</div>
+      <div class="review-photo">🎧</div>
+      <div class="review-photo-more">+38</div>
+    </div>
+    <div class="review-photos-cell">
+      <div class="review-photo">👤</div>
+      <div class="review-photo-more">+14</div>
+    </div>
+    <div class="review-photos-cell">
+      <div class="review-photo">👤</div>
+      <div class="review-photo">🎧</div>
+      <div class="review-photo">🎁</div>
+      <div class="review-photo-more">+22</div>
+    </div>
+
+    <!-- ═══════════════ SECTION: ОСНОВНЫЕ ХАРАКТЕРИСТИКИ ═══════════════ -->
+    <div class="section-header-cell sticky">Основные</div>
+    <div class="section-header-cell" style="background:#F5F5F5; border-top:1px solid #EBEBEB; grid-column: 2 / -1; padding: 10px 12px;"></div>
+
+    <!-- Тип подключения -->
+    <div class="param-label-cell">
+      <span class="param-label-text">Тип подключения</span>
+    </div>
+    <div class="param-value-cell">Bluetooth 5.2</div>
+    <div class="param-value-cell">Bluetooth 5.1</div>
+    <div class="param-value-cell">Bluetooth 5.0</div>
+
+    <!-- Шумоподавление -->
+    <div class="param-label-cell">
+      <span class="param-label-text">Шумоподавление<span class="diff-badge">≠</span></span>
+      <!-- H8: Тултип к характеристике -->
+      <span class="param-info-btn" onclick="showTooltip('anc-explain')">Что это? ✦</span>
+    </div>
+    <div class="param-value-cell highlight">Активное (ANC)</div>
+    <div class="param-value-cell highlight">Активное (ANC)</div>
+    <div class="param-value-cell">Активное (ANC)</div>
+
+    <!-- Время работы -->
+    <div class="param-label-cell">
+      <span class="param-label-text">Время работы<span class="diff-badge">≠</span></span>
+      <span class="param-info-btn" onclick="showTooltip('battery-explain')">Что это? ✦</span>
+    </div>
+    <div class="param-value-cell highlight">30 ч</div>
+    <div class="param-value-cell">24 ч</div>
+    <div class="param-value-cell">20 ч</div>
+
+    <!-- Вес -->
+    <div class="param-label-cell">
+      <span class="param-label-text">Вес</span>
+    </div>
+    <div class="param-value-cell">250 г</div>
+    <div class="param-value-cell">238 г</div>
+    <div class="param-value-cell">385 г</div>
+
+    <!-- Страна-производитель (H6 из узких проблем) -->
+    <div class="param-label-cell">
+      <span class="param-label-text">Страна производства<span class="diff-badge">≠</span></span>
+    </div>
+    <div class="param-value-cell">Япония 🇯🇵</div>
+    <div class="param-value-cell">Китай 🇨🇳</div>
+    <div class="param-value-cell">Вьетнам 🇻🇳</div>
+
+    <!-- ═══════════════ AI EXPLAIN ROW ═══════════════ -->
+    <!-- H15: AI объяснение параметров -->
+    <div class="ai-explain-label">✦ ИИ-объяснение</div>
+    <div class="ai-explain-cell" style="grid-column: 2 / -1; justify-content: flex-start; padding-left: 14px;">
+      <button class="ai-explain-btn" onclick="showTooltip('ai-params')">
+        ✦ Что важнее — 30 ч или 20 ч?
+      </button>
+    </div>
+
+    <!-- ═══════════════ SECTION: ДОСТАВКА И ПРОДАВЕЦ ═══════════════ -->
+    <div class="section-header-cell sticky">Доставка</div>
+    <div class="section-header-cell" style="background:#F5F5F5; border-top:1px solid #EBEBEB; grid-column: 2 / -1; padding: 10px 12px;"></div>
+
+    <!-- Срок доставки -->
+    <div class="param-label-cell">
+      <span class="param-label-text">Срок доставки</span>
+    </div>
+    <div class="param-value-cell highlight">
+      <div class="delivery-chip">Завтра</div>
+    </div>
+    <div class="param-value-cell">
+      <div class="delivery-chip">Послезавтра</div>
+    </div>
+    <div class="param-value-cell">
+      <div class="delivery-chip slow">~14 дней</div>
+    </div>
+
+    <!-- Продавец -->
+    <div class="param-label-cell">
+      <span class="param-label-text">Продавец</span>
+    </div>
+    <div class="param-value-cell" style="font-size:11px;">Sony Russia ★4.9</div>
+    <div class="param-value-cell" style="font-size:11px;">Bose Official ★4.7</div>
+    <div class="param-value-cell" style="font-size:11px; color:#E65100;">Tech Import ★3.9 ⚠</div>
+
+    <!-- Возврат -->
+    <div class="param-label-cell">
+      <span class="param-label-text">Возврат</span>
+    </div>
+    <div class="param-value-cell" style="font-size:11px; color:#2E7D32;">✓ 30 дней</div>
+    <div class="param-value-cell" style="font-size:11px; color:#2E7D32;">✓ 30 дней</div>
+    <div class="param-value-cell" style="font-size:11px; color:#E65100;">⚠ Только обмен</div>
+
+    <!-- Пошлина -->
+    <div class="param-label-cell">
+      <span class="param-label-text">Пошлина / доп. платежи</span>
+    </div>
+    <div class="param-value-cell" style="font-size:11px; color:#2E7D32;">Нет</div>
+    <div class="param-value-cell" style="font-size:11px; color:#2E7D32;">Нет</div>
+    <div class="param-value-cell" style="font-size:11px; color:#E65100;">Возможна ~15%</div>
+
+    <!-- ═══════════════ SECTION: ОТЗЫВЫ ═══════════════ -->
+    <div class="section-header-cell sticky">Мнения покупателей</div>
+    <div class="section-header-cell" style="background:#F5F5F5; border-top:1px solid #EBEBEB; grid-column: 2 / -1; padding: 10px 12px;"></div>
+
+    <!-- Рейтинг (H3) -->
+    <div class="param-label-cell">
+      <span class="param-label-text">Рейтинг</span>
+    </div>
+    <div class="param-value-cell highlight">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <span style="color:#FFCC00;font-size:14px;">★ 4.8</span>
+        <span style="font-size:10px;color:#999;">2 341 отзыв</span>
+      </div>
+    </div>
+    <div class="param-value-cell">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <span style="color:#FFCC00;font-size:14px;">★ 4.6</span>
+        <span style="font-size:10px;color:#999;">1 089 отзывов</span>
+      </div>
+    </div>
+    <div class="param-value-cell">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <span style="color:#FFCC00;font-size:14px;">★ 4.9</span>
+        <span style="font-size:10px;color:#999;">547 отзывов</span>
+      </div>
+    </div>
+
+    <!-- Главный плюс из отзывов -->
+    <div class="param-label-cell">
+      <span class="param-label-text">Чаще хвалят за</span>
+    </div>
+    <div class="param-value-cell" style="font-size:11px; color:#2E7D32;">Шумоподавление 🔇</div>
+    <div class="param-value-cell" style="font-size:11px; color:#2E7D32;">Комфорт 😌</div>
+    <div class="param-value-cell" style="font-size:11px; color:#2E7D32;">Качество звука 🎵</div>
+
+    <!-- Главный минус -->
+    <div class="param-label-cell">
+      <span class="param-label-text">Чаще жалуются на</span>
+    </div>
+    <div class="param-value-cell" style="font-size:11px; color:#E65100;">Цена 💸</div>
+    <div class="param-value-cell" style="font-size:11px; color:#E65100;">Бас 🎵</div>
+    <div class="param-value-cell" style="font-size:11px; color:#E65100;">Вес 😮</div>
+
+  </div>
+</div>
+
+<!-- ── STICKY BOTTOM: ДОБАВИТЬ В КОРЗИНУ ── -->
+<div class="sticky-add-bar">
+  <button class="add-to-cart-btn">В корзину<br><span style="font-weight:400;font-size:10px;">24 990 ₽</span></button>
+  <button class="add-to-cart-btn">В корзину<br><span style="font-weight:400;font-size:10px;">21 500 ₽</span></button>
+  <button class="add-to-cart-btn" style="background:#F5F5F5; color:#999;">Высокая цена<br><span style="font-size:10px;">45 990 ₽</span></button>
+</div>
+
+<!-- ══════════════ OVERLAYS & POPUPS ══════════════ -->
+<div class="overlay" id="overlay" onclick="closeAll()"></div>
+
+<!-- История цены -->
+<div class="price-popup" id="price-popup">
+  <div class="popup-handle"></div>
+  <div class="popup-title">История цены: Sony WH-1000XM5</div>
+  <div class="price-chart">
+    <div class="price-chart-bars">
+      <div class="price-bar-group">
+        <div class="price-bar" style="height:50px; background:#FFCC00;"></div>
+        <div class="price-bar-label">Май</div>
+      </div>
+      <div class="price-bar-group">
+        <div class="price-bar" style="height:55px; background:#FFCC00;"></div>
+        <div class="price-bar-label">Июн</div>
+      </div>
+      <div class="price-bar-group">
+        <div class="price-bar" style="height:42px; background:#4CAF50;"></div>
+        <div class="price-bar-label">Июл·мин</div>
+      </div>
+      <div class="price-bar-group">
+        <div class="price-bar" style="height:46px; background:#FFCC00;"></div>
+        <div class="price-bar-label">Сейчас</div>
+      </div>
+    </div>
+  </div>
+  <div class="price-min-note">✓ Минимум за 30 дней: 23 500 ₽ (был 7 июля)</div>
+  <p style="font-size:12px; color:#999; margin-top:6px;">Текущая цена 24 990 ₽ — на 6% выше минимума этого месяца.</p>
+  <button class="popup-close" onclick="closeAll()">Понятно</button>
+</div>
+
+<!-- AI Объяснение параметра -->
+<div class="ai-tooltip" id="ai-params">
+  <div class="popup-handle"></div>
+  <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+    <div style="width:28px;height:28px;background:#5B52F5;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;">✦</div>
+    <div style="font-size:16px;font-weight:700;">Время работы: что выбрать?</div>
+  </div>
+  <p style="font-size:14px; line-height:1.6; color:#333; margin-bottom:12px;">
+    <b>30 часов (Sony)</b> — хватит на 3–4 дня активного использования по дороге на работу и обратно, не нужно брать зарядку в поездку до 3 дней.
+  </p>
+  <p style="font-size:14px; line-height:1.6; color:#333; margin-bottom:12px;">
+    <b>20 часов (Apple)</b> — меньше, но при этом модель поддерживает быструю зарядку: 15 минут → 1,5 часа работы.
+  </p>
+  <div style="background:#E8F5E9; border-radius:8px; padding:10px 12px; font-size:13px; color:#2E7D32; font-weight:600;">
+    💡 Если часто путешествуете — Sony выгоднее. Для города — разница незначительна.
+  </div>
+  <button class="popup-close" onclick="closeAll()">Понял, спасибо</button>
+</div>
+
+<!-- AI Summary -->
+<div class="ai-tooltip" id="ai-summary">
+  <div class="popup-handle"></div>
+  <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+    <div style="width:28px;height:28px;background:#5B52F5;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;">✦</div>
+    <div style="font-size:16px;font-weight:700;">ИИ-разбор сравнения</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+    <div style="background:#F9F8FF;border-radius:10px;padding:12px;">
+      <div style="font-size:12px;font-weight:700;color:#5B52F5;margin-bottom:4px;">🏆 Лучшее шумоподавление</div>
+      <div style="font-size:13px;">Sony XM5 — по данным 2341 отзыва, покупатели чаще всего хвалят именно за ANC.</div>
+    </div>
+    <div style="background:#F9F8FF;border-radius:10px;padding:12px;">
+      <div style="font-size:12px;font-weight:700;color:#5B52F5;margin-bottom:4px;">💰 Лучшая цена/качество</div>
+      <div style="font-size:13px;">Bose QC45 — на 15% дешевле Sony при схожем уровне шумоподавления и большем комфорте.</div>
+    </div>
+    <div style="background:#FFF8E1;border-radius:10px;padding:12px;">
+      <div style="font-size:12px;font-weight:700;color:#E65100;margin-bottom:4px;">⚠ Осторожно: Apple</div>
+      <div style="font-size:13px;">Товар из-за рубежа, возможна пошлина. Только обмен — без возврата денег.</div>
+    </div>
+  </div>
+  <button class="popup-close" onclick="closeAll()">Закрыть</button>
+</div>
+
+<!-- Share popup -->
+<div class="ai-tooltip" id="share">
+  <div class="popup-handle"></div>
+  <div style="font-size:16px;font-weight:700;margin-bottom:14px;">Поделиться сравнением</div>
+  <div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;">
+      <div style="width:48px;height:48px;background:#2AABEE;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;">💬</div>
+      <span style="font-size:11px;">Telegram</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;">
+      <div style="width:48px;height:48px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;">💬</div>
+      <span style="font-size:11px;">WhatsApp</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;">
+      <div style="width:48px;height:48px;background:#F5F5F5;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;">🔗</div>
+      <span style="font-size:11px;">Скопировать</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;">
+      <div style="width:48px;height:48px;background:#FFCC00;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;">📩</div>
+      <span style="font-size:11px;">Ещё</span>
+    </div>
+  </div>
+  <div style="background:#F5F5F5;border-radius:8px;padding:10px 12px;font-size:12px;color:#767676;">
+    Ссылка будет действовать 7 дней и откроется у любого пользователя Маркета.
+  </div>
+  <button class="popup-close" onclick="closeAll()">Готово</button>
+</div>
+
+<!-- ANC Explain -->
+<div class="ai-tooltip" id="anc-explain">
+  <div class="popup-handle"></div>
+  <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+    <div style="width:28px;height:28px;background:#5B52F5;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;">✦</div>
+    <div style="font-size:16px;font-weight:700;">Что такое ANC?</div>
+  </div>
+  <p style="font-size:14px; line-height:1.6; color:#333; margin-bottom:10px;">
+    <b>Активное шумоподавление (ANC)</b> — технология, которая через микрофоны «слышит» шум вокруг и генерирует противоположную звуковую волну, нейтрализуя его.
+  </p>
+  <p style="font-size:14px; line-height:1.6; color:#333; margin-bottom:10px;">
+    Идеально для: самолётов, метро, шумных офисов. Батарея расходуется быстрее при включённом ANC.
+  </p>
+  <div style="background:#EEF2FF; border-radius:8px; padding:10px 12px; font-size:13px; color:#3B36CC;">
+    Все три модели в вашем списке имеют активное шумоподавление — это плюс.
+  </div>
+  <button class="popup-close" onclick="closeAll()">Ясно!</button>
+</div>
+
+<script>
+  function showTooltip(id) {
+    closeAll();
+    document.getElementById(id).classList.add('open');
+    document.getElementById('overlay').classList.add('open');
+  }
+  function openPriceHistory() {
+    closeAll();
+    document.getElementById('price-popup').classList.add('open');
+    document.getElementById('overlay').classList.add('open');
+  }
+  function closeAll() {
+    document.querySelectorAll('.price-popup, .ai-tooltip').forEach(el => el.classList.remove('open'));
+    document.getElementById('overlay').classList.remove('open');
+  }
+  function switchToggle(btn) {
+    document.querySelectorAll('.toggle-btn').forEach(b => {
+      b.classList.remove('active');
+      b.classList.add('inactive');
+    });
+    btn.classList.remove('inactive');
+    btn.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
