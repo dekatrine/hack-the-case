@@ -1691,12 +1691,12 @@ const InterviewTask = ({ taskText, direction, block }) => {
         theory: {},
         caseText: taskText,
         answerText,
-        userMessage: 'Дай короткую наводящую подсказку, как сильно ответить на этот раунд именно в контексте этого кейса. Не давай готовый ответ — направь мысль.',
+        userMessage: 'Дай 2–3 короткие НАПРАВЛЯЮЩИЕ подсказки (о чём подумать) для этого раунда в контексте кейса. Можешь привести 1–2 примера для ориентира, но обязательно подчеркни в конце, что это лишь примеры — кандидат должен сформулировать СВОИ вопросы своими словами и добавить ещё несколько от себя, не копируя примеры дословно.',
         chatHistory: [],
         previousAnswers: acceptedAnswers,
         trackId: direction.id,
       });
-      setHint(res.message || 'Опирайся на цель раунда и данные кейса.');
+      setHint((res.message || 'Опирайся на цель раунда и данные кейса.') + '\n\n⚠️ Это примеры-ориентиры — сформулируй свои вопросы своими словами и добавь ещё несколько.');
     } catch (e) {
       setHint('Не удалось получить подсказку: ' + e.message);
     } finally {
@@ -1704,8 +1704,23 @@ const InterviewTask = ({ taskText, direction, block }) => {
     }
   };
 
+  // Анти-копирование: считаем ответ списанным, если ≥70% значимых слов совпадают с подсказкой Pim.
+  const looksCopiedFromPim = () => {
+    if (!hint || !answerText) return false;
+    const norm = (s) => s.toLowerCase().replace(/[^0-9a-zа-яё\s]/gi, ' ').replace(/\s+/g, ' ').trim();
+    const aw = norm(answerText).split(' ').filter((w) => w.length >= 4);
+    const hw = new Set(norm(hint).split(' ').filter((w) => w.length >= 4));
+    if (aw.length < 3) return false;
+    const shared = aw.filter((w) => hw.has(w)).length;
+    return shared / aw.length >= 0.7;
+  };
+
   const checkRound = async () => {
     if (!canCheck || checking) return;
+    if (activeRound.mode !== 'choice' && looksCopiedFromPim()) {
+      setErr('Похоже, вопросы скопированы из подсказки Pim. Сформулируй их своими словами и добавь ещё несколько от себя.');
+      return;
+    }
     setChecking(true);
     setErr(null);
     try {
@@ -1731,7 +1746,6 @@ const InterviewTask = ({ taskText, direction, block }) => {
 
   const goNext = () => {
     setActiveIdx((idx) => Math.min(idx + 1, rounds.length - 1));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -1873,13 +1887,13 @@ const InterviewProgress = ({ rounds, activeIdx, reviews, progress, onPick }) => 
 
 const InterviewReview = ({ review }) => (
   <div className={`interviewReview ${review.passed ? 'passed' : 'retry'}`}>
-    <div>
+    <div className="interviewReviewHead">
       <span>{review.score ?? 'AI'}</span>
       <em>{review.passed ? 'можно двигаться дальше' : 'нужно усилить'}</em>
     </div>
-    <h4>{review.verdict}</h4>
-    <p>{review.feedback}</p>
-    {review.nextPrompt && <strong>{review.nextPrompt}</strong>}
+    <h4>{review.verdict || (review.passed ? 'Хороший ответ' : 'Нужно доработать')}</h4>
+    {review.feedback && <p>{review.feedback}</p>}
+    {review.nextPrompt && <strong>→ {review.nextPrompt}</strong>}
   </div>
 );
 

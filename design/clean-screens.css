@@ -494,9 +494,21 @@
 /* ===== Interview polish fixes ===== */
 /* AI-review used a legacy grid (86px 1fr) that squeezed long text into an
    86px column (text wrapped per word). Make it a normal block. */
-.clean-screen .interviewReview { display: block; }
-.clean-screen .interviewReview > div { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
-.clean-screen .interviewReview span { font-weight: 800; font-size: 22px; line-height: 1; }
+.clean-screen .interviewReview { display: block; padding: 22px 24px; }
+.clean-screen .interviewReviewHead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.clean-screen .interviewReview span { font-weight: 800; font-size: 26px; line-height: 1; color: var(--accent-primary); }
+.clean-screen .interviewReview.retry span { color: var(--text-primary); }
+.clean-screen .interviewReview h4 { margin: 6px 0 8px; font-size: 16px; font-weight: 700; color: #fff; }
+.clean-screen .interviewReview.retry h4 { color: var(--text-primary); }
+.clean-screen .interviewReview p { font-size: 14px; line-height: 1.6; margin: 0 0 10px; color: rgba(255,255,255,0.9); opacity: 1; }
+.clean-screen .interviewReview.retry p { color: var(--text-secondary); }
+.clean-screen .interviewReview strong { display: block; font-size: 13.5px; margin-top: 8px; color: var(--accent-primary); font-weight: 700; }
+.clean-screen .interviewReview.retry strong { color: var(--accent-primary-deep); }
+/* interview case-condition data table — readable */
+.clean-screen .interviewDataTable { font-size: 13.5px; }
+.clean-screen .interviewDataTable th, .clean-screen .interviewDataTable td { padding: 9px 11px; vertical-align: top; line-height: 1.4; }
+.clean-screen .interviewDataTable th { background: var(--surface-sunk); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-tertiary); }
+.clean-screen .interviewDataTable td { color: var(--text-primary); }
 /* selected (black) choice option: text was near-black on black → force white */
 .clean-screen .interviewChoiceList button.active span { color: #fff; }
 .clean-screen .interviewChoiceList button.active em { color: rgba(255,255,255,0.7); }

@@ -203,56 +203,79 @@ PHASE_GENERATION_SYSTEM = """Ты — методист, который под к
 
 Тебе дан текст кейса, вид интервью (product sense / product design / product execution / product strategy / product growth / profitability / market entry / pricing / growth / M&A) и грейд кандидата (junior / middle / senior).
 
-Твоя задача — собрать 5–7 фаз решения, каждая из которых содержит 2–4 sub-вопроса, на которые кандидат должен дать ответ.
+Твоя задача — собрать 8–12 фаз решения (ориентир ~10; чем сложнее и многослойнее кейс, тем больше фаз — до 12), каждая из которых содержит 3–5 sub-вопросов, на которые кандидат должен дать ответ. Разбивай крупные этапы на отдельные под-этапы, чтобы маршрут был подробным и глубоко покрывал кейс.
 
-Структура маршрута зависит от вида интервью:
+Структура маршрута зависит от вида интервью (ниже — ориентир на ~10 фаз, дроби этапы дальше при необходимости):
 
 **Product Sense / Product Design**:
-1. Clarify (понимание задачи и цели)
-2. User & JTBD (целевой пользователь, контекст, мотивация)
-3. Pain points / problem (что болит, почему сейчас)
-4. Solution & MVP (идеи, MVP, prioritization)
-5. Metrics & experiments (NSM, guardrails, как измеряем)
-6. Trade-offs & risks (что выбираем и почему, что пойдёт не так)
-7. Recommendation (final synthesis)
+1. Clarify (понимание задачи, цели, ограничений)
+2. Target user (кто пользователь, сегменты)
+3. JTBD & context (работа, которую нанимают продукт, контекст использования)
+4. Pain points (что болит, почему сейчас)
+5. Opportunity sizing (масштаб проблемы/сегмента)
+6. Ideas & solutions (варианты решений)
+7. Prioritization & MVP (что в MVP и почему)
+8. Metrics (NSM, input-метрики, guardrails)
+9. Experiments (как проверяем гипотезы)
+10. Trade-offs & risks (что выбираем, что пойдёт не так)
+11. Recommendation (final synthesis + next steps)
 
 **Product Execution / Root Cause**:
 1. Clarify (метрика, период, scope)
-2. Metric breakdown (дерево метрик, сегменты)
-3. Hypotheses (возможные причины)
-4. Validation (как проверим, какими данными)
-5. Action plan (что делаем)
-6. Monitor & risks (метрики мониторинга, риски)
+2. Metric definition (как устроена метрика)
+3. Metric breakdown (дерево метрик)
+4. Segmentation (по сегментам/платформам/гео)
+5. Internal vs external (продуктовые vs внешние причины)
+6. Hypotheses (возможные причины)
+7. Validation (как проверим, какими данными)
+8. Prioritize causes (что главное)
+9. Action plan (что делаем)
+10. Metrics & monitoring (что мониторим)
+11. Risks & recommendation
 
-**Product Strategy / Growth**:
-1. Clarify (winning aspiration, where to play)
-2. Market & competition
-3. Target segment & value prop
-4. GTM / growth levers
-5. Economics & metrics
-6. Risks & roadmap
+**Product Strategy / Growth / Monetization**:
+1. Clarify (winning aspiration, горизонт, ограничения)
+2. Market & trends (рынок, динамика)
+3. Competition (конкуренты, дифференциация)
+4. Target segment (где играем — beachhead)
+5. Value proposition (ценность для сегмента)
+6. Business/monetization model (как зарабатываем)
+7. Growth levers / GTM (каналы, рычаги роста)
+8. Unit economics (LTV/CAC, экономика)
+9. Metrics & KPIs (как измеряем успех)
+10. Roadmap (последовательность на горизонте)
+11. Risks & recommendation
 
 **Consulting Profitability**:
-1. Clarify (что упало, период)
+1. Clarify (что упало, период, масштаб)
 2. Issue tree (revenue × cost)
-3. Drivers analysis (что главное)
-4. Root cause
-5. Recommendations
-6. Risks & next steps
+3. Revenue drivers (объём × цена × микс)
+4. Cost drivers (fixed/variable)
+5. Segmentation (продукты/регионы/каналы)
+6. Quantify (где основная потеря)
+7. Root cause (почему)
+8. Options (варианты действий)
+9. Recommendation
+10. Risks & next steps
 
 **Consulting Market Entry**:
-1. Clarify (зачем заходить)
-2. Market attractiveness (TAM, рост, конкуренты)
-3. Company fit (capabilities, brand, channels)
-4. Economics (unit econ, breakeven)
-5. GTM (how to enter)
-6. Risks & recommendation
+1. Clarify (зачем заходить, критерий успеха)
+2. Market size (TAM/SAM)
+3. Market attractiveness (рост, маржа)
+4. Competition (игроки, барьеры)
+5. Company fit (capabilities, brand, каналы)
+6. Entry mode (build/buy/partner)
+7. Economics (unit econ, breakeven)
+8. GTM (как заходим)
+9. Risks
+10. Recommendation
 
-**Consulting Pricing / M&A / Growth**: подстраивайся аналогично.
+**Consulting Pricing / M&A / Growth**: подстраивайся аналогично, ~10 фаз.
 
 Принципы:
 - Каждая фаза — конкретно про этот кейс. Sub-вопросы должны ссылаться на детали кейса (цифры, сегменты, продукт), а не быть общими.
-- 2–4 sub-вопроса на фазу. Sub-вопрос — это краткий конкретный вопрос на 1-3 предложения ответа.
+- 3–5 sub-вопросов на фазу. Sub-вопрос — это краткий конкретный вопрос на 1-3 предложения ответа.
+- Всего фаз: 8–12 (стремись к ~10). Лучше подробный маршрут с под-этапами, чем 5–6 крупных фаз.
 - Грейд влияет на глубину: junior — больше структурных вопросов, senior — больше про trade-offs и stakeholder management.
 - Не дублируй sub-вопросы между фазами.
 
