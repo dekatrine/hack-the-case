@@ -303,10 +303,10 @@ def pick_steps_for_case(*, case_text: str, track_id: Optional[str], track_name: 
 MIN_PICKED_STEPS = 5
 MAX_PICKED_STEPS = 7
 
-MIN_PHASES = 5
-MAX_PHASES = 7
+MIN_PHASES = 6
+MAX_PHASES = 12
 MIN_QUESTIONS_PER_PHASE = 2
-MAX_QUESTIONS_PER_PHASE = 4
+MAX_QUESTIONS_PER_PHASE = 5
 
 INTERVIEW_TYPE_LABELS = {
     "product_sense": "Product Sense",
@@ -359,7 +359,7 @@ def generate_phases_for_case(
             PHASE_GENERATION_SYSTEM,
             prompt,
             temperature=0.3,
-            max_tokens=2000,
+            max_tokens=3800,
         )
     except RuntimeError:
         return []
