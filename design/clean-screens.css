@@ -322,6 +322,25 @@
 .clean-legacy .quizOpt.wrong .quizLetter { background: var(--semantic-danger); color: #fff; }
 .clean-legacy .quizOpt.correct .quizLetter { background: var(--accent-primary); color: var(--text-on-accent); }
 
+/* Legacy cards had a HARDCODED orange radial glow (rgba(255,122,24,...)) — not a
+   var, so the remap missed it. Retint to a faint lime glow on white (all cards
+   across the app; the whole product is clean now). */
+.quiz-cat-card, .resourceCard, .learnChapterCard, .learnSubtopicRow, .fcChapterTile,
+.defCard, .qbCard, .interviewBlock, .interviewTestCard, .interviewTaskGrid article,
+.chapter, .track-card, .subject-card, .casePrepMenuItem {
+  background:
+    radial-gradient(260px 140px at 86% 10%, rgba(215, 255, 63, 0.12), transparent 64%),
+    #ffffff;
+}
+/* quiz picker: big stat numbers were lime-on-white (invisible) → near-black;
+   category tags / small labels → readable gray. */
+.clean-legacy .quizStats span { color: var(--text-primary); }
+.clean-legacy .quiz-cat-tag,
+.clean-legacy .quizStats p,
+.clean-legacy .quizQuestionMeta span,
+.clean-legacy .resourcesKicker,
+.clean-learn .resourcesKicker { color: var(--text-tertiary); }
+
 /* evaluation card (inline in workspace) */
 .clean-screen .eval { border: 1px solid var(--border-hairline); border-radius: var(--r-clean-card); background: var(--c-white); box-shadow: var(--shadow-clean-1); padding: 24px; margin-top: 20px; }
 .clean-screen .eval pre { white-space: pre-wrap; font-family: var(--font-body-clean); font-size: 13.5px; line-height: 1.6; }
