@@ -504,6 +504,16 @@
 /* round-card top accent: rainbow (lime→amber→rust) → clean solid lime */
 .clean-screen .interviewRoundCard::before { background: var(--accent-primary); opacity: 1; }
 
+/* rounds progress: clean segmented bar (macet .rounds-row) — replaces pill "bubbles" */
+.clean-screen .cs-rounds { margin-bottom: 18px; }
+.clean-screen .cs-rounds-row { display: flex; gap: 6px; margin-bottom: 14px; }
+.clean-screen .cs-round-seg { flex: 1; height: 6px; border-radius: 999px; background: var(--c-gray-200); border: none; padding: 0; cursor: pointer; transition: background var(--dur-fast) var(--ease-standard); }
+.clean-screen .cs-round-seg:hover { background: var(--border-hairline-strong); }
+.clean-screen .cs-round-seg.now { background: var(--accent-primary); }
+.clean-screen .cs-round-seg.now:hover { background: var(--accent-primary-deep); }
+.clean-screen .cs-round-seg.done { background: var(--c-black); }
+.clean-screen .cs-round-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-tertiary); }
+
 /* multi-block answer inputs (each point / question a separate block) */
 .clean-screen .interviewBlocks { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
 .clean-screen .interviewBlockRow { display: flex; align-items: flex-start; gap: 10px; }

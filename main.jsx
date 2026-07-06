@@ -1851,19 +1851,23 @@ const InterviewTask = ({ taskText, direction, block }) => {
 };
 
 const InterviewProgress = ({ rounds, activeIdx, reviews, progress, onPick }) => (
-  <div className="interviewProgress">
-    <div className="interviewProgressBar"><i style={{ width: `${progress}%` }} /></div>
-    <div className="interviewRoundTabs">
+  <div className="cs-rounds">
+    <div className="cs-rounds-row">
       {rounds.map((round, index) => {
-        const status = reviews[round.id]?.passed ? 'done' : index === activeIdx ? 'active' : '';
+        const passed = reviews[round.id]?.passed;
+        const cls = index === activeIdx ? 'now' : (passed || index < activeIdx) ? 'done' : '';
         return (
-          <button key={round.id} className={status} onClick={() => onPick(index)}>
-            <span>{reviews[round.id]?.passed ? '✓' : index + 1}</span>
-            <em>{round.title}</em>
-          </button>
+          <button
+            key={round.id}
+            type="button"
+            className={`cs-round-seg ${cls}`}
+            onClick={() => onPick(index)}
+            aria-label={`Раунд ${index + 1}: ${round.title}`}
+          />
         );
       })}
     </div>
+    <div className="cs-round-label">Раунд {activeIdx + 1} из {rounds.length} · {rounds[activeIdx]?.title}</div>
   </div>
 );
 
