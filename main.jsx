@@ -9,6 +9,10 @@ import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from './quizData.js';
 import { PM_CHAPTERS, FLASHCARDS, PRACTICE_QUESTIONS, KEY_DEFINITIONS, LEARN_TOGETHER_CONTENT } from './courseData.js';
 import PMQuestHifi from './pmquest-hifi.jsx';
 import CleanHome from './CleanHome.jsx';
+import { Button as CleanButton } from './design/components/Button.jsx';
+import { Chip as CleanChip } from './design/components/Chip.jsx';
+import { ScoreDisplay as CleanScore } from './design/components/ScoreDisplay.jsx';
+import { ChatBubble as CleanChatBubble } from './design/components/ChatBubble.jsx';
 import './styles.css';
 import './design/clean-tokens.css';
 import './design/clean-screens.css';
@@ -298,104 +302,141 @@ const GRADES = [
   { id: 'senior', label: 'Senior', sub: '5+, strategy + leadership' },
 ];
 
-const TrackDetail = ({ track, industries, difficulties, onStart, onBack }) => {
+const SparkIcon = <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>;
+
+const TrackDetail = ({ track, industries, difficulties, onStart, onBack, busy, genPreview, err }) => {
+  const isProductTrack = track.id === 'product';
+  const interviewTypes = INTERVIEW_TYPES[track.id] || INTERVIEW_TYPES.product;
   const [industry, setIndustry] = useState(industries?.[0] || '');
   const [difficulty, setDifficulty] = useState(Object.keys(difficulties || {})[0] || '');
   const [extra, setExtra] = useState('');
-  const isProductTrack = track.id === 'product';
-  const interviewTypes = INTERVIEW_TYPES[track.id] || INTERVIEW_TYPES.product;
   const [interviewType, setInterviewType] = useState(interviewTypes[0].id);
   const [grade, setGrade] = useState('middle');
 
-  return (
-    <div className="fade-in">
-      <button className="btn btn-ghost" onClick={onBack} style={{ marginBottom: 32 }}>
-        ← Все направления
-      </button>
-      <div className="eyebrow"><span className="num">02 /</span> {track.tagline}</div>
-      <h1 className="hero" style={{ fontSize: 'clamp(40px, 6vw, 72px)' }}>{track.name}</h1>
-      <p className="hero-sub">{track.description}</p>
+  const handleStart = () => onStart(
+    isProductTrack
+      ? { industry, difficulty, extraContext: extra, trackId: track.id, interviewType, grade }
+      : { industry, difficulty, extraContext: extra, trackId: track.id }
+  );
 
-      <h2 style={{ marginTop: 48 }}>Программа</h2>
-      <div className="chapters">
-        {track.chapters.map((c) => <ChapterCard key={c.id} chapter={c} />)}
+  // Экран генерации (стриминг текста кейса) — чистый clean-стиль.
+  if (busy) {
+    return (
+      <div className="clean-screen">
+        <div className="cs-main w760">
+          <div className="cs-eyebrow">Генерация кейса</div>
+          <h1>Собираю кейс под тебя…</h1>
+          <p className="cs-sub">ИИ пишет свежий кейс и подбирает шаги решения. Обычно занимает несколько секунд.</p>
+          <div className="cs-panel">
+            <div className="cs-panel-body" style={{ whiteSpace: 'pre-wrap', minHeight: 80, marginBottom: 0 }}>
+              {genPreview || <span className="cs-g-val">Готовим условие…</span>}
+              <span className="spinner" style={{ marginLeft: 6 }} />
+            </div>
+          </div>
+        </div>
       </div>
+    );
+  }
 
-      <h2 style={{ marginTop: 64 }}>Сгенерировать кейс</h2>
-
-      {isProductTrack && (
-        <>
-          <div className="field" style={{ marginBottom: 24 }}>
-            <label>Вид интервью</label>
-            <div className="choice-grid">
-              {interviewTypes.map((opt) => (
-                <button
-                  key={opt.id}
-                  className={`choice-card${interviewType === opt.id ? ' active' : ''}`}
-                  onClick={() => setInterviewType(opt.id)}
-                  type="button"
-                >
-                  <strong>{opt.label}</strong>
-                  <small>{opt.sub}</small>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="field" style={{ marginBottom: 24 }}>
-            <label>Грейд кандидата</label>
-            <div className="choice-grid choice-grid-3">
-              {GRADES.map((opt) => (
-                <button
-                  key={opt.id}
-                  className={`choice-card${grade === opt.id ? ' active' : ''}`}
-                  onClick={() => setGrade(opt.id)}
-                  type="button"
-                >
-                  <strong>{opt.label}</strong>
-                  <small>{opt.sub}</small>
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-
-      <div className="form-grid">
-        <div className="field">
-          <label>Отрасль</label>
-          <select value={industry} onChange={(e) => setIndustry(e.target.value)}>
-            {industries.map((i) => <option key={i}>{i}</option>)}
-          </select>
+  return (
+    <div className="clean-screen">
+      <div className="cs-main w900">
+        <div className="cs-topline">
+          <button className="cs-exit" onClick={onBack}>← Выйти</button>
+          <span className="cs-meta">{track.name}</span>
         </div>
-        <div className="field">
-          <label>Сложность</label>
-          <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
-            {Object.entries(difficulties).map(([k, v]) => (
-              <option key={k} value={k}>{k} — {v}</option>
+        <div className="cs-eyebrow">Новый кейс</div>
+        <h1>Настрой параметры</h1>
+        <p className="cs-sub">ИИ сгенерирует свежий кейс под твои настройки и подберёт 5–7 шагов решения.</p>
+
+        <div className="cs-track-banner">
+          <div className="dot" />
+          <div><b>{track.name}</b><span>{track.tagline}</span></div>
+        </div>
+
+        {isProductTrack && (
+          <>
+            <section>
+              <div className="cs-section-label">Вид интервью</div>
+              <div className="cs-pills">
+                {interviewTypes.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`cs-pill${interviewType === opt.id ? ' active' : ''}`}
+                    onClick={() => setInterviewType(opt.id)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <div className="cs-section-label">Грейд кандидата</div>
+              <div className="cs-diffs">
+                {GRADES.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`cs-card-select${grade === opt.id ? ' active' : ''}`}
+                    onClick={() => setGrade(opt.id)}
+                  >
+                    <b>{opt.label}</b><span>{opt.sub}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+
+        <section>
+          <div className="cs-section-label">Индустрия</div>
+          <div className="cs-pills">
+            {industries.map((ind) => (
+              <button
+                key={ind}
+                type="button"
+                className={`cs-pill${industry === ind ? ' active' : ''}`}
+                onClick={() => setIndustry(ind)}
+              >
+                {ind}
+              </button>
             ))}
-          </select>
-        </div>
-        <div className="field full-width">
-          <label>Дополнительный контекст (опц.)</label>
+          </div>
+        </section>
+
+        <section>
+          <div className="cs-section-label">Сложность</div>
+          <div className="cs-diffs">
+            {Object.entries(difficulties).map(([k, v]) => (
+              <button
+                key={k}
+                type="button"
+                className={`cs-card-select${difficulty === k ? ' active' : ''}`}
+                onClick={() => setDifficulty(k)}
+              >
+                <b style={{ textTransform: 'capitalize' }}>{k}</b><span>{v}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <div className="cs-section-label">Дополнительный контекст (опционально)</div>
           <textarea
+            className="cs-input"
             value={extra}
             onChange={(e) => setExtra(e.target.value)}
             placeholder="Например: B2B SaaS на американском рынке, упор на retention"
           />
-        </div>
-        <div className="full-width">
-          <button
-            className="btn btn-primary"
-            onClick={() => onStart(
-              isProductTrack
-                ? { industry, difficulty, extraContext: extra, trackId: track.id, interviewType, grade }
-                : { industry, difficulty, extraContext: extra, trackId: track.id }
-            )}
-          >
-            Начать симуляцию <span className="arrow">→</span>
-          </button>
-        </div>
+        </section>
+
+        {err && <p className="cs-sub" style={{ color: 'var(--semantic-danger)' }}>{err}</p>}
+
+        <CleanButton face="clean" variant="accent" size="lg" fullWidth icon={SparkIcon} onClick={handleStart}>
+          Сгенерировать кейс →
+        </CleanButton>
       </div>
     </div>
   );
@@ -1959,6 +2000,22 @@ const App = () => {
     setScreen('learn');
   };
 
+  // Настройка кейса — clean full-page (макет QuizPage). Экран генерации тоже здесь (busy).
+  if (screen === 'track' && track) {
+    return (
+      <TrackDetail
+        track={track}
+        industries={config.industries}
+        difficulties={config.difficultyLevels}
+        onStart={startSimulation}
+        onBack={() => setScreen('landing')}
+        busy={busy}
+        genPreview={genPreview}
+        err={err}
+      />
+    );
+  }
+
   const screenLabel = { 'pmquest-hifi': 'pmquest / home', landing: 'dojo / resources', track: `exam mode / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz', interview: 'mock interview', learn: `resources / ${learnInitialTab}` }[screen];
 
   return (
@@ -1994,15 +2051,6 @@ const App = () => {
             onOpenInterview={() => setScreen('interview')}
             onOpenLearn={openLearn}
             onOpenPMQuest={() => setScreen('pmquest-hifi')}
-          />
-        )}
-        {screen === 'track' && track && (
-          <TrackDetail
-            track={track}
-            industries={config.industries}
-            difficulties={config.difficultyLevels}
-            onStart={startSimulation}
-            onBack={() => setScreen('landing')}
           />
         )}
         {screen === 'quiz' && (
