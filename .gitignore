@@ -17,3 +17,9 @@ hack-the-case-clean/
 
 # SQLite storage
 backend/data/
+
+# Personal notebooks (course homework, not product source)
+*.ipynb
+
+# Generated Word docs (regenerate via build_case_doc.py)
+*.docx
