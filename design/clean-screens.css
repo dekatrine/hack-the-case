@@ -446,6 +446,51 @@
 .clean-screen .interviewDataTable th { background: var(--surface-sunk); font-weight: 700; }
 .clean-screen .interviewList { padding-left: 18px; color: var(--text-secondary); font-size: 13.5px; line-height: 1.6; margin: 8px 0 0; }
 
+/* ===== Interview polish fixes ===== */
+/* AI-review used a legacy grid (86px 1fr) that squeezed long text into an
+   86px column (text wrapped per word). Make it a normal block. */
+.clean-screen .interviewReview { display: block; }
+.clean-screen .interviewReview > div { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.clean-screen .interviewReview span { font-weight: 800; font-size: 22px; line-height: 1; }
+/* selected (black) choice option: text was near-black on black → force white */
+.clean-screen .interviewChoiceList button.active span { color: #fff; }
+.clean-screen .interviewChoiceList button.active em { color: rgba(255,255,255,0.7); }
+.clean-screen .interviewChoiceList button:focus-visible { outline: 2px solid var(--accent-primary-deep); outline-offset: 2px; }
+/* round-card top accent: rainbow (lime→amber→rust) → clean solid lime */
+.clean-screen .interviewRoundCard::before { background: var(--accent-primary); opacity: 1; }
+
+/* multi-block answer inputs (each point / question a separate block) */
+.clean-screen .interviewBlocks { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.clean-screen .interviewBlockRow { display: flex; align-items: flex-start; gap: 10px; }
+.clean-screen .interviewBlockNum { width: 24px; height: 24px; border-radius: 50%; background: var(--c-black); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex: 0 0 auto; margin-top: 8px; }
+.clean-screen .interviewBlockRow .interviewAnswerInput { flex: 1; min-height: 60px; margin: 0; }
+.clean-screen .interviewBlockDel { flex: 0 0 auto; width: 28px; height: 28px; margin-top: 6px; border: 1px solid var(--border-hairline); border-radius: 50%; background: var(--c-white); color: var(--text-tertiary); cursor: pointer; }
+.clean-screen .interviewBlockDel:hover { border-color: var(--semantic-danger); color: var(--semantic-danger); }
+.clean-screen .interviewAddBlock { align-self: flex-start; }
+
+/* Pim — AI hint assistant */
+.clean-screen .interviewPim { margin-bottom: 14px; }
+.clean-screen .interviewPimBubble { display: flex; gap: 10px; margin-top: 10px; padding: 14px 16px; border-radius: var(--r-clean-card); background: color-mix(in srgb, var(--accent-primary) 14%, var(--c-white)); border: 1px solid color-mix(in srgb, var(--accent-primary) 40%, var(--c-white)); }
+.clean-screen .interviewPimAv { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-primary); color: var(--text-on-accent); display: flex; align-items: center; justify-content: center; font-weight: 800; flex: 0 0 auto; }
+.clean-screen .interviewPimBubble b { font-size: 13px; }
+.clean-screen .interviewPimBubble p { margin: 2px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--text-primary); }
+
+/* ===== Learn: neutralize stray blue/green/indigo hardcoded tints ===== */
+.clean-learn .learnNoteBlock--definition { background: color-mix(in srgb, var(--accent-primary) 12%, var(--c-white)); border-color: var(--accent-primary-deep); }
+.clean-learn .noteCalloutFlowStep { background: var(--surface-sunk); border-color: var(--border-hairline); color: var(--text-primary); }
+.clean-learn .noteCalloutComparisonLeft { background: color-mix(in srgb, var(--semantic-danger) 8%, var(--c-white)); border-color: color-mix(in srgb, var(--semantic-danger) 30%, var(--c-white)); }
+.clean-learn .noteCalloutComparisonRight { background: color-mix(in srgb, var(--semantic-success) 10%, var(--c-white)); border-color: color-mix(in srgb, var(--semantic-success) 30%, var(--c-white)); }
+.clean-learn .sidebarChapterHead.active { background: color-mix(in srgb, var(--accent-primary) 22%, var(--c-white)); }
+.clean-learn .reviewTopicList input { accent-color: var(--accent-primary-deep); }
+/* hero/banner panels had orange+indigo/blue gradients → clean white w/ faint lime */
+.clean-learn .learnBanner,
+.clean-learn .notesContent,
+.clean-learn .noteArticleHero {
+  background:
+    radial-gradient(320px 180px at 88% 0%, rgba(215, 255, 63, 0.10), transparent 60%),
+    #ffffff;
+}
+
 /* ---- responsive ---- */
 @media (max-width: 900px) {
   .clean-screen .interviewMotionShell, .clean-screen .interviewAgent { grid-template-columns: 1fr; }

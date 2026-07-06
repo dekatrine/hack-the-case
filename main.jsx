@@ -1579,19 +1579,25 @@ const InterviewTask = ({ taskText, direction, block }) => {
   const sections = useMemo(() => parseInterviewTask(taskText), [taskText]);
   const rounds = useMemo(() => buildInterviewRounds(sections, direction, block), [sections, direction, block]);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [answers, setAnswers] = useState({});
   const [selected, setSelected] = useState({});
+  const [blocks, setBlocks] = useState({}); // {roundId: [ответ, ...]} — отдельные блоки для текстовых раундов
   const [reviews, setReviews] = useState({});
   const [checking, setChecking] = useState(false);
   const [err, setErr] = useState(null);
+  const [hint, setHint] = useState(null); // подсказка Pim по текущему раунду
+  const [hintBusy, setHintBusy] = useState(false);
 
   useEffect(() => {
     setActiveIdx(0);
-    setAnswers({});
     setSelected({});
+    setBlocks({});
     setReviews({});
     setErr(null);
+    setHint(null);
   }, [taskText]);
+
+  // Подсказка Pim привязана к раунду — сбрасываем при переключении.
+  useEffect(() => { setHint(null); }, [activeIdx]);
 
   if (!taskText) {
     return (
@@ -1604,7 +1610,8 @@ const InterviewTask = ({ taskText, direction, block }) => {
 
   const activeRound = rounds[activeIdx];
   const review = reviews[activeRound.id];
-  const answerText = answers[activeRound.id] || '';
+  const roundBlocks = blocks[activeRound.id] || [''];
+  const answerText = activeRound.mode === 'choice' ? '' : roundBlocks.map((b) => b.trim()).filter(Boolean).join('\n\n');
   const selectedOption = activeRound.options?.find((option) => option.id === selected[activeRound.id]);
   const progress = Math.round(((activeIdx + (review?.passed ? 1 : 0)) / rounds.length) * 100);
   const canCheck =
@@ -1612,17 +1619,50 @@ const InterviewTask = ({ taskText, direction, block }) => {
       ? Boolean(selectedOption)
       : answerText.trim().length >= (activeRound.minLength || 20);
 
+  const answerOf = (round) => round.mode === 'choice'
+    ? (round.options?.find((o) => o.id === selected[round.id])?.label || '')
+    : (blocks[round.id] || []).map((b) => b.trim()).filter(Boolean).join('\n\n');
+
   const acceptedAnswers = Object.fromEntries(
-    rounds
-      .slice(0, activeIdx)
-      .map((round) => [
-        round.title,
-        round.mode === 'choice'
-          ? rounds.find((item) => item.id === round.id)?.options?.find((option) => option.id === selected[round.id])?.label || ''
-          : answers[round.id] || '',
-      ])
-      .filter(([, value]) => value)
+    rounds.slice(0, activeIdx).map((round) => [round.title, answerOf(round)]).filter(([, v]) => v)
   );
+
+  const setBlock = (i, v) => setBlocks((prev) => {
+    const arr = [...(prev[activeRound.id] || [''])]; arr[i] = v;
+    return { ...prev, [activeRound.id]: arr };
+  });
+  const addBlock = () => setBlocks((prev) => ({ ...prev, [activeRound.id]: [...(prev[activeRound.id] || ['']), ''] }));
+  const removeBlock = (i) => setBlocks((prev) => {
+    const arr = [...(prev[activeRound.id] || [''])]; arr.splice(i, 1);
+    return { ...prev, [activeRound.id]: arr.length ? arr : [''] };
+  });
+
+  // Pim — ИИ-помощник: даёт наводящую подсказку по раунду в контексте кейса (не готовый ответ).
+  const askPim = async () => {
+    if (hintBusy) return;
+    setHintBusy(true);
+    try {
+      const res = await api.coach({
+        stepId: activeRound.id,
+        stepTitle: activeRound.title,
+        stepDescription: activeRound.prompt,
+        frameworks: [],
+        caseHint: activeRound.context || '',
+        theory: {},
+        caseText: taskText,
+        answerText,
+        userMessage: 'Дай короткую наводящую подсказку, как сильно ответить на этот раунд именно в контексте этого кейса. Не давай готовый ответ — направь мысль.',
+        chatHistory: [],
+        previousAnswers: acceptedAnswers,
+        trackId: direction.id,
+      });
+      setHint(res.message || 'Опирайся на цель раунда и данные кейса.');
+    } catch (e) {
+      setHint('Не удалось получить подсказку: ' + e.message);
+    } finally {
+      setHintBusy(false);
+    }
+  };
 
   const checkRound = async () => {
     if (!canCheck || checking) return;
@@ -1702,16 +1742,27 @@ const InterviewTask = ({ taskText, direction, block }) => {
                 ))}
               </div>
             ) : (
-              <textarea
-                className="interviewAnswerInput"
-                value={answerText}
-                onChange={(e) => setAnswers((prev) => ({ ...prev, [activeRound.id]: e.target.value }))}
-                placeholder="Напиши ответ так, как сказал бы интервьюеру вслух: структурно, коротко, с опорой на условие…"
-              />
+              <div className="interviewBlocks">
+                {roundBlocks.map((val, i) => (
+                  <div className="interviewBlockRow" key={i}>
+                    <span className="interviewBlockNum">{i + 1}</span>
+                    <textarea
+                      className="interviewAnswerInput"
+                      value={val}
+                      onChange={(e) => setBlock(i, e.target.value)}
+                      placeholder="Отдельный пункт / вопрос — коротко, по делу…"
+                    />
+                    {roundBlocks.length > 1 && (
+                      <button type="button" className="interviewBlockDel" onClick={() => removeBlock(i)} aria-label="удалить пункт">✕</button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" className="btn btn-ghost interviewAddBlock" onClick={addBlock}>+ Добавить пункт</button>
+              </div>
             )}
 
             <div className="interviewExpected">
-              <span>Что проверяет AI</span>
+              <span>Что важно</span>
               <ul>
                 {activeRound.expectedSignals.slice(0, 4).map((signal) => <li key={signal}>{signal}</li>)}
               </ul>
@@ -1724,6 +1775,18 @@ const InterviewTask = ({ taskText, direction, block }) => {
               </div>
             </div>
 
+            <div className="interviewPim">
+              <button type="button" className="btn btn-ghost interviewPimBtn" onClick={askPim} disabled={hintBusy}>
+                {hintBusy ? <><span className="spinner" /> Pim думает…</> : <>💡 Спросить Pim</>}
+              </button>
+              {hint && (
+                <div className="interviewPimBubble">
+                  <span className="interviewPimAv">P</span>
+                  <div><b>Pim</b><p>{hint}</p></div>
+                </div>
+              )}
+            </div>
+
             {err && <div className="error">{err}</div>}
             {review && <InterviewReview review={review} />}
 
@@ -1732,10 +1795,10 @@ const InterviewTask = ({ taskText, direction, block }) => {
                 ← Назад
               </button>
               <button className="btn btn-primary" onClick={checkRound} disabled={!canCheck || checking}>
-                {checking ? <><span className="spinner" /> Проверяю…</> : <>Проверить AI <span className="arrow">→</span></>}
+                {checking ? <><span className="spinner" /> Проверяю…</> : <>Проверить ответ <span className="arrow">→</span></>}
               </button>
-              {review?.passed && activeIdx < rounds.length - 1 && (
-                <button className="btn btn-primary" onClick={goNext}>
+              {activeIdx < rounds.length - 1 && (
+                <button className="btn btn-ghost" onClick={goNext}>
                   Следующий раунд <span className="arrow">→</span>
                 </button>
               )}
