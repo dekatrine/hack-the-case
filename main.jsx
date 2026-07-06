@@ -200,7 +200,7 @@ const Landing = ({ tracks, onPickTrack, onOpenInterview, onOpenLearn, onOpenQuiz
 
         <section>
           <div className="cs-track-cards">
-            {tracks.map((track) => (
+            {tracks.filter((track) => track.id === 'product').map((track) => (
               <button key={track.id} className="cs-track-card" onClick={() => onPickTrack(track)}>
                 <div className="cs-tag-row"><CleanChip face="clean" tone="accent">{trackTag(track.id)}</CleanChip></div>
                 <h3>{track.name}</h3>
@@ -781,11 +781,99 @@ const buildInterviewRounds = (sections, direction, block) => {
   const criteriaSignals = getInterviewLines(criteria).slice(0, 6);
   const pushbackLines = getInterviewLines(pushback);
 
+  // Продуктовые этапы: маршрут решения разбит на отдельные раунды (аудитория,
+  // проблемы, MVP с подробными вопросами, метрики, каналы).
+  const productStages = [
+    {
+      id: 'target_user',
+      title: 'Целевая аудитория',
+      mode: 'text',
+      prompt: 'Кто целевой пользователь? Опиши сегменты и их ключевые потребности в контексте этого кейса.',
+      context: 'Сильный ответ: конкретные сегменты (а не «все»), их контекст и мотивация, primary-сегмент выделен.',
+      expectedSignals: ['Названы конкретные сегменты, а не «все пользователи».', 'Есть primary-сегмент и почему он.', 'Потребности привязаны к контексту кейса.'],
+      minLength: 70,
+    },
+    {
+      id: 'problems',
+      title: 'Проблемы и боли',
+      mode: 'text',
+      prompt: 'Какие главные проблемы/боли у этих пользователей? Какая самая приоритетная и почему?',
+      context: 'Хорошо: боли следуют из потребностей сегмента, приоритет обоснован (частота × острота), нет решения раньше времени.',
+      expectedSignals: ['Боли вытекают из потребностей целевого сегмента.', 'Есть приоритизация болей (частота/острота).', 'Не прыгаешь в решение раньше времени.'],
+      minLength: 70,
+    },
+    {
+      id: 'mvp',
+      title: 'MVP: ключевые функции',
+      mode: 'text',
+      prompt: 'Собери MVP. Какие 3–5 функций войдут в первую версию, зачем каждая и как ты их приоритизируешь? Что осознанно НЕ входит в MVP и почему?',
+      context: 'Сильный ответ: каждая функция решает конкретную боль/JTBD, есть логика приоритизации (RICE или усилия × эффект) и явный out-of-scope.',
+      expectedSignals: [
+        'Каждая функция закрывает конкретную боль/JTBD, а не «потому что круто».',
+        'Есть явная приоритизация (impact × effort / RICE).',
+        'Назван out-of-scope и почему это не в MVP.',
+        'MVP связан с целью и метрикой успеха.',
+      ],
+      minLength: 90,
+    },
+    {
+      id: 'metrics_stage',
+      title: 'Метрики успеха',
+      mode: 'text',
+      prompt: 'Какие метрики покажут, что MVP сработал? Назови North Star, input-метрики и guardrail-метрики.',
+      context: 'Хорошо: одна NSM (реализованная ценность), 2–3 input-метрики, guardrail для защиты качества/доверия.',
+      expectedSignals: ['Есть NSM, отражающая ценность (а не просто выручку).', 'Названы input-метрики, на которые команда влияет.', 'Есть guardrail-метрика.'],
+      minLength: 70,
+    },
+    {
+      id: 'gtm_stage',
+      title: 'Каналы привлечения',
+      mode: 'text',
+      prompt: 'Как приведёшь первых пользователей? Назови каналы/GTM-гипотезы и что будешь измерять по каждому.',
+      context: 'Хорошо: 2–3 приоритетных канала под сегмент, гипотезы проверяемы, есть метрика эффективности канала (CAC/конверсия).',
+      expectedSignals: ['Каналы соответствуют целевому сегменту.', 'Гипотезы проверяемы, есть метрика по каналу (CAC, конверсия).', 'Есть приоритет: с чего начать.'],
+      minLength: 70,
+    },
+  ];
+
+  const consultingStages = [
+    {
+      id: 'solution_route',
+      title: 'Маршрут решения',
+      mode: 'choice',
+      prompt: 'Какая структура ответа лучше всего подходит для этого блока?',
+      context: expected?.text || direction.summary,
+      options: [
+        { id: 'mece_route', label: 'Objective → issue tree → data/math → options → recommendation', note: 'Правильный case route.' },
+        { id: 'brainstorm', label: 'Brainstorm идей → голосование → финальный слайд', note: 'Слишком рыхло для case interview.' },
+        { id: 'ux_route', label: 'Persona → CJM → wireframes → usability', note: 'Может быть частью digital case, но не базовая консалтинговая структура.' },
+      ],
+      expectedSignals: expectedSignals.length ? expectedSignals : ['Есть логичная top-down структура.', 'Структура покрывает цель кейса.', 'Есть место для данных, расчётов и синтеза.'],
+    },
+    {
+      id: 'drivers',
+      title: 'Анализ драйверов',
+      mode: 'text',
+      prompt: 'Разбей проблему на драйверы (issue tree). Какие ветки главные и почему?',
+      context: 'Хорошо: MECE-разбиение, приоритет веток обоснован, есть гипотеза о главном драйвере.',
+      expectedSignals: ['MECE-структура без пересечений.', 'Выделен главный драйвер и почему.', 'Ветки конкретны для этого кейса.'],
+      minLength: 80,
+    },
+    {
+      id: 'options',
+      title: 'Варианты и рекомендация',
+      mode: 'text',
+      prompt: 'Какие варианты действий и какой ты рекомендуешь? Обоснуй экономикой/данными.',
+      context: 'Хорошо: 2–3 варианта, критерии сравнения, чёткая рекомендация с обоснованием.',
+      expectedSignals: ['Есть 2–3 сравнимых варианта.', 'Рекомендация обоснована цифрами/логикой.', 'Названы риски выбора.'],
+      minLength: 80,
+    },
+  ];
+
   const rounds = [
     {
       id: 'opening_move',
       title: 'Первый ход',
-      eyebrow: 'Раунд 1 · выбор',
       mode: 'choice',
       prompt: 'Интервьюер дал вводную. Что ты делаешь первым?',
       context: prompt?.text || block.prompt,
@@ -809,7 +897,6 @@ const buildInterviewRounds = (sections, direction, block) => {
     {
       id: 'clarifying_questions',
       title: 'Уточняющие вопросы',
-      eyebrow: 'Раунд 2 · написать',
       mode: 'text',
       prompt: 'Напиши 4-6 уточняющих вопросов, которые реально помогут решить этот кейс.',
       context: 'Хорошие вопросы сужают ambiguity и не звучат как анкета ради анкеты.',
@@ -822,34 +909,10 @@ const buildInterviewRounds = (sections, direction, block) => {
       ],
       minLength: 60,
     },
-    {
-      id: 'solution_route',
-      title: 'Маршрут решения',
-      eyebrow: 'Раунд 3 · выбор',
-      mode: 'choice',
-      prompt: 'Какая структура ответа лучше всего подходит для этого блока?',
-      context: expected?.text || direction.summary,
-      options: isProduct
-        ? [
-            { id: 'feature_list', label: 'Список фич → любимая фича → релиз всем', note: 'Не хватает пользователя, проблемы, метрик и проверки.' },
-            { id: 'product_loop', label: 'Goal → user/JTBD → pain → options → MVP → metrics/experiment', note: 'Правильный продуктовый маршрут.' },
-            { id: 'finance_only', label: 'P&L → затраты → ROI → сокращение бюджета', note: 'Полезно для бизнеса, но не покрывает product sense.' },
-          ]
-        : [
-            { id: 'mece_route', label: 'Objective → issue tree → data/math → options → recommendation', note: 'Правильный case route.' },
-            { id: 'brainstorm', label: 'Brainstorm идей → голосование → финальный слайд', note: 'Слишком рыхло для case interview.' },
-            { id: 'ux_route', label: 'Persona → CJM → wireframes → usability', note: 'Может быть частью digital case, но не базовая консалтинговая структура.' },
-          ],
-      expectedSignals: expectedSignals.length ? expectedSignals : [
-        'Есть логичная top-down структура.',
-        'Структура покрывает цель кейса и не смешивает причины с решениями.',
-        'Есть место для данных, расчётов и финального синтеза.',
-      ],
-    },
+    ...(isProduct ? productStages : consultingStages),
     {
       id: 'data_move',
       title: 'Работа с данными',
-      eyebrow: 'Раунд 4 · написать',
       mode: 'text',
       prompt: 'Посмотри на данные. Какой первый инсайт или расчёт ты озвучишь интервьюеру?',
       context: data?.text || 'Данных мало: явно назови, каких чисел не хватает, и предложи proxy-допущение.',
@@ -865,7 +928,6 @@ const buildInterviewRounds = (sections, direction, block) => {
     {
       id: 'pushback_synthesis',
       title: 'Pushback и синтез',
-      eyebrow: 'Раунд 5 · написать',
       mode: 'text',
       prompt: pushbackLines[0] || 'Интервьюер просит финальный ответ. Что рекомендуешь и почему?',
       context: pushbackLines.slice(1).join('\n') || 'Ответ должен звучать top-down: рекомендация, 2-3 доказательства, риски и next step.',
@@ -878,8 +940,9 @@ const buildInterviewRounds = (sections, direction, block) => {
       minLength: 90,
     },
   ];
-  return rounds.map((round) => ({
+  return rounds.map((round, i) => ({
     ...round,
+    eyebrow: `Раунд ${i + 1} · ${round.mode === 'choice' ? 'выбор' : 'написать'}`,
     followups: getInterviewFollowups(block.id, round.id, direction.id),
   }));
 };
@@ -1535,7 +1598,7 @@ const InterviewTogether = ({ onBack }) => {
             строит структуру, работает с данными, выдерживает pushback и приземляет рекомендацию.
           </p>
           <div className="directionSwitch" role="tablist" aria-label="Interview direction">
-            {INTERVIEW_DIRECTIONS.map((item) => (
+            {INTERVIEW_DIRECTIONS.filter((item) => item.id === 'product').map((item) => (
               <button
                 key={item.id}
                 className={item.id === directionId ? 'active' : ''}
@@ -1780,7 +1843,13 @@ const InterviewTask = ({ taskText, direction, block }) => {
             </div>
             <h3>{activeRound.title}</h3>
             <p className="interviewRoundPrompt">{activeRound.prompt}</p>
-            {activeRound.context && <div className="interviewRoundContext">{activeRound.context}</div>}
+            {activeRound.context && (
+              <div className="interviewRoundContext">
+                {/^\s*\|.*\|/m.test(activeRound.context)
+                  ? <InterviewSectionBody section={{ text: activeRound.context }} data />
+                  : activeRound.context}
+              </div>
+            )}
 
             {activeRound.mode === 'choice' ? (
               <div className="interviewChoiceList">
