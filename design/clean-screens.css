@@ -286,6 +286,11 @@
   color: var(--text-primary);
 }
 .clean-learn .learnTab.active { color: var(--text-primary); border-bottom-color: var(--accent-primary-deep); }
+/* definition/callout box was hardcoded pink → light lime */
+.clean-learn .noteArticleDefinition, .clean-learn .noteArticleCallout {
+  background: color-mix(in srgb, var(--accent-primary) 14%, var(--c-white));
+  border-color: color-mix(in srgb, var(--accent-primary) 45%, var(--c-white));
+}
 
 /* The legacy "revision dojo" theme paints these cards dark (rgba(5,8,7,.52)).
    Force clean white surfaces inside the clean wrappers (quiz has no learnLight). */

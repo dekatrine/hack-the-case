@@ -1,6 +1,47 @@
 # DESIGN.md — Hack the Case
 
-## Vision
+> **CURRENT CANONICAL DESIGN (2026-07): "Clean" — monochrome + lime.**
+> The whole app (and the PMQuest hi-fi prototype) is skinned in the Clean
+> design imported from Claude Design (project `4766773e`). The earlier
+> orange/cream "editorial" look documented further down is **archived**.
+
+## Clean design system (source of truth)
+
+- **Palette:** near-black `#1d1d1f`, white, cool grays (`#f5f5f7` sunk,
+  `#e8e8ed` hairline) + a **single lime accent `#d7ff3f`** (`#c2eb2a` deep),
+  used sparingly for CTAs / tags / active fills / avatars. Semantic:
+  danger `#ff3b30`, warning `#ff9f0a`, success `#34c759`.
+- **Type:** Inter / system font (`-apple-system, 'Inter', system-ui`). No serif.
+- **Depth:** soft layered shadows (`--shadow-clean-1/2/3`), frosted glass
+  (`--blur-material`) only on sticky/floating chrome. No hard borders.
+- **Radii:** cards `22px`, controls `12px`, pills `999px`.
+- **Selection pattern:** selected/active = **invert to black** (white text),
+  not a colored ring.
+
+### Where it lives
+- `design/clean-tokens.css` — token `:root` block + `CleanHome` layout classes.
+- `design/clean-screens.css` — shared page classes (prefixed `cs-`, scoped
+  under `.clean-screen`) + scoped recolor overrides for legacy classes, plus
+  `.clean-legacy` / `.clean-learn` wrappers that **remap legacy CSS vars**
+  (`--mint`→lime, `--paper`→near-black, `--serif`→Inter, cream→white) so large
+  legacy sections (Learn, quiz) recolor at once.
+- `design/components/*` — 13 clean React components (`Button`, `Card`, `Chip`,
+  `ProgressBar`, `ScoreDisplay`, `ChatBubble`, `StatRing`, `StepRailItem`, …),
+  used with `face="clean"`.
+- `pmquest-hifi.jsx` — recolored via the `.pmq-hifi { --ph-* }` token block in
+  `styles.css`.
+
+### How screens are built
+Each screen early-returns as a full clean page from `App` (no shared legacy
+shell/Topbar). New screens use `cs-` classes + `design/components`; large
+legacy screens keep their markup and are recolored via the var-remap wrappers.
+`styles.css` still holds the legacy classes (now recolored) — most are still
+referenced, so don't bulk-delete; shared names like `.topbar` are used by
+PMQuest.
+
+---
+
+## Vision (original orange iteration — archived)
 
 Переделать интерфейс из "учебного инструмента с CSS" в **продукт, который хочется открывать**. Референсы: Brilliant, Uxcel, Deepstash — чистые, карточные, с ощущением прогресса. Пользователь должен чувствовать, что растёт.
 
