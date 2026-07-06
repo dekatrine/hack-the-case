@@ -496,7 +496,44 @@
 .clean-learn .noteCalloutComparisonRight { background: color-mix(in srgb, var(--semantic-success) 10%, var(--c-white)); border-color: color-mix(in srgb, var(--semantic-success) 30%, var(--c-white)); }
 .clean-learn .sidebarChapterHead.active { background: color-mix(in srgb, var(--accent-primary) 22%, var(--c-white)); }
 .clean-learn .reviewTopicList input { accent-color: var(--accent-primary-deep); }
+
+/* ProductCaseCanvas SVG had NO css → default black rects with invisible labels */
+.clean-learn .productCaseCanvas svg { width: 100%; height: auto; }
+.clean-learn .productCaseCanvas figcaption { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-tertiary); font-weight: 700; margin-bottom: 10px; }
+.clean-learn .canvasNode { fill: var(--surface-sunk); stroke: var(--c-black); stroke-width: 1.5; }
+.clean-learn .productCaseCanvas text { fill: var(--text-primary); font-size: 13px; font-weight: 600; font-family: var(--font-body-clean); }
+.clean-learn .canvasSpine, .clean-learn .canvasConnector { stroke: var(--border-hairline-strong); stroke-width: 1.5; fill: none; }
+
+/* Venn "три круга": orange circles → soft lime; center box keeps dark+lime */
+.clean-learn .vennCircle { border-color: color-mix(in srgb, var(--accent-primary) 45%, var(--c-white)); background: color-mix(in srgb, var(--accent-primary) 12%, var(--c-white)); }
+.clean-learn .vennCircle strong { color: var(--text-primary); }
+.clean-learn .vennCircle span { color: var(--text-secondary); }
+.clean-learn .vennCenter { background: var(--c-black); border-color: var(--c-black); color: var(--accent-primary); }
+
+/* active subtopic in course sidebar: peach → light lime, name black */
+.clean-learn .sidebarSubtopic.active { background: color-mix(in srgb, var(--accent-primary) 20%, var(--c-white)); border-color: color-mix(in srgb, var(--accent-primary) 45%, var(--c-white)); }
+.clean-learn .sidebarSubtopic.active .sidebarSubName { color: var(--text-primary); }
+.clean-learn .sidebarSubtopic.active .sidebarSubDot { background: var(--accent-primary-deep); border-color: var(--accent-primary-deep); }
+
+/* course sections raised to sidebar level: chapters are a top-aligned left column */
+.clean-learn .learnLayout--top { padding: 28px 32px 60px; gap: 28px; align-items: start; }
+.clean-learn .learnLayout--top .learnSidebar { position: sticky; top: 20px; max-height: calc(100vh - 40px); overflow-y: auto; }
+.clean-learn .learnLayout--top .learnScreenHeader { margin-bottom: 18px; }
+.clean-learn .learnLayout--top .learnTabBar { margin-bottom: 20px; }
+@media (max-width: 860px) {
+  .clean-learn .learnLayout--top { grid-template-columns: 1fr; padding: 20px 18px 60px; }
+  .clean-learn .learnLayout--top .learnSidebar { position: static; max-height: none; }
+}
+
+/* compact, tighter lesson text */
+.clean-learn .textbookParagraph, .clean-learn .noteArticleBody p, .clean-learn .noteArticleText p { margin: 0 0 8px; line-height: 1.5; font-size: 14.5px; }
+.clean-learn .noteArticleBody ul, .clean-learn .noteArticleBody ol, .clean-learn .textbookList { margin: 8px 0; padding-left: 20px; }
+.clean-learn .noteArticleBody li, .clean-learn .textbookList li { margin-bottom: 5px; line-height: 1.45; }
 /* hero/banner panels had orange+indigo/blue gradients → clean white w/ faint lime */
+.clean-learn .learnScreenHeader {
+  background: radial-gradient(320px 180px at 92% 0%, rgba(215, 255, 63, 0.12), transparent 60%), #ffffff;
+  border-color: var(--border-hairline);
+}
 .clean-learn .learnBanner,
 .clean-learn .notesContent,
 .clean-learn .resourcesHero,

@@ -1937,6 +1937,9 @@ const App = () => {
     api.config().then(setConfig).catch((e) => setErr(e.message));
   }, []);
 
+  // При переходе на новый экран — прокрутка в начало.
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'auto' }); }, [screen]);
+
   const startSimulation = async (params) => {
     setBusy(true);
     setErr(null);
@@ -2432,6 +2435,9 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
     if (autoOpenReview) setReviewOpen(true);
   }, [autoOpenReview]);
 
+  // При открытии другого урока/вкладки — прокрутка в начало.
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'auto' }); }, [activeTab, selectedChapter, selectedSubtopic]);
+
   const selectChapter = useCallback((chapter, subtopic = null) => {
     setSelectedChapter(chapter);
     setSelectedSubtopic(subtopic);
@@ -2439,25 +2445,7 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
 
   return (
     <div className="clean-learn shell--learnLight learnScreen fade-in">
-      <div className="learnScreenHeader">
-        <button className="btn btn-ghost" onClick={onBack}>← Главная</button>
-        <div>
-          <div className="eyebrow"><span className="num">02 /</span> Resource dojo</div>
-          <h1 className="learnScreenTitle">Case prep <em>resources</em></h1>
-          <p className="learnScreenSub">{PM_CHAPTERS.length} модулей · {Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0)} карточек · {PRACTICE_QUESTIONS.length} вопросов · {KEY_DEFINITIONS.length} терминов</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => setReviewOpen(true)}>
-          AI-повторение <span className="arrow">→</span>
-        </button>
-      </div>
-
-      <div className="learnTabBar">
-        {LEARN_TABS.map((t) => (
-          <button key={t} className={`learnTab${activeTab === t ? ' active' : ''}`} onClick={() => { setActiveTab(t); setSelectedChapter(null); setSelectedSubtopic(null); }}>{LEARN_TAB_LABELS[t] || t}</button>
-        ))}
-      </div>
-
-      <div className="learnLayout">
+      <div className="learnLayout learnLayout--top">
         <LearnSidebar
           activeTab={activeTab}
           selectedChapter={selectedChapter}
@@ -2468,6 +2456,24 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
           }}
         />
         <div className="learnMain">
+          <div className="learnScreenHeader">
+            <button className="btn btn-ghost" onClick={onBack}>← Главная</button>
+            <div>
+              <div className="eyebrow"><span className="num">02 /</span> Resource dojo</div>
+              <h1 className="learnScreenTitle">Case prep <em>resources</em></h1>
+              <p className="learnScreenSub">{PM_CHAPTERS.length} модулей · {Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0)} карточек · {PRACTICE_QUESTIONS.length} вопросов · {KEY_DEFINITIONS.length} терминов</p>
+            </div>
+            <button className="btn btn-primary" onClick={() => setReviewOpen(true)}>
+              AI-повторение <span className="arrow">→</span>
+            </button>
+          </div>
+
+          <div className="learnTabBar">
+            {LEARN_TABS.map((t) => (
+              <button key={t} className={`learnTab${activeTab === t ? ' active' : ''}`} onClick={() => { setActiveTab(t); setSelectedChapter(null); setSelectedSubtopic(null); }}>{LEARN_TAB_LABELS[t] || t}</button>
+            ))}
+          </div>
+
           {activeTab === 'All Resources' && <ResourcesOverview onSelectChapter={(chapter) => selectChapter(chapter)} onOpenTab={setActiveTab} onOpenReview={() => setReviewOpen(true)} onOpenExam={onOpenExam} />}
           {activeTab === 'Notes' && <NotesContent chapter={selectedChapter} selectedSubtopic={selectedSubtopic} onSelectChapter={selectChapter} />}
           {activeTab === 'Questionbank' && <QuestionBankContent chapter={selectedChapter} />}
