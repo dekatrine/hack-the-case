@@ -18,19 +18,6 @@ import './design/clean-tokens.css';
 import './design/clean-screens.css';
 
 /* ───────────────────────────── Topbar ─────────────────────────────── */
-const Topbar = ({ onHome, screen }) => (
-  <header className="topbar">
-    <div className="brand" onClick={onHome} style={{ cursor: 'pointer' }}>
-      <span className="brand-mark">case <em>dojo</em></span>
-      <span className="brand-tag">ai case club</span>
-    </div>
-    <div className="topbar-meta">
-      <span><span className="dot" />ai mentor online</span>
-      <span>{screen}</span>
-    </div>
-  </header>
-);
-
 /* ──────────────────────────── Landing ─────────────────────────────── */
 const getLearningStats = () => ({
   chapters: PM_CHAPTERS.length,
@@ -211,27 +198,6 @@ const Landing = ({ tracks, onPickTrack, onOpenInterview, onOpenLearn, onOpenQuiz
   );
 };
 
-const TrackCard = ({ track, idx, onPick }) => {
-  const onMove = (e) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
-    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
-  };
-  return (
-    <button className="track-card" onClick={onPick} onMouseMove={onMove}>
-      <span className="num">0{idx}</span>
-      <span className="tag">{track.id === 'product' ? 'Product · Interview' : 'Strategy · Consulting'}</span>
-      <h3>{track.name}</h3>
-      <p className="tagline">{track.tagline}</p>
-      <p className="desc">{track.description}</p>
-      <div className="meta">
-        <span>{track.duration}</span>
-        <span>{track.chapters.length} chapters</span>
-      </div>
-    </button>
-  );
-};
-
 /* ──────────────────────────── Track detail ─────────────────────────── */
 const INTERVIEW_TYPES = {
   product: [
@@ -393,24 +359,6 @@ const TrackDetail = ({ track, industries, difficulties, onStart, onBack, busy, g
     </div>
   );
 };
-
-const ChapterCard = ({ chapter }) => (
-  <div className="chapter">
-    <div className="circle">{chapter.circle}</div>
-    <h4>{chapter.title}</h4>
-    <p>{chapter.summary}</p>
-    {chapter.definition && <p className="definition">{chapter.definition}</p>}
-    <div className="skills">
-      {(chapter.skills || []).map((s) => <span key={s} className="skill">{s}</span>)}
-    </div>
-    {chapter.methodMaterials?.length > 0 && (
-      <ul className="chapter-methods">
-        {chapter.methodMaterials.slice(0, 3).map((item) => <li key={item}>{item}</li>)}
-      </ul>
-    )}
-    <div className="outcome">{chapter.outcome}</div>
-  </div>
-);
 
 const getTrackSteps = (track, steps, overrideIds = null) => {
   const stepById = new Map(steps.map((step) => [step.id, step]));
@@ -940,7 +888,7 @@ const MobileStepStrip = ({ steps, activeIdx, answers, onPick }) => {
 };
 
 /* ──────────────────────────── Workspace ─────────────────────────────── */
-const Workspace = ({ caseText, steps, track, aiStepIds, aiPhases, onEvaluate, evaluation, onBack }) => {
+const Workspace = ({ caseText, steps, track, aiStepIds, aiPhases, onEvaluate, evaluation, onBack, busy, err }) => {
   const [activeIdx, setActiveIdx] = useState(0);
   const [answers, setAnswers] = useState({});
   const [coachOpen, setCoachOpen] = useState(false);
@@ -977,6 +925,13 @@ const Workspace = ({ caseText, steps, track, aiStepIds, aiPhases, onEvaluate, ev
         <button className="cs-exit" onClick={onBack}>← Изменить параметры</button>
         <span className="cs-meta">{track?.name || 'Кейс'}</span>
       </div>
+
+      {busy && (
+        <div className="cs-panel" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <span className="spinner" /> Анализирую решение…
+        </div>
+      )}
+      {err && <p className="cs-sub" style={{ color: 'var(--semantic-danger)', marginBottom: 16 }}>{err}</p>}
 
       <MobileStepStrip steps={trackSteps} activeIdx={activeIdx} answers={answers} onPick={setActiveIdx} />
 
@@ -2014,48 +1969,25 @@ const App = () => {
     );
   }
 
-  const screenLabel = { 'pmquest-hifi': 'pmquest / home', landing: 'dojo / resources', track: `exam mode / ${track?.id}`, workspace: 'workspace / live', quiz: 'practice / quiz', interview: 'mock interview', learn: `resources / ${learnInitialTab}` }[screen];
+  // Решение кейса — clean full-page (макет SolvePage). Последний экран.
+  if (screen === 'workspace') {
+    return (
+      <Workspace
+        caseText={caseText}
+        steps={config.steps}
+        track={track}
+        aiStepIds={aiStepIds}
+        aiPhases={aiPhases}
+        onEvaluate={evaluate}
+        evaluation={evaluation}
+        onBack={() => setScreen('track')}
+        busy={busy}
+        err={err}
+      />
+    );
+  }
 
-  return (
-    <div className="shell">
-      <Topbar onHome={() => setScreen('home')} screen={screenLabel} />
-      <main className="main">
-        {busy && <BusyBanner screen={screen} />}
-        {busy && genPreview && (
-          <div
-            style={{
-              margin: '12px 0',
-              padding: '14px 16px',
-              border: '1px dashed var(--ink, #222)',
-              borderRadius: 12,
-              whiteSpace: 'pre-wrap',
-              fontSize: 14,
-              lineHeight: 1.5,
-              opacity: 0.85,
-              maxHeight: 320,
-              overflowY: 'auto',
-            }}
-          >
-            {genPreview}
-            <span className="spinner" style={{ marginLeft: 6 }} />
-          </div>
-        )}
-        {err && <div className="error">{err}</div>}
-        {screen === 'workspace' && (
-          <Workspace
-            caseText={caseText}
-            steps={config.steps}
-            track={track}
-            aiStepIds={aiStepIds}
-            aiPhases={aiPhases}
-            onEvaluate={evaluate}
-            evaluation={evaluation}
-            onBack={() => setScreen('track')}
-          />
-        )}
-      </main>
-    </div>
-  );
+  return null; // все экраны отрисованы через early-return выше
 };
 
 const Loading = () => (
@@ -2075,18 +2007,6 @@ const FullErr = ({ msg }) => (
       <div className="error">{msg}</div>
       <p style={{ color: 'var(--paper-dim)' }}>Проверь VITE_API_BASE_URL и доступность backend.</p>
     </main>
-  </div>
-);
-
-const BusyBanner = ({ screen }) => (
-  <div style={{
-    position: 'fixed', top: 70, right: 32, zIndex: 20,
-    padding: '10px 16px', border: '1px solid var(--hair-strong)', borderRadius: 999,
-    background: 'rgba(11,13,12,0.92)', backdropFilter: 'blur(6px)',
-    fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
-    display: 'flex', gap: 10, alignItems: 'center', color: 'var(--mint)',
-  }}>
-    <span className="spinner" /> {screen === 'workspace' ? 'analyzing…' : 'generating case…'}
   </div>
 );
 
