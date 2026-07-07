@@ -843,6 +843,17 @@
   font-weight: 700;
 }
 
+.clean-learn .noteArticle--detail .noteArticleCallout ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 21px;
+}
+
+.clean-learn .noteArticle--detail .noteArticleCallout li::marker {
+  color: var(--accent-primary-deep);
+}
+
 .clean-learn .noteArticle--detail .textbookSketch {
   margin: 0 0 2px;
   padding: 16px;
@@ -1039,6 +1050,17 @@
   gap: 8px;
   margin: 4px 0 0;
   padding-left: 22px;
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleCallout ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 21px;
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleCallout li::marker {
+  color: var(--accent-primary-deep);
 }
 
 .clean-learn .noteArticle:not(.noteArticle--detail) .textbookSketch,

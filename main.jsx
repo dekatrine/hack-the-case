@@ -3384,6 +3384,32 @@ const renderTextbookText = (value) => {
   });
 };
 
+const splitCalloutTextToBullets = (value = '') => {
+  const text = sanitizeTextbookText(value).replace(/\s+/g, ' ').trim();
+  if (!text) return [];
+
+  const colonChunks = text
+    .split(/(?=(?:[А-ЯЁA-Z][^:.!?]{2,70}:))/g)
+    .map((item) => item.trim().replace(/^\.\s*/, ''))
+    .filter(Boolean);
+
+  const sentenceChunks = text
+    .split(/(?<=[.!?])\s+(?=[А-ЯЁA-Z])/u)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  const chunks = colonChunks.length > 1 ? colonChunks : sentenceChunks;
+  return chunks.length > 1 ? chunks : [text];
+};
+
+const formatCalloutBulletText = (value = '') => {
+  const trimmed = value.trim();
+  if (/^\*\*/.test(trimmed)) return trimmed;
+  const match = trimmed.match(/^([^:]{2,70}):\s*(.+)$/);
+  if (!match) return trimmed;
+  return `**${match[1]}:** ${match[2]}`;
+};
+
 const splitLessonParagraphs = (value = '') =>
   sanitizeTextbookText(value)
     .split(/\n\n+/)
@@ -3669,6 +3695,7 @@ function TextbookSketch({ title, chapterId, subtopicId }) {
 }
 
 function NoteCallout({ callout }) {
+  const textItems = callout.items || splitCalloutTextToBullets(callout.text);
   if (callout.type === 'table') {
     return (
       <div className="noteCalloutTable">
@@ -3730,10 +3757,10 @@ function NoteCallout({ callout }) {
   return (
     <div className={`noteArticleCallout ${callout.type}`}>
       <div className="noteArticleCalloutLabel">{callout.title}</div>
-      {callout.items ? (
-        <ul>{callout.items.map((item) => <li key={item}>{renderTextbookText(item)}</li>)}</ul>
+      {textItems.length > 1 ? (
+        <ul>{textItems.map((item) => <li key={item}>{renderTextbookText(formatCalloutBulletText(item))}</li>)}</ul>
       ) : (
-        <p>{renderTextbookText(callout.text)}</p>
+        <p>{renderTextbookText(textItems[0] || callout.text)}</p>
       )}
     </div>
   );
