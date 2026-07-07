@@ -145,6 +145,10 @@ const HomeIcon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" str
 const PlayIcon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><polygon points="10 8 16 12 10 16" fill="currentColor"/></svg>;
 const BookIcon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 3h13a3 3 0 0 1 3 3v15H7a3 3 0 0 1-3-3z"/><path d="M4 18h16"/></svg>;
 const MicIcon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg>;
+const QuestionIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.1 9a3 3 0 1 1 4.2 2.7c-.8.4-1.3 1-1.3 1.9v.4"/><circle cx="12" cy="18" r=".7" fill="currentColor"/></svg>;
+const BuildIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7h18M3 12h12M3 17h8"/></svg>;
+const CardsIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v11"/></svg>;
+const TermIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 5h16M4 12h16M4 19h10"/></svg>;
 const ArrowIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>;
 const BackIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>;
 const ChatIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.38 8.38 0 0 1-4-1L3 21l1.5-5.5A8.38 8.38 0 0 1 4.5 11 8.38 8.38 0 0 1 13 3a8.4 8.4 0 0 1 8 8.5z"/></svg>;
@@ -157,7 +161,26 @@ const SHELL_NAV = [
   { key: 'learn', label: 'Уроки', icon: BookIcon },
   { key: 'interview', label: 'Mock-интервью', icon: MicIcon },
 ];
-function CleanShell({ active, onNav, onLegacy, children }) {
+function CleanShell({ active, onNav, onLegacy, learnActions, children }) {
+  const learnShortcutGroups = learnActions ? [
+    {
+      label: 'Практика',
+      items: [
+        { label: 'Банк вопросов', icon: QuestionIcon, onClick: () => learnActions.openTab('Questionbank') },
+        { label: 'Конструктор кейса', icon: BuildIcon, onClick: learnActions.openExam },
+      ],
+    },
+    {
+      label: 'Учёба',
+      items: [
+        { label: 'Конспекты', icon: BookIcon, onClick: () => learnActions.openTab('Notes') },
+        { label: 'AI-наставник', icon: SparkIcon, onClick: learnActions.openReview, accent: true },
+        { label: 'Карточки', icon: CardsIcon, onClick: () => learnActions.openTab('Flashcards') },
+        { label: 'Ключевые термины', icon: TermIcon, onClick: () => learnActions.openTab('Key Definitions') },
+      ],
+    },
+  ] : [];
+
   return (
     <div className="clean-appshell">
       <aside className="clean-sidebar">
@@ -166,13 +189,34 @@ function CleanShell({ active, onNav, onLegacy, children }) {
           <div><b>Hack the Case</b><span className="sub">Тренажёр</span></div>
         </div>
         {SHELL_NAV.map((item) => (
-          <CleanNavItem
-            key={item.key}
-            icon={item.icon}
-            label={item.label}
-            active={active === item.key}
-            onClick={() => onNav(item.key)}
-          />
+          <React.Fragment key={item.key}>
+            <CleanNavItem
+              icon={item.icon}
+              label={item.label}
+              active={active === item.key}
+              onClick={() => onNav(item.key)}
+            />
+            {item.key === 'learn' && active === 'learn' && learnActions && (
+              <div className="clean-learn-subnav">
+                {learnShortcutGroups.map((group) => (
+                  <div key={group.label} className="clean-learn-subnav-group">
+                    <div className="clean-learn-subnav-title">{group.label}</div>
+                    {group.items.map((shortcut) => (
+                      <button
+                        key={shortcut.label}
+                        type="button"
+                        className={`clean-learn-subnav-item${shortcut.accent ? ' accent' : ''}`}
+                        onClick={shortcut.onClick}
+                      >
+                        <span>{shortcut.icon}</span>
+                        <em>{shortcut.label}</em>
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </React.Fragment>
         ))}
         {onLegacy && (
           <button type="button" className="clean-legacy-link" onClick={onLegacy}>
@@ -2281,17 +2325,33 @@ const App = () => {
 
   // Learn-хаб (уроки, банк вопросов, карточки, глоссарий).
   if (screen === 'learn') {
+    const openExamFromLearn = () => {
+      const nextTrack = config.tracks.find((item) => item.id === 'business') || config.tracks[0];
+      setTrack(nextTrack);
+      setScreen('track');
+    };
+    const learnActions = {
+      openTab: (tab) => {
+        setLearnInitialTab(tab);
+        setLearnAutoReview(false);
+        setScreen('learn');
+      },
+      openReview: () => {
+        setLearnInitialTab('All Resources');
+        setLearnAutoReview(false);
+        requestAnimationFrame(() => setLearnAutoReview(true));
+        setScreen('learn');
+      },
+      openExam: openExamFromLearn,
+    };
+
     return (
-      <CleanShell active="learn" onNav={shellNav} onLegacy={openLegacy}>
+      <CleanShell active="learn" onNav={shellNav} onLegacy={openLegacy} learnActions={learnActions}>
         <LearningScreen
           onBack={() => setScreen('home')}
           initialTab={learnInitialTab}
           autoOpenReview={learnAutoReview}
-          onOpenExam={() => {
-            const nextTrack = config.tracks.find((item) => item.id === 'business') || config.tracks[0];
-            setTrack(nextTrack);
-            setScreen('track');
-          }}
+          onOpenExam={openExamFromLearn}
         />
       </CleanShell>
     );
@@ -2672,16 +2732,8 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
     <div className="clean-learn shell--learnLight learnScreen fade-in">
       <div className="learnLayout learnLayout--top">
         <LearnSidebar
-          activeTab={activeTab}
           selectedChapter={selectedChapter}
           selectedSubtopic={selectedSubtopic}
-          onOpenTab={(tab) => {
-            setActiveTab(tab);
-            setSelectedChapter(null);
-            setSelectedSubtopic(null);
-          }}
-          onOpenReview={() => setReviewOpen(true)}
-          onOpenExam={onOpenExam}
           onSelect={(chapter, subtopic = null) => {
             setActiveTab('Notes');
             selectChapter(chapter, subtopic);
@@ -2757,22 +2809,9 @@ function ResourcesOverview({ onSelectChapter, onOpenTab }) {
 }
 
 /* ── Sidebar — expandable chapter + subtopic tree ── */
-function LearnSidebar({ activeTab, selectedChapter, selectedSubtopic, onSelect, onOpenTab, onOpenReview, onOpenExam }) {
+function LearnSidebar({ selectedChapter, selectedSubtopic, onSelect }) {
   const [expanded, setExpanded] = useState(() => new Set(selectedChapter ? [selectedChapter.id] : []));
   const fcProgress = loadFcProgress();
-  const cardCount = Object.values(FLASHCARDS).reduce((sum, cards) => sum + cards.length, 0);
-  const sidebarResources = [
-    { group: 'Практика', items: [
-      { key: 'Questionbank', icon: HubIcons.q, title: 'Банк вопросов', meta: `${PRACTICE_QUESTIONS.length} вопросов`, onClick: () => onOpenTab('Questionbank') },
-      { key: 'CaseBuilder', icon: HubIcons.build, title: 'Конструктор кейса', meta: 'AI-сценарий', onClick: onOpenExam },
-    ] },
-    { group: 'Учёба', items: [
-      { key: 'Notes', icon: HubIcons.notes, title: 'Конспекты', meta: `${PM_CHAPTERS.length} модулей`, onClick: () => onOpenTab('Notes') },
-      { key: 'Review', icon: HubIcons.ai, title: 'AI-наставник', meta: 'Review-сессия', onClick: onOpenReview, accent: true },
-      { key: 'Flashcards', icon: HubIcons.cards, title: 'Карточки', meta: `${cardCount} карточек`, onClick: () => onOpenTab('Flashcards') },
-      { key: 'Key Definitions', icon: HubIcons.term, title: 'Ключевые термины', meta: `${KEY_DEFINITIONS.length} терминов`, onClick: () => onOpenTab('Key Definitions') },
-    ] },
-  ];
 
   useEffect(() => {
     if (selectedChapter) setExpanded((prev) => new Set([...prev, selectedChapter.id]));
@@ -2838,26 +2877,6 @@ function LearnSidebar({ activeTab, selectedChapter, selectedSubtopic, onSelect, 
         );
       })}
 
-      <div className="learnSidebarResources">
-        {sidebarResources.map((group) => (
-          <div className="learnSidebarResourceGroup" key={group.group}>
-            <div className="learnSidebarResourceTitle">{group.group}</div>
-            {group.items.map((item) => (
-              <button
-                key={item.key}
-                className={`learnSidebarResourceItem${activeTab === item.key ? ' active' : ''}${item.accent ? ' accent' : ''}`}
-                onClick={item.onClick}
-              >
-                <span className="learnSidebarResourceIcon">{item.icon}</span>
-                <span className="learnSidebarResourceText">
-                  <strong>{item.title}</strong>
-                  <small>{item.meta}</small>
-                </span>
-              </button>
-            ))}
-          </div>
-        ))}
-      </div>
     </aside>
   );
 }
