@@ -676,9 +676,9 @@
 }
 
 .clean-learn .noteArticle--detail {
-  grid-template-columns: minmax(0, 1fr) 190px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
-  max-width: 1080px;
+  max-width: 980px;
   padding: 24px 0 72px;
   font-family: var(--font-body-clean);
   color: var(--text-primary);
@@ -742,7 +742,7 @@
 
 .clean-learn .noteArticle--detail .noteArticleBody {
   gap: 22px;
-  max-width: none;
+  max-width: 920px;
   padding: 0 0 52px;
 }
 
@@ -916,11 +916,7 @@
 }
 
 .clean-learn .noteArticle--detail .noteArticleTopicRail {
-  top: 24px;
-  gap: 3px;
-  padding: 10px;
-  border-radius: 14px;
-  box-shadow: none;
+  display: none;
 }
 
 .clean-learn .noteArticle--detail .noteArticleTopicRail button {
@@ -957,6 +953,8 @@
 /* Chapter note overview typography — same readable scale as detail pages */
 .clean-learn .noteArticle:not(.noteArticle--detail) {
   font-family: var(--font-body-clean);
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 980px;
 }
 
 .clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleHero {
@@ -980,8 +978,12 @@
 
 .clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleBody {
   gap: 20px;
-  max-width: 760px;
+  max-width: 920px;
   padding: 8px 0 52px;
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleTopicRail {
+  display: none;
 }
 
 .clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleBody > .section-h {
