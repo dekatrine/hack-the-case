@@ -249,9 +249,13 @@
 .clean-screen .learning-flow-map { display: flex; flex-wrap: wrap; gap: 8px; }
 .clean-screen .flow-node { display: flex; gap: 6px; align-items: flex-start; background: var(--c-white); border: 1px solid var(--border-hairline); border-radius: var(--r-clean-sm); padding: 8px 10px; font-size: 12px; max-width: 180px; }
 .clean-screen .flow-node span { font-weight: 800; color: var(--accent-primary-deep); }
-.clean-screen .term-list h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-tertiary); margin: 16px 0 8px; }
-.clean-screen .term-row { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border-hairline); font-size: 13px; }
-.clean-screen .term-row span { font-weight: 700; min-width: 120px; }
+.clean-screen .term-list { margin-top: 16px; border: 1px solid var(--border-hairline); border-radius: var(--r-clean-sm); background: var(--surface-sunk); padding: 12px 14px; }
+.clean-screen .term-list-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.clean-screen .term-list h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-tertiary); margin: 0; }
+.clean-screen .term-list-head span { font-size: 11px; color: var(--text-tertiary); }
+.clean-screen .term-row { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border-hairline); font-size: 13px; }
+.clean-screen .term-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.clean-screen .term-row span { font-weight: 700; min-width: 120px; color: var(--text-primary); }
 .clean-screen .term-row p { margin: 0; color: var(--text-secondary); }
 
 /* step block bits */
@@ -664,4 +668,277 @@
   .cs-eval-row { gap: 20px; }
   .cs-term-row { flex-direction: column; gap: 4px; }
   .cs-term-row .name { width: auto; }
+}
+
+/* Note detail — compact three-column reference layout */
+.clean-learn .learnMain--noteDetail {
+  min-width: 0;
+}
+
+.clean-learn .noteArticle--detail {
+  grid-template-columns: minmax(0, 1fr) 190px;
+  gap: 28px;
+  max-width: 1080px;
+  padding: 24px 0 72px;
+  font-family: var(--font-body-clean);
+  color: var(--text-primary);
+}
+
+.clean-learn .noteArticle--detail .noteArticleHero {
+  padding: 0 0 20px;
+  border: 0;
+  border-bottom: 1px solid var(--border-hairline);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.clean-learn .noteArticle--detail .noteArticleCrumbs {
+  margin-bottom: 18px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.clean-learn .noteArticle--detail .noteArticleCrumbs strong {
+  color: var(--text-primary);
+}
+
+.clean-learn .noteArticle--detail .noteArticleHero h2 {
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  font-family: var(--font-display-clean);
+  font-size: clamp(22px, 2.2vw, 30px);
+  font-weight: 760;
+  line-height: 1.12;
+  letter-spacing: -.03em;
+}
+
+.clean-learn .noteArticle--detail .noteArticleHero p {
+  max-width: 720px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.clean-learn .noteArticle--detail .noteArticleSources {
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.clean-learn .noteArticle--detail .noteArticleSources span {
+  padding: 5px 9px;
+  border: 1px solid var(--border-hairline);
+  border-radius: 999px;
+  color: var(--text-tertiary);
+  background: var(--surface-sunk);
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.clean-learn .noteArticle--detail .noteArticleBody {
+  gap: 22px;
+  max-width: none;
+  padding: 0 0 52px;
+}
+
+.clean-learn .noteArticle--detail .noteArticleIntro {
+  padding: 18px 20px;
+  border: 1px solid var(--border-hairline);
+  border-left: 4px solid var(--accent-primary);
+  border-radius: 16px;
+  background: var(--c-white);
+  box-shadow: 0 2px 10px rgba(17, 24, 39, .035);
+}
+
+.clean-learn .noteArticle--detail .noteArticleDefinitionBadge {
+  display: inline-flex;
+  margin: 0 0 10px;
+  color: var(--text-tertiary);
+  font-family: var(--font-label-clean);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.clean-learn .noteArticle--detail .noteArticleIntro h3 {
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  font-family: var(--font-display-clean);
+  font-size: 18px;
+  font-weight: 760;
+  line-height: 1.25;
+  letter-spacing: -.02em;
+}
+
+.clean-learn .noteArticle--detail .noteArticleIntro p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-body-clean);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.7;
+}
+
+.clean-learn .noteArticle--detail .noteArticleSection {
+  gap: 10px;
+}
+
+.clean-learn .noteArticle--detail .noteArticleSection h3,
+.clean-learn .noteArticle--detail .noteArticlePractice h3 {
+  margin: 10px 0 2px;
+  color: var(--text-primary);
+  font-family: var(--font-display-clean);
+  font-size: 20px;
+  font-weight: 760;
+  line-height: 1.18;
+  letter-spacing: -.025em;
+}
+
+.clean-learn .noteArticle--detail .textbookParagraph,
+.clean-learn .noteArticle--detail .noteArticleSection p,
+.clean-learn .noteArticle--detail .noteArticleSection li,
+.clean-learn .noteArticle--detail .noteArticlePractice p,
+.clean-learn .noteArticle--detail .noteArticleCallout p,
+.clean-learn .noteArticle--detail .noteArticleCallout li {
+  color: var(--text-secondary);
+  font-family: var(--font-body-clean);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.72;
+  letter-spacing: -.005em;
+}
+
+.clean-learn .noteArticle--detail .textbookParagraph {
+  margin: 0 0 14px;
+}
+
+.clean-learn .noteArticle--detail .textbookParagraph:last-child,
+.clean-learn .noteArticle--detail .noteArticleSection p:last-child {
+  margin-bottom: 0;
+}
+
+.clean-learn .noteArticle--detail strong {
+  color: var(--text-primary);
+  font-weight: 720;
+}
+
+.clean-learn .noteArticle--detail .noteArticleList {
+  margin-top: 4px;
+  padding-left: 22px;
+}
+
+.clean-learn .noteArticle--detail .noteArticleList li {
+  margin-bottom: 8px;
+}
+
+.clean-learn .noteArticle--detail .noteArticleList li::marker {
+  color: var(--text-tertiary);
+  font-family: var(--font-label-clean);
+  font-weight: 700;
+}
+
+.clean-learn .noteArticle--detail .textbookSketch {
+  margin: 0 0 2px;
+  padding: 16px;
+}
+
+.clean-learn .noteArticle--detail .textbookSketch svg {
+  min-height: 230px;
+  border-radius: 10px;
+  background: var(--surface-sunk);
+}
+
+.clean-learn .noteArticle--detail .noteArticleCallout {
+  position: relative;
+  margin: 0;
+  padding: 18px 20px 18px 50px;
+  border: 1px solid var(--border-hairline);
+  background: var(--c-white);
+  box-shadow: 0 2px 10px rgba(17, 24, 39, .04);
+}
+
+.clean-learn .noteArticle--detail .noteArticleCallout::before {
+  content: '◉';
+  position: absolute;
+  top: 18px;
+  left: 16px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--accent-primary);
+  color: var(--c-black);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.clean-learn .noteArticle--detail .noteArticleCallout.note::before {
+  content: '●';
+  background: var(--c-black);
+  color: var(--c-white);
+}
+
+.clean-learn .noteArticle--detail .noteArticleCallout.example::before {
+  content: '⌘';
+  background: var(--surface-sunk);
+  color: var(--text-primary);
+}
+
+.clean-learn .noteArticle--detail .noteArticleCalloutLabel {
+  margin: 0 0 6px;
+  color: var(--text-primary);
+  font-family: var(--font-display-clean);
+  font-size: 15px;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.clean-learn .noteArticle--detail .noteArticleCalloutLabel::before {
+  display: none;
+}
+
+.clean-learn .noteArticle--detail .noteArticleTopicRail {
+  top: 24px;
+  gap: 3px;
+  padding: 10px;
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.clean-learn .noteArticle--detail .noteArticleTopicRail button {
+  grid-template-columns: 24px 1fr;
+  gap: 8px;
+  padding: 7px;
+}
+
+.clean-learn .noteArticle--detail .noteArticleTopicRail button > span {
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+}
+
+.clean-learn .noteArticle--detail .noteArticleTopicRail strong {
+  color: var(--text-primary);
+  font-size: 10.5px;
+}
+
+.clean-learn .noteArticle--detail .noteArticleTopicRail small {
+  font-size: 9px;
+}
+
+@media (max-width: 1100px) {
+  .clean-learn .noteArticle--detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .clean-learn .noteArticle--detail .noteArticleTopicRail {
+    position: static;
+    order: 3;
+  }
 }

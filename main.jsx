@@ -455,6 +455,136 @@ const formatTerm = (term) => {
   return term;
 };
 
+const CHAPTER_THINKING_FLOWS = {
+  ch0: ['Пойми роль PM', 'Раздели зоны ответственности', 'Найди стейкхолдеров', 'Свяжи value с delivery', 'Сформулируй влияние'],
+  ch1: ['Назови проблему', 'Определи аудиторию', 'Опиши ценность', 'Проверь PMF-сигналы', 'Сравни outcome и output'],
+  ch2: ['Выбери сегмент', 'Опиши job', 'Найди switch moment', 'Раздели problem/solution', 'Собери CJM-инсайт'],
+  ch3: ['Сформулируй гипотезу', 'Выбери метод исследования', 'Собери факты', 'Синтезируй паттерны', 'Переведи в opportunity'],
+  ch4: ['Оцени рынок', 'Раздели TAM/SAM/SOM', 'Найди конкурентов', 'Проверь тренды', 'Сделай стратегический вывод'],
+  ch5: ['Поставь diagnosis', 'Выбери where to play', 'Определи how to win', 'Назови trade-offs', 'Свяжи actions с метриками'],
+  ch6: ['Уточни outcome', 'Выбери NSM', 'Разложи дерево метрик', 'Добавь input + guardrails', 'Запиши критерий успеха'],
+  ch7: ['Найди этап воронки', 'Выбери primary metric', 'Проверь сегменты', 'Добавь guardrails', 'Предложи эксперимент'],
+  ch8: ['Сформулируй гипотезу', 'Выбери дизайн теста', 'Определи sample и метрики', 'Проверь риски валидности', 'Прими решение'],
+  ch9: ['Собери инициативы', 'Оцени impact', 'Оцени confidence', 'Учти effort / delay', 'Объясни приоритет'],
+  ch10: ['Определи unit', 'Посчитай revenue', 'Учти costs и margin', 'Проверь LTV/CAC', 'Назови рычаг улучшения'],
+  ch11: ['Clarify задачу', 'Построй структуру', 'Проанализируй варианты', 'Синтезируй рекомендацию', 'Назови риски и next steps'],
+  p_clarify: ['Уточни цель', 'Зафиксируй пользователя', 'Назови метрику успеха', 'Пойми ограничения', 'Переформулируй задачу'],
+  p_user: ['Выбери primary user', 'Опиши JTBD', 'Найди контекст', 'Ранжируй боли', 'Сформулируй сегмент'],
+  p_needs: ['Разложи journey', 'Найди friction', 'Собери evidence', 'Переведи боль в opportunity', 'Выбери problem statement'],
+  p_prioritize: ['Собери варианты', 'Оцени impact', 'Оцени effort', 'Учти confidence', 'Отрежь лишнее'],
+  p_solutions: ['Сгенерируй 3 решения', 'Опиши MVP', 'Проверь feasibility', 'Свяжи с user flow', 'Выбери решение'],
+  p_tradeoffs: ['Выбери primary metric', 'Добавь guardrails', 'Опиши эксперимент', 'Назови trade-offs', 'Сделай launch/no-launch вывод'],
+  p_metrics: ['Уточни outcome', 'Выбери NSM', 'Разложи metric tree', 'Добавь guardrails', 'Скажи, как проверишь'],
+  p_summary: ['Начни с рекомендации', 'Дай 2–3 причины', 'Назови риски', 'Предложи next step', 'Закрой ответ метрикой'],
+  b_case_condition: ['Перепиши условие', 'Отдели факты', 'Уточни цель клиента', 'Назови ограничения', 'Сформулируй decision question'],
+  b_archetype: ['Определи тип кейса', 'Выбери маршрут', 'Назови критерий решения', 'Отбрось лишние фреймворки', 'Согласуй структуру'],
+  b_tree: ['Построй MECE-ветки', 'Добавь драйверы', 'Сформулируй гипотезы', 'Приоритизируй анализ', 'Назови нужные данные'],
+  b_market: ['Оцени отрасль', 'Найди конкурентов', 'Проверь тренды', 'Оцени привлекательность', 'Сделай market вывод'],
+  b_market_sizing: ['Определи единицу расчёта', 'Разложи формулу', 'Сделай допущения', 'Посчитай порядок величины', 'Проверь sanity check'],
+  b_customer: ['Выдели сегменты', 'Оцени потребности', 'Найди journey gaps', 'Выбери target', 'Свяжи с предложением'],
+  b_diagnosis: ['Разложи метрику', 'Найди where drop', 'Проверь сегменты', 'Проверь причины', 'Сделай root-cause вывод'],
+  b_solution_portfolio: ['Собери инициативы', 'Оцени эффект', 'Оцени сложность', 'Собери портфель', 'Назови quick win'],
+  b_gtm: ['Выбери канал', 'Опиши launch motion', 'Учти операции', 'Проверь экономику', 'Собери roadmap'],
+  b_metrics_validation: ['Выбери success metric', 'Добавь guardrails', 'Опиши тест', 'Проверь риски валидности', 'Сделай decision rule'],
+  b_economics: ['Определи revenue drivers', 'Разложи costs', 'Посчитай margin', 'Проверь sensitivity', 'Назови рычаг прибыли'],
+  b_risks: ['Назови ключевые риски', 'Оцени вероятность/impact', 'Добавь mitigation', 'Проверь downside', 'Скажи go/no-go условия'],
+  b_recommend: ['Дай ответ top-down', 'Подкрепи фактами', 'Назови trade-offs', 'Защити от pushback', 'Сформулируй next step'],
+};
+
+const CHAPTER_KNOWLEDGE_ALIAS = {
+  p_clarify: 'ch11',
+  p_user: 'ch2',
+  p_needs: 'ch3',
+  p_prioritize: 'ch9',
+  p_solutions: 'ch1',
+  p_tradeoffs: 'ch6',
+  p_metrics: 'ch6',
+  p_summary: 'ch11',
+  b_case_condition: 'ch11',
+  b_archetype: 'ch11',
+  b_tree: 'ch11',
+  b_market: 'ch4',
+  b_market_sizing: 'ch4',
+  b_customer: 'ch2',
+  b_diagnosis: 'ch7',
+  b_solution_portfolio: 'ch9',
+  b_gtm: 'ch5',
+  b_metrics_validation: 'ch6',
+  b_economics: 'ch10',
+  b_risks: 'ch5',
+  b_recommend: 'ch11',
+};
+
+const TERM_KEYWORDS_BY_CHAPTER = {
+  ch0: ['pm', 'mvp', 'prd', 'discovery'],
+  ch1: ['value', 'pmf', 'retention', 'outcome', 'product'],
+  ch2: ['jtbd', 'cjm', 'switch', 'job', 'segment'],
+  ch3: ['discovery', 'mom test', 'ost', 'interview', 'opportunity'],
+  ch4: ['tam', 'sam', 'som', 'pestel', 'market'],
+  ch5: ['strategy', 'gtm', 'moat', 'network effects'],
+  ch6: ['nsm', 'okr', 'kpi', 'metric', 'north star'],
+  ch7: ['activation', 'retention', 'nps', 'heart', 'aarrr', 'churn', 'goodhart'],
+  ch8: ['a/b', 'test', 'experiment', 'rice', 'hypothesis'],
+  ch9: ['rice', 'prioritization', 'roadmap', 'cost of delay'],
+  ch10: ['unit economics', 'ltv', 'cac', 'mrr', 'arr', 'churn'],
+  ch11: ['case', 'framework', 'recommendation', 'prd', 'okr'],
+  p_tradeoffs: ['nsm', 'guardrails', 'experiment', 'a/b', 'goodhart'],
+  p_metrics: ['nsm', 'okr', 'kpi', 'guardrails', 'heart'],
+  b_metrics_validation: ['metric', 'experiment', 'a/b', 'guardrails', 'heart'],
+  b_economics: ['unit economics', 'ltv', 'cac', 'margin', 'mrr'],
+};
+
+const normalizeTerm = (value = '') => value.toLowerCase().replace(/[’']/g, '').trim();
+
+const dedupeTerms = (terms) => {
+  const seen = new Set();
+  return terms.filter((term) => {
+    const name = normalizeTerm(term?.name || term?.term || '');
+    if (!name || seen.has(name)) return false;
+    seen.add(name);
+    return true;
+  });
+};
+
+const getAiSuggestedTerms = (chapter, step, explicitTerms = []) => {
+  const explicit = explicitTerms.map(formatTerm);
+  const chapterId = chapter?.id;
+  const knowledgeId = CHAPTER_KNOWLEDGE_ALIAS[chapterId] || chapterId;
+  const context = normalizeTerm([
+    chapter?.title,
+    chapter?.description,
+    step?.title,
+    step?.description,
+    step?.theory?.goal,
+    step?.theory?.answerTemplate,
+    step?.theory?.commonMistake,
+  ].filter(Boolean).join(' '));
+  const keywords = [
+    ...(TERM_KEYWORDS_BY_CHAPTER[knowledgeId] || []),
+    ...(TERM_KEYWORDS_BY_CHAPTER[chapterId] || []),
+  ];
+
+  const scored = KEY_DEFINITIONS.map((item) => {
+    const haystack = normalizeTerm(`${item.term} ${item.category} ${item.definition}`);
+    let score = item.chapter === knowledgeId || item.chapter === chapterId ? 5 : 0;
+    if (context.includes(normalizeTerm(item.term))) score += 4;
+    keywords.forEach((keyword) => {
+      const key = normalizeTerm(keyword);
+      if (haystack.includes(key) || context.includes(key)) score += 2;
+    });
+    return {
+      name: item.term,
+      meaning: item.definition,
+      category: item.category,
+      score,
+    };
+  })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'ru'));
+
+  return dedupeTerms([...explicit, ...scored]).slice(0, 6);
+};
+
 const cleanMarkdown = (value = '') =>
   value
     .replace(/\*\*/g, '')
@@ -554,6 +684,7 @@ const splitTemplate = (template = '') =>
 
 const getVisualSteps = (chapter, step) => {
   if (chapter?.visualSteps?.length) return chapter.visualSteps;
+  if (CHAPTER_THINKING_FLOWS[chapter?.id]) return CHAPTER_THINKING_FLOWS[chapter.id];
   const fromTemplate = splitTemplate(step?.theory?.answerTemplate || '');
   if (fromTemplate.length > 1) return fromTemplate;
   return [
@@ -1196,10 +1327,11 @@ const StepsRail = ({ steps, activeIdx, answers, onPick }) => (
 
 const ChapterMethodCard = ({ chapter, step, idx }) => {
   const theory = step?.theory || {};
-  const terms = [
+  const explicitTerms = [
     ...(chapter?.terms || []),
     ...(theory.terms || []),
-  ].map(formatTerm);
+  ];
+  const terms = getAiSuggestedTerms(chapter, step, explicitTerms);
   const visualSteps = getVisualSteps(chapter, step);
   const materials = [
     ...(chapter?.methodMaterials || []),
@@ -1226,7 +1358,10 @@ const ChapterMethodCard = ({ chapter, step, idx }) => {
       )}
       {terms.length > 0 && (
         <div className="term-list">
-          <h4>Термины</h4>
+          <div className="term-list-head">
+            <h4>AI-подборка терминов для решения</h4>
+            <span>по главе и текущему шагу</span>
+          </div>
           {terms.slice(0, 6).map((term) => (
             <div key={`${term.name}-${term.meaning}`} className="term-row">
               <span>{term.name}</span>
@@ -2515,6 +2650,7 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [selectedSubtopic, setSelectedSubtopic] = useState(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const isNoteDetail = activeTab === 'Notes' && Boolean(selectedChapter);
 
   useEffect(() => {
     setActiveTab(normalizeTab(initialTab));
@@ -2544,8 +2680,8 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
             selectChapter(chapter, subtopic);
           }}
         />
-        <div className="learnMain">
-          <div className="learnScreenHeader">
+        <div className={`learnMain${isNoteDetail ? ' learnMain--noteDetail' : ''}`}>
+          {!isNoteDetail && <div className="learnScreenHeader">
             <button className="btn btn-ghost" onClick={onBack}>← Главная</button>
             <div>
               <div className="eyebrow"><span className="num">02 /</span> Resource dojo</div>
@@ -2555,13 +2691,13 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
             <button className="btn btn-primary" onClick={() => setReviewOpen(true)}>
               AI-повторение <span className="arrow">→</span>
             </button>
-          </div>
+          </div>}
 
-          <div className="learnTabBar">
+          {!isNoteDetail && <div className="learnTabBar">
             {LEARN_TABS.map((t) => (
               <button key={t} className={`learnTab${activeTab === t ? ' active' : ''}`} onClick={() => { setActiveTab(t); setSelectedChapter(null); setSelectedSubtopic(null); }}>{LEARN_TAB_LABELS[t] || t}</button>
             ))}
-          </div>
+          </div>}
 
           {activeTab === 'All Resources' && <ResourcesOverview onSelectChapter={(chapter) => selectChapter(chapter)} onOpenTab={setActiveTab} onOpenReview={() => setReviewOpen(true)} onOpenExam={onOpenExam} />}
           {activeTab === 'Notes' && <NotesContent chapter={selectedChapter} selectedSubtopic={selectedSubtopic} onSelectChapter={selectChapter} />}
@@ -3230,7 +3366,7 @@ const sanitizeTextbookText = (value = '') =>
     .replace(/проверь/g, 'проверяется')
     .replace(/напиши/g, 'составляется')
     .replace(/сформулируй/g, 'формулируется')
-    .replace(/объясни/g, 'объясняется')
+    .replace(/(^|[^\p{L}\p{N}_])объясни(?=$|[^\p{L}\p{N}_])/giu, '$1объясняется')
     .replace(/открой/g, 'открывается')
     .replace(/переформулируй/g, 'переформулируется')
     .replace(/проведи/g, 'проводится')
@@ -3288,9 +3424,9 @@ const getSubtopicTextbookLesson = (chapter, subtopic) => {
   const visuals = subtopicVisual ? [subtopicVisual, ...baseVisuals] : baseVisuals;
 
   return {
-    title: subtopic ? `Урок: ${topicTitle}` : `Конспект: ${chapter.title}`,
+    title: subtopic ? topicTitle : `Конспект: ${chapter.title}`,
     eyebrow: subtopic ? `Модуль ${chapter.number} · Подтема` : `Модуль ${chapter.number}`,
-    subtitle: subtopic ? `Учебный разбор темы «${topicTitle}» в контексте Product Management и case interview.` : chapter.description,
+    subtitle: subtopic ? chapter.description : chapter.description,
     definitionTitle: topicTitle,
     definition,
     paragraphs: paragraphs.length > 1 ? paragraphs.slice(1) : paragraphs,
@@ -3664,10 +3800,17 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
   const article = getNotesArticle(activeChapter);
   const lesson = selectedSubtopic ? getSubtopicTextbookLesson(activeChapter, selectedSubtopic) : null;
   const studyBlocks = getLessonStudyBlocks(activeChapter, selectedSubtopic);
+  const detailCallouts = selectedSubtopic?.id === 'ch0_3'
+    ? [
+        activeChapter.notes.find((note) => note.title === 'Карта компетенций PM: T-shaped профиль'),
+        activeChapter.notes.find((note) => note.title === 'PM ≠ Project Manager ≠ Business Analyst'),
+        activeChapter.notes.find((note) => note.title === 'Три пересекающихся круга PM (Venn diagram)'),
+      ].filter(Boolean)
+    : [];
 
   if (lesson) {
     return (
-      <div className="noteArticle textbookLesson">
+      <div className="noteArticle textbookLesson noteArticle--detail">
         <div className="noteArticleHero" style={{ '--ch-color': activeChapter.color }}>
           <div>
             <div className="noteArticleCrumbs">
@@ -3679,22 +3822,24 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
             </div>
             <h2>{lesson.title}</h2>
             <p>{lesson.subtitle}</p>
+            <div className="noteArticleSources">
+              <span>SVPG: Discovery / Delivery</span>
+              <span>HBR: Jobs To Be Done</span>
+              <span>ProductTalk: Continuous Discovery</span>
+            </div>
           </div>
-          <button className="btn btn-ghost" onClick={() => onSelectChapter(activeChapter, null)}>К обзору модуля</button>
         </div>
 
         <article className="noteArticleBody">
-          <div className="textbookMeta">
-            <span>{lesson.eyebrow}</span>
-            <span>{selectedSubtopic.duration}</span>
-          </div>
-
-          <section className="noteArticleDefinition">
-            <span>Определение</span>
+          <section className="noteArticleIntro">
+            <span className="noteArticleDefinitionBadge">Определение</span>
+            <h3>{lesson.definitionTitle}</h3>
             <p>{renderTextbookText(lesson.definition)}</p>
           </section>
 
           <TextbookSketch title={`Визуальная модель: ${lesson.definitionTitle}`} chapterId={activeChapter.id} subtopicId={selectedSubtopic.id} />
+
+          {detailCallouts.map((callout) => <NoteCallout key={callout.title} callout={callout} />)}
 
           <section className="noteArticleSection">
             <h3>Учебное объяснение</h3>
@@ -3770,7 +3915,7 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
             <p>{renderTextbookText(`**Пример применения.** ${lesson.example}`)}</p>
           </section>
 
-          {lesson.analogy && (
+          {lesson.analogy && detailCallouts.length === 0 && (
             <section className="noteArticleCallout analogy">
               <div className="noteArticleCalloutLabel">Аналогия</div>
               <p>{renderTextbookText(lesson.analogy)}</p>
