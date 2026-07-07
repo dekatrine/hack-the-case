@@ -3385,21 +3385,22 @@ const renderTextbookText = (value) => {
 };
 
 const splitCalloutTextToBullets = (value = '') => {
-  const text = sanitizeTextbookText(value).replace(/\s+/g, ' ').trim();
+  const rawText = sanitizeTextbookText(value).trim();
+  const text = rawText.replace(/\s+/g, ' ').trim();
   if (!text) return [];
 
-  const colonChunks = text
-    .split(/(?=(?:[А-ЯЁA-Z][^:.!?]{2,70}:))/g)
+  const lineChunks = rawText
+    .split(/\n+/)
     .map((item) => item.trim().replace(/^\.\s*/, ''))
     .filter(Boolean);
+  if (lineChunks.length > 1) return lineChunks;
 
   const sentenceChunks = text
     .split(/(?<=[.!?])\s+(?=[А-ЯЁA-Z])/u)
     .map((item) => item.trim())
     .filter(Boolean);
 
-  const chunks = colonChunks.length > 1 ? colonChunks : sentenceChunks;
-  return chunks.length > 1 ? chunks : [text];
+  return sentenceChunks.length > 1 ? sentenceChunks : [text];
 };
 
 const formatCalloutBulletText = (value = '') => {
