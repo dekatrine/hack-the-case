@@ -4094,7 +4094,6 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
 
 function ReviewSessionModal({ onClose }) {
   const [step, setStep] = useState(1);
-  const [subject, setSubject] = useState('product');
   const [topics, setTopics] = useState([]);
   const [level, setLevel] = useState('knows_a_bit');
   const [length, setLength] = useState('quick');
@@ -4104,10 +4103,6 @@ function ReviewSessionModal({ onClose }) {
   const [sending, setSending] = useState(false);
   const chatRef = useRef(null);
 
-  const subjects = [
-    { id: 'product', title: 'Product Case Track', sub: 'PM interviews, metrics, discovery, strategy' },
-    { id: 'business', title: 'Business Case Track', sub: 'Consulting, market sizing, economics, recommendation' },
-  ];
   const availableTopics = PM_CHAPTERS.slice(0, 12);
   const selectedTopics = availableTopics.filter((topic) => topics.includes(topic.id));
 
@@ -4121,7 +4116,7 @@ function ReviewSessionModal({ onClose }) {
 
   function startSession() {
     const topicNames = selectedTopics.map((t) => t.title).join(', ');
-    const intro = `Привет! Я AI-ментор Case Dojo. Сегодня разбираем: **${topicNames}**.
+    const intro = `Привет! Я AI-наставник Hack the Case. Сегодня разбираем продуктовые темы: **${topicNames}**.
 
 Уровень сессии: ${level === 'clueless' ? 'с нуля' : level === 'pretty_familiar' ? 'продвинутый' : 'базовый'}. Формат: ${length === 'quick' ? 'короткий разбор' : 'глубокая проработка'}.
 
@@ -4174,28 +4169,14 @@ function ReviewSessionModal({ onClose }) {
   return (
     <div className="reviewOverlay" role="dialog" aria-modal="true">
       <div className="reviewModal">
-        <button className="reviewClose" onClick={onClose} aria-label="Close">×</button>
+        <button className="reviewClose" onClick={onClose} aria-label="Закрыть">×</button>
         {!started ? (
           <>
-            <div className="reviewStepMeta">Step {step} of 3</div>
+            <div className="reviewStepMeta">Шаг {step} из 2</div>
             {step === 1 && (
               <div className="reviewStep">
-                <h2>Choose your track</h2>
-                <p>Pick the case direction you want to review with AI.</p>
-                <div className="reviewChoiceGrid">
-                  {subjects.map((item) => (
-                    <button key={item.id} className={subject === item.id ? 'active' : ''} onClick={() => setSubject(item.id)}>
-                      <strong>{item.title}</strong>
-                      <small>{item.sub}</small>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {step === 2 && (
-              <div className="reviewStep">
-                <h2>Choose what to review</h2>
-                <p>Select up to 3 topics for a focused session.</p>
+                <h2>Что повторить?</h2>
+                <p>Выбери до 3 продуктовых тем для сфокусированной сессии с AI-наставником.</p>
                 <div className="reviewTopicList">
                   {availableTopics.map((topic) => (
                     <label key={topic.id}>
@@ -4206,10 +4187,10 @@ function ReviewSessionModal({ onClose }) {
                 </div>
               </div>
             )}
-            {step === 3 && (
+            {step === 2 && (
               <div className="reviewStep">
-                <h2>Configure your session</h2>
-                <p>Set how much the AI mentor should assume you already know.</p>
+                <h2>Настрой сессию</h2>
+                <p>Укажи, насколько подробно AI-наставнику объяснять материал.</p>
                 <div className="reviewConfig">
                   {[
                     ['clueless', 'С нуля', 'Нужно объяснять максимально просто.'],
@@ -4224,8 +4205,8 @@ function ReviewSessionModal({ onClose }) {
                 </div>
                 <div className="reviewConfig two">
                   {[
-                    ['quick', 'Quick Review', 'Короткая сессия для повторения.'],
-                    ['deep', 'In-Depth', 'Длиннее, с большим количеством объяснений.'],
+                    ['quick', 'Быстрое повторение', 'Короткая сессия для освежения темы.'],
+                    ['deep', 'Глубокий разбор', 'Больше объяснений, примеров и проверки понимания.'],
                   ].map(([id, title, sub]) => (
                     <button key={id} className={length === id ? 'active' : ''} onClick={() => setLength(id)}>
                       <strong>{title}</strong>
@@ -4236,25 +4217,25 @@ function ReviewSessionModal({ onClose }) {
               </div>
             )}
             <div className="reviewFooter">
-              <button className="btn btn-ghost" onClick={() => step === 1 ? onClose() : setStep((s) => s - 1)}>Back</button>
-              {step < 3 ? (
-                <button className="btn btn-primary" onClick={() => setStep((s) => s + 1)} disabled={step === 2 && topics.length === 0}>Next</button>
+              <button className="btn btn-ghost" onClick={() => step === 1 ? onClose() : setStep((s) => s - 1)}>Назад</button>
+              {step < 2 ? (
+                <button className="btn btn-primary" onClick={() => setStep((s) => s + 1)} disabled={topics.length === 0}>Дальше</button>
               ) : (
-                <button className="btn btn-primary" onClick={startSession} disabled={topics.length === 0}>Start Review Session</button>
+                <button className="btn btn-primary" onClick={startSession} disabled={topics.length === 0}>Начать сессию</button>
               )}
             </div>
           </>
         ) : (
           <div className="reviewSession">
             <div className="reviewSessionHead">
-              <button onClick={() => { setStarted(false); setMessages([]); }}>← Back</button>
-              <span>{selectedTopics.map((t) => t.icon).join(' ')} {length === 'quick' ? 'Quick Review' : 'In-Depth'}</span>
-              <button onClick={onClose}>End Session</button>
+              <button onClick={() => { setStarted(false); setMessages([]); }}>← К настройкам</button>
+              <span>{selectedTopics.map((t) => t.icon).join(' ')} {length === 'quick' ? 'Быстрое повторение' : 'Глубокий разбор'}</span>
+              <button onClick={onClose}>Завершить</button>
             </div>
             <div className="reviewChat" ref={chatRef}>
               {messages.map((msg, i) => (
                 <div key={i} className={`reviewBubble ${msg.role}`}>
-                  {msg.role === 'ai' && <strong>Case Dojo AI</strong>}
+                  {msg.role === 'ai' && <strong>AI-наставник</strong>}
                   {msg.text.split('\n').map((line, j) => (
                     line ? <p key={j}>{line.replace(/\*\*([^*]+)\*\*/g, '$1')}</p> : <br key={j} />
                   ))}
@@ -4262,7 +4243,7 @@ function ReviewSessionModal({ onClose }) {
               ))}
               {sending && (
                 <div className="reviewBubble ai">
-                  <strong>Case Dojo AI</strong>
+                  <strong>AI-наставник</strong>
                   <p className="reviewThinking"><span className="spinner" /> думаю…</p>
                 </div>
               )}
