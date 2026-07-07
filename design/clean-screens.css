@@ -582,6 +582,103 @@
   .clean-learn .learnLayout--top .learnSidebar { position: static; max-height: none; }
 }
 
+/* Sidebar resource shortcuts — moved from the large hub tiles */
+.clean-learn .learnSidebarResources {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-hairline);
+}
+
+.clean-learn .learnSidebarResourceGroup + .learnSidebarResourceGroup {
+  margin-top: 14px;
+}
+
+.clean-learn .learnSidebarResourceTitle {
+  margin: 0 0 7px;
+  color: var(--text-tertiary);
+  font-family: var(--font-label-clean);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.clean-learn .learnSidebarResourceItem {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.clean-learn .learnSidebarResourceItem:hover {
+  background: var(--surface-sunk);
+  border-color: var(--border-hairline);
+}
+
+.clean-learn .learnSidebarResourceItem.active {
+  background: color-mix(in srgb, var(--accent-primary) 18%, var(--c-white));
+  border-color: color-mix(in srgb, var(--accent-primary) 42%, var(--c-white));
+}
+
+.clean-learn .learnSidebarResourceIcon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--c-black);
+  color: var(--c-white);
+}
+
+.clean-learn .learnSidebarResourceItem.accent .learnSidebarResourceIcon {
+  background: var(--accent-primary);
+  color: var(--c-black);
+}
+
+.clean-learn .learnSidebarResourceIcon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.clean-learn .learnSidebarResourceText {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.clean-learn .learnSidebarResourceText strong {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clean-learn .learnSidebarResourceText small {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .02em;
+}
+
+.clean-learn .cs-hub--courseOnly {
+  max-width: 920px;
+}
+
+.clean-learn .caseCourseRows--learn {
+  margin-top: 18px;
+}
+
 /* QuestionBank: neutralize orange difficulty/chapter tags; dark AI breakdown */
 .clean-learn .qbChapterTag { color: var(--text-secondary) !important; }
 .clean-learn .qbDiffTag { background: var(--surface-sunk); color: var(--text-secondary); }

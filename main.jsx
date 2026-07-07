@@ -2675,6 +2675,13 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
           activeTab={activeTab}
           selectedChapter={selectedChapter}
           selectedSubtopic={selectedSubtopic}
+          onOpenTab={(tab) => {
+            setActiveTab(tab);
+            setSelectedChapter(null);
+            setSelectedSubtopic(null);
+          }}
+          onOpenReview={() => setReviewOpen(true)}
+          onOpenExam={onOpenExam}
           onSelect={(chapter, subtopic = null) => {
             setActiveTab('Notes');
             selectChapter(chapter, subtopic);
@@ -2720,56 +2727,52 @@ const HubIcons = {
   term: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 5h16M4 12h16M4 19h10"/></svg>,
 };
 
-function ResourcesOverview({ onSelectChapter, onOpenTab, onOpenReview, onOpenExam }) {
-  const cardCount = Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0);
-  const groups = [
-    {
-      label: 'Практика',
-      items: [
-        { icon: HubIcons.q, title: 'Банк вопросов', desc: 'Практика с вариантами ответа и разбором от AI.', meta: `${PRACTICE_QUESTIONS.length} вопросов`, onClick: () => onOpenTab('Questionbank') },
-        { icon: HubIcons.build, title: 'Конструктор кейса', desc: 'Собери пробный кейс под конкретное интервью.', meta: 'AI-сценарий', onClick: onOpenExam },
-      ],
-    },
-    {
-      label: 'Учёба',
-      items: [
-        { icon: HubIcons.notes, title: 'Конспекты', desc: 'Теория, фреймворки и примеры сильных ответов.', meta: `${PM_CHAPTERS.length} модулей`, onClick: () => onOpenTab('Notes') },
-        { icon: HubIcons.ai, accent: true, isNew: true, title: 'AI-наставник', desc: 'Объясни тему своими словами и получи проверку.', meta: 'Review-сессия', onClick: onOpenReview },
-        { icon: HubIcons.cards, title: 'Карточки', desc: 'Активное вспоминание и интервальное повторение.', meta: `${cardCount} карточек`, onClick: () => onOpenTab('Flashcards') },
-        { icon: HubIcons.term, title: 'Ключевые термины', desc: 'Короткие определения для быстрого повторения.', meta: `${KEY_DEFINITIONS.length} терминов`, onClick: () => onOpenTab('Key Definitions') },
-      ],
-    },
-  ];
+function ResourcesOverview({ onSelectChapter, onOpenTab }) {
   return (
-    <div className="cs-hub">
-      <p className="cs-sub">Всё для подготовки к продуктовому интервью в одном месте: теория, практика и разбор с AI.</p>
-      {groups.map((g) => (
-        <div className="cs-hub-group" key={g.label}>
-          <div className="cs-section-label">{g.label}</div>
-          <div className="cs-tile-grid">
-            {g.items.map((t) => (
-              <CleanCard key={t.title} face="clean" interactive onClick={t.onClick}>
-                <div className="cs-tile">
-                  <div className={`ico${t.accent ? ' accent' : ''}`}>{t.icon}</div>
-                  <div>
-                    <b>{t.title}{t.isNew && <CleanChip face="clean" tone="accent" style={{ marginLeft: 8 }}>New</CleanChip>}</b>
-                    <p>{t.desc}</p>
-                    <div className="m">{t.meta}</div>
-                  </div>
-                </div>
-              </CleanCard>
-            ))}
-          </div>
-        </div>
-      ))}
+    <div className="cs-hub cs-hub--courseOnly">
+      <div className="cs-section-label">Модули курса</div>
+      <p className="cs-sub">Выбери главу или подглаву в левом меню. Здесь оставлен только обзор курса, а практика и повторение переехали в боковую навигацию.</p>
+      <div className="caseCourseRows caseCourseRows--learn">
+        {PM_CHAPTERS.map((chapter) => (
+          <button
+            key={chapter.id}
+            className="caseCourseRow"
+            onClick={() => {
+              onSelectChapter(chapter);
+              onOpenTab('Notes');
+            }}
+            style={{ '--col': chapter.color }}
+          >
+            <span>{chapter.number}</span>
+            <div>
+              <strong>{chapter.title}</strong>
+              <small>{chapter.description}</small>
+            </div>
+            <em>{chapter.subtopics.length} тем</em>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
 
 /* ── Sidebar — expandable chapter + subtopic tree ── */
-function LearnSidebar({ activeTab, selectedChapter, selectedSubtopic, onSelect }) {
+function LearnSidebar({ activeTab, selectedChapter, selectedSubtopic, onSelect, onOpenTab, onOpenReview, onOpenExam }) {
   const [expanded, setExpanded] = useState(() => new Set(selectedChapter ? [selectedChapter.id] : []));
   const fcProgress = loadFcProgress();
+  const cardCount = Object.values(FLASHCARDS).reduce((sum, cards) => sum + cards.length, 0);
+  const sidebarResources = [
+    { group: 'Практика', items: [
+      { key: 'Questionbank', icon: HubIcons.q, title: 'Банк вопросов', meta: `${PRACTICE_QUESTIONS.length} вопросов`, onClick: () => onOpenTab('Questionbank') },
+      { key: 'CaseBuilder', icon: HubIcons.build, title: 'Конструктор кейса', meta: 'AI-сценарий', onClick: onOpenExam },
+    ] },
+    { group: 'Учёба', items: [
+      { key: 'Notes', icon: HubIcons.notes, title: 'Конспекты', meta: `${PM_CHAPTERS.length} модулей`, onClick: () => onOpenTab('Notes') },
+      { key: 'Review', icon: HubIcons.ai, title: 'AI-наставник', meta: 'Review-сессия', onClick: onOpenReview, accent: true },
+      { key: 'Flashcards', icon: HubIcons.cards, title: 'Карточки', meta: `${cardCount} карточек`, onClick: () => onOpenTab('Flashcards') },
+      { key: 'Key Definitions', icon: HubIcons.term, title: 'Ключевые термины', meta: `${KEY_DEFINITIONS.length} терминов`, onClick: () => onOpenTab('Key Definitions') },
+    ] },
+  ];
 
   useEffect(() => {
     if (selectedChapter) setExpanded((prev) => new Set([...prev, selectedChapter.id]));
@@ -2834,6 +2837,27 @@ function LearnSidebar({ activeTab, selectedChapter, selectedSubtopic, onSelect }
           </div>
         );
       })}
+
+      <div className="learnSidebarResources">
+        {sidebarResources.map((group) => (
+          <div className="learnSidebarResourceGroup" key={group.group}>
+            <div className="learnSidebarResourceTitle">{group.group}</div>
+            {group.items.map((item) => (
+              <button
+                key={item.key}
+                className={`learnSidebarResourceItem${activeTab === item.key ? ' active' : ''}${item.accent ? ' accent' : ''}`}
+                onClick={item.onClick}
+              >
+                <span className="learnSidebarResourceIcon">{item.icon}</span>
+                <span className="learnSidebarResourceText">
+                  <strong>{item.title}</strong>
+                  <small>{item.meta}</small>
+                </span>
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
     </aside>
   );
 }
