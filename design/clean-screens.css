@@ -942,3 +942,108 @@
     order: 3;
   }
 }
+
+/* Chapter note overview typography — same readable scale as detail pages */
+.clean-learn .noteArticle:not(.noteArticle--detail) {
+  font-family: var(--font-body-clean);
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleHero {
+  padding: 24px 28px;
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleHero h2 {
+  font-family: var(--font-display-clean);
+  font-size: clamp(24px, 2.4vw, 34px);
+  font-weight: 760;
+  line-height: 1.14;
+  letter-spacing: -.03em;
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleHero p {
+  color: var(--text-secondary);
+  font-family: var(--font-body-clean);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleBody {
+  gap: 20px;
+  max-width: 760px;
+  padding: 8px 0 52px;
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleBody > .section-h {
+  margin: 0 0 4px;
+  color: var(--text-primary);
+  font-family: var(--font-display-clean);
+  font-size: clamp(21px, 2vw, 28px);
+  font-weight: 760;
+  line-height: 1.18;
+  letter-spacing: -.025em;
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleBody h3,
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticlePractice h3 {
+  margin: 10px 0 2px;
+  color: var(--text-primary);
+  font-family: var(--font-display-clean);
+  font-size: 19px;
+  font-weight: 760;
+  line-height: 1.22;
+  letter-spacing: -.02em;
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleDefinition {
+  padding: 16px 18px;
+  border-left: 4px solid var(--accent-primary);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--accent-primary) 10%, var(--c-white));
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleDefinition span {
+  margin-bottom: 8px;
+  color: var(--accent-primary-deep);
+  font-family: var(--font-label-clean);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .1em;
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleDefinition p,
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleCallout p,
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticlePractice p,
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleList,
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleList li,
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleCallout li {
+  color: var(--text-secondary);
+  font-family: var(--font-body-clean);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.68;
+  letter-spacing: -.005em;
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleDefinition p strong,
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleCallout p strong,
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticlePractice p strong,
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleList strong {
+  display: inline;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: inherit;
+  font-weight: 720;
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleList {
+  gap: 8px;
+  margin: 4px 0 0;
+  padding-left: 22px;
+}
+
+.clean-learn .noteArticle:not(.noteArticle--detail) .textbookSketch,
+.clean-learn .noteArticle:not(.noteArticle--detail) .textbookVisual,
+.clean-learn .noteArticle:not(.noteArticle--detail) .productCaseCanvas {
+  padding: 18px;
+  margin-bottom: 14px;
+}
