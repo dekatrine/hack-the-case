@@ -1807,7 +1807,9 @@
   .clean-learn .noteArticle:not(.noteArticle--detail) .textbookSketch svg,
   .clean-learn .noteArticle:not(.noteArticle--detail) .textbookVisual svg,
   .clean-learn .noteArticle:not(.noteArticle--detail) .productCaseCanvas svg {
-    min-width: 520px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     min-height: 210px;
   }
 
@@ -1815,6 +1817,45 @@
   .clean-learn .caseCourseRows--learn,
   .clean-learn .fcChapterGrid {
     grid-template-columns: 1fr;
+  }
+
+  .clean-learn .caseCourseRows--learn {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+
+  .clean-learn .caseCourseRows--learn .caseCourseRow {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 14px;
+    min-width: 0;
+    padding: 18px 20px;
+  }
+
+  .clean-learn .caseCourseRows--learn .caseCourseRow > span {
+    grid-row: 1 / span 2;
+  }
+
+  .clean-learn .caseCourseRows--learn .caseCourseRow > div {
+    min-width: 0;
+  }
+
+  .clean-learn .caseCourseRows--learn .caseCourseRow strong,
+  .clean-learn .caseCourseRows--learn .caseCourseRow small {
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .clean-learn .caseCourseRows--learn .caseCourseRow em {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 8px;
+    letter-spacing: .16em;
   }
 
   .clean-learn .casePrepMenuItem {
@@ -1957,5 +1998,139 @@
   .clean-learn .noteArticle--detail .noteArticleHero h2,
   .clean-learn .noteArticle:not(.noteArticle--detail) .noteArticleHero h2 {
     font-size: 22px;
+  }
+}
+
+/* Final mobile overflow guard: legacy lesson blocks must never widen the page. */
+@media (max-width: 760px) {
+  .clean-learn,
+  .clean-learn .learnLayout,
+  .clean-learn .learnLayout--top,
+  .clean-learn .learnSidebar,
+  .clean-learn .learnMain,
+  .clean-learn .learnMain--noteDetail,
+  .clean-learn .resourcesOverview,
+  .clean-learn .notesHome,
+  .clean-learn .notesContent,
+  .clean-learn .noteArticle,
+  .clean-learn .noteArticleHero,
+  .clean-learn .noteArticleBody,
+  .clean-learn .noteArticleSection,
+  .clean-learn .noteArticlePractice,
+  .clean-learn .noteArticleCallout,
+  .clean-learn .noteArticleIntro,
+  .clean-learn .noteArticleDefinition,
+  .clean-learn .textbookSketch,
+  .clean-learn .textbookVisual,
+  .clean-learn .productCaseCanvas,
+  .clean-learn .caseCourseRows,
+  .clean-learn .caseCourseRow,
+  .clean-learn .casePrepMenu,
+  .clean-learn .casePrepMenuGrid,
+  .clean-learn .casePrepMenuItem {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .clean-learn {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .clean-learn .learnLayout,
+  .clean-learn .learnLayout--top,
+  .clean-learn .learnMain,
+  .clean-learn .learnMain--noteDetail,
+  .clean-learn .resourcesOverview,
+  .clean-learn .notesHome,
+  .clean-learn .notesContent,
+  .clean-learn .noteArticle,
+  .clean-learn .noteArticleHero,
+  .clean-learn .noteArticleBody {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .clean-learn .learnScreenHeader,
+  .clean-learn .resourcesHero,
+  .clean-learn .notesHomeHead,
+  .clean-learn .noteArticleHero {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .clean-learn .learnScreenHeader > *,
+  .clean-learn .resourcesHero > *,
+  .clean-learn .notesHomeHead > *,
+  .clean-learn .noteArticleHero > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .clean-learn .learnScreenTitle,
+  .clean-learn .resourcesHero h2,
+  .clean-learn .notesHomeHead h2,
+  .clean-learn .noteArticleHero h2,
+  .clean-learn .noteArticleBody h3,
+  .clean-learn .noteArticleSection h3,
+  .clean-learn .noteArticlePractice h3,
+  .clean-learn .noteArticleCalloutLabel,
+  .clean-learn .sidebarChapterName,
+  .clean-learn .caseCourseRow strong {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .clean-learn .learnScreenSub,
+  .clean-learn .resourcesHero p,
+  .clean-learn .notesHomeHead p,
+  .clean-learn .noteArticleHero p,
+  .clean-learn .noteArticleCrumbs,
+  .clean-learn .textbookParagraph,
+  .clean-learn .noteArticleSection p,
+  .clean-learn .noteArticlePractice p,
+  .clean-learn .noteArticleCallout p,
+  .clean-learn .noteArticleDefinition p,
+  .clean-learn .caseCourseRow small,
+  .clean-learn .sidebarChapterDesc {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .clean-learn .learnTabBar,
+  .clean-learn .noteArticleSources {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .clean-learn .noteArticleSources a,
+  .clean-learn .noteArticleSources span,
+  .clean-learn .learnTab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .clean-learn .textbookSketch,
+  .clean-learn .textbookVisual,
+  .clean-learn .productCaseCanvas {
+    overflow: hidden;
+  }
+
+  .clean-learn .textbookSketch svg,
+  .clean-learn .textbookVisual svg,
+  .clean-learn .productCaseCanvas svg {
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
   }
 }
