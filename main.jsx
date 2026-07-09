@@ -2783,7 +2783,7 @@ function ResourcesOverview({ onSelectChapter, onOpenTab }) {
   return (
     <div className="cs-hub cs-hub--courseOnly">
       <div className="cs-section-label">Модули курса</div>
-      <p className="cs-sub">Выбери главу или подглаву в левом меню. Здесь оставлен только обзор курса, а практика и повторение переехали в боковую навигацию.</p>
+      <p className="cs-sub">Выбери главу из списка ниже. Конспекты, практика, карточки и термины доступны через вкладки раздела.</p>
       <div className="caseCourseRows caseCourseRows--learn">
         {PM_CHAPTERS.map((chapter) => (
           <button
