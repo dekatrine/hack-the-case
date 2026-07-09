@@ -3168,7 +3168,6 @@
 
 .clean-legacy.quizPicker .num,
 .clean-legacy.quizPicker .eyebrow,
-.clean-legacy.quizPicker .quiz-cat-tag,
 .clean-legacy.quizPicker .quizStats p {
   color: var(--accent-primary);
 }
@@ -3180,8 +3179,14 @@
 
 .clean-legacy.quizPicker .hero-sub,
 .clean-legacy.quizPicker .quiz-cat-sub,
+.clean-legacy.quizPicker .quiz-cat-tag,
 .clean-legacy.quizPicker .quiz-cat-count {
   color: var(--text-secondary);
+}
+
+.clean-legacy.quizPicker .quiz-cat-tag,
+.clean-legacy.quizPicker .quiz-cat-count {
+  font-weight: 650;
 }
 
 .clean-legacy.quizPicker .quizStats div {
