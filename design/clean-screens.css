@@ -2867,3 +2867,163 @@
     max-height: 44dvh !important;
   }
 }
+
+/* FINAL mobile lessons override — neutralizes older 100dvw/negative-margin rules. */
+@media (max-width: 760px) {
+  body .clean-learn .learnMain,
+  body .clean-learn .cs-hub,
+  body .clean-learn .cs-hub--courseOnly,
+  body .clean-learn .learnChapterView,
+  body .clean-learn .notesContent,
+  body .clean-learn .noteArticle,
+  body .clean-learn .qbContent,
+  body .clean-learn .fcHome,
+  body .clean-learn .cs-glossary {
+    width: 100% !important;
+    max-width: 430px !important;
+    min-width: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    overflow-x: hidden !important;
+  }
+
+  body .clean-learn .learnScreenHeader,
+  body .clean-learn .learnTabBar,
+  body .clean-learn .caseCourseRows--learn,
+  body .clean-learn .learnSubtopicList,
+  body .clean-learn .noteArticleHero,
+  body .clean-learn .noteArticleBody,
+  body .clean-learn .noteArticleIntro,
+  body .clean-learn .noteArticleSection,
+  body .clean-learn .noteArticleCallout,
+  body .clean-learn .noteArticlePractice,
+  body .clean-learn .textbookSketch,
+  body .clean-learn .textbookVisual,
+  body .clean-learn .productCaseCanvas {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  body .clean-learn .learnTabBar {
+    position: sticky !important;
+    top: 0 !important;
+    display: flex !important;
+    gap: 8px !important;
+    padding: 10px 0 12px !important;
+    border: 0 !important;
+    background: rgba(255,255,255,.96) !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+  }
+
+  body .clean-learn .learnTabBar::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  body .clean-learn .learnTab {
+    flex: 0 0 auto !important;
+    max-width: 180px !important;
+    padding: 9px 12px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  body .clean-learn .caseCourseRows--learn {
+    display: grid !important;
+    gap: 12px !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  body .clean-learn .caseCourseRows--learn .caseCourseRow {
+    display: grid !important;
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 14px !important;
+    gap: 12px !important;
+    border: 1px solid var(--border-hairline) !important;
+    border-radius: 18px !important;
+    background: #fff !important;
+    box-shadow: 0 6px 18px rgba(17,24,39,.04) !important;
+  }
+
+  body .clean-learn .caseCourseRows--learn .caseCourseRow > span {
+    grid-column: 1 !important;
+    grid-row: 1 / span 3 !important;
+    width: 32px !important;
+    height: 32px !important;
+    margin: 1px 0 0 !important;
+    align-self: start !important;
+  }
+
+  body .clean-learn .caseCourseRows--learn .caseCourseRow > div {
+    grid-column: 2 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  body .clean-learn .caseCourseRows--learn .caseCourseRow strong,
+  body .clean-learn .caseCourseRows--learn .caseCourseRow small,
+  body .clean-learn .learnSubtopicTitle,
+  body .clean-learn .learnSubtopicMeta {
+    display: block !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    text-overflow: clip !important;
+  }
+
+  body .clean-learn .caseCourseRows--learn .caseCourseRow strong {
+    font-size: 15px !important;
+    line-height: 1.24 !important;
+  }
+
+  body .clean-learn .caseCourseRows--learn .caseCourseRow small {
+    margin-top: 5px !important;
+    font-size: 12.5px !important;
+    line-height: 1.35 !important;
+    color: var(--text-secondary) !important;
+  }
+
+  body .clean-learn .caseCourseRows--learn .caseCourseRow em {
+    grid-column: 2 !important;
+    margin-top: 8px !important;
+    font-size: 10px !important;
+    letter-spacing: .18em !important;
+  }
+
+  body .clean-learn .learnSubtopicRow {
+    display: grid !important;
+    grid-template-columns: 30px minmax(0, 1fr) 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 10px !important;
+    padding: 13px !important;
+    border-radius: 16px !important;
+  }
+
+  body .clean-learn .learnSubtopicRow > div {
+    min-width: 0 !important;
+  }
+
+  body .reviewOverlay {
+    z-index: 2147483000 !important;
+  }
+
+  body .reviewModal {
+    width: calc(100vw - 24px) !important;
+    max-width: 430px !important;
+    min-width: 0 !important;
+    max-height: 86dvh !important;
+  }
+}
