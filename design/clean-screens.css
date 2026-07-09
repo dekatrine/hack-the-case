@@ -571,6 +571,7 @@
 .clean-learn .sidebarSubtopic.active { background: color-mix(in srgb, var(--accent-primary) 20%, var(--c-white)); border-color: color-mix(in srgb, var(--accent-primary) 45%, var(--c-white)); }
 .clean-learn .sidebarSubtopic.active .sidebarSubName { color: var(--text-primary); }
 .clean-learn .sidebarSubtopic.active .sidebarSubDot { background: var(--accent-primary-deep); border-color: var(--accent-primary-deep); }
+.clean-learn .sidebarChapterDesc { display: none; }
 
 /* course sections raised to sidebar level: chapters are a top-aligned left column */
 .clean-learn .learnLayout--top { padding: 28px 32px 60px; gap: 28px; align-items: start; }
@@ -1505,36 +1506,120 @@
 
   .clean-learn .learnLayout--top {
     grid-template-columns: 1fr;
-    gap: 14px;
-    padding: 12px 12px 42px;
+    gap: 24px;
+    padding: 0 0 42px;
   }
 
   .clean-learn .learnLayout--top .learnSidebar {
     position: static;
     display: block;
-    max-height: 42vh;
-    overflow-y: auto;
-    padding: 14px;
-    border-radius: 20px;
-    box-shadow: 0 8px 28px rgba(17,24,39,.06);
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--c-white);
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
   .clean-learn .learnLayout--top .learnSidebarTitle {
-    display: block;
-    margin-bottom: 10px;
+    display: none;
   }
 
   .clean-learn .sidebarChapterGroup {
     min-width: 0;
+    margin: 0;
+    border-bottom: 1px solid var(--border-hairline);
   }
 
   .clean-learn .sidebarChapterHead {
-    padding: 10px;
-    border-radius: 14px;
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+    min-height: 96px;
+    padding: 18px 20px;
+    border-radius: 0;
+    background: var(--c-white);
+    border: 0;
   }
 
+  .clean-learn .sidebarChapterHead.active {
+    background: color-mix(in srgb, var(--surface-info) 50%, var(--c-white));
+    box-shadow: inset 3px 0 0 color-mix(in srgb, var(--col, var(--accent-primary)) 55%, var(--c-white));
+  }
+
+  .clean-learn .sidebarCircle {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--col, var(--accent-primary)) 22%, var(--c-white));
+    color: var(--text-primary);
+    font-family: var(--font-display-clean);
+    font-size: 13px;
+    font-weight: 760;
+  }
+
+  .clean-learn .sidebarCircle::before {
+    content: attr(data-chapter);
+  }
+
+  .clean-learn .sidebarCircle svg,
+  .clean-learn .sidebarCircleFull {
+    display: none;
+  }
+
+  .clean-learn .sidebarChapterText {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .clean-learn .sidebarChapterName {
+    color: var(--text-primary);
+    font-family: var(--font-display-clean);
+    font-size: 17px;
+    font-weight: 760;
+    line-height: 1.18;
+    letter-spacing: -.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .clean-learn .sidebarChapterName::first-letter {
+    color: inherit;
+  }
+
+  .clean-learn .sidebarChapterDesc {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 12.5px;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .clean-learn .sidebarChapterMeta {
+    margin-top: 8px;
+    color: var(--text-tertiary);
+    font-family: var(--font-label-clean);
+    font-size: 12px;
+    font-weight: 560;
+    letter-spacing: .16em;
+    text-transform: lowercase;
+  }
+
+  .clean-learn .sidebarChapterMeta::first-letter {
+    text-transform: uppercase;
+  }
+
+  .clean-learn .sidebarExpandBtn,
   .clean-learn .sidebarSubtopics {
-    margin-left: 14px;
+    display: none;
   }
 
   .clean-learn .sidebarSubtopic {
@@ -1552,6 +1637,11 @@
 
   .clean-learn .sidebarSubDuration {
     font-size: 10px;
+  }
+
+  .clean-learn .learnMain {
+    min-width: 0;
+    padding: 0 16px;
   }
 
   .clean-learn .learnScreenHeader {
@@ -1612,6 +1702,8 @@
     margin-bottom: 12px;
     font-size: 9px;
     line-height: 1.35;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .clean-learn .noteArticle--detail .noteArticleHero h2,
@@ -1619,6 +1711,8 @@
     font-size: 24px;
     line-height: 1.12;
     letter-spacing: -.025em;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .clean-learn .noteArticle--detail .noteArticleHero p,
@@ -1849,11 +1943,11 @@
   }
 
   .clean-learn .learnLayout--top {
-    padding-inline: 10px;
+    padding-inline: 0;
   }
 
   .clean-learn .learnLayout--top .learnSidebar {
-    max-height: 38vh;
+    max-height: none;
   }
 
   .clean-learn .sidebarSubDuration {

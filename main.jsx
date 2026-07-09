@@ -2842,7 +2842,7 @@ function LearnSidebar({ selectedChapter, selectedSubtopic, onSelect }) {
               className={`sidebarChapterHead${isSelected ? ' active' : ''}`}
               onClick={() => { onSelect(ch); setExpanded((prev) => new Set([...prev, ch.id])); }}
             >
-              <div className="sidebarCircle" style={{ '--col': ch.color }}>
+              <div className="sidebarCircle" style={{ '--col': ch.color }} data-chapter={ch.number}>
                 {pct >= 100
                   ? <span className="sidebarCircleFull">✓</span>
                   : pct > 0
@@ -2851,6 +2851,7 @@ function LearnSidebar({ selectedChapter, selectedSubtopic, onSelect }) {
               </div>
               <div className="sidebarChapterText">
                 <div className="sidebarChapterName">{ch.number}. {ch.title}</div>
+                <div className="sidebarChapterDesc">{ch.description}</div>
                 <div className="sidebarChapterMeta">{ch.subtopics.length} подтем{pct > 0 ? ` · ${pct}%` : ''}</div>
               </div>
               <button className="sidebarExpandBtn" onClick={(e) => toggleExpand(ch.id, e)} aria-label="expand">
