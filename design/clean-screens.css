@@ -319,11 +319,13 @@
   --rust: var(--semantic-danger);
   /* type — drop Fraunces serif for the clean grotesque */
   --serif: var(--font-display-clean);
+  --sans: var(--font-body-clean);
+  --mono: var(--font-label-clean);
 }
 /* heading accent words (italic <em>) must stay high-contrast, not lime-on-white */
 .clean-legacy h1 em, .clean-legacy h2 em, .clean-legacy h3 em,
 .clean-learn h1 em, .clean-learn h2 em, .clean-learn h3 em,
-.clean-screen h1 em, .clean-screen h2 em, .clean-screen h3 em { color: var(--text-primary); font-style: italic; }
+.clean-screen h1 em, .clean-screen h2 em, .clean-screen h3 em { color: var(--text-primary); font-style: normal; }
 
 /* After the --mint→lime remap, legacy elements that used orange for HEADINGS
    or small LABELS would turn lime (unreadable on white). Keep headings black
@@ -3233,4 +3235,102 @@
 
 .clean-legacy.quizPicker .quiz-cat-icon {
   filter: grayscale(1);
+}
+
+/* Unified typography across the clean app pages.
+   One family system: title/body/label all use Inter/system; hierarchy comes
+   from weight and size, not from mixed serif/italic/mono styles. */
+.clean-appshell,
+.clean-appshell .clean-main,
+.clean-appshell .clean-screen,
+.clean-appshell .clean-legacy,
+.clean-appshell .clean-learn {
+  font-family: var(--font-body-clean) !important;
+}
+
+.clean-appshell h1,
+.clean-appshell h2,
+.clean-appshell h3,
+.clean-appshell h4,
+.clean-appshell strong,
+.clean-appshell b,
+.clean-appshell button,
+.clean-appshell input,
+.clean-appshell textarea,
+.clean-appshell select {
+  font-family: var(--font-body-clean) !important;
+}
+
+.clean-appshell .clean-main h1,
+.clean-appshell .clean-screen h1,
+.clean-appshell .clean-screen .hero,
+.clean-appshell .clean-legacy h1.hero,
+.clean-appshell .clean-learn .learnScreenTitle,
+.clean-appshell .clean-learn .learnEmptyState h2 {
+  font-family: var(--font-display-clean) !important;
+  font-style: normal !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.055em !important;
+  line-height: 0.98 !important;
+  color: var(--text-primary) !important;
+}
+
+.clean-appshell .clean-main h2,
+.clean-appshell .clean-screen h2,
+.clean-appshell .clean-learn h2 {
+  font-family: var(--font-display-clean) !important;
+  font-style: normal !important;
+  font-weight: 780 !important;
+  letter-spacing: -0.04em !important;
+  color: var(--text-primary) !important;
+}
+
+.clean-appshell .clean-main h3,
+.clean-appshell .clean-screen h3,
+.clean-appshell .clean-learn h3 {
+  font-family: var(--font-display-clean) !important;
+  font-style: normal !important;
+  font-weight: 760 !important;
+  letter-spacing: -0.025em !important;
+  color: var(--text-primary) !important;
+}
+
+.clean-appshell h1 em,
+.clean-appshell h2 em,
+.clean-appshell h3 em,
+.clean-appshell .hero em,
+.clean-appshell .learnScreenTitle em,
+.clean-appshell .interviewHero h1 em {
+  font-family: inherit !important;
+  font-style: normal !important;
+  font-weight: inherit !important;
+  color: inherit !important;
+}
+
+.clean-appshell p,
+.clean-appshell small,
+.clean-appshell span,
+.clean-appshell li,
+.clean-appshell label,
+.clean-appshell .hero-sub,
+.clean-appshell .learnScreenSub,
+.clean-appshell .cs-sub {
+  font-family: var(--font-body-clean) !important;
+}
+
+.clean-appshell .eyebrow,
+.clean-appshell .cs-eyebrow,
+.clean-appshell .cs-section-label,
+.clean-appshell .clean-eyebrow,
+.clean-appshell .resourcesKicker,
+.clean-appshell .learnSidebarTitle,
+.clean-appshell .learnSidebarResourceGroup,
+.clean-appshell .learnTab,
+.clean-appshell .quiz-cat-tag,
+.clean-appshell .quiz-cat-count,
+.clean-appshell .quizStats p,
+.clean-appshell .cs-meta,
+.clean-appshell .cs-exit {
+  font-family: var(--font-label-clean) !important;
+  font-style: normal !important;
 }
