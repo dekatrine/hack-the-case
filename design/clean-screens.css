@@ -3089,3 +3089,83 @@
     overflow-y: auto !important;
   }
 }
+
+/* New case / quiz picker: remove legacy orange accents, keep clean lime palette. */
+.clean-legacy.quizPicker {
+  color: var(--text-primary);
+}
+
+.clean-legacy.quizPicker .btn-ghost {
+  border-color: var(--border-hairline);
+  background: #ffffff;
+  color: var(--text-primary);
+}
+
+.clean-legacy.quizPicker .btn-ghost:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-sunk);
+}
+
+.clean-legacy.quizPicker .num,
+.clean-legacy.quizPicker .eyebrow,
+.clean-legacy.quizPicker .quiz-cat-tag,
+.clean-legacy.quizPicker .quizStats p {
+  color: var(--accent-primary);
+}
+
+.clean-legacy.quizPicker .hero,
+.clean-legacy.quizPicker .hero em {
+  color: var(--text-primary);
+}
+
+.clean-legacy.quizPicker .hero-sub,
+.clean-legacy.quizPicker .quiz-cat-sub,
+.clean-legacy.quizPicker .quiz-cat-count {
+  color: var(--text-secondary);
+}
+
+.clean-legacy.quizPicker .quizStats div {
+  border: 1px solid var(--border-hairline);
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.clean-legacy.quizPicker .quizStats span {
+  color: var(--text-primary);
+}
+
+.clean-legacy.quizPicker .quiz-cat-card {
+  border: 1px solid var(--border-hairline);
+  background:
+    radial-gradient(260px 140px at 86% 10%, color-mix(in srgb, var(--accent-primary) 7%, transparent), transparent 64%),
+    #ffffff;
+  box-shadow: none;
+}
+
+.clean-legacy.quizPicker .quiz-cat-card:hover,
+.clean-legacy.quizPicker .quiz-cat-card:focus-visible {
+  border-color: color-mix(in srgb, var(--accent-primary) 56%, var(--border-hairline));
+  background:
+    radial-gradient(300px 160px at 86% 10%, color-mix(in srgb, var(--accent-primary) 11%, transparent), transparent 64%),
+    #ffffff;
+}
+
+.clean-legacy.quizPicker .quiz-cat-card:first-child {
+  border-color: color-mix(in srgb, var(--accent-primary) 46%, var(--border-hairline));
+}
+
+.clean-legacy.quizPicker .quiz-cat-title {
+  color: var(--text-primary);
+}
+
+.clean-legacy.quizPicker .quiz-cat-mastery {
+  background: var(--border-hairline);
+}
+
+.clean-legacy.quizPicker .quiz-cat-mastery span {
+  background: var(--accent-primary);
+}
+
+.clean-legacy.quizPicker .quiz-cat-icon {
+  filter: grayscale(1);
+}
