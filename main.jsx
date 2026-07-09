@@ -2779,30 +2779,21 @@ const HubIcons = {
   term: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 5h16M4 12h16M4 19h10"/></svg>,
 };
 
-function ResourcesOverview({ onSelectChapter, onOpenTab }) {
+function ResourcesOverview({ onOpenTab, onOpenReview }) {
   return (
     <div className="cs-hub cs-hub--courseOnly">
       <div className="cs-section-label">Модули курса</div>
-      <p className="cs-sub">Выбери главу из списка ниже. Конспекты, практика, карточки и термины доступны через вкладки раздела.</p>
-      <div className="caseCourseRows caseCourseRows--learn">
-        {PM_CHAPTERS.map((chapter) => (
-          <button
-            key={chapter.id}
-            className="caseCourseRow"
-            onClick={() => {
-              onSelectChapter(chapter);
-              onOpenTab('Notes');
-            }}
-            style={{ '--col': chapter.color }}
-          >
-            <span>{chapter.number}</span>
-            <div>
-              <strong>{chapter.title}</strong>
-              <small>{chapter.description}</small>
-            </div>
-            <em>{chapter.subtopics.length} тем</em>
-          </button>
-        ))}
+      <div className="learnEmptyState">
+        <span className="learnEmptyStateIcon">{HubIcons.notes}</span>
+        <h2>Выбери главу в левом меню</h2>
+        <p>Список модулей уже находится слева. Здесь остаются быстрые переходы к форматам учёбы без дублирования тем.</p>
+        <div className="learnQuickActions" aria-label="Быстрые действия">
+          <button type="button" onClick={() => onOpenTab('Notes')}>Конспекты</button>
+          <button type="button" onClick={() => onOpenTab('Questionbank')}>Банк вопросов</button>
+          <button type="button" onClick={() => onOpenTab('Flashcards')}>Карточки</button>
+          <button type="button" onClick={() => onOpenTab('Key Definitions')}>Термины</button>
+          <button type="button" onClick={onOpenReview}>AI-наставник</button>
+        </div>
       </div>
     </div>
   );

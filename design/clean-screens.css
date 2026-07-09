@@ -744,6 +744,66 @@
   max-width: 920px;
 }
 
+.clean-learn .learnEmptyState {
+  margin-top: 18px;
+  padding: 34px;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--r-clean-card);
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(17, 24, 39, 0.05);
+}
+
+.clean-learn .learnEmptyStateIcon {
+  display: inline-grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--c-black);
+  color: #ffffff;
+}
+
+.clean-learn .learnEmptyState h2 {
+  margin: 18px 0 8px;
+  color: var(--text-primary);
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 820;
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+}
+
+.clean-learn .learnEmptyState p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.clean-learn .learnQuickActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.clean-learn .learnQuickActions button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--border-hairline);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--text-primary);
+  font: 750 12px/1 var(--font-title);
+  letter-spacing: 0.03em;
+  cursor: pointer;
+}
+
+.clean-learn .learnQuickActions button:hover {
+  border-color: color-mix(in srgb, var(--accent-primary) 48%, var(--border-hairline));
+  background: color-mix(in srgb, var(--accent-primary) 12%, #ffffff);
+}
+
 .clean-learn .caseCourseRows--learn {
   margin-top: 18px;
 }
