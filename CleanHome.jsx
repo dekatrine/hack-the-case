@@ -58,13 +58,13 @@ export default function CleanHome({ onNewCase, onOpenLearn, onOpenInterview, onO
         <div className="clean-hero-row">
           <div>
             <div className="clean-track-line">
-              <span className="name">Product Manager</span>
-              <span className="focus">· Product Sense, Метрики, Эксперименты</span>
+              <span className="name">Продуктовый менеджер</span>
+              <span className="focus">· продуктовые кейсы, метрики, эксперименты</span>
             </div>
             <h1>Готов разобрать кейс сегодня?</h1>
           </div>
           <div className="clean-stats">
-            <div className="clean-stat"><b>{stats.streak} дн.</b><span>Стрик</span></div>
+            <div className="clean-stat"><b>{stats.streak} дн.</b><span>Дней подряд</span></div>
             <div className="clean-stat"><b>Ур. {stats.level}</b><span>Уровень</span></div>
             <div className="clean-stat"><b>{stats.avgScore ?? '—'}</b><span>Средний балл</span></div>
           </div>
@@ -81,7 +81,7 @@ export default function CleanHome({ onNewCase, onOpenLearn, onOpenInterview, onO
           <div className="xp">
             <div className="clean-progress-row">
               <span>Прогресс уровня</span>
-              <span>{stats.xpIntoLevel} / 300 XP</span>
+              <span>{stats.xpIntoLevel} / 300 опыта</span>
             </div>
             <ProgressBar face="clean" value={Math.round((stats.xpIntoLevel / 300) * 100)} />
           </div>

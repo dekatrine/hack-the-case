@@ -20,7 +20,7 @@ export function Chip({ children, tone = 'neutral', face = 'clean', solid = false
   };
   const editorialTones = {
     neutral: { color: 'var(--text-secondary)', borderColor: 'var(--border-hairline)' },
-    accent: { color: 'var(--accent-primary)', borderColor: 'rgba(255,122,24,0.3)' },
+    accent: { color: 'var(--accent-primary-deep)', borderColor: 'color-mix(in srgb, var(--accent-primary) 50%, var(--border-hairline))' },
   };
   const cleanTones = {
     neutral: { background: 'transparent', color: 'var(--text-tertiary)', border: '1px solid var(--border-hairline)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600, fontSize: 11 },

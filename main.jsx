@@ -218,11 +218,6 @@ function CleanShell({ active, onNav, onLegacy, learnActions, children }) {
             )}
           </React.Fragment>
         ))}
-        {onLegacy && (
-          <button type="button" className="clean-legacy-link" onClick={onLegacy}>
-            PMQuest (классический режим) →
-          </button>
-        )}
       </aside>
       <div className="clean-appmain">{children}</div>
     </div>
@@ -1763,12 +1758,12 @@ const InterviewTogether = ({ onBack }) => {
       <div className="cs-main w1040 interviewPage">
       <div className="cs-topline">
         <button className="cs-exit" onClick={onBack}>← На главную</button>
-        <span className="cs-meta">Mock interview</span>
+        <span className="cs-meta">Мок-интервью</span>
       </div>
 
       <section className="interviewHero">
         <div className="interviewHeroCopy">
-          <div className="eyebrow"><span className="num">03 /</span> Mock interview lab</div>
+          <div className="eyebrow"><span className="num">03 /</span> Тренажёр интервью</div>
           <h1 className="hero" style={{ fontSize: 'clamp(38px, 6vw, 74px)' }}>
             Решаем<br/><em>собеседование</em><br/>вместе
           </h1>
@@ -2514,12 +2509,12 @@ function QuizCategoryPicker({ onSelect, onBack }) {
       <button className="btn btn-ghost" onClick={onBack} style={{ marginBottom: 32 }}>← На главную</button>
       <div className="eyebrow"><span className="num">00 /</span> Выбери тему</div>
       <h1 className="hero" style={{ fontSize: 'clamp(32px, 5vw, 56px)' }}>
-        Практика в формате<br/><em>Duolingo</em>
+        Спринт‑квиз<br/><em>по продукту</em>
       </h1>
       <p className="hero-sub">10 вопросов из темы — 4 варианта ответа — мгновенное объяснение. Тренируй то, что спрашивают на интервью в продукте, BigTech и консалтинге.</p>
       <div className="quizStats">
-        <div><span>{progress.xp}</span><p>XP</p></div>
-        <div><span>{progress.streak}</span><p>дней streak</p></div>
+        <div><span>{progress.xp}</span><p>опыта</p></div>
+        <div><span>{progress.streak}</span><p>дней подряд</p></div>
         <div><span>{progress.sessions}</span><p>спринтов</p></div>
         <div><span>{getQuizQuestionCount()}</span><p>вопросов</p></div>
       </div>
@@ -2667,8 +2662,8 @@ function QuizResult({ score, total, category, mistakes, xpGain, streak, onRetry,
         <h2 className="quizResultScore">{score}/{total}</h2>
         <p className="quizResultPct">{pct}% правильных ответов</p>
         <div className="quizResultStats">
-          <span>+{xpGain} XP</span>
-          <span>{streak} day streak</span>
+          <span>+{xpGain} опыта</span>
+          <span>{streak} дней подряд</span>
           <span>{mistakes} ошибок</span>
         </div>
         <p className="quizResultMsg">{msg}</p>
@@ -2743,8 +2738,8 @@ const LearningScreen = ({ onBack, initialTab = 'All Resources', autoOpenReview =
           {!isNoteDetail && <div className="learnScreenHeader">
             <button className="btn btn-ghost" onClick={onBack}>← Главная</button>
             <div>
-              <div className="eyebrow"><span className="num">02 /</span> Resource dojo</div>
-              <h1 className="learnScreenTitle">Case prep <em>resources</em></h1>
+              <div className="eyebrow"><span className="num">02 /</span> Библиотека подготовки</div>
+              <h1 className="learnScreenTitle">Материалы для кейсов</h1>
               <p className="learnScreenSub">{PM_CHAPTERS.length} модулей · {Object.values(FLASHCARDS).reduce((s, a) => s + a.length, 0)} карточек · {PRACTICE_QUESTIONS.length} вопросов · {KEY_DEFINITIONS.length} терминов</p>
             </div>
             <button className="btn btn-primary" onClick={() => setReviewOpen(true)}>
@@ -3877,7 +3872,7 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
         <div className="noteArticleHero" style={{ '--ch-color': activeChapter.color }}>
           <div>
             <div className="noteArticleCrumbs">
-              <span>Case prep resources</span>
+              <span>Материалы для кейсов</span>
               <b>›</b>
               <span>Уроки</span>
               <b>›</b>
@@ -4017,7 +4012,7 @@ function NotesContent({ chapter, selectedSubtopic, onSelectChapter }) {
       <div className="noteArticleHero" style={{ '--ch-color': activeChapter.color }}>
         <div>
           <div className="noteArticleCrumbs">
-            <span>Case prep resources</span>
+            <span>Материалы для кейсов</span>
             <b>›</b>
             <span>Конспекты</span>
             <b>›</b>
