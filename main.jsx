@@ -7,7 +7,6 @@ import { ScoreBadge } from './components/ui/score-badge.jsx';
 import { Progress } from './components/ui/progress.jsx';
 import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from './quizData.js';
 import { PM_CHAPTERS, FLASHCARDS, PRACTICE_QUESTIONS, KEY_DEFINITIONS, LEARN_TOGETHER_CONTENT } from './courseData.js';
-import PMQuestHifi from './pmquest-hifi.jsx';
 import CleanHome from './CleanHome.jsx';
 import { Button as CleanButton } from './design/components/Button.jsx';
 import { Chip as CleanChip } from './design/components/Chip.jsx';
@@ -161,7 +160,7 @@ const SHELL_NAV = [
   { key: 'learn', label: 'Уроки', icon: BookIcon },
   { key: 'interview', label: 'Mock-интервью', icon: MicIcon },
 ];
-function CleanShell({ active, onNav, onLegacy, learnActions, children }) {
+function CleanShell({ active, onNav, learnActions, children }) {
   const learnShortcutGroups = learnActions ? [
     {
       label: 'Практика',
@@ -2184,7 +2183,7 @@ const InterviewSectionBody = ({ section, data = false, compact = false }) => {
 const App = () => {
   const [config, setConfig] = useState(null);
   const [err, setErr] = useState(null);
-  const [screen, setScreen] = useState('home'); // home (clean) | pmquest-hifi | landing | track | workspace | quiz | interview | learn
+  const [screen, setScreen] = useState('home'); // home | landing | track | workspace | quiz | interview | learn
   const [quizCategory, setQuizCategory] = useState(null);
   const [learnInitialTab, setLearnInitialTab] = useState('All Resources');
   const [learnAutoReview, setLearnAutoReview] = useState(false);
@@ -2249,26 +2248,18 @@ const App = () => {
 
   // Постоянный левый сайдбар на всех clean-экранах.
   const shellNav = (key) => setScreen(key);
-  const openLegacy = () => setScreen('pmquest-hifi');
 
   // CleanHome — новый основной экран (clean-дизайн из Claude Design).
   if (screen === 'home') {
     return (
-      <CleanShell active="home" onNav={shellNav} onLegacy={openLegacy}>
+      <CleanShell active="home" onNav={shellNav}>
         <CleanHome
           onNewCase={() => setScreen('landing')}
           onOpenLearn={() => { setLearnInitialTab('Notes'); setLearnAutoReview(false); setScreen('learn'); }}
           onOpenInterview={() => setScreen('interview')}
-          onOpenLegacy={openLegacy}
         />
       </CleanShell>
     );
-  }
-
-  // PMQuest has local lessons and fallback practice, so it remains useful when
-  // the optional AI backend is unavailable.
-  if (screen === 'pmquest-hifi') {
-    return <PMQuestHifi />;
   }
 
   if (err && !config) return <FullErr msg={err} />;
@@ -2283,7 +2274,7 @@ const App = () => {
   // Выбор направления — track picker.
   if (screen === 'landing') {
     return (
-      <CleanShell active="landing" onNav={shellNav} onLegacy={openLegacy}>
+      <CleanShell active="landing" onNav={shellNav}>
         <Landing
           tracks={config.tracks}
           onPickTrack={(t) => { setTrack(t); setScreen('track'); }}
@@ -2299,7 +2290,7 @@ const App = () => {
   // Mock-интервью.
   if (screen === 'interview') {
     return (
-      <CleanShell active="interview" onNav={shellNav} onLegacy={openLegacy}>
+      <CleanShell active="interview" onNav={shellNav}>
         <InterviewTogether onBack={() => setScreen('home')} />
       </CleanShell>
     );
@@ -2308,7 +2299,7 @@ const App = () => {
   // Sprint quiz (MCQ).
   if (screen === 'quiz') {
     return (
-      <CleanShell active="landing" onNav={shellNav} onLegacy={openLegacy}>
+      <CleanShell active="landing" onNav={shellNav}>
         <QuizPage
           category={quizCategory}
           onSelectCategory={setQuizCategory}
@@ -2341,7 +2332,7 @@ const App = () => {
     };
 
     return (
-      <CleanShell active="learn" onNav={shellNav} onLegacy={openLegacy} learnActions={learnActions}>
+      <CleanShell active="learn" onNav={shellNav} learnActions={learnActions}>
         <LearningScreen
           onBack={() => setScreen('home')}
           initialTab={learnInitialTab}
@@ -2355,7 +2346,7 @@ const App = () => {
   // Настройка кейса (макет QuizPage). Экран генерации тоже здесь (busy).
   if (screen === 'track' && track) {
     return (
-      <CleanShell active="landing" onNav={shellNav} onLegacy={openLegacy}>
+      <CleanShell active="landing" onNav={shellNav}>
         <TrackDetail
           track={track}
           industries={config.industries}
@@ -2373,7 +2364,7 @@ const App = () => {
   // Решение кейса (макет SolvePage).
   if (screen === 'workspace') {
     return (
-      <CleanShell active="landing" onNav={shellNav} onLegacy={openLegacy}>
+      <CleanShell active="landing" onNav={shellNav}>
         <Workspace
           caseText={caseText}
           steps={config.steps}
