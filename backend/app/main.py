@@ -36,10 +36,6 @@ from .schemas import (
     GenerateCaseResponse,
     GenerateInterviewRequest,
     GenerateInterviewResponse,
-    LearnExplainRequest,
-    LearnExplainResponse,
-    LearnSessionRequest,
-    LearnSessionResponse,
     PhaseQuestion,
 )
 
@@ -155,7 +151,7 @@ def get_app_config() -> dict:
 def _case_prompt(payload: GenerateCaseRequest) -> tuple[str, str]:
     """Возвращает (track_name, prompt) для генерации кейса."""
     track = next((item for item in TRACKS if item.get("id") == payload.trackId), None)
-    track_name = track["name"] if track else "Бизнес-кейсы"
+    track_name = track["name"] if track else "Продуктовые кейсы"
     case_kind = (
         "продуктовый кейс для PM-интервью"
         if payload.trackId == "product"
@@ -351,7 +347,7 @@ def generate_phases_for_case(
         f"Грейд кандидата: {grade_label}\n\n"
         f"Текст кейса:\n{case_text[:4000]}\n\n"
         "Собери маршрут из 5–7 фаз решения этого кейса. В каждой фазе — 2–4 sub-вопроса, "
-        "конкретно про этот кейс. Финальная фаза — рекомендация и risks. Верни JSON с полем phases."
+        "конкретно про этот кейса. Финальная фаза — рекомендация и risks. Верни JSON с полем phases."
     )
 
     try:
@@ -372,7 +368,7 @@ def _parse_phases(raw: str) -> list[CasePhase]:
     if not raw:
         return []
     text = raw.strip()
-    match = re.search(r"\{.*\}", text, re.DOTALL)
+    match = re.search(r"\{**\}", text, re.DOTALL)
     if not match:
         return []
     try:
@@ -471,7 +467,7 @@ def _parse_step_ids(raw: str, allowed_ids: list[str]) -> list[str]:
 
     if len(ordered) > MAX_PICKED_STEPS:
         # Обрезаем хвост, но гарантируем, что final_synthesis (если был в выборе)
-        # сохранится последним шагом маршрута.
+        # сохраняем последним шагом маршрута.
         had_synthesis = "final_synthesis" in ordered
         trimmed = ordered[:MAX_PICKED_STEPS]
         if had_synthesis and "final_synthesis" not in trimmed:
@@ -539,7 +535,7 @@ def check_interview_answer(payload: CheckInterviewRequest) -> CheckInterviewResp
         system = INTERVIEW_FINAL_SYSTEM
         temperature = 0.3
     elif payload.mode == "coach":
-        prompt = f"""Кандидат отвечает на текущем раунде. Помоги наводящими подсказками, без оценки.
+        prompt = f"""Кандидат отвечает на текуЩем раунде. Помоги наводящими подсказками, без оценки.
 
 НАПРАВЛЕНИЕ: {payload.directionId}
 БЛОК: {payload.blockId}
@@ -643,58 +639,6 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
-@app.post("/api/learn/explain", response_model=LearnExplainResponse)
-def learn_explain(payload: LearnExplainRequest) -> LearnExplainResponse:
-    difficulty_label = {"simplified": "очень простыми словами, как будто объясняешь школьнику", "normal": "чётко и понятно", "advanced": "с глубокими деталями и нюансами"}.get(payload.difficulty, "чётко и понятно")
-    prompt = f"""Объясни концепцию продуктового менеджмента.
-
-Тема: {payload.topic}
-Подтема: {payload.subtopic}
-Уровень объяснения: {difficulty_label}
-"""
-    if payload.question:
-        prompt += f"\nВопрос, на котором пользователь ошибся: {payload.question}"
-    if payload.wrongAnswer:
-        prompt += f"\nНеправильный ответ пользователя: {payload.wrongAnswer}"
-    if payload.correctAnswer:
-        prompt += f"\nПравильный ответ: {payload.correctAnswer}"
-
-    prompt += "\n\nДай объяснение (3-5 предложений) и один практический совет (tip). Отвечай строго в формате JSON: {\"explanation\": \"...\", \"tip\": \"...\"}"
-
-    system = "Ты опытный PM-ментор. Объясняй ясно, с примерами. Давай практические советы. Отвечай только валидным JSON без markdown-блоков."
-    raw = ""
-    try:
-        raw = call_yandex_gpt(system, prompt, temperature=0.4, max_tokens=600)
-        # Модель часто оборачивает JSON в ```json ... ``` markdown — вытаскиваем
-        # первый сбалансированный объект через regex.
-        m = re.search(r"\{.*\}", raw, re.DOTALL)
-        parsed = json.loads(m.group(0) if m else raw)
-        return LearnExplainResponse(
-            explanation=parsed.get("explanation", raw),
-            tip=parsed.get("tip", ""),
-        )
-    except Exception:
-        return LearnExplainResponse(explanation=raw or "", tip="")
-
-
-@app.post("/api/learn/session", response_model=LearnSessionResponse)
-def learn_session(payload: LearnSessionRequest) -> LearnSessionResponse:
-    level_label = {"beginner": "максимально просто и доступно", "normal": "понятно с примерами", "advanced": "подробно с нюансами"}.get(payload.userLevel, "понятно с примерами")
-    prompt = f"""Напиши обучающее объяснение для студента, изучающего продуктовый менеджмент.
-
-Раздел курса: {payload.chapterId}
-Подтема: {payload.subtopicId}
-Стиль: {level_label}
-
-Напиши 2-3 абзаца, объясняющих эту тему. Включи конкретный пример. Не используй markdown, только чистый текст.
-"""
-    try:
-        exposition = call_yandex_gpt("Ты опытный PM-преподаватель. Объясняй ясно, с примерами из реального мира.", prompt, temperature=0.5, max_tokens=800)
-        return LearnSessionResponse(exposition=exposition)
-    except RuntimeError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
-
-
 def build_coach_context(payload: CoachRequest) -> str:
     previous = []
     for step in CASE_STEPS:
@@ -723,9 +667,9 @@ def build_coach_context(payload: CoachRequest) -> str:
 {chr(10).join(previous) if previous else '(пока нет)'}
 
 ОТВЕТ СТУДЕНТА НА ТЕКУЩИЙ БЛОК:
-{payload.answerText.strip() or '(студент ещё не написал ответ)'}
+{payload.answerText.strip() or 'студент ещё не написал ответ)'}
 
-ИСТОРИЯ ДИАЛОГА:
+ИСТОРИя ДИАЛОГА:
 {chr(10).join(history) if history else '(пока нет)'}
 
 СООБЩЕНИЕ СТУДЕНТА:
