@@ -47,7 +47,7 @@ function computeStats() {
   return { xp, level, xpIntoLevel, weekCount: weekAttempts.length, avgScore, streak, attempts: history.length };
 }
 
-export default function CleanHome({ onNewCase, onOpenLearn, onOpenInterview, onOpenLegacy }) {
+export default function CleanHome({ onNewCase, onOpenInterview, onOpenLegacy }) {
   const stats = useMemo(computeStats, []);
   const savedCases = useMemo(() => readJSON('pmquest-saved-cases-v1', []), []);
   const lastCase = savedCases.length ? savedCases[savedCases.length - 1] : null;
@@ -114,11 +114,11 @@ export default function CleanHome({ onNewCase, onOpenLearn, onOpenInterview, onO
               </h3>
             </Card>
           )}
-          <Card face="clean" className="clean-library" onClick={onOpenLearn}>
-            <div className="ico">{BookIcon}</div>
+          <Card face="clean" className="clean-library" onClick={onOpenInterview}>
+            <div className="ico">{MicIcon}</div>
             <div style={{ flex: 1 }}>
-              <b>Библиотека уроков</b>
-              <p>Фреймворки, метрики, поведенческие вопросы — короткие карточки.</p>
+              <b>Устное интервью</b>
+              <p>5 раундов с ИИ-интервьюером, вопросы и разбор ответа.</p>
             </div>
             <div className="open">Открыть →</div>
           </Card>
