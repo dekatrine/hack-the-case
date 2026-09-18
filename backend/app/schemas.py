@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class GenerateCaseRequest(BaseModel):
+    mvp: bool = False
     industry: str
     difficulty: str
     extraContext: str = ""
@@ -87,6 +88,7 @@ class CoachResponse(BaseModel):
 
 
 class EvaluateRequest(BaseModel):
+    mvp: bool = False
     caseText: str
     answers: dict[str, str] = Field(default_factory=dict)
     trackId: Optional[str] = None

@@ -2,12 +2,12 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { createRoot } from 'react-dom/client';
 import { api } from './api/client.js';
 import { initAnalytics } from './api/analytics.js';
-import { initSync } from './api/sync.js';
 import { ScoreBadge } from './components/ui/score-badge.jsx';
 import { Progress } from './components/ui/progress.jsx';
 import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from './quizData.js';
 import { PM_CHAPTERS, FLASHCARDS, PRACTICE_QUESTIONS, KEY_DEFINITIONS, LEARN_TOGETHER_CONTENT } from './courseData.js';
 import CleanHome from './CleanHome.jsx';
+import MvpApp from './MvpApp.jsx';
 import { Button as CleanButton } from './design/components/Button.jsx';
 import { Chip as CleanChip } from './design/components/Chip.jsx';
 import { ScoreDisplay as CleanScore } from './design/components/ScoreDisplay.jsx';
@@ -4581,7 +4581,7 @@ class ErrorBoundary extends React.Component {
 initAnalytics();
 
 function mountApp() {
-  createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>);
+  createRoot(document.getElementById('root')).render(<ErrorBoundary><MvpApp /></ErrorBoundary>);
   // Убираем стартовый сплэш (плавно) после монтирования.
   const splash = document.getElementById('app-splash');
   if (splash) {
@@ -4590,9 +4590,5 @@ function mountApp() {
   }
 }
 
-// Пытаемся подтянуть прогресс с сервера, НО не блокируем рендер дольше 2.5с
-// (на free-tier бэкенд может «просыпаться» до минуты — не держим сплэш всё это время).
-Promise.race([
-  initSync(),
-  new Promise((resolve) => setTimeout(resolve, 2500)),
-]).finally(mountApp);
+// MVP хранит кейсы локально; прежняя серверная синхронизация остаётся в api/sync.js.
+mountApp();

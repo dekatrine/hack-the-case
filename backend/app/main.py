@@ -21,6 +21,7 @@ from .prompts import (
     INTERVIEW_GENERATION_SYSTEM,
     PHASE_GENERATION_SYSTEM,
     RUBRIC_SYSTEM,
+    MVP_RUBRIC_SYSTEM,
     STEP_SELECTION_SYSTEM,
     get_coach_system_prompt,
 )
@@ -180,12 +181,14 @@ def _case_prompt(payload: GenerateCaseRequest) -> tuple[str, str]:
         )
     if payload.extraContext.strip():
         prompt += f"\nДополнительный контекст: {payload.extraContext.strip()}"
+    if payload.mvp:
+        prompt += "\nКейс на 15–20 минут. Дай короткий заголовок, условие, достаточные численные данные и конкретный вопрос. Решение состоит из четырёх блоков: понимание проблемы, гипотезы, анализ данных, рекомендация. Не добавляй учебный маршрут, ответы или подсказки. Все данные вымышленные, но внутренне согласованные."
     return track_name, prompt
 
 
 def _route_for_case(payload: GenerateCaseRequest, track_name: str, case_text: str):
     """AI-маршрут (phases + step selection) — только для product-трека."""
-    if payload.trackId != "product":
+    if payload.mvp or payload.trackId != "product":
         return [], []
     phases = generate_phases_for_case(
         case_text=case_text,
@@ -617,6 +620,25 @@ def ask_coach(payload: CoachRequest) -> CoachResponse:
 
 @app.post("/api/evaluate", response_model=EvaluateResponse)
 def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
+    if payload.mvp:
+        fields = {
+            "problem": "Понимание проблемы",
+            "hypotheses": "Гипотезы",
+            "analysis": "Данные и расчёты",
+            "recommendation": "Рекомендация",
+        }
+        if not any(payload.answers.get(key, "").strip() for key in fields):
+            raise HTTPException(status_code=422, detail="Сначала напиши решение")
+        answers = "\n\n".join(
+            f"{title}:\n{payload.answers.get(key, '').strip() or '(пропущено)'}"
+            for key, title in fields.items()
+        )
+        prompt = f"КЕЙС:\n{payload.caseText}\n\nОТВЕТ ПОЛЬЗОВАТЕЛЯ:\n{answers}"
+        try:
+            evaluation = call_yandex_gpt(MVP_RUBRIC_SYSTEM, prompt, temperature=0.3)
+            return EvaluateResponse(evaluation=evaluation)
+        except RuntimeError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
     answers_summary = []
     used_ids = set()
     for step in CASE_STEPS:
