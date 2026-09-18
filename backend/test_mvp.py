@@ -17,13 +17,16 @@ class MvpTests(unittest.TestCase):
         model.assert_called_once()
 
     @patch('app.main.call_yandex_gpt', return_value='{"summary":"Разбор"}')
-    def test_evaluation_uses_four_fields_and_full_case(self, model):
+    def test_evaluation_uses_short_questions_and_full_case(self, model):
         case = 'A' * 4000 + 'ВАЖНОЕ ОГРАНИЧЕНИЕ'
-        evaluate(EvaluateRequest(caseText=case, answers={'problem': 'Моя гипотеза'}, mvp=True))
+        evaluate(EvaluateRequest(caseText=case, answers={'problem': 'Моя гипотеза', 'audience': 'Новые клиенты', 'validation': 'Проверю мобильную воронку', 'metric': 'Конверсия должна вырасти', 'risk': 'Рост отмен'}, mvp=True))
         system, prompt = model.call_args.args
         self.assertEqual(system, MVP_RUBRIC_SYSTEM)
         self.assertIn('ВАЖНОЕ ОГРАНИЧЕНИЕ', prompt)
         self.assertIn('Моя гипотеза', prompt)
+        for answer in ['Новые клиенты', 'Проверю мобильную воронку', 'Конверсия должна вырасти', 'Рост отмен']:
+            self.assertIn(answer, prompt)
+        self.assertIn('Краткий ответ — полноценный ответ', system)
         self.assertIn('Данные и расчёты:', prompt)
         self.assertNotIn('Roadmap', prompt)
 

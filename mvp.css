@@ -156,3 +156,21 @@
  .mvp-form-footer > button { width:100%; }
  .mvp-form-footer > span { width:100%; }
 }
+/* Short answers and readable generated case content. */
+.mvp-screen-solve .mvp-form textarea { min-height:76px; height:76px; }
+.mvp-screen-solve .mvp-form textarea::placeholder { color:var(--text-secondary); font-size:12px; }
+.mvp-case-content { font-size:14px; line-height:1.75; overflow-wrap:anywhere; }
+.mvp-case-content h3 { font-size:16px; line-height:1.4; margin:26px 0 12px; padding-top:18px; border-top:1px solid var(--border-hairline); }
+.mvp-case-content h3:first-child { margin-top:16px; padding-top:0; border:0; }
+.mvp-case-content p { margin:0 0 14px; }
+.mvp-case-content ul,.mvp-case-content ol { padding-left:22px; margin:12px 0 20px; }
+.mvp-case-content li { padding-left:4px; margin:8px 0; }
+.mvp-case-content strong { font-weight:650; }
+.mvp-case-fact { display:flex; flex-direction:column; gap:4px; }
+.mvp-case-fact > strong { font-size:11px; color:var(--text-secondary); }
+.mvp-case-content hr { border:0; border-top:1px solid var(--border-hairline); margin:20px 0; }
+.mvp-case-table { overflow-x:auto; margin:16px 0 22px; border:1px solid var(--border-hairline); border-radius:10px; }
+.mvp-case-table table { width:100%; border-collapse:collapse; font-size:12px; text-align:left; }
+.mvp-case-table th { background:var(--surface-sunk); font-weight:600; }
+.mvp-case-table :is(th,td) { padding:10px 12px; border-bottom:1px solid var(--border-hairline); }
+.mvp-case-table tr:last-child td { border-bottom:0; }

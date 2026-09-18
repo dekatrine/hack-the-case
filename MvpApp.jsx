@@ -3,13 +3,24 @@ import { ArrowUpRight, ArrowRight, ChevronDown, Check, BriefcaseBusiness, Layers
 import { api } from './api/client.js';
 import { Button } from './design/components/Button.jsx';
 import './mvp.css';
+import CaseContent from './CaseContent.jsx';
 
 export const STORAGE_KEY = 'htc_mvp_cases_v1';
-const FIELDS = [
+const LEGACY_FIELDS = [
   ['problem', 'Как ты понимаешь проблему?', 'Цель, пользователь, ограничения и критерий успеха.'],
   ['hypotheses', 'Какие гипотезы проверишь?', 'Возможные причины и порядок их проверки.'],
   ['analysis', 'Какие данные и расчёты используешь?', 'Используй числа из условия. Отдельно обозначь допущения.'],
   ['recommendation', 'Что рекомендуешь и почему?', 'Решение, аргументы, риски и способ измерить результат.'],
+];
+const FIELDS = [
+  ['problem', 'Что нужно изменить в этом кейсе?', 'Назови одну главную проблему или цель.', 'Например: повысить конверсию в заказ.'],
+  ['audience', 'Для кого это особенно важно?', 'Один сегмент пользователей, клиентов или часть бизнеса.', 'Назови сегмент и коротко объясни выбор.'],
+  ['hypotheses', 'В чём может быть причина проблемы?', 'Достаточно одной-двух гипотез.', 'Думаю, причина в …'],
+  ['analysis', 'Какой факт из условия поддерживает твою мысль?', 'Одно число, сравнение или короткий расчёт. Если данных нет — укажи это.', 'В условии … Это может означать …'],
+  ['validation', 'Что проверишь первым?', 'Назови одну проверку, которая поможет подтвердить или отвергнуть гипотезу.', 'Сравню … / Проверю …'],
+  ['recommendation', 'Какое действие предлагаешь?', 'Одно конкретное действие и короткое «почему».', 'Предлагаю …, потому что …'],
+  ['metric', 'По чему поймёшь, что стало лучше?', 'Метрика и желаемое направление изменения.', 'Должна вырасти / снизиться …'],
+  ['risk', 'Что может пойти не так?', 'Один риск или ограничение твоего решения.', 'Есть риск, что …'],
 ];
 function loadCases() {
   try {
@@ -86,7 +97,7 @@ export default function MvpApp() {
     try {
       const result = await api.evaluate({ caseText: item.caseText, answers, trackId: item.params.trackId, mvp: true });
       if (!result.evaluation?.trim()) throw new Error('ИИ вернул пустой разбор. Попробуй ещё раз.');
-      update(item.id, c => ({ ...c, attempts: [...c.attempts, { answers, evaluation: result.evaluation, createdAt: new Date().toISOString() }] }));
+      update(item.id, c => ({ ...c, attempts: [...c.attempts, { answers, questionVersion: 2, evaluation: result.evaluation, createdAt: new Date().toISOString() }] }));
       setAttemptIndex(null); go('review');
     } catch (e) { setError(e.message || 'Не удалось проверить решение. Твой ответ сохранён — попробуй ещё раз.'); }
     finally { lock.current = false; setBusy(''); }
@@ -153,13 +164,13 @@ export default function MvpApp() {
       {screen === 'solve' && active && <>
         <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
         <div className="clean-eyebrow">Шаг 2 · Решение</div><h1>Твой ход</h1>
-        <p className="mvp-lead">Сформулируй решение в четырёх блоках. Можно отправить неполный ответ.</p>
+        <p className="mvp-lead">Восемь коротких вопросов. На каждый достаточно одной-двух фраз — важна мысль, а не объём.</p>
         <div className="mvp-workspace">
-          <aside className="mvp-card mvp-condition"><h2>Условие кейса</h2><p className="mvp-muted">Данные кейса сгенерированы ИИ для тренировки.</p><div className="mvp-prose">{active.caseText}</div>
+          <aside className="mvp-card mvp-condition"><h2>Условие кейса</h2><p className="mvp-muted">Данные кейса сгенерированы ИИ для тренировки.</p><CaseContent text={active.caseText}/>
             {attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation}/></details>}
           </aside>
           <section className="mvp-card mvp-form" aria-label="Твоё решение">
-            {FIELDS.map(([key, label, hint], index) => <label key={key} htmlFor={`answer-${key}`}><span>{index + 1}. {label}</span><span className="mvp-muted">{hint}</span><textarea id={`answer-${key}`} rows={5} disabled={!!busy} value={active.answers[key] || ''} onChange={e => { const value = e.target.value; update(active.id, c => ({ ...c, answers: { ...c.answers, [key]: value } })); }}/></label>)}
+            {FIELDS.map(([key, label, hint, placeholder], index) => <label key={key} htmlFor={`answer-${key}`}><span>{index + 1}. {label}</span><span className="mvp-muted">{hint}</span><textarea id={`answer-${key}`} placeholder={placeholder} rows={2} disabled={!!busy} value={active.answers[key] || ''} onChange={e => { const value = e.target.value; update(active.id, c => ({ ...c, answers: { ...c.answers, [key]: value } })); }}/></label>)}
             <p className="mvp-muted">{saveError ? 'Сохранение недоступно' : 'Черновик сохраняется в этом браузере'}</p>
             <Button variant="accent" disabled={!!busy || !hasChanges} onClick={evaluate}>{busy ? 'Разбираем решение…' : attempts.length ? 'Проверить новую версию' : 'Получить ИИ-разбор'}</Button>
             {busy && <p role="status">Проверяем аргументы, расчёты и рекомендацию…</p>}
@@ -172,7 +183,7 @@ export default function MvpApp() {
         <button className="mvp-back" onClick={() => go('library')}>← Мои кейсы</button>
         <div className="clean-eyebrow">Шаг 3 · Обратная связь</div><h1>Разбор решения</h1><p className="mvp-lead">{active.title}</p>
         <label className="mvp-version">Версия решения<select value={attemptIndex ?? attempts.length - 1} onChange={e => setAttemptIndex(Number(e.target.value))}>{attempts.map((a, i) => <option key={i} value={i}>Версия {i + 1} · {new Date(a.createdAt).toLocaleString('ru-RU')}</option>)}</select></label>
-        <article className="mvp-card mvp-review"><Review value={attempt.evaluation}/><details><summary>Ответ этой версии</summary>{FIELDS.map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div></section>)}</details></article>
+        <article className="mvp-card mvp-review"><Review value={attempt.evaluation}/><details><summary>Ответ этой версии</summary>{(attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div></section>)}</details></article>
         <div className="mvp-actions"><Button variant="accent" onClick={() => go('solve')}>Улучшить решение</Button><Button variant="neutral" onClick={() => go('generate')}>Новый кейс</Button></div>
         <p className="mvp-muted">Редактирование продолжится с последнего черновика. ИИ может ошибаться — сверяй выводы с данными кейса.</p>
       </div>}

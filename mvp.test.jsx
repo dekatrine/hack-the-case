@@ -24,12 +24,12 @@ describe('MVP core flow', () => {
     await newCase();
     expect(api.generate).toHaveBeenCalledWith(expect.objectContaining({ mvp: true, industry: 'Маркетплейсы' }));
     expect(screen.queryByText('Уроки')).toBeNull();
-    fireEvent.change(screen.getByLabelText(/1\. Как ты понимаешь/), { target: { value: 'Падает конверсия' } });
+    fireEvent.change(screen.getByLabelText(/1\. Что нужно изменить/), { target: { value: 'Падает конверсия' } });
     fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
     await screen.findByRole('heading', { name: 'Разбор решения' });
     fireEvent.click(screen.getByRole('button', { name: 'Улучшить решение' }));
     expect(screen.getByRole('button', { name: 'Проверить новую версию' }).disabled).toBe(true);
-    fireEvent.change(screen.getByLabelText(/1\. Как ты понимаешь/), { target: { value: 'Конверсия упала на 20% относительно исходной' } });
+    fireEvent.change(screen.getByLabelText(/1\. Что нужно изменить/), { target: { value: 'Конверсия упала на 20% относительно исходной' } });
     fireEvent.click(screen.getByRole('button', { name: 'Проверить новую версию' }));
     await screen.findByRole('heading', { name: 'Разбор решения' });
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY))[0];
@@ -43,13 +43,13 @@ describe('MVP core flow', () => {
     await newCase();
     fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
     expect(api.evaluate).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByLabelText(/1\. Как ты понимаешь/), { target: { value: 'Мой черновик' } });
+    fireEvent.change(screen.getByLabelText(/1\. Что нужно изменить/), { target: { value: 'Мой черновик' } });
     api.evaluate.mockRejectedValueOnce(new Error('Временная ошибка'));
     fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
     await screen.findByText('Временная ошибка');
     cleanup(); render(<MvpApp/>);
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
-    expect(screen.getByLabelText(/1\. Как ты понимаешь/).value).toBe('Мой черновик');
+    expect(screen.getByLabelText(/1\. Что нужно изменить/).value).toBe('Мой черновик');
   });
   it('retries generation without creating empty cases or duplicate submissions', async () => {
     api.generate.mockRejectedValueOnce(new Error('Генерация недоступна'));
