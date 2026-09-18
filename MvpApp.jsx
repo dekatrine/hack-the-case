@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { ArrowUpRight, ArrowRight, ChevronDown, Check, BriefcaseBusiness, Layers3, Clock3, Sparkles } from 'lucide-react';
 import { api } from './api/client.js';
 import { Button } from './design/components/Button.jsx';
 import './mvp.css';
@@ -52,7 +53,7 @@ export default function MvpApp() {
     setConfigError('');
     api.config().then(data => {
       setConfig(data);
-      setParams(p => ({ ...p, industry: p.industry || data.industries?.[0] || '', difficulty: p.difficulty || Object.keys(data.difficultyLevels || {})[0] || '' }));
+      setParams(p => ({ ...p, industry: p.industry || data.industries?.find(x => x.includes('Маркетплейсы')) || data.industries?.[0] || '', difficulty: p.difficulty || Object.keys(data.difficultyLevels || {})[0] || '' }));
     }).catch(() => setConfigError('Не удалось загрузить настройки генерации. Сохранённые кейсы доступны.'));
   };
   useEffect(fetchConfig, []);
@@ -100,18 +101,32 @@ export default function MvpApp() {
         <Button variant="accent" size="sm" disabled={!!busy} onClick={() => go('generate')}>Новый кейс</Button>
       </nav>
     </header>
-    <main className="mvp-main">
+    <main className={`mvp-main mvp-screen-${screen}`}>
       {saveError && <p role="alert" className="mvp-notice">{saveError}</p>}
       {error && <p role="alert" className="mvp-notice">{error}</p>}
       {screen === 'library' && <>
-        <div className="clean-eyebrow">Практика решения кейсов</div>
-        <h1>Решай. Разбирай. Улучшай.</h1>
-        <p className="mvp-lead">Сгенерируй кейс, предложи решение и получи персональный ИИ-разбор.</p>
-        {!cases.length ? <section className="mvp-card mvp-empty">
-          <h2>Твой первый кейс</h2><p>Выбери тему и сложность. ИИ подготовит условие и данные — дальше твой ход.</p>
-          <Button variant="accent" onClick={() => go('generate')}>Сгенерировать кейс</Button>
-          <p className="mvp-muted">Черновики и разборы сохраняются в этом браузере.</p>
-        </section> : <div className="mvp-grid">{cases.map(c => {
+        <div className="mvp-page-heading"><div><div className="clean-eyebrow">Твоя практика</div>
+        <h1>Мои кейсы<span className="mvp-count">{String(cases.length).padStart(2, '0')}</span></h1>
+        <p className="mvp-lead">От первой гипотезы до уверенного решения.</p></div><span className="mvp-small-note"><Clock3 size={15}/>15–20 минут на практику</span></div>
+        {!cases.length ? <>
+          <section className="mvp-start">
+            <div className="mvp-start-copy"><span className="mvp-kicker"><Sparkles size={14}/>Кейс под твою задачу</span>
+              <h2>Сильные решения<br/>начинаются с практики.</h2>
+              <p>Реальная бизнес-ситуация, твои гипотезы и конкретная обратная связь. Начни с одного кейса.</p>
+              <Button variant="accent" icon={<ArrowUpRight size={18}/>} onClick={() => go('generate')}>Сгенерировать кейс</Button>
+            </div>
+            <div className="mvp-start-route"><span className="mvp-kicker">Одна тренировка</span>
+              {[['01','Получи задачу','ИИ подготовит условие и исходные данные.'],['02','Предложи решение','Разложи проблему, гипотезы и аргументы.'],['03','Сделай ответ сильнее','Получи разбор и доработай слабые места.']].map(([n,t,d]) => <div className="mvp-route-row" key={n}><span>{n}</span><div><b>{t}</b><p>{d}</p></div></div>)}
+            </div>
+          </section>
+          <div className="mvp-section-label"><h2>С чего начать</h2><span>Выбери задачу для первой тренировки</span></div>
+          <div className="mvp-starters">{[
+            ['Диагностика метрик','Почему падает конверсия?','Найди причину изменения метрики и предложи проверку.', 'В маркетплейсе падает конверсия из поиска в заказ'],
+            ['Продуктовое решение','Что улучшить в продукте?','Определи проблему пользователя и приоритет решения.', 'Как улучшить повторные покупки в маркетплейсе'],
+            ['Бизнес-стратегия','Как вырастить прибыль?','Разбери экономику и выбери точку роста.', 'Рост прибыли маркетплейса при ограниченном бюджете'],
+          ].map(([tag,t,d,context],i) => <button className="mvp-starter" key={tag} onClick={() => { setParams(p => ({ ...p, trackId: i === 2 ? 'business' : 'product', extraContext: context })); go('generate'); }}><span className="mvp-starter-tag">{tag}<ArrowUpRight size={17}/></span><b>{t}</b><p>{d}</p></button>)}</div>
+          <p className="mvp-storage-note">Здесь появятся твои кейсы, черновики и разборы. Они сохраняются в этом браузере.</p>
+        </> : <div className="mvp-grid">{cases.map(c => {
           const reviewed = c.attempts.length > 0;
           const draft = reviewed && JSON.stringify(c.answers) !== JSON.stringify(c.attempts.at(-1).answers);
           return <article className="mvp-card" key={c.id}>
@@ -121,20 +136,20 @@ export default function MvpApp() {
           </article>;
         })}</div>}
       </>}
-      {screen === 'generate' && <div className="mvp-narrow">
-        <div className="clean-eyebrow">Шаг 1 · Кейс</div><h1>Какой кейс решим?</h1>
-        <p className="mvp-lead">Настрой задачу под себя. На решение — примерно 15–20 минут.</p>
+      {screen === 'generate' && <>
+        <div className="mvp-page-heading"><div><div className="clean-eyebrow">Новая тренировка</div><h1>Настрой свой кейс</h1>
+        <p className="mvp-lead">Выбери задачу. Условие и данные подготовит ИИ.</p></div><div className="mvp-flow"><b>01 Кейс</b><ArrowRight size={14}/><span>02 Решение</span><ArrowRight size={14}/><span>03 Разбор</span></div></div>
         {configError && <div role="alert" className="mvp-notice">{configError} <button onClick={fetchConfig}>Повторить загрузку</button></div>}
         {!config && !configError && <p role="status">Загружаем настройки…</p>}
-        {config && <form className="mvp-card mvp-form" onSubmit={generate}>
-          <label>Направление<select disabled={!!busy} value={params.trackId} onChange={e => setParams(p => ({ ...p, trackId: e.target.value }))}><option value="product">Продуктовые кейсы</option><option value="business">Бизнес-кейсы</option></select></label>
-          <label>Отрасль<select required disabled={!!busy} value={params.industry} onChange={e => setParams(p => ({ ...p, industry: e.target.value }))}>{config.industries.map(x => <option key={x}>{x}</option>)}</select></label>
-          <label>Сложность<select required disabled={!!busy} value={params.difficulty} onChange={e => setParams(p => ({ ...p, difficulty: e.target.value }))}>{Object.keys(config.difficultyLevels).map(x => <option key={x}>{x}</option>)}</select></label>
-          <label>Тема или контекст · необязательно<textarea maxLength={2000} disabled={!!busy} value={params.extraContext} onChange={e => setParams(p => ({ ...p, extraContext: e.target.value }))} placeholder="Например: в маркетплейсе падает конверсия из поиска в заказ" rows={3}/></label>
-          <Button variant="accent" type="submit" disabled={!!busy}>{busy ? 'Генерируем кейс…' : 'Сгенерировать кейс'}</Button>
+        {config && <div className="mvp-setup-layout"><form className="mvp-card mvp-form mvp-setup" onSubmit={generate}>
+          <fieldset><legend>01 / Направление</legend><div className="mvp-direction">{[['product','Продуктовые кейсы','Пользователи, метрики, гипотезы',Layers3],['business','Бизнес-кейсы','Прибыль, рынок, стратегия',BriefcaseBusiness]].map(([id,title,description,Icon]) => <button type="button" className={params.trackId === id ? 'selected' : ''} aria-pressed={params.trackId === id} disabled={!!busy} key={id} onClick={() => setParams(p => ({ ...p, trackId:id }))}><span className="mvp-direction-top"><Icon size={20}/><span className="mvp-choice-check">{params.trackId === id && <Check size={12}/>}</span></span><b>{title}</b><small>{description}</small></button>)}</div></fieldset>
+          <label>02 / Отрасль<span className="mvp-select-wrap"><select required disabled={!!busy} value={params.industry} onChange={e => setParams(p => ({ ...p, industry: e.target.value }))}>{config.industries.map(x => <option value={x} key={x}>{x.includes(' / ') ? x.split(' / ').slice(1).join(' / ') : x}</option>)}</select><ChevronDown size={16}/></span></label>
+          <fieldset><legend>03 / Сложность</legend><div className="mvp-levels">{Object.keys(config.difficultyLevels).map(x => <button type="button" aria-pressed={params.difficulty === x} className={params.difficulty === x ? 'selected' : ''} disabled={!!busy} key={x} onClick={() => setParams(p => ({ ...p, difficulty:x }))}>{x}</button>)}</div></fieldset>
+          <label><span>04 / Свой контекст <small className="mvp-muted">необязательно</small></span><textarea maxLength={2000} disabled={!!busy} value={params.extraContext} onChange={e => setParams(p => ({ ...p, extraContext: e.target.value }))} placeholder="Например: пользователи добавляют товары в корзину, но не оформляют заказ" rows={2}/></label>
+          <div className="mvp-form-footer"><span><Clock3 size={14}/>15–20 минут на решение</span><Button variant="accent" type="submit" icon={<ArrowRight size={17}/>} disabled={!!busy}>{busy ? 'Генерируем кейс…' : 'Сгенерировать кейс'}</Button></div>
           {busy && <p role="status">ИИ готовит условие и данные. Это может занять около минуты.</p>}
-        </form>}
-      </div>}
+        </form><aside className="mvp-setup-aside"><span className="mvp-kicker">Твоя тренировка</span><h2>{params.trackId === 'product' ? 'Думай как продакт.' : 'Смотри на бизнес глубже.'}</h2><p>Не ищи идеальный ответ с первой попытки. Сформулируй логику — и проверь её на практике.</p><div className="mvp-setup-spec"><span>Направление<b>{params.trackId === 'product' ? 'Продукт' : 'Бизнес'}</b></span><span>Уровень<b>{params.difficulty}</b></span><span>Формат<b>Письменный кейс</b></span></div><div className="mvp-aside-bottom"><Sparkles size={20}/><b>Обратная связь по делу</b><p>Что получилось, где не хватает аргументов и что улучшить в следующей попытке.</p></div></aside></div>}
+      </>}
       {screen === 'solve' && active && <>
         <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
         <div className="clean-eyebrow">Шаг 2 · Решение</div><h1>Твой ход</h1>

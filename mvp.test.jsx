@@ -15,7 +15,7 @@ afterEach(cleanup);
 async function newCase() {
   render(<MvpApp/>);
   fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
-  await screen.findByLabelText('Отрасль');
+  await screen.findByLabelText('02 / Отрасль');
   fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
   await screen.findByRole('heading', { name: 'Твой ход' });
 }
@@ -55,7 +55,7 @@ describe('MVP core flow', () => {
     api.generate.mockRejectedValueOnce(new Error('Генерация недоступна'));
     render(<MvpApp/>);
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
-    await screen.findByLabelText('Отрасль');
+    await screen.findByLabelText('02 / Отрасль');
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
     await screen.findByText('Генерация недоступна');
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY))).toHaveLength(0);
@@ -63,12 +63,23 @@ describe('MVP core flow', () => {
     await screen.findByRole('heading', { name: 'Твой ход' });
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY))).toHaveLength(1);
   });
+  it('opens a suggested topic and submits the selected direction and level', async () => {
+    api.config.mockResolvedValue({ industries: ['Маркетплейсы'], difficultyLevels: { Начальный: 'Просто', Средний: 'Сложнее' } });
+    render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: /Как вырастить прибыль/ }));
+    await screen.findByLabelText('02 / Отрасль');
+    expect(screen.getByRole('button', { name: /Бизнес-кейсы/ }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'Средний' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
+    await screen.findByRole('heading', { name: 'Твой ход' });
+    expect(api.generate).toHaveBeenCalledWith(expect.objectContaining({ trackId: 'business', difficulty: 'Средний', extraContext: 'Рост прибыли маркетплейса при ограниченном бюджете' }));
+  });
   it('recovers config loading and handles invalid storage', async () => {
     localStorage.setItem(STORAGE_KEY, '{broken');
     api.config.mockRejectedValueOnce(new Error('Offline'));
     render(<MvpApp/>);
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Повторить загрузку' }));
-    await waitFor(() => expect(screen.getByLabelText('Отрасль').value).toBe('Маркетплейсы'));
+    await waitFor(() => expect(screen.getByLabelText('02 / Отрасль').value).toBe('Маркетплейсы'));
   });
 });
