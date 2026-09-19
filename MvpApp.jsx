@@ -29,7 +29,7 @@ function loadCases() {
   } catch { return []; }
 }
 function titleOf(text) {
-  return text.split('\n').find(line => line.trim())?.replace(/^[#*\s]+|[*]+$/g, '').slice(0, 100) || 'Новый кейс';
+  return text.split('\n').find(line => line.trim())?.replace(/^[#\s]+/, '').replace(/[*`]/g, '').trim().slice(0, 100) || 'Новый кейс';
 }
 function Review({ value }) {
   let parsed;
@@ -142,7 +142,7 @@ export default function MvpApp() {
           const draft = reviewed && JSON.stringify(c.answers) !== JSON.stringify(c.attempts.at(-1).answers);
           return <article className="mvp-card" key={c.id}>
             <span className="mvp-status">{draft ? 'Ответ обновлён' : reviewed ? 'Есть разбор' : 'В процессе'}</span>
-            <h2>{c.title}</h2><p className="mvp-muted">{c.params.difficulty} · {c.params.industry}</p>
+            <h2>{titleOf(c.title || c.caseText)}</h2><p className="mvp-muted">{c.params.difficulty} · {c.params.industry}</p>
             <div className="mvp-actions"><Button onClick={() => open(c, reviewed && !draft ? 'review' : 'solve')}>{reviewed && !draft ? 'Посмотреть разбор' : 'Продолжить'}</Button></div>
           </article>;
         })}</div>}
@@ -181,7 +181,7 @@ export default function MvpApp() {
       </>}
       {screen === 'review' && active && attempt && <div className="mvp-narrow">
         <button className="mvp-back" onClick={() => go('library')}>← Мои кейсы</button>
-        <div className="clean-eyebrow">Шаг 3 · Обратная связь</div><h1>Разбор решения</h1><p className="mvp-lead">{active.title}</p>
+        <div className="clean-eyebrow">Шаг 3 · Обратная связь</div><h1>Разбор решения</h1><p className="mvp-lead">{titleOf(active.title || active.caseText)}</p>
         <label className="mvp-version">Версия решения<select value={attemptIndex ?? attempts.length - 1} onChange={e => setAttemptIndex(Number(e.target.value))}>{attempts.map((a, i) => <option key={i} value={i}>Версия {i + 1} · {new Date(a.createdAt).toLocaleString('ru-RU')}</option>)}</select></label>
         <article className="mvp-card mvp-review"><Review value={attempt.evaluation}/><details><summary>Ответ этой версии</summary>{(attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div></section>)}</details></article>
         <div className="mvp-actions"><Button variant="accent" onClick={() => go('solve')}>Улучшить решение</Button><Button variant="neutral" onClick={() => go('generate')}>Новый кейс</Button></div>
