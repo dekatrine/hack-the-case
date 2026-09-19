@@ -1,12 +1,32 @@
 import unittest
 from unittest.mock import patch
 from fastapi import HTTPException
-from app.main import generate_case, evaluate
+from app.main import generate_case, evaluate, PRODUCT_INTERVIEWS
 from app.schemas import GenerateCaseRequest, EvaluateRequest
 from app.prompts import MVP_RUBRIC_SYSTEM
 
 
 class MvpTests(unittest.TestCase):
+    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK"}')
+    def test_all_types_use_distinct_generation_and_evaluation(self, model):
+        prompts = set()
+        for type_id, definition in PRODUCT_INTERVIEWS.items():
+            generate_case(GenerateCaseRequest(industry='Retail', difficulty='Начальный', trackId='product', interviewType=type_id, mvp=True))
+            prompt = model.call_args.args[1]
+            self.assertIn(definition['instruction'], prompt)
+            prompts.add(prompt)
+            evaluate(EvaluateRequest(caseText='Case', interviewType=type_id, answers={'problem': 'Краткий ответ'}, mvp=True))
+            system, prompt = model.call_args.args
+            self.assertIn(definition['instruction'], system)
+            for question in definition['questions']:
+                self.assertIn(question['label'], prompt)
+        self.assertEqual(len(prompts), len(PRODUCT_INTERVIEWS))
+
+    def test_unknown_type_is_rejected(self):
+        with self.assertRaises(HTTPException) as error:
+            generate_case(GenerateCaseRequest(industry='Retail', difficulty='Начальный', interviewType='unknown', mvp=True))
+        self.assertEqual(error.exception.status_code, 422)
+
     @patch('app.main.generate_phases_for_case')
     @patch('app.main.call_yandex_gpt', return_value='Кейс с данными')
     def test_generation_skips_legacy_route(self, model, phases):

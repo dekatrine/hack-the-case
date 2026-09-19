@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowUpRight, ArrowRight, ChevronDown, Check, BriefcaseBusiness, Layers3, Clock3, Sparkles } from 'lucide-react';
+import { ArrowUpRight, ArrowRight, ChevronDown, Check, Layers3, Clock3, Sparkles } from 'lucide-react';
 import { api } from './api/client.js';
 import { Button } from './design/components/Button.jsx';
 import './mvp.css';
 import CaseContent from './CaseContent.jsx';
+import INTERVIEWS from './backend/app/product_interviews.json';
+const interviewFields = type => INTERVIEWS.find(t => t.id === type)?.questions.map(q => [q.id, q.label, q.hint, 'Короткий ответ…']);
 
 export const STORAGE_KEY = 'htc_mvp_cases_v1';
 const LEGACY_FIELDS = [
@@ -55,8 +57,10 @@ export default function MvpApp() {
   const [saveError, setSaveError] = useState('');
   const [busy, setBusy] = useState('');
   const lock = useRef(false);
-  const [params, setParams] = useState({ trackId: 'product', industry: '', difficulty: '', extraContext: '' });
+  const [params, setParams] = useState({ trackId: 'product', interviewType: 'product_sense', industry: '', difficulty: '', extraContext: '' });
   const active = cases.find(c => c.id === selected);
+  const fields = interviewFields(active?.params.interviewType) || FIELDS;
+  const selectedType = INTERVIEWS.find(t => t.id === params.interviewType) || INTERVIEWS[0];
   const attempts = active?.attempts || [];
   const attempt = attempts[attemptIndex ?? attempts.length - 1];
 
@@ -95,9 +99,9 @@ export default function MvpApp() {
     const item = active;
     const answers = { ...item.answers };
     try {
-      const result = await api.evaluate({ caseText: item.caseText, answers, trackId: item.params.trackId, mvp: true });
+      const result = await api.evaluate({ caseText: item.caseText, answers, trackId: item.params.trackId, interviewType: item.params.interviewType, mvp: true });
       if (!result.evaluation?.trim()) throw new Error('ИИ вернул пустой разбор. Попробуй ещё раз.');
-      update(item.id, c => ({ ...c, attempts: [...c.attempts, { answers, questionVersion: 2, evaluation: result.evaluation, createdAt: new Date().toISOString() }] }));
+      update(item.id, c => ({ ...c, attempts: [...c.attempts, { answers, questionVersion: 2, questions: fields, evaluation: result.evaluation, createdAt: new Date().toISOString() }] }));
       setAttemptIndex(null); go('review');
     } catch (e) { setError(e.message || 'Не удалось проверить решение. Твой ответ сохранён — попробуй ещё раз.'); }
     finally { lock.current = false; setBusy(''); }
@@ -134,15 +138,15 @@ export default function MvpApp() {
           <div className="mvp-starters">{[
             ['Диагностика метрик','Почему падает конверсия?','Найди причину изменения метрики и предложи проверку.', 'В маркетплейсе падает конверсия из поиска в заказ'],
             ['Продуктовое решение','Что улучшить в продукте?','Определи проблему пользователя и приоритет решения.', 'Как улучшить повторные покупки в маркетплейсе'],
-            ['Бизнес-стратегия','Как вырастить прибыль?','Разбери экономику и выбери точку роста.', 'Рост прибыли маркетплейса при ограниченном бюджете'],
-          ].map(([tag,t,d,context],i) => <button className="mvp-starter" key={tag} onClick={() => { setParams(p => ({ ...p, trackId: i === 2 ? 'business' : 'product', extraContext: context })); go('generate'); }}><span className="mvp-starter-tag">{tag}<ArrowUpRight size={17}/></span><b>{t}</b><p>{d}</p></button>)}</div>
+            ['Продуктовая стратегия','Как вырастить прибыль?','Разбери экономику и выбери точку роста.', 'Рост прибыли маркетплейса при ограниченном бюджете'],
+          ].map(([tag,t,d,context],i) => <button className="mvp-starter" key={tag} onClick={() => { setParams(p => ({ ...p, trackId: 'product', interviewType: ['product_execution', 'product_sense', 'product_strategy'][i], extraContext: context })); go('generate'); }}><span className="mvp-starter-tag">{tag}<ArrowUpRight size={17}/></span><b>{t}</b><p>{d}</p></button>)}</div>
           <p className="mvp-storage-note">Здесь появятся твои кейсы, черновики и разборы. Они сохраняются в этом браузере.</p>
         </> : <div className="mvp-grid">{cases.map(c => {
           const reviewed = c.attempts.length > 0;
           const draft = reviewed && JSON.stringify(c.answers) !== JSON.stringify(c.attempts.at(-1).answers);
           return <article className="mvp-card" key={c.id}>
             <span className="mvp-status">{draft ? 'Ответ обновлён' : reviewed ? 'Есть разбор' : 'В процессе'}</span>
-            <h2>{titleOf(c.title || c.caseText)}</h2><p className="mvp-muted">{c.params.difficulty} · {c.params.industry}</p>
+            <h2>{titleOf(c.title || c.caseText)}</h2><p className="mvp-muted">{INTERVIEWS.find(t => t.id === c.params.interviewType)?.label || 'Кейс'} · {c.params.difficulty} · {c.params.industry}</p>
             <div className="mvp-actions"><Button onClick={() => open(c, reviewed && !draft ? 'review' : 'solve')}>{reviewed && !draft ? 'Посмотреть разбор' : 'Продолжить'}</Button></div>
           </article>;
         })}</div>}
@@ -153,13 +157,13 @@ export default function MvpApp() {
         {configError && <div role="alert" className="mvp-notice">{configError} <button onClick={fetchConfig}>Повторить загрузку</button></div>}
         {!config && !configError && <p role="status">Загружаем настройки…</p>}
         {config && <div className="mvp-setup-layout"><form className="mvp-card mvp-form mvp-setup" onSubmit={generate}>
-          <fieldset><legend>01 / Направление</legend><div className="mvp-direction">{[['product','Продуктовые кейсы','Пользователи, метрики, гипотезы',Layers3],['business','Бизнес-кейсы','Прибыль, рынок, стратегия',BriefcaseBusiness]].map(([id,title,description,Icon]) => <button type="button" className={params.trackId === id ? 'selected' : ''} aria-pressed={params.trackId === id} disabled={!!busy} key={id} onClick={() => setParams(p => ({ ...p, trackId:id }))}><span className="mvp-direction-top"><Icon size={20}/><span className="mvp-choice-check">{params.trackId === id && <Check size={12}/>}</span></span><b>{title}</b><small>{description}</small></button>)}</div></fieldset>
+          <fieldset><legend>01 / Тип продуктового собеседования</legend><div className="mvp-direction">{INTERVIEWS.map(t => <button type="button" className={params.interviewType === t.id ? 'selected' : ''} aria-pressed={params.interviewType === t.id} disabled={!!busy} key={t.id} onClick={() => setParams(p => ({ ...p, trackId: 'product', interviewType:t.id }))}><span className="mvp-direction-top"><Layers3 size={20}/><span className="mvp-choice-check">{params.interviewType === t.id && <Check size={12}/>}</span></span><b>{t.label}</b><small>{t.description}</small></button>)}</div></fieldset>
           <label>02 / Отрасль<span className="mvp-select-wrap"><select required disabled={!!busy} value={params.industry} onChange={e => setParams(p => ({ ...p, industry: e.target.value }))}>{config.industries.map(x => <option value={x} key={x}>{x.includes(' / ') ? x.split(' / ').slice(1).join(' / ') : x}</option>)}</select><ChevronDown size={16}/></span></label>
           <fieldset><legend>03 / Сложность</legend><div className="mvp-levels">{Object.keys(config.difficultyLevels).map(x => <button type="button" aria-pressed={params.difficulty === x} className={params.difficulty === x ? 'selected' : ''} disabled={!!busy} key={x} onClick={() => setParams(p => ({ ...p, difficulty:x }))}>{x}</button>)}</div></fieldset>
           <label><span>04 / Свой контекст <small className="mvp-muted">необязательно</small></span><textarea maxLength={2000} disabled={!!busy} value={params.extraContext} onChange={e => setParams(p => ({ ...p, extraContext: e.target.value }))} placeholder="Например: пользователи добавляют товары в корзину, но не оформляют заказ" rows={2}/></label>
           <div className="mvp-form-footer"><span><Clock3 size={14}/>15–20 минут на решение</span><Button variant="accent" type="submit" icon={<ArrowRight size={17}/>} disabled={!!busy}>{busy ? 'Генерируем кейс…' : 'Сгенерировать кейс'}</Button></div>
           {busy && <p role="status">ИИ готовит условие и данные. Это может занять около минуты.</p>}
-        </form><aside className="mvp-setup-aside"><span className="mvp-kicker">Твоя тренировка</span><h2>{params.trackId === 'product' ? 'Думай как продакт.' : 'Смотри на бизнес глубже.'}</h2><p>Не ищи идеальный ответ с первой попытки. Сформулируй логику — и проверь её на практике.</p><div className="mvp-setup-spec"><span>Направление<b>{params.trackId === 'product' ? 'Продукт' : 'Бизнес'}</b></span><span>Уровень<b>{params.difficulty}</b></span><span>Формат<b>Письменный кейс</b></span></div><div className="mvp-aside-bottom"><Sparkles size={20}/><b>Обратная связь по делу</b><p>Что получилось, где не хватает аргументов и что улучшить в следующей попытке.</p></div></aside></div>}
+        </form><aside className="mvp-setup-aside"><span className="mvp-kicker">Твоя тренировка</span><h2>{selectedType.label}</h2><p>{selectedType.description}. Условие, вопросы и разбор адаптируются под выбранный тип.</p><div className="mvp-setup-spec"><span>Направление<b>Продуктовое</b></span><span>Уровень<b>{params.difficulty}</b></span><span>Формат<b>Письменный кейс</b></span></div><div className="mvp-aside-bottom"><Sparkles size={20}/><b>Обратная связь по делу</b><p>Что получилось, где не хватает аргументов и что улучшить в следующей попытке.</p></div></aside></div>}
       </>}
       {screen === 'solve' && active && <>
         <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
@@ -170,7 +174,7 @@ export default function MvpApp() {
             {attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation}/></details>}
           </aside>
           <section className="mvp-card mvp-form" aria-label="Твоё решение">
-            {FIELDS.map(([key, label, hint, placeholder], index) => <label key={key} htmlFor={`answer-${key}`}><span>{index + 1}. {label}</span><span className="mvp-muted">{hint}</span><textarea id={`answer-${key}`} placeholder={placeholder} rows={2} disabled={!!busy} value={active.answers[key] || ''} onChange={e => { const value = e.target.value; update(active.id, c => ({ ...c, answers: { ...c.answers, [key]: value } })); }}/></label>)}
+            {fields.map(([key, label, hint, placeholder], index) => <label key={key} htmlFor={`answer-${key}`}><span>{index + 1}. {label}</span><span className="mvp-muted">{hint}</span><textarea id={`answer-${key}`} placeholder={placeholder} rows={2} disabled={!!busy} value={active.answers[key] || ''} onChange={e => { const value = e.target.value; update(active.id, c => ({ ...c, answers: { ...c.answers, [key]: value } })); }}/></label>)}
             <p className="mvp-muted">{saveError ? 'Сохранение недоступно' : 'Черновик сохраняется в этом браузере'}</p>
             <Button variant="accent" disabled={!!busy || !hasChanges} onClick={evaluate}>{busy ? 'Разбираем решение…' : attempts.length ? 'Проверить новую версию' : 'Получить ИИ-разбор'}</Button>
             {busy && <p role="status">Проверяем аргументы, расчёты и рекомендацию…</p>}
@@ -183,7 +187,7 @@ export default function MvpApp() {
         <button className="mvp-back" onClick={() => go('library')}>← Мои кейсы</button>
         <div className="clean-eyebrow">Шаг 3 · Обратная связь</div><h1>Разбор решения</h1><p className="mvp-lead">{titleOf(active.title || active.caseText)}</p>
         <label className="mvp-version">Версия решения<select value={attemptIndex ?? attempts.length - 1} onChange={e => setAttemptIndex(Number(e.target.value))}>{attempts.map((a, i) => <option key={i} value={i}>Версия {i + 1} · {new Date(a.createdAt).toLocaleString('ru-RU')}</option>)}</select></label>
-        <article className="mvp-card mvp-review"><Review value={attempt.evaluation}/><details><summary>Ответ этой версии</summary>{(attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div></section>)}</details></article>
+        <article className="mvp-card mvp-review"><Review value={attempt.evaluation}/><details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div></section>)}</details></article>
         <div className="mvp-actions"><Button variant="accent" onClick={() => go('solve')}>Улучшить решение</Button><Button variant="neutral" onClick={() => go('generate')}>Новый кейс</Button></div>
         <p className="mvp-muted">Редактирование продолжится с последнего черновика. ИИ может ошибаться — сверяй выводы с данными кейса.</p>
       </div>}

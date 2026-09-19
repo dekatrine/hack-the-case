@@ -24,12 +24,12 @@ describe('MVP core flow', () => {
     await newCase();
     expect(api.generate).toHaveBeenCalledWith(expect.objectContaining({ mvp: true, industry: 'Маркетплейсы' }));
     expect(screen.queryByText('Уроки')).toBeNull();
-    fireEvent.change(screen.getByLabelText(/1\. Что нужно изменить/), { target: { value: 'Падает конверсия' } });
+    fireEvent.change(screen.getByLabelText(/1\. Какую задачу пользователя/), { target: { value: 'Падает конверсия' } });
     fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
     await screen.findByRole('heading', { name: 'Разбор решения' });
     fireEvent.click(screen.getByRole('button', { name: 'Улучшить решение' }));
     expect(screen.getByRole('button', { name: 'Проверить новую версию' }).disabled).toBe(true);
-    fireEvent.change(screen.getByLabelText(/1\. Что нужно изменить/), { target: { value: 'Конверсия упала на 20% относительно исходной' } });
+    fireEvent.change(screen.getByLabelText(/1\. Какую задачу пользователя/), { target: { value: 'Конверсия упала на 20% относительно исходной' } });
     fireEvent.click(screen.getByRole('button', { name: 'Проверить новую версию' }));
     await screen.findByRole('heading', { name: 'Разбор решения' });
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY))[0];
@@ -43,13 +43,13 @@ describe('MVP core flow', () => {
     await newCase();
     fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
     expect(api.evaluate).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByLabelText(/1\. Что нужно изменить/), { target: { value: 'Мой черновик' } });
+    fireEvent.change(screen.getByLabelText(/1\. Какую задачу пользователя/), { target: { value: 'Мой черновик' } });
     api.evaluate.mockRejectedValueOnce(new Error('Временная ошибка'));
     fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
     await screen.findByText('Временная ошибка');
     cleanup(); render(<MvpApp/>);
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
-    expect(screen.getByLabelText(/1\. Что нужно изменить/).value).toBe('Мой черновик');
+    expect(screen.getByLabelText(/1\. Какую задачу пользователя/).value).toBe('Мой черновик');
   });
   it('retries generation without creating empty cases or duplicate submissions', async () => {
     api.generate.mockRejectedValueOnce(new Error('Генерация недоступна'));
@@ -68,11 +68,11 @@ describe('MVP core flow', () => {
     render(<MvpApp/>);
     fireEvent.click(screen.getByRole('button', { name: /Как вырастить прибыль/ }));
     await screen.findByLabelText('02 / Отрасль');
-    expect(screen.getByRole('button', { name: /Бизнес-кейсы/ }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button', { name: /Продуктовая стратегия/ }).getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: 'Средний' }));
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
     await screen.findByRole('heading', { name: 'Твой ход' });
-    expect(api.generate).toHaveBeenCalledWith(expect.objectContaining({ trackId: 'business', difficulty: 'Средний', extraContext: 'Рост прибыли маркетплейса при ограниченном бюджете' }));
+    expect(api.generate).toHaveBeenCalledWith(expect.objectContaining({ trackId: 'product', interviewType: 'product_strategy', difficulty: 'Средний', extraContext: 'Рост прибыли маркетплейса при ограниченном бюджете' }));
   });
   it('recovers config loading and handles invalid storage', async () => {
     localStorage.setItem(STORAGE_KEY, '{broken');

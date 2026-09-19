@@ -153,8 +153,33 @@ def get_app_config() -> dict:
     }
 
 
+PRODUCT_INTERVIEWS = {item["id"]: item for item in json.loads(
+    Path(__file__).with_name("product_interviews.json").read_text(encoding="utf-8")
+)}
+
+
+def _interview_type(type_id):
+    if not type_id:
+        return None  # Previously saved MVP cases retain their original questions.
+    if type_id not in PRODUCT_INTERVIEWS:
+        raise HTTPException(status_code=422, detail="Неизвестный тип продуктового собеседования")
+    return PRODUCT_INTERVIEWS[type_id]
+
+
 def _case_prompt(payload: GenerateCaseRequest) -> tuple[str, str]:
     """Возвращает (track_name, prompt) для генерации кейса."""
+    interview = _interview_type(payload.interviewType) if payload.mvp else None
+    if interview:
+        questions = "\n".join(q["label"] for q in interview["questions"])
+        return "Продуктовое собеседование", (
+            f"Сгенерируй задание для продуктового собеседования: {interview['label']}.\n"
+            f"{interview['instruction']}\nОтрасль: {payload.industry}. Сложность: {payload.difficulty}.\n"
+            f"Контекст пользователя: {payload.extraContext}\n"
+            "Выбранный тип интервью обязателен; адаптируй контекст к нему. Не подменяй тип. "
+            "Задание на 15–20 минут. Данные вымышленные и внутренне согласованные. "
+            "Дай короткий заголовок и разделы Контекст, Данные, Ограничения, Задача. "
+            "Не давай решения или готовых ответов. Кандидат ответит коротко на вопросы:\n" + questions
+        )
     track = next((item for item in TRACKS if item.get("id") == payload.trackId), None)
     track_name = track["name"] if track else "Бизнес-кейсы"
     case_kind = (
@@ -631,6 +656,9 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
             "metric": "По чему поймёшь, что стало лучше?",
             "risk": "Что может пойти не так?",
         }
+        interview = _interview_type(payload.interviewType)
+        if interview:
+            fields = {q["id"]: q["label"] for q in interview["questions"]}
         if not any(payload.answers.get(key, "").strip() for key in fields):
             raise HTTPException(status_code=422, detail="Сначала напиши решение")
         answers = "\n\n".join(
@@ -639,7 +667,10 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
         )
         prompt = f"КЕЙС:\n{payload.caseText}\n\nОТВЕТ ПОЛЬЗОВАТЕЛЯ:\n{answers}"
         try:
-            evaluation = call_yandex_gpt(MVP_RUBRIC_SYSTEM, prompt, temperature=0.3)
+            system = MVP_RUBRIC_SYSTEM
+            if interview:
+                system += f"\nТип интервью: {interview['label']}.\n{interview['instruction']}\nОценивай ответы именно на вопросы из запроса. Не требуй диагностики падения метрик в других типах интервью."
+            evaluation = call_yandex_gpt(system, prompt, temperature=0.3)
             return EvaluateResponse(evaluation=evaluation)
         except RuntimeError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc

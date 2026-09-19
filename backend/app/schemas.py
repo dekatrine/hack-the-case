@@ -88,6 +88,7 @@ class CoachResponse(BaseModel):
 
 
 class EvaluateRequest(BaseModel):
+    interviewType: Optional[str] = None
     mvp: bool = False
     caseText: str
     answers: dict[str, str] = Field(default_factory=dict)
