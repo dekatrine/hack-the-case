@@ -5,6 +5,7 @@ import { Button } from './design/components/Button.jsx';
 import './mvp.css';
 import CaseContent from './CaseContent.jsx';
 import ConditionAssistant from './ConditionAssistant.jsx';
+import TheoryPage from './TheoryPage.jsx';
 import INTERVIEWS from './backend/app/product_interviews.json';
 const interviewFields = type => INTERVIEWS.find(t => t.id === type)?.questions.map(q => [q.id, q.label, q.hint, 'Короткий ответ…']);
 
@@ -114,12 +115,14 @@ export default function MvpApp() {
       <button className="clean-brand" disabled={!!busy} onClick={() => go('library')} aria-label="Hack the Case — мои кейсы"><span className="mark">H</span><b>Hack the Case</b></button>
       <nav aria-label="Основная навигация">
         <button aria-current={screen === 'library' ? 'page' : undefined} disabled={!!busy} onClick={() => go('library')}>Мои кейсы</button>
+        <button aria-current={screen === 'theory' ? 'page' : undefined} disabled={!!busy} onClick={() => go('theory')}>Теория</button>
         <Button variant="accent" size="sm" disabled={!!busy} onClick={() => go('generate')}>Новый кейс</Button>
       </nav>
     </header>
     <main className={`mvp-main mvp-screen-${screen}`}>
       {saveError && <p role="alert" className="mvp-notice">{saveError}</p>}
       {error && <p role="alert" className="mvp-notice">{error}</p>}
+      {screen === 'theory' && <TheoryPage onResume={active ? () => go('solve') : null}/>}
       {screen === 'library' && <>
         <div className="mvp-page-heading"><div><div className="clean-eyebrow">Твоя практика</div>
         <h1>Мои кейсы<span className="mvp-count">{String(cases.length).padStart(2, '0')}</span></h1>

@@ -74,6 +74,14 @@ describe('MVP core flow', () => {
     await screen.findByRole('heading', { name: 'Твой ход' });
     expect(api.generate).toHaveBeenCalledWith(expect.objectContaining({ trackId: 'product', interviewType: 'product_strategy', difficulty: 'Средний', extraContext: 'Рост прибыли маркетплейса при ограниченном бюджете' }));
   });
+  it('opens theory from a solution and returns without losing the draft', async () => {
+    await newCase();
+    fireEvent.change(screen.getByLabelText(/1\. Какую задачу пользователя/), { target: { value: 'Сохранённая мысль' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Теория' }));
+    expect(screen.getByRole('heading', { name: 'Теория для практики' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Вернуться к решению' }));
+    expect(screen.getByLabelText(/1\. Какую задачу пользователя/).value).toBe('Сохранённая мысль');
+  });
   it('recovers config loading and handles invalid storage', async () => {
     localStorage.setItem(STORAGE_KEY, '{broken');
     api.config.mockRejectedValueOnce(new Error('Offline'));
