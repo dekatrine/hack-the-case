@@ -79,6 +79,9 @@ async function generateStream(payload, onChunk) {
 }
 
 export const api = {
+  explainCondition: (payload) => request('/api/cases/explain', {
+    method: 'POST', body: JSON.stringify(payload),
+  }),
   config: () => request('/api/config'),
   generateStream,
   generate: (payload) =>

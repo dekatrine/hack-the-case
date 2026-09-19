@@ -4,6 +4,7 @@ import { api } from './api/client.js';
 import { Button } from './design/components/Button.jsx';
 import './mvp.css';
 import CaseContent from './CaseContent.jsx';
+import ConditionAssistant from './ConditionAssistant.jsx';
 import INTERVIEWS from './backend/app/product_interviews.json';
 const interviewFields = type => INTERVIEWS.find(t => t.id === type)?.questions.map(q => [q.id, q.label, q.hint, 'Короткий ответ…']);
 
@@ -170,7 +171,7 @@ export default function MvpApp() {
         <div className="clean-eyebrow">Шаг 2 · Решение</div><h1>Твой ход</h1>
         <p className="mvp-lead">Восемь коротких вопросов. На каждый достаточно одной-двух фраз — важна мысль, а не объём.</p>
         <div className="mvp-workspace">
-          <aside className="mvp-card mvp-condition"><h2>Условие кейса</h2><p className="mvp-muted">Данные кейса сгенерированы ИИ для тренировки.</p><CaseContent text={active.caseText}/>
+          <aside className="mvp-card mvp-condition"><h2>Условие кейса</h2><p className="mvp-muted">Данные кейса сгенерированы ИИ для тренировки.</p><ConditionAssistant key={active.id} caseText={active.caseText}/><CaseContent text={active.caseText}/>
             {attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation}/></details>}
           </aside>
           <section className="mvp-card mvp-form" aria-label="Твоё решение">

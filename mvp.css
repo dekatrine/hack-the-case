@@ -174,3 +174,20 @@
 .mvp-case-table th { background:var(--surface-sunk); font-weight:600; }
 .mvp-case-table :is(th,td) { padding:10px 12px; border-bottom:1px solid var(--border-hairline); }
 .mvp-case-table tr:last-child td { border-bottom:0; }
+.mvp-assistant { margin:20px 0; border:1px solid var(--border-hairline); border-radius:12px; background:var(--surface-sunk); }
+.mvp-assistant-toggle { display:flex; align-items:center; gap:10px; width:100%; padding:14px; text-align:left; font-size:13px; font-weight:600; }
+.mvp-assistant-toggle > span { flex:1; }
+.mvp-assistant-toggle small { display:block; color:var(--text-secondary); font-size:11px; font-weight:400; margin-top:3px; }
+.mvp-assistant-toggle[aria-expanded="true"] > svg:last-child { transform:rotate(180deg); }
+.mvp-assistant-body { padding:0 14px 16px; }
+.mvp-assistant-body > p { font-size:12px; color:var(--text-secondary); line-height:1.6; }
+.mvp-assistant-body form { display:flex; flex-direction:column; gap:10px; }
+.mvp-assistant-body label { font-size:12px; font-weight:600; }
+.mvp-assistant-body textarea { font-size:13px; min-height:76px; }
+.mvp-assistant-body small { font-size:11px; color:var(--text-secondary); }
+.mvp-assistant-body form > button { align-self:flex-start; }
+.mvp-assistant-chat { max-height:320px; overflow:auto; overflow-wrap:anywhere; }
+.mvp-assistant-exchange { border-top:1px solid var(--border-hairline); padding:12px 0; font-size:13px; }
+.mvp-assistant-exchange > div { background:var(--surface-card); border-radius:9px; padding:12px; }
+.mvp-assistant-exchange .mvp-case-content { font-size:13px; }
+.mvp-assistant-exchange p { margin:0 0 10px; }

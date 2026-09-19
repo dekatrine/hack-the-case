@@ -17,6 +17,7 @@ WINDOW_SECONDS = 60
 # Endpoints that call YandexGPT — the expensive budget.
 LLM_PATH_PREFIXES = (
     "/api/cases/generate",
+    "/api/cases/explain",
     "/api/interviews",
     "/api/coach",
     "/api/evaluate",

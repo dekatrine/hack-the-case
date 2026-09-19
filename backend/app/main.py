@@ -22,11 +22,15 @@ from .prompts import (
     PHASE_GENERATION_SYSTEM,
     RUBRIC_SYSTEM,
     MVP_RUBRIC_SYSTEM,
+    CONDITION_EXPLAIN_SYSTEM,
+    CONDITION_GUARD_SYSTEM,
     STEP_SELECTION_SYSTEM,
     get_coach_system_prompt,
 )
 from .schemas import (
     CasePhase,
+    ConditionExplainRequest,
+    ConditionExplainResponse,
     CheckInterviewRequest,
     CheckInterviewResponse,
     CoachRequest,
@@ -788,3 +792,26 @@ def build_coach_context(payload: CoachRequest) -> str:
 СООБЩЕНИЕ СТУДЕНТА:
 {payload.userMessage}
 """
+
+
+@app.post("/api/cases/explain", response_model=ConditionExplainResponse)
+def explain_condition(payload: ConditionExplainRequest) -> ConditionExplainResponse:
+    if not payload.question.strip() or not payload.caseText.strip():
+        raise HTTPException(status_code=422, detail="Напиши вопрос об условии")
+    context = json.dumps({"case": payload.caseText, "question": payload.question}, ensure_ascii=False)
+    fallback = "Могу объяснить термин или формулировку условия, но выбор решения остаётся за тобой. Спроси, какое понятие непонятно."
+    try:
+        draft = call_yandex_gpt(CONDITION_EXPLAIN_SYSTEM, context, temperature=0.1, max_tokens=700)
+        if not draft.strip():
+            raise RuntimeError("Пустой ответ ассистента. Попробуй ещё раз.")
+        check = call_yandex_gpt(CONDITION_GUARD_SYSTEM,
+            json.dumps({"case": payload.caseText, "question": payload.question, "draft": draft}, ensure_ascii=False),
+            temperature=0, max_tokens=60)
+        try:
+            allowed = json.loads(check.replace("```json", "").replace("```", "").strip())
+        except (ValueError, TypeError):
+            allowed = None
+        safe = isinstance(allowed, dict) and allowed.get("allowed") is True
+        return ConditionExplainResponse(message=draft if safe else fallback)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail="Ассистент временно недоступен. Попробуй ещё раз.") from exc

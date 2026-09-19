@@ -121,3 +121,12 @@ class LearnSessionRequest(BaseModel):
 
 class LearnSessionResponse(BaseModel):
     exposition: str
+
+
+class ConditionExplainRequest(BaseModel):
+    caseText: str = Field(min_length=1, max_length=30000)
+    question: str = Field(min_length=1, max_length=1500)
+
+
+class ConditionExplainResponse(BaseModel):
+    message: str
