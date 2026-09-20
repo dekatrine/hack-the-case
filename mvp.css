@@ -223,3 +223,24 @@
 .case-materials .theory-card h3 { font-size:15px; margin:0 0 12px; }
 .theory-save { display:inline-block; padding:9px 12px; border:1px solid var(--border-hairline); border-radius:8px; font-size:12px; margin-top:16px; text-align:left; }
 .theory-save[aria-pressed="true"] { background:var(--accent-primary); border-color:var(--accent-primary); color:var(--text-primary); }
+.theory-source { color:var(--text-secondary); font-size:11px !important; border-top:1px solid var(--border-hairline); padding-top:12px; margin-top:18px !important; }
+.theory-source button { display:block; margin-top:8px; color:var(--text-primary); font-weight:600; }
+.book-intro { max-width:780px; color:var(--text-secondary); font-size:13px; line-height:1.7; margin:0 0 28px; }
+.book-layout { display:grid; grid-template-columns:280px minmax(0,1fr); gap:32px; align-items:start; }
+.book-toc { position:sticky; top:20px; max-height:calc(100vh - 40px); overflow:auto; border:1px solid var(--border-hairline); border-radius:14px; padding:16px; }
+.book-toc label { display:block; font-size:12px; font-weight:600; margin-bottom:8px; }
+.book-toc input { width:100%; padding:10px; border:1px solid var(--border-hairline); border-radius:8px; background:var(--surface-sunk); margin-bottom:16px; }
+.book-toc nav { display:flex; flex-direction:column; gap:4px; }
+.book-toc nav button { display:flex; gap:10px; text-align:left; font-size:12px; line-height:1.5; padding:10px; border-radius:8px; }
+.book-toc nav button > span { font-variant-numeric:tabular-nums; color:var(--text-secondary); }
+.book-toc nav button[aria-current="page"] { background:var(--accent-primary); font-weight:600; }
+.book-article { border:1px solid var(--border-hairline); border-radius:16px; padding:30px; scroll-margin-top:24px; }
+.book-article > h2 { font-size:26px; letter-spacing:-.6px; margin:12px 0 20px; }
+.book-article p { font-size:14px; line-height:1.8; }
+.book-article .book-summary { font-size:17px; }
+.book-article section { margin-top:26px; }
+.book-article .theory-example { padding:2px 18px 12px; }
+.book-related .theory-card { background:var(--surface-sunk); }
+.book-source { color:var(--text-secondary); font-size:11px !important; margin-top:28px; }
+.book-pagination { display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; border-top:1px solid var(--border-hairline); padding-top:20px; margin-top:24px; font-size:12px; }
+@media(max-width:850px) { .book-layout { grid-template-columns:1fr; } .book-toc { position:static; max-height:270px; } .book-article { padding:22px; } .mvp-header { flex-wrap:wrap; } .mvp-header nav { flex-wrap:wrap; } }

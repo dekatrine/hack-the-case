@@ -1,3 +1,4 @@
+import { BOOK_CARDS } from './bookData.js';
 // Short, case-oriented reference cards. Examples are illustrative, not case solutions.
 const card = (id, title, definition, example, types, application, mistake) => ({ id, title, definition, example, types, application, mistake });
 export const THEORY_BLOCKS = [
@@ -35,3 +36,11 @@ export const THEORY_BLOCKS = [
     card('average', 'Средний чек, ARPU и ARPPU', 'Средний чек — выручка или оборот заказов, делённые на число заказов. ARPU — выручка на пользователя; ARPPU — на платящего пользователя за один и тот же период.', 'За месяц 10 пользователей, из них 2 платящих, сделали 4 заказа на 2 000 ₽ выручки: средний чек — 500 ₽, ARPU — 200 ₽, ARPPU — 1 000 ₽.', ['Средний чек: единица — заказ.', 'ARPU: единица — пользователь выбранной базы.', 'ARPPU: единица — платящий пользователь.'], 'Назови период и состав базы. У маркетплейса чек по GMV и выручка платформы на заказ — разные величины.', 'Принимать число заказов за число покупателей или смешивать GMV с выручкой.'),
   ]},
 ];
+
+// Additional topics from the supplied textbook; earlier IDs stay unchanged for bookmarks.
+THEORY_BLOCKS.push(
+  { id: 'delivery', title: 'Команда и разработка', description: 'От планирования и коммуникации до выпуска продукта.', cards: [] },
+  { id: 'contexts', title: 'Рынки и контексты', description: 'Как меняется продуктовый подход в разных средах.', cards: [] },
+  { id: 'career', title: 'Развитие продакта', description: 'Компетенции, портфолио и работа с обратной связью.', cards: [] },
+);
+for (const c of BOOK_CARDS) THEORY_BLOCKS.find(g => g.id === c.group).cards.push(c);

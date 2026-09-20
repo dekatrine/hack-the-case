@@ -77,8 +77,8 @@ describe('MVP core flow', () => {
   it('opens theory from a solution and returns without losing the draft', async () => {
     await newCase();
     fireEvent.change(screen.getByLabelText(/1\. Какую задачу пользователя/), { target: { value: 'Сохранённая мысль' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Теория' }));
-    expect(screen.getByRole('heading', { name: 'Теория для практики' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Карточки' }));
+    expect(screen.getByRole('heading', { name: 'Карточки для практики' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Вернуться к решению' }));
     expect(screen.getByLabelText(/1\. Какую задачу пользователя/).value).toBe('Сохранённая мысль');
   });
@@ -87,16 +87,16 @@ describe('MVP core flow', () => {
     const summary = screen.getByText('Какие материалы могут понадобиться');
     const panel = summary.closest('details');
     panel.open = true;
-    fireEvent.click(within(panel).getAllByRole('button', { name: 'Добавить в мою теорию' })[0]);
-    fireEvent.click(within(panel).getByRole('button', { name: 'Открыть мою теорию' }));
-    expect(screen.getByRole('button', { name: 'Моя теория · 1' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(panel).getAllByRole('button', { name: 'Добавить в мои карточки' })[0]);
+    fireEvent.click(within(panel).getByRole('button', { name: 'Открыть мои карточки' }));
+    expect(screen.getByRole('button', { name: 'Мои карточки · 1' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('heading', { name: 'Сегментация' })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Конверсия' })).toBeNull();
     cleanup(); render(<MvpApp/>);
-    fireEvent.click(screen.getByRole('button', { name: 'Теория' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Моя теория · 1' }));
-    fireEvent.click(screen.getByRole('button', { name: 'В моей теории · убрать' }));
-    expect(screen.getByRole('button', { name: 'Моя теория · 0' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Карточки' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Мои карточки · 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'В моих карточках · убрать' }));
+    expect(screen.getByRole('button', { name: 'Мои карточки · 0' })).toBeTruthy();
     expect(JSON.parse(localStorage.getItem('htc_saved_theory_v1'))).toEqual([]);
   });
   it('recovers config loading and handles invalid storage', async () => {

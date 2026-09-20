@@ -4,11 +4,11 @@ import TheoryCard from './TheoryCard.jsx';
 export const SAVED_THEORY_KEY = 'htc_saved_theory_v1';
 const cards = THEORY_BLOCKS.flatMap(g => g.cards);
 const byType = {
-  product_sense: ['segment', 'jtbd', 'problem', 'research'],
-  product_execution: ['conversion', 'funnel', 'change', 'retention'],
-  product_strategy: ['strategy-choice', 'value', 'prioritization', 'market'],
-  product_experiment: ['ab', 'experiment-metrics', 'significance'],
-  product_estimation: ['market', 'estimation-methods', 'assumptions'],
+  product_sense: ['segment', 'jtbd', 'problem', 'research', 'book-10'],
+  product_execution: ['conversion', 'funnel', 'change', 'retention', 'book-14'],
+  product_strategy: ['strategy-choice', 'value', 'prioritization', 'market', 'book-7'],
+  product_experiment: ['ab', 'experiment-metrics', 'significance', 'book-12'],
+  product_estimation: ['market', 'estimation-methods', 'assumptions', 'book-26'],
 };
 export function readSavedTheory() {
   try {
@@ -30,6 +30,6 @@ export default function CaseMaterials({ item, savedIds, onToggle, onOpenTheory }
     <summary>Какие материалы могут понадобиться<span>{recommended.length} карточек по теме кейса</span></summary>
     <p className="mvp-muted">Подборка по типу собеседования и понятиям в условии. Общая теория с отдельными примерами, без разбора твоего кейса.</p>
     <div className="case-materials-cards">{recommended.map(c => <TheoryCard key={c.id} card={c} saved={savedIds.includes(c.id)} onToggle={onToggle}/>)}</div>
-    <button className="theory-save" onClick={onOpenTheory}>Открыть мою теорию</button>
+    <button className="theory-save" onClick={onOpenTheory}>Открыть мои карточки</button>
   </details>;
 }
