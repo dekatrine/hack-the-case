@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import MvpApp, { STORAGE_KEY } from './MvpApp.jsx';
 import { api } from './api/client.js';
 vi.mock('./api/client.js', () => ({ api: { config: vi.fn(), generate: vi.fn(), evaluate: vi.fn() } }));
@@ -81,6 +81,23 @@ describe('MVP core flow', () => {
     expect(screen.getByRole('heading', { name: 'Теория для практики' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Вернуться к решению' }));
     expect(screen.getByLabelText(/1\. Какую задачу пользователя/).value).toBe('Сохранённая мысль');
+  });
+  it('saves a case material, restores it after reload and removes it from saved theory', async () => {
+    await newCase();
+    const summary = screen.getByText('Какие материалы могут понадобиться');
+    const panel = summary.closest('details');
+    panel.open = true;
+    fireEvent.click(within(panel).getAllByRole('button', { name: 'Добавить в мою теорию' })[0]);
+    fireEvent.click(within(panel).getByRole('button', { name: 'Открыть мою теорию' }));
+    expect(screen.getByRole('button', { name: 'Моя теория · 1' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('heading', { name: 'Сегментация' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Конверсия' })).toBeNull();
+    cleanup(); render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: 'Теория' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Моя теория · 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'В моей теории · убрать' }));
+    expect(screen.getByRole('button', { name: 'Моя теория · 0' })).toBeTruthy();
+    expect(JSON.parse(localStorage.getItem('htc_saved_theory_v1'))).toEqual([]);
   });
   it('recovers config loading and handles invalid storage', async () => {
     localStorage.setItem(STORAGE_KEY, '{broken');

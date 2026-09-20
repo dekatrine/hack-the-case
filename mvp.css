@@ -216,3 +216,10 @@
 .theory-mistake { margin-top:20px; padding-top:1px; border-top:1px solid var(--border-hairline); color:var(--text-secondary); }
 .mvp-screen-theory .mvp-back { display:flex; align-items:center; gap:6px; }
 @media(max-width:680px) { .theory-cards { grid-template-columns:1fr; } .theory-tools { flex-direction:column; align-items:stretch; gap:10px; } .mvp-header nav { flex-wrap:wrap; } .theory-card { padding:20px; } }
+.case-materials > summary { font-size:14px; line-height:1.5; }
+.case-materials > summary > span { display:block; font-size:11px; font-weight:400; color:var(--text-secondary); margin:4px 0 0 16px; }
+.case-materials-cards { display:grid; gap:12px; margin:16px 0; }
+.case-materials .theory-card { padding:16px; background:var(--surface-card); }
+.case-materials .theory-card h3 { font-size:15px; margin:0 0 12px; }
+.theory-save { display:inline-block; padding:9px 12px; border:1px solid var(--border-hairline); border-radius:8px; font-size:12px; margin-top:16px; text-align:left; }
+.theory-save[aria-pressed="true"] { background:var(--accent-primary); border-color:var(--accent-primary); color:var(--text-primary); }

@@ -6,6 +6,7 @@ import './mvp.css';
 import CaseContent from './CaseContent.jsx';
 import ConditionAssistant from './ConditionAssistant.jsx';
 import TheoryPage from './TheoryPage.jsx';
+import CaseMaterials, { readSavedTheory, SAVED_THEORY_KEY } from './CaseMaterials.jsx';
 import INTERVIEWS from './backend/app/product_interviews.json';
 const interviewFields = type => INTERVIEWS.find(t => t.id === type)?.questions.map(q => [q.id, q.label, q.hint, 'Короткий ответ…']);
 
@@ -49,6 +50,14 @@ function Review({ value }) {
   </>;
 }
 export default function MvpApp() {
+  const [savedTheory, setSavedTheory] = useState(readSavedTheory);
+  const [theorySavedOnly, setTheorySavedOnly] = useState(false);
+  const [theoryError, setTheoryError] = useState('');
+  const toggleTheory = id => {
+    const next = savedTheory.includes(id) ? savedTheory.filter(x => x !== id) : [...savedTheory, id];
+    try { localStorage.setItem(SAVED_THEORY_KEY, JSON.stringify(next)); setSavedTheory(next); setTheoryError(''); }
+    catch { setTheoryError('Не удалось сохранить материал в браузере. Попробуй ещё раз.'); }
+  };
   const [cases, setCases] = useState(loadCases);
   const [screen, setScreen] = useState('library');
   const [selected, setSelected] = useState(null);
@@ -115,14 +124,15 @@ export default function MvpApp() {
       <button className="clean-brand" disabled={!!busy} onClick={() => go('library')} aria-label="Hack the Case — мои кейсы"><span className="mark">H</span><b>Hack the Case</b></button>
       <nav aria-label="Основная навигация">
         <button aria-current={screen === 'library' ? 'page' : undefined} disabled={!!busy} onClick={() => go('library')}>Мои кейсы</button>
-        <button aria-current={screen === 'theory' ? 'page' : undefined} disabled={!!busy} onClick={() => go('theory')}>Теория</button>
+        <button aria-current={screen === 'theory' ? 'page' : undefined} disabled={!!busy} onClick={() => { setTheorySavedOnly(false); go('theory'); }}>Теория</button>
         <Button variant="accent" size="sm" disabled={!!busy} onClick={() => go('generate')}>Новый кейс</Button>
       </nav>
     </header>
     <main className={`mvp-main mvp-screen-${screen}`}>
       {saveError && <p role="alert" className="mvp-notice">{saveError}</p>}
       {error && <p role="alert" className="mvp-notice">{error}</p>}
-      {screen === 'theory' && <TheoryPage onResume={active ? () => go('solve') : null}/>}
+      {theoryError && <p role="alert" className="mvp-notice">{theoryError}</p>}
+      {screen === 'theory' && <TheoryPage savedIds={savedTheory} onToggle={toggleTheory} initialSavedOnly={theorySavedOnly} onResume={active ? () => go('solve') : null}/>}
       {screen === 'library' && <>
         <div className="mvp-page-heading"><div><div className="clean-eyebrow">Твоя практика</div>
         <h1>Мои кейсы<span className="mvp-count">{String(cases.length).padStart(2, '0')}</span></h1>
@@ -174,7 +184,7 @@ export default function MvpApp() {
         <div className="clean-eyebrow">Шаг 2 · Решение</div><h1>Твой ход</h1>
         <p className="mvp-lead">Восемь коротких вопросов. На каждый достаточно одной-двух фраз — важна мысль, а не объём.</p>
         <div className="mvp-workspace">
-          <aside className="mvp-card mvp-condition"><h2>Условие кейса</h2><p className="mvp-muted">Данные кейса сгенерированы ИИ для тренировки.</p><ConditionAssistant key={active.id} caseText={active.caseText}/><CaseContent text={active.caseText}/>
+          <aside className="mvp-card mvp-condition"><h2>Условие кейса</h2><p className="mvp-muted">Данные кейса сгенерированы ИИ для тренировки.</p><ConditionAssistant key={active.id} caseText={active.caseText}/><CaseContent text={active.caseText}/><CaseMaterials key={`materials-${active.id}`} item={active} savedIds={savedTheory} onToggle={toggleTheory} onOpenTheory={() => { setTheorySavedOnly(true); go('theory'); }}/>
             {attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation}/></details>}
           </aside>
           <section className="mvp-card mvp-form" aria-label="Твоё решение">
