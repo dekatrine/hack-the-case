@@ -253,3 +253,57 @@
 .book-section-source { font-size:11px; color:var(--text-secondary); }
 .book-key-points { padding:16px 20px 16px 36px; background:var(--surface-sunk); border-radius:10px; }
 .book-key-points li { font-size:13px; line-height:1.75; padding-left:3px; margin:8px 0; }
+
+/* Guided full case: the existing clean tokens and controls stay unchanged. */
+.mvp-case-progress { margin:28px 0 30px; }
+.mvp-case-progress-caption { display:flex; align-items:center; justify-content:space-between; gap:16px; font-size:12px; margin-bottom:14px; }
+.mvp-case-progress-caption > span:first-child { font-weight:600; }
+.mvp-case-progress-caption > span:last-child { color:var(--text-secondary); font-size:11px; }
+.mvp-case-progress-track { height:5px; border-radius:var(--r-pill); background:var(--surface-sunk); overflow:hidden; }
+.mvp-case-progress-track > span { display:block; height:100%; background:var(--text-primary); transition:width .15s ease; }
+.mvp-question-steps { display:flex; gap:10px; margin-top:20px; }
+.mvp-question-steps > button { display:flex; align-items:center; justify-content:center; width:40px; height:40px; padding:0; border:1px solid var(--border-hairline); border-radius:50%; background:var(--surface-card); color:var(--text-secondary); font-size:11px; }
+.mvp-question-steps > button[aria-current="step"] { background:var(--accent-primary); border-color:var(--accent-primary); color:var(--text-primary); font-weight:600; }
+.mvp-screen-solve .mvp-question-card { gap:0; padding:30px; }
+.mvp-question-card > .mvp-kicker { color:var(--text-secondary); font-size:9px; }
+.mvp-question-card > h2 { font-size:25px; letter-spacing:-.6px; margin:22px 0 12px; line-height:1.35; outline:none; }
+.mvp-question-hint { color:var(--text-secondary); font-size:13px; line-height:1.7; margin:0 0 24px; }
+.mvp-screen-solve .mvp-question-input textarea { height:180px; min-height:140px; font-size:14px; line-height:1.8; border-radius:12px; }
+.mvp-visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.mvp-step-hint-toggle { display:flex; align-items:center; gap:8px; align-self:flex-start; padding:12px 0; margin-top:12px; font-size:12px; font-weight:500; }
+.mvp-step-hint { background:var(--surface-sunk); border-radius:12px; padding:18px; margin:4px 0 16px; }
+.mvp-step-hint b { font-size:12px; font-weight:600; }
+.mvp-step-hint p { font-size:13px; line-height:1.8; margin:10px 0 14px; }
+.mvp-step-hint small { color:var(--text-secondary); font-size:11px; line-height:1.7; }
+.mvp-autosave { font-size:11px; margin:12px 0 20px; }
+.mvp-step-navigation { display:flex; align-items:center; justify-content:space-between; gap:14px; padding-top:22px; border-top:1px solid var(--border-hairline); }
+.mvp-step-navigation > button { font-size:13px !important; padding:13px 22px !important; }
+.mvp-step-navigation > button:disabled { cursor:not-allowed; }
+.mvp-step-note { margin:16px 0 0; font-size:11px; line-height:1.7; }
+.mvp-step-error { color:var(--semantic-danger); font-size:12px; line-height:1.7; margin:12px 0 0; }
+.mvp-step-review-link, .mvp-edit-step { font-size:12px; text-align:left; text-decoration:underline; text-underline-offset:4px; margin-top:20px; align-self:flex-start; }
+.mvp-edit-step { margin:12px 0 8px; }
+.mvp-app .mvp-condition-disclosure { border:0; padding:0; margin:0; }
+.mvp-condition-disclosure > summary { display:flex; align-items:center; justify-content:space-between; gap:15px; list-style:none; font-size:19px; font-weight:600; }
+.mvp-condition-disclosure > summary::-webkit-details-marker { display:none; }
+.mvp-condition-disclosure[open] > summary > svg { transform:rotate(180deg); }
+.mvp-condition-body > .mvp-muted { margin-top:18px; font-size:12px; }
+@media(max-width:760px) {
+  .mvp-guided-workspace { gap:18px; }
+  .mvp-case-progress { margin:24px 0; }
+  .mvp-question-steps { gap:6px; }
+  .mvp-question-steps > button { width:36px; height:38px; flex:0 0 36px; font-size:10px; }
+  .mvp-screen-solve .mvp-question-card { padding:24px 22px; }
+  .mvp-question-card > h2 { font-size:23px; margin-top:20px; }
+  .mvp-question-hint { font-size:12px; margin-bottom:20px; }
+  .mvp-screen-solve .mvp-question-input textarea { height:170px; font-size:14px; }
+  .mvp-flow-condition { padding:20px 22px; }
+  .mvp-condition-disclosure > summary { font-size:16px; }
+  .mvp-step-navigation { gap:10px; }
+  .mvp-step-navigation > button { font-size:12px !important; padding:12px 18px !important; }
+}
+@media(max-width:370px) {
+  .mvp-question-steps { gap:4px; }
+  .mvp-question-steps > button { width:32px; flex-basis:32px; }
+  .mvp-step-navigation > button { font-size:11px !important; padding:12px 15px !important; }
+}
