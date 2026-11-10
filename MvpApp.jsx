@@ -4,6 +4,7 @@ import { api } from './api/client.js';
 import { Button } from './design/components/Button.jsx';
 import './mvp.css';
 import CaseContent from './CaseContent.jsx';
+import CaseFlow from './CaseFlow.jsx';
 import ConditionAssistant from './ConditionAssistant.jsx';
 import TheoryPage from './TheoryPage.jsx';
 import BookTheoryPage from './BookTheoryPage.jsx';
@@ -107,7 +108,8 @@ export default function MvpApp() {
   };
   const evaluate = async () => {
     if (lock.current || !active) return;
-    if (!Object.values(active.answers).some(a => a.trim())) { setError('Напиши решение хотя бы в одном поле.'); return; }
+    const missing = fields.find(([key]) => !active.answers[key]?.trim());
+    if (missing) { update(active.id, c => ({ ...c, currentQuestionId: missing[0] })); setError('Перед разбором заполни все ответы кейса.'); return; }
     lock.current = true; setBusy('evaluate'); setError('');
     const item = active;
     const answers = { ...item.answers };
@@ -186,26 +188,19 @@ export default function MvpApp() {
       {screen === 'solve' && active && <>
         <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
         <div className="clean-eyebrow">Шаг 2 · Решение</div><h1>Твой ход</h1>
-        <p className="mvp-lead">Восемь коротких вопросов. На каждый достаточно одной-двух фраз — важна мысль, а не объём.</p>
-        <div className="mvp-workspace">
-          <aside className="mvp-card mvp-condition"><h2>Условие кейса</h2><p className="mvp-muted">Данные кейса сгенерированы ИИ для тренировки.</p><ConditionAssistant key={active.id} caseText={active.caseText}/><CaseContent text={active.caseText}/><CaseMaterials key={`materials-${active.id}`} item={active} savedIds={savedTheory} onToggle={toggleTheory} onOpenTheory={() => { setTheorySavedOnly(true); go('cards'); }}/>
-            {attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation}/></details>}
-          </aside>
-          <section className="mvp-card mvp-form" aria-label="Твоё решение">
-            {fields.map(([key, label, hint, placeholder], index) => <label key={key} htmlFor={`answer-${key}`}><span>{index + 1}. {label}</span><span className="mvp-muted">{hint}</span><textarea id={`answer-${key}`} placeholder={placeholder} rows={2} disabled={!!busy} value={active.answers[key] || ''} onChange={e => { const value = e.target.value; update(active.id, c => ({ ...c, answers: { ...c.answers, [key]: value } })); }}/></label>)}
-            <p className="mvp-muted">{saveError ? 'Сохранение недоступно' : 'Черновик сохраняется в этом браузере'}</p>
-            <Button variant="accent" disabled={!!busy || !hasChanges} onClick={evaluate}>{busy ? 'Разбираем решение…' : attempts.length ? 'Проверить новую версию' : 'Получить ИИ-разбор'}</Button>
-            {busy && <p role="status">Проверяем аргументы, расчёты и рекомендацию…</p>}
-            {!hasChanges && <p className="mvp-muted">Измени ответ, чтобы проверить новую версию.</p>}
-            {attempts.length > 0 && <Button variant="neutral" disabled={!!busy} onClick={() => { setAttemptIndex(null); go('review'); }}>Посмотреть разбор</Button>}
-          </section>
-        </div>
+        <p className="mvp-lead">Один кейс, {fields.length} шагов. Отвечай на один вопрос за раз — все мысли сложатся в полное решение.</p>
+        <CaseFlow key={active.id} fields={fields} answers={active.answers} questionId={active.currentQuestionId}
+          onQuestion={key => update(active.id, c => ({ ...c, currentQuestionId: key }))}
+          onAnswer={(key, value) => update(active.id, c => ({ ...c, currentQuestionId: key, answers: { ...c.answers, [key]: value } }))}
+          onEvaluate={evaluate} busy={busy} saveError={saveError} hasChanges={hasChanges} attempts={attempts}
+          onReview={() => { setAttemptIndex(null); go('review'); }}
+          condition={<><p className="mvp-muted">Данные кейса сгенерированы ИИ для тренировки.</p><ConditionAssistant key={active.id} caseText={active.caseText}/><CaseContent text={active.caseText}/><CaseMaterials key={`materials-${active.id}`} item={active} savedIds={savedTheory} onToggle={toggleTheory} onOpenTheory={() => { setTheorySavedOnly(true); go('cards'); }}/>{attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation}/></details>}</>}/>
       </>}
       {screen === 'review' && active && attempt && <div className="mvp-narrow">
         <button className="mvp-back" onClick={() => go('library')}>← Мои кейсы</button>
         <div className="clean-eyebrow">Шаг 3 · Обратная связь</div><h1>Разбор решения</h1><p className="mvp-lead">{titleOf(active.title || active.caseText)}</p>
         <label className="mvp-version">Версия решения<select value={attemptIndex ?? attempts.length - 1} onChange={e => setAttemptIndex(Number(e.target.value))}>{attempts.map((a, i) => <option key={i} value={i}>Версия {i + 1} · {new Date(a.createdAt).toLocaleString('ru-RU')}</option>)}</select></label>
-        <article className="mvp-card mvp-review"><Review value={attempt.evaluation}/><details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div></section>)}</details></article>
+        <article className="mvp-card mvp-review"><Review value={attempt.evaluation}/><details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div><button className="mvp-edit-step" onClick={() => { update(active.id, c => ({ ...c, currentQuestionId: key })); go('solve'); }}>Доработать этот шаг</button></section>)}</details></article>
         <div className="mvp-actions"><Button variant="accent" onClick={() => go('solve')}>Улучшить решение</Button><Button variant="neutral" onClick={() => go('generate')}>Новый кейс</Button></div>
         <p className="mvp-muted">Редактирование продолжится с последнего черновика. ИИ может ошибаться — сверяй выводы с данными кейса.</p>
       </div>}
