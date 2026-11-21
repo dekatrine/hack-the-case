@@ -13,6 +13,7 @@ function loadProgress() {
 export default function LearningPath({ onOpenCases }) {
   const [progress,setProgress] = useState(loadProgress);
   const [active,setActive] = useState(null);
+  const [taskIndex,setTaskIndex] = useState(0);
   const [phase,setPhase] = useState('theory');
   const [selected,setSelected] = useState(null);
   const [order,setOrder] = useState([]);
@@ -26,17 +27,24 @@ export default function LearningPath({ onOpenCases }) {
   const current = next < 0 ? lessons.length-1 : next;
   function openLesson(index) {
     if (index > current) return;
-    setActive(index);setPhase('theory');setSelected(null);setNumeric('');setResult(null);
-    setOrder([...(lessons[index].task.items || [])].reverse());
+    setActive(index);setTaskIndex(0);setPhase('theory');setSelected(null);setNumeric('');setResult(null);
+    setOrder([...(lessons[index].tasks?.[0]?.items || lessons[index].task?.items || [])].reverse());
     track('lesson_started',{lessonId:lessons[index].id,skillPath:SKILL_PATH.id});
   }
   function check() {
-    const lesson=lessons[active];const task=lesson.task;
-    const correct=task.type==='choice' ? selected===task.answer : task.type==='order' ? order.every((v,i)=>v===task.answer[i]) : Number(numeric)===task.answer && numeric.trim()!=='';
+    const lesson=lessons[active];const task=(lesson.tasks || [lesson.task])[taskIndex];
+    const correct=(task.type==='choice'||task.type==='chart') ? selected===task.answer : task.type==='order' ? order.every((v,i)=>v===task.answer[i]) : Number(numeric)===task.answer && numeric.trim()!=='';
     setResult(correct);
     track('answer_submitted',{lessonId:lesson.id,correct,taskType:task.type});
     track('feedback_viewed',{lessonId:lesson.id,correct});
     if (!correct) setProgress(p=>({...p,mistakes:{...p.mistakes,[lesson.id]:(p.mistakes[lesson.id]||0)+1}}));
+  }
+  function advance() {
+    const lesson=lessons[active];
+    if (taskIndex >= (lesson.tasks || [lesson.task]).length - 1) { finish(); return; }
+    const index=taskIndex+1;
+    setTaskIndex(index);setResult(null);setSelected(null);setNumeric('');
+    setOrder([...(lesson.tasks?.[index]?.items || [])].reverse());
   }
   function finish() {
     const id=lessons[active].id;
@@ -51,22 +59,23 @@ export default function LearningPath({ onOpenCases }) {
     </button>)}</div>
     <div className="lp-actions"><button className="lp-secondary" onClick={onOpenCases}>Перейти к полным кейсам →</button></div>
   </div>;
-  const lesson=lessons[active];const task=lesson.task;
-  const canCheck=task.type==='choice'?selected!==null:task.type==='order'?order.length===task.items.length:numeric.trim()!=='';
+  const lesson=lessons[active];const task=(lesson.tasks || [lesson.task])[taskIndex];
+  const canCheck=(task.type==='choice'||task.type==='chart')?selected!==null:task.type==='order'?order.length===task.items.length:numeric.trim()!=='';
   function reorder(index,delta) {setOrder(prev=>{const next=[...prev];const target=index+delta;if(target<0||target>=next.length)return prev;[next[index],next[target]]=[next[target],next[index]];return next;});}
   return <div className="lp lp-session">
     <button className="mvp-back" onClick={()=>setActive(null)}>← Карта навыков</button>
     <div className="lp-kicker">{lesson.final?'Итоговый мини-кейс':'Микроурок'} {active+1} / {lessons.length}</div>
-    <div className="lp-progress" aria-label="Прогресс урока"><span style={{width:phase==='theory'?'45%':result===true?'100%':'75%'}} /></div>
+    <div className="lp-progress" aria-label="Прогресс урока"><span style={{width:phase==='theory'?'20%':result===true?`${Math.round(100*(taskIndex+1)/(lesson.tasks || [lesson.task]).length)}%`:`${Math.round(20+70*taskIndex/(lesson.tasks || [lesson.task]).length)}%`}} /></div>
     <h1>{lesson.title}</h1>
     {phase==='theory'?<><p className="lp-theory">{lesson.theory}</p><div className="lp-example"><small>ПРИМЕР</small>{lesson.example}</div><div className="lp-actions"><button className="lp-primary" onClick={()=>setPhase('practice')}>Попробовать →</button></div></>:
-    <><div className="lp-kicker">Твоя практика</div><h2>{task.question}</h2>
-      {task.type==='choice'&&<div className="lp-answers">{task.options.map((option,i)=><button className="lp-answer" aria-pressed={selected===i} disabled={result!==null} key={option} onClick={()=>setSelected(i)}>{option}</button>)}</div>}
+    <><div className="lp-kicker">Твоя практика · Задание {taskIndex+1} из {(lesson.tasks || [lesson.task]).length}</div><h2>{task.question}</h2>
+      {task.type==='chart'&&<div className="lp-chart" role="img" aria-label={task.bars.map(b=>`${b.label}: ${b.value}`).join(', ')}>{task.bars.map(b=><div className="lp-chart-item" key={b.label}><div className="lp-chart-label"><span>{b.label}</span><strong>{b.value.toLocaleString('ru-RU')}</strong></div><div className="lp-chart-track"><span style={{width:`${100*b.value/Math.max(...task.bars.map(v=>v.value))}%`}} /></div></div>)}</div>}
+      {(task.type==='choice'||task.type==='chart')&&<div className="lp-answers">{task.options.map((option,i)=><button className="lp-answer" aria-pressed={selected===i} disabled={result!==null} key={option} onClick={()=>setSelected(i)}>{option}</button>)}</div>}
       {task.type==='order'&&<div className="lp-answers">{order.map((item,i)=><div className="lp-order-row" key={item}><span>{i+1}. {item}</span><span className="lp-order-actions"><button aria-label={`Поднять ${item}`} disabled={result!==null||i===0} onClick={()=>reorder(i,-1)}>↑</button><button aria-label={`Опустить ${item}`} disabled={result!==null||i===order.length-1} onClick={()=>reorder(i,1)}>↓</button></span></div>)}</div>}
       {task.type==='number'&&<div className="lp-answers"><label>Ответ в {task.unit}<div><input className="lp-number" type="number" step="any" value={numeric} disabled={result!==null} onChange={e=>setNumeric(e.target.value)}/></div></label></div>}
       {result!==null&&<div className="lp-feedback" role="status"><strong>{result?'Верно!':'Пока не так. Попробуй ещё раз.'}</strong>{task.explanation}</div>}
       {error&&<p role="alert">{error}</p>}
-      <div className="lp-actions">{result===true?<button className="lp-primary" onClick={finish}>{lesson.final?'Завершить мини-кейс':'Завершить урок'} →</button>:result===false?<button className="lp-primary" onClick={()=>{setResult(null);setSelected(null);setNumeric('');}}>Повторить попытку</button>:<button className="lp-primary" disabled={!canCheck} onClick={check}>Проверить ответ</button>}</div>
+      <div className="lp-actions">{result===true?<button className="lp-primary" onClick={advance}>{taskIndex<(lesson.tasks || [lesson.task]).length-1?'Следующий вопрос':lesson.final?'Завершить мини-кейс':'Завершить урок'} →</button>:result===false?<button className="lp-primary" onClick={()=>{setResult(null);setSelected(null);setNumeric('');}}>Повторить попытку</button>:<button className="lp-primary" disabled={!canCheck} onClick={check}>Проверить ответ</button>}</div>
     </>}
   </div>;
 }
