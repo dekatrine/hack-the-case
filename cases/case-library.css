@@ -35,3 +35,8 @@
 .mycases :is(button,input,select):focus-visible { outline:2px solid var(--text-primary);outline-offset:3px; }
 @media(max-width:800px) { .mycases-toolbar { grid-template-columns:1fr 1fr; }.mycases-search { grid-column:1/-1; } }
 @media(max-width:550px) { .mycases-heading { flex-direction:column; }.mycases-stats { gap:7px; }.mycases-stat { padding:12px; }.mycases-stat strong { font-size:22px; }.mycases-stat span { font-size:10px; }.mycases-item { padding:18px; }.mycases-item-main { flex-direction:column;align-items:flex-start; }.mycases-actions button { flex:1;justify-content:center; }.mycases-toolbar { grid-template-columns:1fr; }.mycases-search { grid-column:auto; }.mycases-new { align-self:flex-start; } }
+
+.mycases-learning-tip { margin:18px 0;border:1px solid var(--border-hairline);border-radius:var(--r-clean-sm);background:var(--surface-sunk);padding:18px; }
+.mycases-learning-tip strong { display:block;font-size:13px; }
+.mycases-learning-tip p { color:var(--text-secondary);font-size:12px;line-height:1.6;margin:8px 0 12px; }
+.mycases-learning-tip button { padding:10px 12px;background:var(--accent-primary);color:var(--text-on-accent);border-radius:var(--r-clean-sm);font-weight:700;font-size:12px; }
