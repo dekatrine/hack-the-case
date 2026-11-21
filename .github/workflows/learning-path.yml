@@ -1,0 +1,23 @@
+name: Learning path checks
+on:
+  pull_request:
+    paths:
+      - 'learning/**'
+      - 'MvpApp.jsx'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/learning-path.yml'
+  push:
+    branches: [feature/learning-path-micro-lessons]
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:unit
+      - run: npm run build
