@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { track } from '../api/analytics.js';
 import { SKILL_PATH } from './skillPath.js';
 import BusinessSimulator from './BusinessSimulator.jsx';
+import DecisionChallenge from './DecisionChallenge.jsx';
 import { chooseChallenge, dueReviews, recordAttempt } from './learningEngine.js';
 import './learning-path.css';
 
@@ -23,6 +24,7 @@ export default function LearningPath({ onOpenCases }) {
   const [result,setResult] = useState(null);
   const [error,setError] = useState('');
   const [simulator,setSimulator] = useState(false);
+  const [decisionOpen,setDecisionOpen] = useState(false);
   useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(progress));setError(''); } catch { setError('Не удалось сохранить прогресс в этом браузере.'); } },[progress]);
   const lessons = SKILL_PATH.lessons;
   const completed = progress.completed;
@@ -64,6 +66,7 @@ export default function LearningPath({ onOpenCases }) {
     track(lessons[active].final?'case_completed':'lesson_completed',{lessonId:id,skillPath:SKILL_PATH.id});
     setActive(null);setPhase('theory');setResult(null);
   }
+  if (decisionOpen) return <div className="lp"><DecisionChallenge onExit={()=>setDecisionOpen(false)}/></div>;
   if (simulator) return <div className="lp"><button className="mvp-back" onClick={()=>setSimulator(false)}>← Карта навыков</button><BusinessSimulator onComplete={()=>setSimulator(false)}/></div>;
   if (active===null) return <div className="lp">
     <div className="lp-head"><div><div className="lp-kicker">Трек · Product Management</div><h1>{SKILL_PATH.title}</h1><p className="mvp-lead">{SKILL_PATH.description}</p></div><div className="lp-summary"><b>{completed.length}/{lessons.length}</b><span>Уроков пройдено</span></div></div>
@@ -71,7 +74,7 @@ export default function LearningPath({ onOpenCases }) {
     <div className="lp-rail">{lessons.map((lesson,i)=><button type="button" key={lesson.id} className={['lp-node',completed.includes(lesson.id)?'complete':'',i===current?'current':'',lesson.final?'final':''].join(' ')} disabled={i>current} onClick={()=>openLesson(i)}>
       <span className="lp-node-number">{completed.includes(lesson.id)?'✓':String(i+1).padStart(2,'0')}</span><span className="lp-node-copy"><strong>{lesson.title}</strong><small>{lesson.skill} · {lesson.final?'Итоговая задача':'3–5 минут'}</small></span><span className="lp-node-meta">{completed.includes(lesson.id)?'Пройдено':i>current?'Закрыто':'Начать →'}</span>
     </button>)}</div>
-    <div className="lp-actions"><button className="lp-primary" onClick={()=>setSimulator(true)}>Симулятор бизнеса →</button><button className="lp-secondary" onClick={onOpenCases}>Перейти к полным кейсам →</button></div>
+    <div className="lp-actions"><button className="lp-primary" onClick={()=>setDecisionOpen(true)}>Бизнес-кейс: решения и бюджет →</button><button className="lp-secondary" onClick={()=>setSimulator(true)}>Калькулятор метрик →</button><button className="lp-secondary" onClick={onOpenCases}>Перейти к полным кейсам →</button></div>
   </div>;
   const lesson=lessons[active];const task=getTask(lesson,taskIndex);
   const canCheck=(task.type==='choice'||task.type==='chart')?selected!==null:task.type==='order'?order.length===task.items.length:numeric.trim()!=='';
