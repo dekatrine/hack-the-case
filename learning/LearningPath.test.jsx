@@ -1,12 +1,13 @@
 import React from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import LearningPath from './LearningPath.jsx';
 
 vi.mock('../api/analytics.js', () => ({ track: vi.fn() }));
 const KEY = 'htc_learning_path_v1';
 
 beforeEach(() => localStorage.clear());
+afterEach(() => cleanup());
 
 describe('Product metrics learning path', () => {
   it('shows one available lesson and locks later lessons', () => {
