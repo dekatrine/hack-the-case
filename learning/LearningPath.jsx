@@ -27,7 +27,7 @@ export default function LearningPath({ onOpenCases }) {
   function openLesson(index) {
     if (index > current) return;
     setActive(index);setPhase('theory');setSelected(null);setNumeric('');setResult(null);
-    setOrder([...lessons[index].task.items || []].reverse());
+    setOrder([...(lessons[index].task.items || [])].reverse());
     track('lesson_started',{lessonId:lessons[index].id,skillPath:SKILL_PATH.id});
   }
   function check() {
