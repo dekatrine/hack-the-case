@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, ArrowRight, ChevronDown, Check, Layers3, Clock3, Sparkles } from 'lucide-react';
 import { api } from './api/client.js';
+import { LOCAL_CASE_CONFIG } from './api/localCaseConfig.js';
 import { Button } from './design/components/Button.jsx';
 import './mvp.css';
 import CaseContent from './CaseContent.jsx';
@@ -82,11 +83,15 @@ export default function MvpApp() {
   const attempt = attempts[attemptIndex ?? attempts.length - 1];
 
   const fetchConfig = () => {
-    setConfigError('');
     api.config().then(data => {
       setConfig(data);
+      setConfigError('');
       setParams(p => ({ ...p, industry: p.industry || data.industries?.find(x => x.includes('Маркетплейсы')) || data.industries?.[0] || '', difficulty: p.difficulty || Object.keys(data.difficultyLevels || {})[0] || '' }));
-    }).catch(() => setConfigError('Не удалось загрузить настройки генерации. Сохранённые кейсы доступны.'));
+    }).catch(() => {
+      setConfig(LOCAL_CASE_CONFIG);
+      setConfigError('Сервер генерации пока недоступен. Можно выбрать параметры, но для создания AI-кейса требуется подключение. Проверь, запущен ли backend, затем повтори подключение.');
+      setParams(p => ({ ...p, industry: p.industry || 'E-commerce / Маркетплейсы', difficulty: p.difficulty || 'Начальный' }));
+    });
   };
   useEffect(fetchConfig, []);
   useEffect(() => {

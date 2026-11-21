@@ -1,25 +1,74 @@
 import { track } from './analytics.js';
 
-const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-const API_BASE_URL =
-  configuredApiBaseUrl?.replace(/\/+$/, '') ||
-  (import.meta.env.DEV ? '' : 'https://hack-the-case-api.onrender.com');
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()?.replace(/\/+$/, '');
+const defaultApiBaseUrl = import.meta.env.DEV ? '' : 'https://hack-the-case-api.onrender.com';
+let detectedLocalBase = null;
+
+// Some users already have Vite running from an older branch without the /api proxy.
+// In dev, discover a working local API instead of requiring them to set ports manually.
+const devCandidates = import.meta.env.DEV && !configuredApiBaseUrl
+  ? ['', 'http://127.0.0.1:8001', 'http://localhost:8001',
+      'http://127.0.0.1:8000', 'http://localhost:8000']
+  : [];
+
+function apiBase() {
+  return configuredApiBaseUrl || detectedLocalBase || defaultApiBaseUrl;
+}
+
+async function fetchApi(path, options = {}) {
+  const opts = {
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    ...options,
+  };
+  const candidates = detectedLocalBase !== null || devCandidates.length === 0
+    ? [apiBase()] : devCandidates;
+  let lastError;
+  for (const base of candidates) {
+    try {
+      const response = await fetch(`${base}${path}`, opts);
+      if (response.ok) {
+        // A stale Vite dev server can reply to /api/config with index.html (200).
+        // Treat that as a missing proxy, not as a valid API connection.
+        const contentType = response.headers.get('content-type') || '';
+        if (path === '/api/config' && !contentType.includes('application/json')) {
+          lastError = new Error('Frontend вернул HTML вместо настроек API');
+          if (devCandidates.length > 1) continue;
+          throw lastError;
+        }
+        if (devCandidates.length) detectedLocalBase = base;
+        return response;
+      }
+      // Vite returns a plain-text 5xx if its proxy is not connected. Only
+      // fall back in that case; never re-send real backend 4xx / JSON 5xx.
+      if (base === '' && devCandidates.length > 1 && response.status >= 500) {
+        const kind = response.headers.get('content-type') || '';
+        if (!kind.includes('application/json')) {
+          lastError = new Error('Локальный proxy недоступен');
+          continue;
+        }
+      }
+      return response;
+    } catch (err) {
+      lastError = err;
+      // Only safe to retry a read request; POST requests could be duplicated.
+      if ((opts.method || 'GET').toUpperCase() !== 'GET') break;
+    }
+  }
+  if (detectedLocalBase !== null && devCandidates.length && (opts.method || 'GET').toUpperCase() === 'GET') {
+    // Backend may have moved ports since the last request.
+    detectedLocalBase = null;
+    if (!options.__rediscovered) return fetchApi(path, { ...options, __rediscovered: true });
+  }
+  throw lastError || new Error('API недоступен');
+}
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-    ...options,
-  });
-
+  const response = await fetchApi(path, options);
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     track('api_error', { path, status: response.status });
     throw new Error(body.detail || `Ошибка API: ${response.status}`);
   }
-
   return response.json();
 }
 
@@ -37,7 +86,7 @@ function withEvent(promise, event, params) {
 // Бросает ошибку, если стрим не удался — вызывающий может откатиться на
 // обычный api.generate().
 async function generateStream(payload, onChunk) {
-  const response = await fetch(`${API_BASE_URL}/api/cases/generate/stream`, {
+  const response = await fetch(`${apiBase()}/api/cases/generate/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
