@@ -59,7 +59,7 @@ async function start() {
   } else {
     process.stdout.write(`▶ Запускаю backend на порту ${port}…\n`);
     apiProcess = spawn(python, [
-      '-m','uvicorn','app.main:app','--reload','--reload-dir','app',
+      '-m','uvicorn','app.main:app',
       '--host','127.0.0.1','--port',String(port)
     ], { cwd: backend, env: process.env, stdio: 'inherit' });
     let backendExit = null;
@@ -69,7 +69,7 @@ async function start() {
     });
     apiProcess.once('exit', code => { backendExit = new Error(`Backend завершился (код ${code})`); });
     let ready = false;
-    for (let attempt = 0; attempt < 80; attempt += 1) {
+    for (let attempt = 0; attempt < 180; attempt += 1) {
       if (backendExit) throw backendExit;
       if (await alive(port)) { ready = true; break; }
       await wait(250);
