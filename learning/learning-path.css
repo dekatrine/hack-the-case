@@ -1,0 +1,38 @@
+/* Learning path: only existing clean design tokens, no palette overrides. */
+.lp { max-width:850px; margin:0 auto; }
+.lp-head { display:flex; justify-content:space-between; gap:20px; align-items:flex-start; margin-bottom:28px; }
+.lp-head h1 { margin:5px 0 10px; }
+.lp-summary { border:1px solid var(--border-hairline); border-radius:var(--r-clean-sm); padding:12px 18px; background:var(--surface-sunk); text-align:center; min-width:120px; }
+.lp-summary b { font-size:22px; display:block; }
+.lp-summary span,.lp-kicker { font-size:11px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.08em; }
+.lp-rail { display:grid; gap:12px; }
+.lp-node { width:100%; display:flex; align-items:center; text-align:left; gap:18px; border:1px solid var(--border-hairline); border-radius:var(--r-clean-card); padding:18px 22px; background:var(--surface-card); color:var(--text-primary); }
+.lp-node:not(:disabled):hover { border-color:var(--text-secondary); }
+.lp-node:disabled { opacity:.52; cursor:not-allowed; }
+.lp-node-number { width:46px;height:46px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--surface-sunk);font-weight:700; }
+.lp-node.complete .lp-node-number,.lp-node.current .lp-node-number { background:var(--accent-primary);color:var(--text-on-accent); }
+.lp-node-copy { flex:1;display:grid;gap:5px; }
+.lp-node-copy strong { font-size:16px; }
+.lp-node-copy small,.lp-node-meta { font-size:12px;color:var(--text-secondary); }
+.lp-node.final { border-style:dashed; }
+.lp-session { max-width:650px; margin:0 auto; }
+.lp-progress { height:6px; background:var(--surface-sunk); overflow:hidden; border-radius:var(--r-pill); margin:18px 0 32px; }
+.lp-progress > span { display:block;height:100%;background:var(--accent-primary);transition:width .2s ease; }
+.lp-theory { font-size:16px;line-height:1.7; }
+.lp-example { margin:24px 0; padding:24px; border-radius:var(--r-clean-sm); background:var(--surface-sunk); }
+.lp-example small { color:var(--text-secondary);display:block;margin-bottom:8px; }
+.lp-answers { display:grid;gap:10px; margin:22px 0; }
+.lp-answer { display:block;text-align:left;width:100%;border:1px solid var(--border-hairline-strong);border-radius:var(--r-clean-sm);padding:16px 18px;background:var(--surface-card); }
+.lp-answer[aria-pressed=true] { border-color:var(--text-primary);background:var(--surface-sunk); }
+.lp-answer:disabled { cursor:default; }
+.lp-order-row { display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border-hairline);border-radius:var(--r-clean-sm);padding:12px 14px; }
+.lp-order-actions { display:flex;gap:8px; }
+.lp-order-actions button { min-width:34px;min-height:34px;border:1px solid var(--border-hairline);border-radius:var(--r-sm); }
+.lp-number { max-width:240px;padding:14px;border:1px solid var(--border-hairline-strong);border-radius:var(--r-clean-sm);background:var(--surface-card);color:var(--text-primary);font:inherit; }
+.lp-feedback { padding:18px;border-radius:var(--r-clean-sm);background:var(--surface-sunk);margin:18px 0;line-height:1.6; }
+.lp-feedback strong { display:block;margin-bottom:6px; }
+.lp-actions { display:flex;gap:12px;flex-wrap:wrap;margin-top:24px; }
+.lp-primary { background:var(--accent-primary);color:var(--text-on-accent);border-radius:var(--r-clean-sm);padding:13px 22px;font-weight:700; }
+.lp-secondary { border:1px solid var(--border-hairline-strong);border-radius:var(--r-clean-sm);padding:13px 22px; }
+.lp-primary:disabled { opacity:.45;cursor:not-allowed; }
+@media(max-width:650px) { .lp-head { flex-direction:column; }.lp-node { padding:15px;gap:12px; }.lp-summary { text-align:left; }.lp-actions > button { flex:1; } }
