@@ -5,6 +5,8 @@ import { Button } from './design/components/Button.jsx';
 import './mvp.css';
 import CaseContent from './CaseContent.jsx';
 import LearningPath from './learning/LearningPath.jsx';
+import CaseLibrary from './cases/CaseLibrary.jsx';
+import { duplicateAsNewAttempt } from './cases/caseLibrary.js';
 import CaseFlow from './CaseFlow.jsx';
 import ConditionAssistant from './ConditionAssistant.jsx';
 import TheoryPage from './TheoryPage.jsx';
@@ -93,8 +95,10 @@ export default function MvpApp() {
   }, [cases]);
   useEffect(() => { window.scrollTo?.({ top: 0, behavior: 'auto' }); }, [screen, selected]);
   const go = (next) => { setError(''); setScreen(next); };
-  const update = (id, fn) => setCases(prev => prev.map(c => c.id === id ? fn(c) : c));
+  const update = (id, fn) => setCases(prev => prev.map(c => c.id === id ? { ...fn(c), updatedAt: new Date().toISOString() } : c));
   const open = (c, next) => { setSelected(c.id); setAttemptIndex(null); go(next); };
+  const archive = (item, shouldArchive) => update(item.id, c => ({ ...c, archivedAt: shouldArchive ? new Date().toISOString() : null, updatedAt: new Date().toISOString() }));
+  const retryCase = (item) => { const now = new Date().toISOString(); const copy = duplicateAsNewAttempt(item, crypto.randomUUID(), now); setCases(prev => [copy, ...prev]); open(copy, 'solve'); };
   const generate = async (event) => {
     event.preventDefault();
     if (lock.current) return;
@@ -102,7 +106,7 @@ export default function MvpApp() {
     try {
       const result = await api.generate({ ...params, mvp: true });
       if (!result.caseText?.trim()) throw new Error('ИИ вернул пустой кейс. Попробуй ещё раз.');
-      const item = { id: crypto.randomUUID(), title: titleOf(result.caseText), caseText: result.caseText, params: { ...params }, answers: {}, attempts: [], createdAt: new Date().toISOString() };
+      const item = { id: crypto.randomUUID(), title: titleOf(result.caseText), caseText: result.caseText, params: { ...params }, answers: {}, attempts: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       setCases(prev => [item, ...prev]); open(item, 'solve');
     } catch (e) { setError(e.message || 'Не удалось сгенерировать кейс. Попробуй ещё раз.'); }
     finally { lock.current = false; setBusy(''); }
@@ -142,11 +146,11 @@ export default function MvpApp() {
       {screen === 'learning' && <LearningPath onOpenCases={() => go('library')}/>}
       {screen === 'theory' && <BookTheoryPage initialChapter={bookChapter} savedIds={savedTheory} onToggle={toggleTheory} onResume={active ? () => go('solve') : null}/>}
       {screen === 'cards' && <TheoryPage onOpenChapter={number => { setBookChapter(number); go('theory'); }} savedIds={savedTheory} onToggle={toggleTheory} initialSavedOnly={theorySavedOnly} onResume={active ? () => go('solve') : null}/>}
-      {screen === 'library' && <>
+      {screen === 'library' && (cases.length === 0 ? <>
         <div className="mvp-page-heading"><div><div className="clean-eyebrow">Твоя практика</div>
         <h1>Мои кейсы<span className="mvp-count">{String(cases.length).padStart(2, '0')}</span></h1>
         <p className="mvp-lead">От первой гипотезы до уверенного решения.</p></div><span className="mvp-small-note"><Clock3 size={15}/>15–20 минут на практику</span></div>
-        {!cases.length ? <>
+
           <section className="mvp-start">
             <div className="mvp-start-copy"><span className="mvp-kicker"><Sparkles size={14}/>Кейс под твою задачу</span>
               <h2>Сильные решения<br/>начинаются с практики.</h2>
@@ -164,16 +168,7 @@ export default function MvpApp() {
             ['Продуктовая стратегия','Как вырастить прибыль?','Разбери экономику и выбери точку роста.', 'Рост прибыли маркетплейса при ограниченном бюджете'],
           ].map(([tag,t,d,context],i) => <button className="mvp-starter" key={tag} onClick={() => { setParams(p => ({ ...p, trackId: 'product', interviewType: ['product_execution', 'product_sense', 'product_strategy'][i], extraContext: context })); go('generate'); }}><span className="mvp-starter-tag">{tag}<ArrowUpRight size={17}/></span><b>{t}</b><p>{d}</p></button>)}</div>
           <p className="mvp-storage-note">Здесь появятся твои кейсы, черновики и разборы. Они сохраняются в этом браузере.</p>
-        </> : <div className="mvp-grid">{cases.map(c => {
-          const reviewed = c.attempts.length > 0;
-          const draft = reviewed && JSON.stringify(c.answers) !== JSON.stringify(c.attempts.at(-1).answers);
-          return <article className="mvp-card" key={c.id}>
-            <span className="mvp-status">{draft ? 'Ответ обновлён' : reviewed ? 'Есть разбор' : 'В процессе'}</span>
-            <h2>{titleOf(c.title || c.caseText)}</h2><p className="mvp-muted">{INTERVIEWS.find(t => t.id === c.params.interviewType)?.label || 'Кейс'} · {c.params.difficulty} · {c.params.industry}</p>
-            <div className="mvp-actions"><Button onClick={() => open(c, reviewed && !draft ? 'review' : 'solve')}>{reviewed && !draft ? 'Посмотреть разбор' : 'Продолжить'}</Button></div>
-          </article>;
-        })}</div>}
-      </>}
+        </> : <CaseLibrary cases={cases} interviewTypes={INTERVIEWS} onOpen={open} onNew={() => go('generate')} onArchive={archive} onRetry={retryCase} onLearn={() => go('learning')}/>)}
       {screen === 'generate' && <>
         <div className="mvp-page-heading"><div><div className="clean-eyebrow">Новая тренировка</div><h1>Настрой свой кейс</h1>
         <p className="mvp-lead">Выбери задачу. Условие и данные подготовит ИИ.</p></div><div className="mvp-flow"><b>01 Кейс</b><ArrowRight size={14}/><span>02 Решение</span><ArrowRight size={14}/><span>03 Разбор</span></div></div>
@@ -203,7 +198,7 @@ export default function MvpApp() {
         <button className="mvp-back" onClick={() => go('library')}>← Мои кейсы</button>
         <div className="clean-eyebrow">Шаг 3 · Обратная связь</div><h1>Разбор решения</h1><p className="mvp-lead">{titleOf(active.title || active.caseText)}</p>
         <label className="mvp-version">Версия решения<select value={attemptIndex ?? attempts.length - 1} onChange={e => setAttemptIndex(Number(e.target.value))}>{attempts.map((a, i) => <option key={i} value={i}>Версия {i + 1} · {new Date(a.createdAt).toLocaleString('ru-RU')}</option>)}</select></label>
-        <article className="mvp-card mvp-review"><Review value={attempt.evaluation}/><details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div><button className="mvp-edit-step" onClick={() => { update(active.id, c => ({ ...c, currentQuestionId: key })); go('solve'); }}>Доработать этот шаг</button></section>)}</details></article>
+        <article className="mvp-card mvp-review"><Review value={attempt.evaluation}/>{/(конверс|воронк|метрик|conversion|funnel|metric)/i.test(attempt.evaluation) && <div className="mycases-learning-tip"><strong>Хочешь потренировать метрики?</strong><p>Это дополнительная практика по теме разбора, а не автоматическая оценка твоих навыков.</p><button type="button" onClick={() => go('learning')}>Перейти к урокам по метрикам →</button></div>}<details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div><button className="mvp-edit-step" onClick={() => { update(active.id, c => ({ ...c, currentQuestionId: key })); go('solve'); }}>Доработать этот шаг</button></section>)}</details></article>
         <div className="mvp-actions"><Button variant="accent" onClick={() => go('solve')}>Улучшить решение</Button><Button variant="neutral" onClick={() => go('generate')}>Новый кейс</Button></div>
         <p className="mvp-muted">Редактирование продолжится с последнего черновика. ИИ может ошибаться — сверяй выводы с данными кейса.</p>
       </div>}

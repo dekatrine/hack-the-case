@@ -1,0 +1,42 @@
+/* My Cases extends the existing clean theme without replacing any color tokens. */
+.mycases { max-width:1080px;margin:0 auto; }
+.mycases-heading { align-items:flex-start; }
+.mycases-new { display:inline-flex;align-items:center;gap:12px;padding:13px 18px;border-radius:var(--r-clean-sm);background:var(--accent-primary);color:var(--text-on-accent);font-size:13px;font-weight:700;white-space:nowrap; }
+.mycases-stats { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:26px 0 30px; }
+.mycases-stat { padding:20px 22px;border:1px solid var(--border-hairline);border-radius:var(--r-clean-sm);background:var(--surface-card);display:grid;gap:5px; }
+.mycases-stat strong { font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums; }
+.mycases-stat span { color:var(--text-secondary);font-size:12px; }
+.mycases-toolbar { display:grid;grid-template-columns:minmax(200px,1fr) minmax(130px,210px) minmax(130px,185px);gap:10px; }
+.mycases-search { display:flex;align-items:center;gap:10px;border:1px solid var(--border-hairline);border-radius:var(--r-clean-sm);padding:0 14px;min-width:0; }
+.mycases-search input { border:0;outline:0;background:transparent;width:100%;min-width:0;padding:13px 0;font:inherit;color:var(--text-primary);font-size:13px; }
+.mycases-toolbar select { height:100%;min-width:0;font-size:12px; }
+.mycases-tabs { display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 22px; }
+.mycases-tabs button { padding:9px 14px;font-size:12px;border-radius:var(--r-pill);border:1px solid var(--border-hairline);background:var(--surface-card);color:var(--text-secondary); }
+.mycases-tabs button[aria-pressed="true"] { border-color:var(--accent-primary);background:var(--accent-primary);color:var(--text-on-accent);font-weight:700; }
+.mycases-list { display:grid;gap:14px; }
+.mycases-item { padding:24px;border:1px solid var(--border-hairline);border-radius:var(--r-clean-card);background:var(--surface-card); }
+.mycases-item-top { display:flex;justify-content:space-between;gap:14px;color:var(--text-secondary);font-size:11px; }
+.mycases-item-main { display:flex;align-items:center;justify-content:space-between;gap:16px;margin:18px 0 16px; }
+.mycases-item-main h2 { font-size:19px;margin:9px 0 6px; }
+.mycases-item-main p { font-size:12px;margin:0;color:var(--text-secondary); }
+.mycases-state { display:inline-block;padding:5px 10px;border-radius:var(--r-pill);background:var(--surface-sunk);font-size:11px; }
+.mycases-count { font-size:12px;color:var(--text-secondary);white-space:nowrap; }
+.mycases-progress { height:5px;overflow:hidden;border-radius:var(--r-pill);background:var(--surface-sunk);margin:12px 0 18px; }
+.mycases-progress span { display:block;height:100%;background:var(--accent-primary); }
+.mycases-actions { display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:15px;border-top:1px solid var(--border-hairline); }
+.mycases-actions button { display:inline-flex;align-items:center;gap:6px;font-size:12px;border:1px solid var(--border-hairline);padding:10px 12px;border-radius:var(--r-clean-sm); }
+.mycases-actions .mycases-action-main { background:var(--accent-primary);border-color:var(--accent-primary);color:var(--text-on-accent);font-weight:700; }
+.mycases-empty { padding:44px 22px;text-align:center;border:1px solid var(--border-hairline);border-radius:var(--r-clean-card); }
+.mycases-empty > svg { margin:0 auto 12px; }
+.mycases-empty h2 { font-size:19px;margin:10px 0; }
+.mycases-empty p { color:var(--text-secondary);font-size:13px; }
+.mycases-empty .mycases-actions { justify-content:center;border:0; }
+.mycases-note { color:var(--text-secondary);font-size:11px;margin:22px 0; }
+.mycases :is(button,input,select):focus-visible { outline:2px solid var(--text-primary);outline-offset:3px; }
+@media(max-width:800px) { .mycases-toolbar { grid-template-columns:1fr 1fr; }.mycases-search { grid-column:1/-1; } }
+@media(max-width:550px) { .mycases-heading { flex-direction:column; }.mycases-stats { gap:7px; }.mycases-stat { padding:12px; }.mycases-stat strong { font-size:22px; }.mycases-stat span { font-size:10px; }.mycases-item { padding:18px; }.mycases-item-main { flex-direction:column;align-items:flex-start; }.mycases-actions button { flex:1;justify-content:center; }.mycases-toolbar { grid-template-columns:1fr; }.mycases-search { grid-column:auto; }.mycases-new { align-self:flex-start; } }
+
+.mycases-learning-tip { margin:18px 0;border:1px solid var(--border-hairline);border-radius:var(--r-clean-sm);background:var(--surface-sunk);padding:18px; }
+.mycases-learning-tip strong { display:block;font-size:13px; }
+.mycases-learning-tip p { color:var(--text-secondary);font-size:12px;line-height:1.6;margin:8px 0 12px; }
+.mycases-learning-tip button { padding:10px 12px;background:var(--accent-primary);color:var(--text-on-accent);border-radius:var(--r-clean-sm);font-weight:700;font-size:12px; }
