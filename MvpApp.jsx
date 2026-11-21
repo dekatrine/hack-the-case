@@ -146,7 +146,29 @@ export default function MvpApp() {
       {screen === 'learning' && <LearningPath onOpenCases={() => go('library')}/>}
       {screen === 'theory' && <BookTheoryPage initialChapter={bookChapter} savedIds={savedTheory} onToggle={toggleTheory} onResume={active ? () => go('solve') : null}/>}
       {screen === 'cards' && <TheoryPage onOpenChapter={number => { setBookChapter(number); go('theory'); }} savedIds={savedTheory} onToggle={toggleTheory} initialSavedOnly={theorySavedOnly} onResume={active ? () => go('solve') : null}/>}
-      {screen === 'library' && <CaseLibrary cases={cases} interviewTypes={INTERVIEWS} onOpen={open} onNew={() => go('generate')} onArchive={archive} onRetry={retryCase} onLearn={() => go('learning')}/>}
+      {screen === 'library' && (cases.length === 0 ? <>
+        <div className="mvp-page-heading"><div><div className="clean-eyebrow">Твоя практика</div>
+        <h1>Мои кейсы<span className="mvp-count">{String(cases.length).padStart(2, '0')}</span></h1>
+        <p className="mvp-lead">От первой гипотезы до уверенного решения.</p></div><span className="mvp-small-note"><Clock3 size={15}/>15–20 минут на практику</span></div>
+
+          <section className="mvp-start">
+            <div className="mvp-start-copy"><span className="mvp-kicker"><Sparkles size={14}/>Кейс под твою задачу</span>
+              <h2>Сильные решения<br/>начинаются с практики.</h2>
+              <p>Реальная бизнес-ситуация, твои гипотезы и конкретная обратная связь. Начни с одного кейса.</p>
+              <Button variant="accent" icon={<ArrowUpRight size={18}/>} onClick={() => go('generate')}>Сгенерировать кейс</Button>
+            </div>
+            <div className="mvp-start-route"><span className="mvp-kicker">Одна тренировка</span>
+              {[['01','Получи задачу','ИИ подготовит условие и исходные данные.'],['02','Предложи решение','Разложи проблему, гипотезы и аргументы.'],['03','Сделай ответ сильнее','Получи разбор и доработай слабые места.']].map(([n,t,d]) => <div className="mvp-route-row" key={n}><span>{n}</span><div><b>{t}</b><p>{d}</p></div></div>)}
+            </div>
+          </section>
+          <div className="mvp-section-label"><h2>С чего начать</h2><span>Выбери задачу для первой тренировки</span></div>
+          <div className="mvp-starters">{[
+            ['Диагностика метрик','Почему падает конверсия?','Найди причину изменения метрики и предложи проверку.', 'В маркетплейсе падает конверсия из поиска в заказ'],
+            ['Продуктовое решение','Что улучшить в продукте?','Определи проблему пользователя и приоритет решения.', 'Как улучшить повторные покупки в маркетплейсе'],
+            ['Продуктовая стратегия','Как вырастить прибыль?','Разбери экономику и выбери точку роста.', 'Рост прибыли маркетплейса при ограниченном бюджете'],
+          ].map(([tag,t,d,context],i) => <button className="mvp-starter" key={tag} onClick={() => { setParams(p => ({ ...p, trackId: 'product', interviewType: ['product_execution', 'product_sense', 'product_strategy'][i], extraContext: context })); go('generate'); }}><span className="mvp-starter-tag">{tag}<ArrowUpRight size={17}/></span><b>{t}</b><p>{d}</p></button>)}</div>
+          <p className="mvp-storage-note">Здесь появятся твои кейсы, черновики и разборы. Они сохраняются в этом браузере.</p>
+        </> : <CaseLibrary cases={cases} interviewTypes={INTERVIEWS} onOpen={open} onNew={() => go('generate')} onArchive={archive} onRetry={retryCase} onLearn={() => go('learning')}/>)}
       {screen === 'generate' && <>
         <div className="mvp-page-heading"><div><div className="clean-eyebrow">Новая тренировка</div><h1>Настрой свой кейс</h1>
         <p className="mvp-lead">Выбери задачу. Условие и данные подготовит ИИ.</p></div><div className="mvp-flow"><b>01 Кейс</b><ArrowRight size={14}/><span>02 Решение</span><ArrowRight size={14}/><span>03 Разбор</span></div></div>
