@@ -27,6 +27,14 @@ async function fetchApi(path, options = {}) {
     try {
       const response = await fetch(`${base}${path}`, opts);
       if (response.ok) {
+        // A stale Vite dev server can reply to /api/config with index.html (200).
+        // Treat that as a missing proxy, not as a valid API connection.
+        const contentType = response.headers.get('content-type') || '';
+        if (path === '/api/config' && !contentType.includes('application/json')) {
+          lastError = new Error('Frontend вернул HTML вместо настроек API');
+          if (devCandidates.length > 1) continue;
+          throw lastError;
+        }
         if (devCandidates.length) detectedLocalBase = base;
         return response;
       }
