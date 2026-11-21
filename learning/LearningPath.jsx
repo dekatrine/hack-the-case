@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { track } from '../api/analytics.js';
 import { SKILL_PATH } from './skillPath.js';
+import BusinessSimulator from './BusinessSimulator.jsx';
+import { chooseChallenge, dueReviews, recordAttempt } from './learningEngine.js';
 import './learning-path.css';
 
 const KEY = 'htc_learning_path_v1';
 function loadProgress() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || '{}');
-    return { completed: Array.isArray(raw.completed) ? raw.completed : [], mistakes: raw.mistakes && typeof raw.mistakes === 'object' ? raw.mistakes : {} };
-  } catch { return { completed: [], mistakes: {} }; }
+    return { completed: Array.isArray(raw.completed) ? raw.completed : [], mistakes: raw.mistakes && typeof raw.mistakes === 'object' ? raw.mistakes : {}, reviews: raw.reviews && typeof raw.reviews === 'object' ? raw.reviews : {} };
+  } catch { return { completed: [], mistakes: {}, reviews: {} }; }
 }
 export default function LearningPath({ onOpenCases }) {
   const [progress,setProgress] = useState(loadProgress);
@@ -20,13 +22,17 @@ export default function LearningPath({ onOpenCases }) {
   const [numeric,setNumeric] = useState('');
   const [result,setResult] = useState(null);
   const [error,setError] = useState('');
+  const [simulator,setSimulator] = useState(false);
   useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(progress));setError(''); } catch { setError('Не удалось сохранить прогресс в этом браузере.'); } },[progress]);
   const lessons = SKILL_PATH.lessons;
   const completed = progress.completed;
   const next = lessons.findIndex(l => !completed.includes(l.id));
   const current = next < 0 ? lessons.length-1 : next;
+  const due = dueReviews(progress.reviews || {}, completed);
+  const challenge = chooseChallenge(progress.reviews?.[lessons[active ?? current]?.id]?.mastery);
   function openLesson(index) {
     if (index > current) return;
+    setSimulator(false);
     setActive(index);setTaskIndex(0);setPhase('theory');setSelected(null);setNumeric('');setResult(null);
     setOrder([...(lessons[index].tasks?.[0]?.items || lessons[index].task?.items || [])].reverse());
     track('lesson_started',{lessonId:lessons[index].id,skillPath:SKILL_PATH.id});
@@ -35,6 +41,7 @@ export default function LearningPath({ onOpenCases }) {
     const lesson=lessons[active];const task=(lesson.tasks || [lesson.task])[taskIndex];
     const correct=(task.type==='choice'||task.type==='chart') ? selected===task.answer : task.type==='order' ? order.every((v,i)=>v===task.answer[i]) : Number(numeric)===task.answer && numeric.trim()!=='';
     setResult(correct);
+    setProgress(p=>({...p,reviews:recordAttempt(p.reviews || {},lesson.id,correct)}));
     track('answer_submitted',{lessonId:lesson.id,correct,taskType:task.type});
     track('feedback_viewed',{lessonId:lesson.id,correct});
     if (!correct) setProgress(p=>({...p,mistakes:{...p.mistakes,[lesson.id]:(p.mistakes[lesson.id]||0)+1}}));
@@ -52,12 +59,14 @@ export default function LearningPath({ onOpenCases }) {
     track(lessons[active].final?'case_completed':'lesson_completed',{lessonId:id,skillPath:SKILL_PATH.id});
     setActive(null);setPhase('theory');setResult(null);
   }
+  if (simulator) return <div className="lp"><button className="mvp-back" onClick={()=>setSimulator(false)}>← Карта навыков</button><BusinessSimulator onComplete={()=>setSimulator(false)}/></div>;
   if (active===null) return <div className="lp">
     <div className="lp-head"><div><div className="lp-kicker">Трек · Product Management</div><h1>{SKILL_PATH.title}</h1><p className="mvp-lead">{SKILL_PATH.description}</p></div><div className="lp-summary"><b>{completed.length}/{lessons.length}</b><span>Уроков пройдено</span></div></div>
+    <div className="lp-review-panel"><div><strong>Повторение навыков</strong><p>{due.length ? `Пора повторить: ${due.length} ${due.length===1?'урок':'уроков'}` : 'Новые повторения появятся по мере практики.'}</p></div>{due.length>0&&<button className="lp-secondary" onClick={()=>openLesson(lessons.findIndex(l=>l.id===due[0]))}>Повторить →</button>}</div>
     <div className="lp-rail">{lessons.map((lesson,i)=><button type="button" key={lesson.id} className={['lp-node',completed.includes(lesson.id)?'complete':'',i===current?'current':'',lesson.final?'final':''].join(' ')} disabled={i>current} onClick={()=>openLesson(i)}>
       <span className="lp-node-number">{completed.includes(lesson.id)?'✓':String(i+1).padStart(2,'0')}</span><span className="lp-node-copy"><strong>{lesson.title}</strong><small>{lesson.skill} · {lesson.final?'Итоговая задача':'3–5 минут'}</small></span><span className="lp-node-meta">{completed.includes(lesson.id)?'Пройдено':i>current?'Закрыто':'Начать →'}</span>
     </button>)}</div>
-    <div className="lp-actions"><button className="lp-secondary" onClick={onOpenCases}>Перейти к полным кейсам →</button></div>
+    <div className="lp-actions"><button className="lp-primary" onClick={()=>setSimulator(true)}>Симулятор бизнеса →</button><button className="lp-secondary" onClick={onOpenCases}>Перейти к полным кейсам →</button></div>
   </div>;
   const lesson=lessons[active];const task=(lesson.tasks || [lesson.task])[taskIndex];
   const canCheck=(task.type==='choice'||task.type==='chart')?selected!==null:task.type==='order'?order.length===task.items.length:numeric.trim()!=='';
@@ -66,7 +75,7 @@ export default function LearningPath({ onOpenCases }) {
     <button className="mvp-back" onClick={()=>setActive(null)}>← Карта навыков</button>
     <div className="lp-kicker">{lesson.final?'Итоговый мини-кейс':'Микроурок'} {active+1} / {lessons.length}</div>
     <div className="lp-progress" aria-label="Прогресс урока"><span style={{width:phase==='theory'?'20%':result===true?`${Math.round(100*(taskIndex+1)/(lesson.tasks || [lesson.task]).length)}%`:`${Math.round(20+70*taskIndex/(lesson.tasks || [lesson.task]).length)}%`}} /></div>
-    <h1>{lesson.title}</h1>
+    <h1>{lesson.title}</h1><p className="lp-mastery">Уровень практики: {challenge==='hard'?'Продвинутый':challenge==='medium'?'Средний':'Базовый'} · задания по текущей теме</p>
     {phase==='theory'?<><p className="lp-theory">{lesson.theory}</p><div className="lp-example"><small>ПРИМЕР</small>{lesson.example}</div><div className="lp-actions"><button className="lp-primary" onClick={()=>setPhase('practice')}>Попробовать →</button></div></>:
     <><div className="lp-kicker">Твоя практика · Задание {taskIndex+1} из {(lesson.tasks || [lesson.task]).length}</div><h2>{task.question}</h2>
       {task.type==='chart'&&<div className="lp-chart" role="img" aria-label={task.bars.map(b=>`${b.label}: ${b.value}`).join(', ')}>{task.bars.map(b=><div className="lp-chart-item" key={b.label}><div className="lp-chart-label"><span>{b.label}</span><strong>{b.value.toLocaleString('ru-RU')}</strong></div><div className="lp-chart-track"><span style={{width:`${100*b.value/Math.max(...task.bars.map(v=>v.value))}%`}} /></div></div>)}</div>}
