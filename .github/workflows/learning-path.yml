@@ -5,6 +5,10 @@ on:
       - 'learning/**'
       - 'MvpApp.jsx'
       - 'package.json'
+      - 'api/client.js'
+      - 'vite.config.js'
+      - 'scripts/**'
+      - 'cases/**'
       - 'package-lock.json'
       - '.github/workflows/learning-path.yml'
   push:
@@ -21,3 +25,28 @@ jobs:
       - run: npm ci
       - run: npm run test:unit
       - run: npm run build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r backend/requirements.txt
+      - name: Smoke-test one-command local startup
+        shell: bash
+        run: |
+          npm run dev > /tmp/htc-dev.log 2>&1 &
+          dev_pid=$!
+          trap 'kill "$dev_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 65); do
+            if curl --fail --silent http://127.0.0.1:5173/api/config > /tmp/htc-config.json && curl --fail --silent http://127.0.0.1:5173/health > /tmp/htc-health.json; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          cat /tmp/htc-dev.log
+          if [ "$ready" -ne 1 ]; then
+            echo 'Local frontend-to-backend startup failed'
+            exit 1
+          fi
+          python -c 'import json; d=json.load(open("/tmp/htc-config.json")); assert isinstance(d.get("industries"),list); h=json.load(open("/tmp/htc-health.json")); assert h.get("status")=="ok"'
+
