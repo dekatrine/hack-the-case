@@ -36,3 +36,13 @@
 .lp-secondary { border:1px solid var(--border-hairline-strong);border-radius:var(--r-clean-sm);padding:13px 22px; }
 .lp-primary:disabled { opacity:.45;cursor:not-allowed; }
 @media(max-width:650px) { .lp-head { flex-direction:column; }.lp-node { padding:15px;gap:12px; }.lp-summary { text-align:left; }.lp-actions > button { flex:1; } }
+
+/* Data charts are intentionally monochrome with the existing lime accent. */
+.lp-chart { display:grid;gap:15px;margin:20px 0 26px;padding:20px;border:1px solid var(--border-hairline);border-radius:var(--r-clean-sm); }
+.lp-chart-item { display:grid;gap:7px; }
+.lp-chart-label { display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--text-secondary); }
+.lp-chart-label strong { color:var(--text-primary);font-variant-numeric:tabular-nums; }
+.lp-chart-track { width:100%;height:16px;background:var(--surface-sunk);border-radius:var(--r-sm);overflow:hidden; }
+.lp-chart-track span { display:block;height:100%;background:var(--accent-primary);border-radius:var(--r-sm);min-width:2px; }
+.lp-order-actions button:focus-visible,.lp-answer:focus-visible,.lp-node:focus-visible,.lp-primary:focus-visible,.lp-secondary:focus-visible { outline:2px solid var(--text-primary);outline-offset:3px; }
+@media(prefers-reduced-motion:reduce) { .lp-progress > span { transition:none; } }
