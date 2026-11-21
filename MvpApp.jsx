@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, ArrowRight, ChevronDown, Check, Layers3, Clock3, Sparkles } from 'lucide-react';
 import { api } from './api/client.js';
+import { LOCAL_CASE_CONFIG } from './api/localCaseConfig.js';
 import { Button } from './design/components/Button.jsx';
 import './mvp.css';
 import CaseContent from './CaseContent.jsx';
@@ -82,11 +83,15 @@ export default function MvpApp() {
   const attempt = attempts[attemptIndex ?? attempts.length - 1];
 
   const fetchConfig = () => {
-    setConfigError('');
     api.config().then(data => {
       setConfig(data);
+      setConfigError('');
       setParams(p => ({ ...p, industry: p.industry || data.industries?.find(x => x.includes('Маркетплейсы')) || data.industries?.[0] || '', difficulty: p.difficulty || Object.keys(data.difficultyLevels || {})[0] || '' }));
-    }).catch(() => setConfigError('Не удалось загрузить настройки генерации. Сохранённые кейсы доступны.'));
+    }).catch(() => {
+      setConfig(LOCAL_CASE_CONFIG);
+      setConfigError('Сервер генерации пока недоступен. Можно выбрать параметры, но для создания AI-кейса требуется подключение. Проверь, запущен ли backend, затем повтори подключение.');
+      setParams(p => ({ ...p, industry: p.industry || 'E-commerce / Маркетплейсы', difficulty: p.difficulty || 'Начальный' }));
+    });
   };
   useEffect(fetchConfig, []);
   useEffect(() => {
@@ -172,7 +177,7 @@ export default function MvpApp() {
       {screen === 'generate' && <>
         <div className="mvp-page-heading"><div><div className="clean-eyebrow">Новая тренировка</div><h1>Настрой свой кейс</h1>
         <p className="mvp-lead">Выбери задачу. Условие и данные подготовит ИИ.</p></div><div className="mvp-flow"><b>01 Кейс</b><ArrowRight size={14}/><span>02 Решение</span><ArrowRight size={14}/><span>03 Разбор</span></div></div>
-        {configError && <div role="alert" className="mvp-notice">{configError} <button onClick={fetchConfig}>Повторить загрузку</button></div>}
+        {configError && <div role="alert" className="mvp-notice">{configError} <button onClick={fetchConfig}>Проверить подключение</button></div>}
         {!config && !configError && <p role="status">Загружаем настройки…</p>}
         {config && <div className="mvp-setup-layout"><form className="mvp-card mvp-form mvp-setup" onSubmit={generate}>
           <fieldset><legend>01 / Тип продуктового собеседования</legend><div className="mvp-direction">{INTERVIEWS.map(t => <button type="button" className={params.interviewType === t.id ? 'selected' : ''} aria-pressed={params.interviewType === t.id} disabled={!!busy} key={t.id} onClick={() => setParams(p => ({ ...p, trackId: 'product', interviewType:t.id }))}><span className="mvp-direction-top"><Layers3 size={20}/><span className="mvp-choice-check">{params.interviewType === t.id && <Check size={12}/>}</span></span><b>{t.label}</b><small>{t.description}</small></button>)}</div></fieldset>
