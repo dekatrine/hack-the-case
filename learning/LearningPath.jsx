@@ -37,8 +37,13 @@ export default function LearningPath({ onOpenCases }) {
     setOrder([...(lessons[index].tasks?.[0]?.items || lessons[index].task?.items || [])].reverse());
     track('lesson_started',{lessonId:lessons[index].id,skillPath:SKILL_PATH.id});
   }
+  function getTask(lesson,index) {
+    if (lesson.tasks) return lesson.tasks[index];
+    const tier=chooseChallenge(progress.reviews?.[lesson.id]?.mastery);
+    return tier==='hard' && lesson.challenges?.hard ? lesson.challenges.hard : lesson.task;
+  }
   function check() {
-    const lesson=lessons[active];const task=(lesson.tasks || [lesson.task])[taskIndex];
+    const lesson=lessons[active];const task=getTask(lesson,taskIndex);
     const correct=(task.type==='choice'||task.type==='chart') ? selected===task.answer : task.type==='order' ? order.every((v,i)=>v===task.answer[i]) : Number(numeric)===task.answer && numeric.trim()!=='';
     setResult(correct);
     setProgress(p=>({...p,reviews:recordAttempt(p.reviews || {},lesson.id,correct)}));
@@ -68,7 +73,7 @@ export default function LearningPath({ onOpenCases }) {
     </button>)}</div>
     <div className="lp-actions"><button className="lp-primary" onClick={()=>setSimulator(true)}>Симулятор бизнеса →</button><button className="lp-secondary" onClick={onOpenCases}>Перейти к полным кейсам →</button></div>
   </div>;
-  const lesson=lessons[active];const task=(lesson.tasks || [lesson.task])[taskIndex];
+  const lesson=lessons[active];const task=getTask(lesson,taskIndex);
   const canCheck=(task.type==='choice'||task.type==='chart')?selected!==null:task.type==='order'?order.length===task.items.length:numeric.trim()!=='';
   function reorder(index,delta) {setOrder(prev=>{const next=[...prev];const target=index+delta;if(target<0||target>=next.length)return prev;[next[index],next[target]]=[next[target],next[index]];return next;});}
   return <div className="lp lp-session">
