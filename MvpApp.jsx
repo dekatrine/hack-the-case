@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowUpRight, ArrowRight, ChevronDown, Check, Layers3, Clock3, Sparkles } from 'lucide-react';
+import { ArrowUpRight, ArrowRight, Calculator, ChartNoAxesColumnIncreasing, ChevronDown, Check, Clock3, Compass, FlaskConical, Lightbulb, Sparkles, UsersRound } from 'lucide-react';
 import { api } from './api/client.js';
 import { LOCAL_CASE_CONFIG } from './api/localCaseConfig.js';
 import { Button } from './design/components/Button.jsx';
@@ -16,6 +16,15 @@ import BookTheoryPage from './BookTheoryPage.jsx';
 import CaseMaterials, { readSavedTheory, SAVED_THEORY_KEY } from './CaseMaterials.jsx';
 import INTERVIEWS from './backend/app/product_interviews.json';
 import CASE_VARIANTS from './backend/app/case_variants.json';
+
+const DIRECTION_ICONS = {
+  product_sense: Lightbulb,
+  product_execution: ChartNoAxesColumnIncreasing,
+  product_strategy: Compass,
+  product_experiment: FlaskConical,
+  product_estimation: Calculator,
+  product_segmentation: UsersRound,
+};
 const interviewFields = type => INTERVIEWS.find(t => t.id === type)?.questions.map(q => [q.id, q.label, q.hint, 'Короткий ответ…']);
 const routeFields = route => route.map(step => [step.id, step.question, step.hint, 'Короткий ответ…']);
 
@@ -261,7 +270,21 @@ export default function MvpApp() {
         {configError && <div role="alert" className="mvp-notice">{configError} <button onClick={fetchConfig}>Повторить загрузку</button></div>}
         {!config && !configError && <p role="status">Загружаем настройки…</p>}
         {config && <div className="mvp-setup-layout"><form className="mvp-card mvp-form mvp-setup" onSubmit={generate}>
-          <fieldset><legend>01 / Направление</legend><div className="mvp-direction">{INTERVIEWS.map(t => <button type="button" className={params.interviewType === t.id ? 'selected' : ''} aria-pressed={params.interviewType === t.id} disabled={!!busy} key={t.id} onClick={() => { setVariantId('surprise'); setParams(p => ({ ...p, trackId: 'product', interviewType:t.id })); }}><span className="mvp-direction-top"><Layers3 size={20}/><span className="mvp-choice-check">{params.interviewType === t.id && <Check size={12}/>}</span></span><b>{t.label}</b><small>{t.description}</small></button>)}</div></fieldset>
+          <fieldset>
+            <legend>01 / Направление</legend>
+            <div className="mvp-direction">{INTERVIEWS.map(type => {
+              const Icon = DIRECTION_ICONS[type.id];
+              const selected = params.interviewType === type.id;
+              return <button type="button" className={selected ? 'selected' : ''} aria-pressed={selected} disabled={!!busy} key={type.id}
+                onClick={() => {
+                  setVariantId('surprise');
+                  setParams(p => ({ ...p, trackId: 'product', interviewType: type.id }));
+                }}>
+                <span className="mvp-direction-top"><Icon size={20} aria-hidden="true"/><span className="mvp-choice-check">{selected && <Check size={12} aria-hidden="true"/>}</span></span>
+                <b>{type.label}</b><small>{type.description}</small>
+              </button>;
+            })}</div>
+          </fieldset>
           <label>Вариант тренировки<span className="mvp-select-wrap">
             <select value={variantId} disabled={!!busy} onChange={event => setVariantId(event.target.value)}>
               <option value="surprise">Подобрать сценарий</option>
