@@ -274,6 +274,18 @@
 .mvp-step-options label { display:flex; flex-direction:row; align-items:center; gap:10px; padding:12px; border:1px solid var(--border-hairline); border-radius:12px; cursor:pointer; }
 .mvp-step-options label:has(input:checked) { border-color:var(--text-primary); }
 .mvp-step-options input { flex:none; accent-color:var(--text-primary); }
+.mvp-story-progress { margin:24px 0; scroll-margin-top:18px; }
+.mvp-story-progress-segments { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
+.mvp-story-progress-segments span { height:7px; border-radius:var(--r-pill); background:var(--surface-sunk); }
+.mvp-story-progress-segments span[data-state="done"] { background:var(--text-primary); }
+.mvp-story-progress-segments span[data-state="active"] { background:var(--accent-primary); }
+.mvp-story-scene { margin:12px 0 0; padding:12px 14px; border-radius:12px; background:var(--surface-sunk); overflow-wrap:anywhere; }
+.mvp-story-scene .mvp-case-content > :first-child { margin-top:0; }
+.mvp-story-scene .mvp-case-content > :last-child { margin-bottom:0; }
+.mvp-story-previous { margin:12px 0 0; color:var(--text-secondary); font-size:14px; overflow-wrap:anywhere; }
+.mvp-story-previous > p { white-space:pre-wrap; }
+.mvp-screen-solve .mvp-story-workspace .mvp-question-input textarea { min-height:94px; height:auto; }
+.mvp-screen-solve .mvp-story-workspace .mvp-question-input-long textarea { min-height:220px; }
 .mvp-screen-solve .mvp-question-input textarea { height:180px; min-height:140px; font-size:14px; line-height:1.8; border-radius:12px; }
 .mvp-visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 .mvp-step-hint-toggle { display:flex; align-items:center; gap:8px; align-self:flex-start; padding:12px 0; margin-top:12px; font-size:12px; font-weight:500; }
@@ -296,6 +308,7 @@
 .mvp-condition-body > .mvp-muted { margin-top:18px; font-size:12px; }
 @media(max-width:760px) {
   .mvp-guided-workspace { gap:18px; }
+  .mvp-story-workspace > .mvp-flow-condition { order:2; }
   .mvp-case-progress { margin:24px 0; }
   .mvp-question-steps { gap:6px; }
   .mvp-question-steps > button { width:36px; height:38px; flex:0 0 36px; font-size:10px; }

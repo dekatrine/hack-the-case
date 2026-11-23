@@ -7,6 +7,37 @@ from app.prompts import CASE_GENERATION_SYSTEM, CASE_NOVELTY_SYSTEM, MVP_RUBRIC_
 
 
 class MvpTests(unittest.TestCase):
+    @patch('app.main.call_yandex_gpt', return_value="План роста\n\n**Контекст:** Запуск в новом сегменте.\n\n**Данные:** 80 заявок.\n\n**Ограничения:** один аналитик.")
+    def test_story_cases_have_complete_branches_and_scoped_evidence(self, model):
+        for interview_type in PRODUCT_INTERVIEWS:
+            result = generate_case(GenerateCaseRequest(
+                industry='Retail', difficulty='Начальный', mvp=True, interviewType=interview_type,
+            ))
+            self.assertNotIn('80 заявок', result.caseIntro)
+            self.assertNotIn('один аналитик', result.caseIntro)
+            by_id = {step.id: step for step in result.caseRoute}
+            self.assertEqual(len(by_id), len(result.caseRoute))
+            self.assertLessEqual(len(by_id), 64)
+            pending = [(result.caseRoute[0].id, [])]
+            endings = []
+            while pending:
+                step_id, visited = pending.pop()
+                self.assertNotIn(step_id, [step.id for step in visited])
+                step = by_id[step_id]
+                self.assertEqual(set(step.options), set(step.nextByAnswer))
+                self.assertEqual(len(set(step.nextByAnswer.values())), len(step.options))
+                previous = [*visited, step]
+                next_ids = list(step.nextByAnswer.values()) or ([step.nextStepId] if step.nextStepId else [])
+                if next_ids:
+                    pending.extend((next_id, previous) for next_id in next_ids)
+                else:
+                    endings.append(previous)
+            self.assertGreaterEqual(len(endings), 8)
+            for path in endings:
+                self.assertGreaterEqual(len(path), 15)
+                self.assertEqual({step.chapter for step in path}, {1, 2, 3, 4})
+                self.assertTrue(path[-1].longAnswer)
+
     @patch('app.main.call_yandex_gpt')
     def test_generation_discards_verbatim_and_semantic_repeats(self, model):
         old = 'Заказы упали после релиза iOS. Проверь ошибки оплаты.'
@@ -51,7 +82,7 @@ class MvpTests(unittest.TestCase):
             answers={'release_action': 'Приостановлю раскатку'},
             caseRoute=[{'id': 'release_action', 'question': 'Что сделаешь с текущей раскаткой?'}],
         ))
-        self.assertIn('Что сделаешь с текущей раскаткой?:\nПриостановлю раскатку', model.call_args.args[1])
+        self.assertIn('Что сделаешь с текущей раскаткой?\nОтвет: Приостановлю раскатку', model.call_args.args[1])
 
     @patch('app.main.call_yandex_gpt', side_effect=['Новый текст', '{}'] * 3)
     def test_generation_does_not_accept_an_unverified_case(self, model):

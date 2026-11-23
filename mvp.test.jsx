@@ -28,6 +28,44 @@ function fillCase(problem = 'Падает конверсия') {
   });
 }
 describe('MVP core flow', () => {
+  it('reveals only the chosen story branch and restores the new path after reloading', async () => {
+    const chapter = { chapter: 1, chapterTitle: 'Первый выбор' };
+    const caseRoute = [
+      { ...chapter, id: 'choose', question: 'Что запросишь?', options: ['Спрос', 'Ресурсы'], nextByAnswer: { Спрос: 'demand', Ресурсы: 'team' } },
+      { ...chapter, id: 'demand', question: 'Что скажешь о спросе?', evidence: 'В листе ожидания 80 заявок.', nextStepId: 'final' },
+      { ...chapter, id: 'team', question: 'Что скажешь о ресурсах?', evidence: 'Доступен один аналитик.', nextStepId: 'final' },
+      { chapter: 4, chapterTitle: 'Решение', id: 'final', question: 'Напиши рекомендацию.', longAnswer: true },
+    ];
+    api.generate.mockResolvedValueOnce({ caseText: '# Пилот\nВ листе ожидания 80 заявок. Доступен один аналитик.', caseIntro: 'Команда обсуждает запуск.', caseRoute });
+    render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: /Как вырастить прибыль/ }));
+    await screen.findByLabelText('02 / Отрасль');
+    fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
+    await screen.findByText('Глава 1 из 4 · Шаг 1');
+    expect(screen.queryByText('В листе ожидания 80 заявок.')).toBeNull();
+    expect(screen.queryByText('Доступен один аналитик.')).toBeNull();
+    fireEvent.click(screen.getByRole('radio', { name: 'Спрос' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Дальше' }));
+    expect(screen.getByText('В листе ожидания 80 заявок.')).toBeTruthy();
+    expect(screen.queryByText('Доступен один аналитик.')).toBeNull();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Проверю намерение купить.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Ресурсы' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Дальше' }));
+    cleanup(); render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
+    expect(screen.getByText('Доступен один аналитик.')).toBeTruthy();
+    expect(screen.queryByText('В листе ожидания 80 заявок.')).toBeNull();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Проверю загрузку аналитика.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Дальше' }));
+    expect(screen.getByPlaceholderText('Разверни аргументы и опирайся на данные…')).toBeTruthy();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Запущу пилот с небольшой группой.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
+    await screen.findByRole('heading', { name: 'Разбор решения' });
+    expect(api.evaluate.mock.lastCall[0].caseRoute.map(step => step.id)).toEqual(['choose', 'team', 'final']);
+    expect(api.evaluate.mock.lastCall[0].answers).not.toHaveProperty('demand');
+  });
+
   it('restores a case-specific route and reviews answers to its own questions', async () => {
     const evidence = '| Версия | Ошибки |\n| --- | --- |\n| Новая | 14% |';
     const caseRoute = [

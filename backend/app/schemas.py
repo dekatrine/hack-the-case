@@ -37,6 +37,12 @@ class CaseRouteStep(BaseModel):
     hint: str = Field(default="", max_length=300)
     options: list[Annotated[str, Field(min_length=1, max_length=160)]] = Field(default_factory=list, max_length=4)
     evidence: str = Field(default="", max_length=1600)
+    scene: str = Field(default="", max_length=1000)
+    chapter: int = Field(default=0, ge=0, le=4)
+    chapterTitle: str = Field(default="", max_length=80)
+    longAnswer: bool = False
+    nextStepId: Optional[str] = None
+    nextByAnswer: dict[str, str] = Field(default_factory=dict, max_length=4)
 
 
 class GenerateCaseResponse(BaseModel):
@@ -44,6 +50,7 @@ class GenerateCaseResponse(BaseModel):
     suggestedStepIds: list[str] = Field(default_factory=list)
     phases: list[CasePhase] = Field(default_factory=list)
     caseRoute: list[CaseRouteStep] = Field(default_factory=list)
+    caseIntro: str = ""
 
 
 class GenerateInterviewRequest(BaseModel):
@@ -106,7 +113,7 @@ class EvaluateRequest(BaseModel):
     caseText: str
     answers: dict[str, str] = Field(default_factory=dict)
     trackId: Optional[str] = None
-    caseRoute: list[CaseRouteStep] = Field(default_factory=list, max_length=16)
+    caseRoute: list[CaseRouteStep] = Field(default_factory=list, max_length=64)
 
 
 class EvaluateResponse(BaseModel):

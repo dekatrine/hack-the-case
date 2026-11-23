@@ -1,5 +1,3 @@
-import random
-
 from .schemas import CaseRouteStep
 
 
@@ -90,10 +88,9 @@ def diagnostic_route(case_text: str, angles: dict[str, tuple[str, str]]) -> list
             continue
         subject = angle.split(":", 1)[0]
         request_data, read_data, *decisions = ROUTES[subject]
-        choices = random.sample(request_data.options, len(request_data.options))
         return [
             *OPENING,
-            request_data.model_copy(update={"options": choices}),
+            request_data,
             read_data.model_copy(update={"evidence": evidence}),
             *decisions,
             *ENDING,

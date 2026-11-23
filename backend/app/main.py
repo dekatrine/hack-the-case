@@ -14,6 +14,7 @@ from .config import get_settings
 from .ratelimit import build_rate_limit_middleware
 from .data import CASE_STEPS, COURSE_MODULES, DIFFICULTY_LEVELS, INDUSTRIES, SOURCE_NOTES
 from .diagnostic_routes import diagnostic_route
+from .story_routes import build_story
 from .llm import call_yandex_gpt, stream_yandex_gpt
 from .prompts import (
     CASE_GENERATION_SYSTEM,
@@ -178,11 +179,6 @@ def _case_prompt(payload: GenerateCaseRequest) -> tuple[str, str]:
     """Возвращает (track_name, prompt) для генерации кейса."""
     interview = _interview_type(payload.interviewType) if payload.mvp else None
     if interview:
-        if payload.interviewType == "product_execution":
-            task = "В разделе Задача сформулируй одно решение, которое нужно обосновать. Вопросы появятся по ходу кейса."
-        else:
-            questions = "\n".join(q["label"] for q in interview["questions"])
-            task = "Кандидат ответит коротко на вопросы:\n" + questions
         return "Продуктовое собеседование", (
             f"Сгенерируй задание для продуктового собеседования: {interview['label']}.\n"
             f"{interview['instruction']}\nОтрасль: {payload.industry}. Сложность: {payload.difficulty}.\n"
@@ -194,7 +190,8 @@ def _case_prompt(payload: GenerateCaseRequest) -> tuple[str, str]:
             "Заранее выбери конкретный механизм проблемы или дилемму и заложи данные, которые позволяют "
             "проверить конкурирующие объяснения или сопоставить варианты. Для диагностики сравни группы "
             "с разной динамикой и добавь факт, который может отличить одну причину от другой. "
-            "Не давай решения или готовых ответов. " + task
+            "В разделе Задача сформулируй одно решение, которое нужно обосновать. "
+            "Не давай решения, готовых ответов или списка вопросов. Вопросы появятся по ходу кейса."
         )
     track = next((item for item in TRACKS if item.get("id") == payload.trackId), None)
     track_name = track["name"] if track else "Бизнес-кейсы"
@@ -374,8 +371,11 @@ def _case_response(payload: GenerateCaseRequest, track_name: str, case_text: str
                 CaseRouteStep(id=f"diagnosis_{index}", question=q.text[:240], hint=q.hint[:300])
                 for index, q in enumerate(questions[:16], start=1)
             ]
+    intro = ""
+    if payload.mvp and payload.interviewType in PRODUCT_INTERVIEWS:
+        intro, route = build_story(case_text, payload.interviewType, route, PRODUCT_INTERVIEWS[payload.interviewType]["questions"])
     return GenerateCaseResponse(
-        caseText=case_text, suggestedStepIds=suggested_step_ids, phases=phases, caseRoute=route,
+        caseText=case_text, suggestedStepIds=suggested_step_ids, phases=phases, caseRoute=route, caseIntro=intro,
     )
 
 
@@ -797,22 +797,33 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
         interview = _interview_type(payload.interviewType)
         if interview:
             fields = {q["id"]: q["label"] for q in interview["questions"]}
-        case_route = payload.caseRoute if payload.interviewType == "product_execution" else []
+        case_route = payload.caseRoute if interview else []
         if case_route:
             fields = {step.id: step.question for step in case_route}
             if len(fields) != len(case_route):
                 raise HTTPException(status_code=422, detail="В маршруте повторяются шаги")
         if not any(payload.answers.get(key, "").strip() for key in fields):
             raise HTTPException(status_code=422, detail="Сначала напиши решение")
-        answers = "\n\n".join(
-            f"{title}:\n{payload.answers.get(key, '').strip() or '(пропущено)'}"
-            for key, title in fields.items()
-        )
+        if case_route:
+            answers = "\n\n".join(
+                "\n".join(filter(None, (
+                    step.question, step.scene, step.evidence,
+                    "Ответ: " + (payload.answers.get(step.id, "").strip() or "(пропущено)"),
+                )))
+                for step in case_route
+            )
+        else:
+            answers = "\n\n".join(
+                f"{title}:\n{payload.answers.get(key, '').strip() or '(пропущено)'}"
+                for key, title in fields.items()
+            )
         prompt = f"КЕЙС:\n{payload.caseText}\n\nОТВЕТ ПОЛЬЗОВАТЕЛЯ:\n{answers}"
         try:
             system = MVP_RUBRIC_SYSTEM
             if interview:
                 system += f"\nТип интервью: {interview['label']}.\n{interview['instruction']}\nОценивай ответы именно на вопросы из запроса. Не требуй диагностики падения метрик в других типах интервью."
+            if case_route:
+                system += "\nУчитывай только пройденный маршрут и информацию, открытую на его шагах. Оцени аргументацию, а не длину ответа."
             evaluation = call_yandex_gpt(system, prompt, temperature=0.3)
             return EvaluateResponse(evaluation=evaluation)
         except RuntimeError as exc:

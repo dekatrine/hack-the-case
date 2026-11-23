@@ -8,6 +8,7 @@ import CaseContent from './CaseContent.jsx';
 import LearningPath from './learning/LearningPath.jsx';
 import CaseLibrary from './cases/CaseLibrary.jsx';
 import { duplicateAsNewAttempt } from './cases/caseLibrary.js';
+import { hasStory, storyPath, storyAnswers } from './cases/storyPath.js';
 import CaseFlow from './CaseFlow.jsx';
 import ConditionAssistant from './ConditionAssistant.jsx';
 import TheoryPage from './TheoryPage.jsx';
@@ -91,10 +92,13 @@ export default function MvpApp() {
   const lock = useRef(false);
   const [params, setParams] = useState({ trackId: 'product', interviewType: 'product_sense', industry: '', difficulty: '', extraContext: '' });
   const active = cases.find(c => c.id === selected);
-  const caseRoute = active?.caseRoute || [];
+  const story = hasStory(active?.caseRoute);
+  const caseRoute = story ? storyPath(active.caseRoute, active.answers) : active?.caseRoute || [];
   const fields = caseRoute.length ? routeFields(caseRoute) : interviewFields(active?.params?.interviewType) || FIELDS;
   const evidenceStep = caseRoute.find(step => step.evidence);
-  const conditionText = evidenceStep && !active.answers[evidenceStep.id]?.trim()
+  const conditionText = story
+    ? [active.caseIntro, ...new Set(caseRoute.filter(step => step.evidence && active.answers[step.id]?.trim()).map(step => step.evidence))].filter(Boolean).join('\n\n')
+    : evidenceStep && !active.answers[evidenceStep.id]?.trim()
     ? active.caseText.replace(`\n\n**Дополнительный срез данных**\n\n${evidenceStep.evidence}`, '')
     : active?.caseText;
   const selectedType = INTERVIEWS.find(t => t.id === params.interviewType) || INTERVIEWS[0];
@@ -136,7 +140,7 @@ export default function MvpApp() {
       if (params.interviewType === 'product_execution' && !result.caseRoute?.length) {
         throw new Error('Не удалось подготовить шаги кейса. Попробуй сгенерировать ещё раз.');
       }
-      const item = { id: crypto.randomUUID(), title: titleOf(result.caseText), caseText: result.caseText, caseRoute: result.caseRoute || [], params: { ...params }, answers: {}, attempts: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      const item = { id: crypto.randomUUID(), title: titleOf(result.caseText), caseText: result.caseText, caseIntro: result.caseIntro, caseRoute: result.caseRoute || [], params: { ...params }, answers: {}, attempts: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       setCases(prev => [item, ...prev]); open(item, 'solve');
     } catch (e) { setError(e.message || 'Не удалось сгенерировать кейс. Попробуй ещё раз.'); }
     finally { lock.current = false; setBusy(''); }
@@ -149,7 +153,7 @@ export default function MvpApp() {
     const item = active;
     const answers = { ...item.answers };
     try {
-      const result = await api.evaluate({ caseText: item.caseText, answers, trackId: item.params.trackId, interviewType: item.params.interviewType, mvp: true, ...(caseRoute.length ? { caseRoute } : {}) });
+      const result = await api.evaluate({ caseText: story ? item.caseIntro : item.caseText, answers, trackId: item.params.trackId, interviewType: item.params.interviewType, mvp: true, ...(caseRoute.length ? { caseRoute } : {}) });
       if (!result.evaluation?.trim()) throw new Error('ИИ вернул пустой разбор. Попробуй ещё раз.');
       update(item.id, c => ({ ...c, attempts: [...c.attempts, { answers, questionVersion: 2, questions: fields, evaluation: result.evaluation, createdAt: new Date().toISOString() }] }));
       setAttemptIndex(null); go('review');
@@ -215,11 +219,14 @@ export default function MvpApp() {
       </>}
       {screen === 'solve' && active && <>
         <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
-        <div className="clean-eyebrow">Шаг 2 · Решение</div><h1>Твой ход</h1>
-        <p className="mvp-lead">Один кейс, {fields.length} шагов. Отвечай на один вопрос за раз — все мысли сложатся в полное решение.</p>
-        <CaseFlow key={active.id} fields={fields} caseRoute={caseRoute} answers={active.answers} questionId={active.currentQuestionId}
+        {!story && <div className="clean-eyebrow">Шаг 2 · Решение</div>}<h1>{story ? active.title : 'Твой ход'}</h1>
+        {!story && <p className="mvp-lead">Один кейс, {fields.length} шагов. Отвечай на один вопрос за раз — все мысли сложатся в полное решение.</p>}
+        <CaseFlow key={active.id} fields={fields} caseRoute={caseRoute} storyIntro={story ? active.caseIntro : undefined} answers={active.answers} questionId={active.currentQuestionId}
           onQuestion={key => update(active.id, c => ({ ...c, currentQuestionId: key }))}
-          onAnswer={(key, value) => update(active.id, c => ({ ...c, currentQuestionId: key, answers: { ...c.answers, [key]: value } }))}
+          onAnswer={(key, value) => update(active.id, c => ({
+            ...c, currentQuestionId: key,
+            answers: story ? storyAnswers(caseRoute, c.answers, key, value) : { ...c.answers, [key]: value },
+          }))}
           onEvaluate={evaluate} busy={busy} saveError={saveError} hasChanges={hasChanges} attempts={attempts}
           onReview={() => { setAttemptIndex(null); go('review'); }}
           condition={<><p className="mvp-muted">Данные кейса вымышлены и даны для тренировки.</p><ConditionAssistant key={active.id} caseText={conditionText}/><CaseContent text={conditionText}/><CaseMaterials key={`materials-${active.id}`} item={active} savedIds={savedTheory} onToggle={toggleTheory} onOpenTheory={() => { setTheorySavedOnly(true); go('cards'); }}/>{attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation}/></details>}</>}/>
@@ -228,7 +235,7 @@ export default function MvpApp() {
         <button className="mvp-back" onClick={() => go('library')}>← Мои кейсы</button>
         <div className="clean-eyebrow">Шаг 3 · Обратная связь</div><h1>Разбор решения</h1><p className="mvp-lead">{titleOf(active.title || active.caseText)}</p>
         <label className="mvp-version">Версия решения<select value={attemptIndex ?? attempts.length - 1} onChange={e => setAttemptIndex(Number(e.target.value))}>{attempts.map((a, i) => <option key={i} value={i}>Версия {i + 1} · {new Date(a.createdAt).toLocaleString('ru-RU')}</option>)}</select></label>
-        <article className="mvp-card mvp-review"><Review value={attempt.evaluation}/>{/(конверс|воронк|метрик|conversion|funnel|metric)/i.test(attempt.evaluation) && <div className="mycases-learning-tip"><strong>Хочешь потренировать метрики?</strong><p>Это дополнительная практика по теме разбора, а не автоматическая оценка твоих навыков.</p><button type="button" onClick={() => go('learning')}>Перейти к урокам по метрикам →</button></div>}<details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div><button className="mvp-edit-step" onClick={() => { update(active.id, c => ({ ...c, currentQuestionId: key })); go('solve'); }}>Доработать этот шаг</button></section>)}</details></article>
+        <article className="mvp-card mvp-review"><Review value={attempt.evaluation}/>{/(конверс|воронк|метрик|conversion|funnel|metric)/i.test(attempt.evaluation) && <div className="mycases-learning-tip"><strong>Хочешь потренировать метрики?</strong><p>Это дополнительная практика по теме разбора, а не автоматическая оценка твоих навыков.</p><button type="button" onClick={() => go('learning')}>Перейти к урокам по метрикам →</button></div>}<details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div>{(!story || fields.some(([id]) => id === key)) && <button className="mvp-edit-step" onClick={() => { update(active.id, c => ({ ...c, currentQuestionId: key })); go('solve'); }}>Доработать этот шаг</button>}</section>)}</details></article>
         <div className="mvp-actions"><Button variant="accent" onClick={() => go('solve')}>Улучшить решение</Button><Button variant="neutral" onClick={() => go('generate')}>Новый кейс</Button></div>
         <p className="mvp-muted">Редактирование продолжится с последнего черновика. ИИ может ошибаться — сверяй выводы с данными кейса.</p>
       </div>}
