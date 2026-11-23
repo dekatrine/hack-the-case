@@ -31,10 +31,19 @@ class CasePhase(BaseModel):
     questions: list[PhaseQuestion] = Field(default_factory=list)
 
 
+class CaseRouteStep(BaseModel):
+    id: str = Field(pattern=r"^[a-z][a-z0-9_]{0,47}$")
+    question: str = Field(min_length=1, max_length=240)
+    hint: str = Field(default="", max_length=300)
+    options: list[Annotated[str, Field(min_length=1, max_length=160)]] = Field(default_factory=list, max_length=4)
+    evidence: str = Field(default="", max_length=1600)
+
+
 class GenerateCaseResponse(BaseModel):
     caseText: str
     suggestedStepIds: list[str] = Field(default_factory=list)
     phases: list[CasePhase] = Field(default_factory=list)
+    caseRoute: list[CaseRouteStep] = Field(default_factory=list)
 
 
 class GenerateInterviewRequest(BaseModel):
@@ -97,6 +106,7 @@ class EvaluateRequest(BaseModel):
     caseText: str
     answers: dict[str, str] = Field(default_factory=dict)
     trackId: Optional[str] = None
+    caseRoute: list[CaseRouteStep] = Field(default_factory=list, max_length=16)
 
 
 class EvaluateResponse(BaseModel):

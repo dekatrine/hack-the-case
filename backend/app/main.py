@@ -13,6 +13,7 @@ from . import db
 from .config import get_settings
 from .ratelimit import build_rate_limit_middleware
 from .data import CASE_STEPS, COURSE_MODULES, DIFFICULTY_LEVELS, INDUSTRIES, SOURCE_NOTES
+from .diagnostic_routes import diagnostic_route
 from .llm import call_yandex_gpt, stream_yandex_gpt
 from .prompts import (
     CASE_GENERATION_SYSTEM,
@@ -31,6 +32,7 @@ from .prompts import (
 )
 from .schemas import (
     CasePhase,
+    CaseRouteStep,
     ConditionExplainRequest,
     ConditionExplainResponse,
     CheckInterviewRequest,
@@ -176,7 +178,11 @@ def _case_prompt(payload: GenerateCaseRequest) -> tuple[str, str]:
     """Возвращает (track_name, prompt) для генерации кейса."""
     interview = _interview_type(payload.interviewType) if payload.mvp else None
     if interview:
-        questions = "\n".join(q["label"] for q in interview["questions"])
+        if payload.interviewType == "product_execution":
+            task = "В разделе Задача сформулируй одно решение, которое нужно обосновать. Вопросы появятся по ходу кейса."
+        else:
+            questions = "\n".join(q["label"] for q in interview["questions"])
+            task = "Кандидат ответит коротко на вопросы:\n" + questions
         return "Продуктовое собеседование", (
             f"Сгенерируй задание для продуктового собеседования: {interview['label']}.\n"
             f"{interview['instruction']}\nОтрасль: {payload.industry}. Сложность: {payload.difficulty}.\n"
@@ -188,7 +194,7 @@ def _case_prompt(payload: GenerateCaseRequest) -> tuple[str, str]:
             "Заранее выбери конкретный механизм проблемы или дилемму и заложи данные, которые позволяют "
             "проверить конкурирующие объяснения или сопоставить варианты. Для диагностики сравни группы "
             "с разной динамикой и добавь факт, который может отличить одну причину от другой. "
-            "Не давай решения или готовых ответов. Кандидат ответит коротко на вопросы:\n" + questions
+            "Не давай решения или готовых ответов. " + task
         )
     track = next((item for item in TRACKS if item.get("id") == payload.trackId), None)
     track_name = track["name"] if track else "Бизнес-кейсы"
@@ -244,12 +250,14 @@ def _route_for_case(payload: GenerateCaseRequest, track_name: str, case_text: st
 EXECUTION_ANGLES = {
     "сбой после релиза: сравни старую и новую версии продукта и долю ошибок":
         (r"верси\w* (?:мобильного )?приложени\w*|(?:стар\w+|нов\w+) верси\w*",
-         "В одной платформе и в один период сравнили старую и новую версии приложения. "
-         "Доля технических ошибок — 2% и 14%, конверсия в целевое действие — 24% и 13% соответственно."),
+         "На одной платформе и за один период сравнили старую и новую версии приложения.\n\n"
+         "| Версия | Доля ошибок | Конверсия |\n| --- | --- | --- |\n"
+         "| Старая | 2% | 24% |\n| Новая | 14% | 13% |"),
     "региональный дефицит: сравни доступность предложения и конверсию по регионам или складам":
         (r"наличи\w*[^\n]*(?:склад|регион)|(?:склад|регион)[^\n]*наличи",
-         "В регионе A наличие по складам по самым популярным позициям снизилось с 94% до 62%, "
-         "в регионе B — с 93% до 92%. Конверсия снизилась с 24% до 15% в A и с 23% до 22% в B."),
+         "Сравнили наличие по складам для популярных товаров и конверсию по регионам.\n\n"
+         "| Регион | Наличие до | Наличие после | Конверсия до | Конверсия после |\n| --- | --- | --- | --- | --- |\n"
+         "| A | 94% | 62% | 24% | 15% |\n| B | 93% | 92% | 23% | 22% |"),
     "ошибка измерения: сравни логи событий с независимым источником фактических операций":
         (r"(?:фактическ\w+|реальн\w+) (?:операци\w*|заказ\w*)|лог\w* событи\w*",
          "По операционному реестру число завершённых операций в проверенной когорте изменилось с 505 до 497. "
@@ -349,17 +357,34 @@ def _generate_distinct_case(prompt: str, recent_cases: list[str], interview_type
     raise RuntimeError("Пока не удалось придумать кейс с новым ходом решения. Попробуй ещё раз.")
 
 
+def _case_response(payload: GenerateCaseRequest, track_name: str, case_text: str) -> GenerateCaseResponse:
+    phases, suggested_step_ids = _route_for_case(payload, track_name, case_text)
+    route = []
+    if payload.mvp and payload.interviewType == "product_execution":
+        route = diagnostic_route(case_text, EXECUTION_ANGLES)
+        if not route:
+            custom_phases = generate_phases_for_case(
+                case_text=case_text, track_id=payload.trackId, track_name=track_name,
+                interview_type=payload.interviewType, grade=payload.grade,
+            )
+            questions = [q for phase in custom_phases for q in phase.questions if q.text.strip()]
+            if len(questions) < 5:
+                raise RuntimeError("Не удалось подготовить маршрут кейса. Попробуй сгенерировать ещё раз.")
+            route = [
+                CaseRouteStep(id=f"diagnosis_{index}", question=q.text[:240], hint=q.hint[:300])
+                for index, q in enumerate(questions[:16], start=1)
+            ]
+    return GenerateCaseResponse(
+        caseText=case_text, suggestedStepIds=suggested_step_ids, phases=phases, caseRoute=route,
+    )
+
+
 @app.post("/api/cases/generate", response_model=GenerateCaseResponse)
 def generate_case(payload: GenerateCaseRequest) -> GenerateCaseResponse:
     track_name, prompt = _case_prompt(payload)
     try:
         case_text = _generate_distinct_case(prompt, payload.recentCases, payload.interviewType)
-        phases, suggested_step_ids = _route_for_case(payload, track_name, case_text)
-        return GenerateCaseResponse(
-            caseText=case_text,
-            suggestedStepIds=suggested_step_ids,
-            phases=phases,
-        )
+        return _case_response(payload, track_name, case_text)
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
@@ -380,7 +405,7 @@ def generate_case_stream(payload: GenerateCaseRequest) -> StreamingResponse:
     def event_stream():
         case_text = ""
         try:
-            if payload.recentCases:
+            if payload.recentCases or (payload.mvp and payload.interviewType == "product_execution"):
                 case_text = _generate_distinct_case(prompt, payload.recentCases, payload.interviewType)
                 yield sse({"type": "chunk", "text": case_text})
             else:
@@ -392,17 +417,8 @@ def generate_case_stream(payload: GenerateCaseRequest) -> StreamingResponse:
             if not case_text.strip():
                 raise RuntimeError("пустой ответ модели")
             yield sse({"type": "status", "stage": "route"})
-            phases, suggested_step_ids = _route_for_case(payload, track_name, case_text)
-            yield sse(
-                {
-                    "type": "done",
-                    "caseText": case_text,
-                    "suggestedStepIds": suggested_step_ids,
-                    "phases": [
-                        p.dict() if hasattr(p, "dict") else p for p in phases
-                    ],
-                }
-            )
+            result = _case_response(payload, track_name, case_text)
+            yield sse({"type": "done", **result.model_dump()})
         except RuntimeError as exc:
             yield sse({"type": "error", "detail": str(exc)})
 
@@ -781,6 +797,11 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
         interview = _interview_type(payload.interviewType)
         if interview:
             fields = {q["id"]: q["label"] for q in interview["questions"]}
+        case_route = payload.caseRoute if payload.interviewType == "product_execution" else []
+        if case_route:
+            fields = {step.id: step.question for step in case_route}
+            if len(fields) != len(case_route):
+                raise HTTPException(status_code=422, detail="В маршруте повторяются шаги")
         if not any(payload.answers.get(key, "").strip() for key in fields):
             raise HTTPException(status_code=422, detail="Сначала напиши решение")
         answers = "\n\n".join(

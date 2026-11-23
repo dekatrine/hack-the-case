@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Check, ChevronDown, Sparkles } from 'lucide-react';
 import { Button } from './design/components/Button.jsx';
+import CaseContent from './CaseContent.jsx';
 
 const GUIDES = {
   problem: 'Сначала опиши потребность или изменение, которого нужно добиться. Решение и конкретные функции оставь для следующих шагов.',
@@ -20,10 +21,11 @@ export function initialQuestion(fields, answers, savedQuestion) {
   return missing < 0 ? 0 : missing;
 }
 
-export default function CaseFlow({ fields, answers, questionId, onQuestion, onAnswer, onEvaluate, condition, busy, saveError, hasChanges, attempts, onReview }) {
+export default function CaseFlow({ fields, caseRoute = [], answers, questionId, onQuestion, onAnswer, onEvaluate, condition, busy, saveError, hasChanges, attempts, onReview }) {
   const [currentKey, setCurrentKey] = useState(() => fields[initialQuestion(fields, answers, questionId)][0]);
   const index = Math.max(0, fields.findIndex(([id]) => id === currentKey));
   const [key, label, hint, placeholder] = fields[index];
+  const { evidence, options } = caseRoute[index] || {};
   const completed = fields.filter(([id]) => answers[id]?.trim()).length;
   const [notice, setNotice] = useState('');
   const [showHint, setShowHint] = useState(false);
@@ -41,7 +43,7 @@ export default function CaseFlow({ fields, answers, questionId, onQuestion, onAn
   };
   const forward = () => {
     if (!answers[key]?.trim()) {
-      setNotice('Напиши ответ на этот вопрос — достаточно одной-двух фраз.');
+      setNotice(options?.length ? 'Выбери один вариант.' : 'Напиши ответ на этот вопрос — достаточно одной-двух фраз.');
       input.current?.focus(); return;
     }
     if (index < fields.length - 1) { move(index + 1); return; }
@@ -61,7 +63,13 @@ export default function CaseFlow({ fields, answers, questionId, onQuestion, onAn
         <span className="mvp-kicker">Один вопрос · часть полного решения</span>
         <h2 ref={heading} tabIndex={-1} id={`question-${key}`}>{label}</h2>
         <p className="mvp-question-hint" id={`hint-${key}`}>{hint}</p>
-        <label className="mvp-question-input" htmlFor={`answer-${key}`}><span className="mvp-visually-hidden">{index + 1}. {label}</span><textarea ref={input} id={`answer-${key}`} aria-describedby={`hint-${key}${notice ? ' case-step-error' : ''}`} aria-invalid={notice ? true : undefined} placeholder={placeholder || 'Запиши ход своих мыслей…'} rows={6} disabled={!!busy} value={answers[key] || ''} onChange={e => { setNotice(''); onAnswer(key, e.target.value); }}/></label>
+        {evidence && <div className="mvp-step-evidence" aria-label="Данные для шага"><CaseContent text={evidence}/></div>}
+        {options?.length ? <fieldset className="mvp-step-options" aria-labelledby={`question-${key}`} aria-describedby={`hint-${key}${notice ? ' case-step-error' : ''}`} disabled={!!busy}>
+          {options.map((option, optionIndex) => <label key={option}>
+            <input ref={optionIndex === 0 ? input : undefined} type="radio" name={`answer-${key}`} value={option} checked={answers[key] === option} onChange={() => { setNotice(''); onAnswer(key, option); }}/>
+            <span>{option}</span>
+          </label>)}
+        </fieldset> : <label className="mvp-question-input" htmlFor={`answer-${key}`}><span className="mvp-visually-hidden">{index + 1}. {label}</span><textarea ref={input} id={`answer-${key}`} aria-describedby={`hint-${key}${notice ? ' case-step-error' : ''}`} aria-invalid={notice ? true : undefined} placeholder={placeholder || 'Запиши ход своих мыслей…'} rows={6} disabled={!!busy} value={answers[key] || ''} onChange={e => { setNotice(''); onAnswer(key, e.target.value); }}/></label>}
         {notice && <p id="case-step-error" role="alert" className="mvp-step-error">{notice}</p>}
         <button type="button" className="mvp-step-hint-toggle" disabled={!!busy} aria-expanded={showHint} aria-controls="case-step-hint" onClick={() => setShowHint(v => !v)}><Sparkles size={15} aria-hidden="true"/>{showHint ? 'Скрыть подсказку' : 'Подсказка к шагу'}</button>
         {showHint && <div id="case-step-hint" className="mvp-step-hint"><b>С чего начать</b><p>{GUIDES[key] || 'Опирайся на условие и свои предыдущие ответы. Отдельно отмечай факты и предположения.'}</p><small>Это ориентир для рассуждения. Итоговый ИИ-разбор появится после всего кейса.</small></div>}

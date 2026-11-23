@@ -31,11 +31,27 @@ class MvpTests(unittest.TestCase):
     @patch('app.main.call_yandex_gpt', return_value='**Заказов стало меньше**\nСравни данные и предложи проверку.')
     def test_analytics_repetition_switches_to_unused_comparative_data(self, model, sample):
         params = dict(industry='Retail', difficulty='Начальный', interviewType='product_execution', mvp=True)
-        first = generate_case(GenerateCaseRequest(**params)).caseText
-        second = generate_case(GenerateCaseRequest(**params, recentCases=[first])).caseText
-        self.assertIn('старую и новую версии приложения', first)
-        self.assertIn('наличие по складам', second)
+        first = generate_case(GenerateCaseRequest(**params))
+        second = generate_case(GenerateCaseRequest(**params, recentCases=[first.caseText]))
+        self.assertIn('старую и новую версии приложения', first.caseText)
+        self.assertIn('наличие по складам', second.caseText)
+        self.assertNotEqual(len(first.caseRoute), len(second.caseRoute))
+        self.assertIn('release_action', {step.id for step in first.caseRoute})
+        self.assertIn('stock_action', {step.id for step in second.caseRoute})
+        for case in (first, second):
+            self.assertEqual(len(case.caseRoute), len({step.id for step in case.caseRoute}))
+            self.assertTrue(any(step.options for step in case.caseRoute))
+            self.assertTrue(any(step.evidence and step.evidence in case.caseText for step in case.caseRoute))
         self.assertEqual(model.call_count, 2)
+
+    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK"}')
+    def test_evaluation_uses_case_specific_question(self, model):
+        evaluate(EvaluateRequest(
+            caseText='Условие', mvp=True, interviewType='product_execution',
+            answers={'release_action': 'Приостановлю раскатку'},
+            caseRoute=[{'id': 'release_action', 'question': 'Что сделаешь с текущей раскаткой?'}],
+        ))
+        self.assertIn('Что сделаешь с текущей раскаткой?:\nПриостановлю раскатку', model.call_args.args[1])
 
     @patch('app.main.call_yandex_gpt', side_effect=['Новый текст', '{}'] * 3)
     def test_generation_does_not_accept_an_unverified_case(self, model):

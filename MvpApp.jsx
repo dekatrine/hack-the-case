@@ -15,6 +15,7 @@ import BookTheoryPage from './BookTheoryPage.jsx';
 import CaseMaterials, { readSavedTheory, SAVED_THEORY_KEY } from './CaseMaterials.jsx';
 import INTERVIEWS from './backend/app/product_interviews.json';
 const interviewFields = type => INTERVIEWS.find(t => t.id === type)?.questions.map(q => [q.id, q.label, q.hint, 'Короткий ответ…']);
+const routeFields = route => route.map(step => [step.id, step.question, step.hint, 'Короткий ответ…']);
 
 export const STORAGE_KEY = 'htc_mvp_cases_v1';
 const LEGACY_FIELDS = [
@@ -90,7 +91,12 @@ export default function MvpApp() {
   const lock = useRef(false);
   const [params, setParams] = useState({ trackId: 'product', interviewType: 'product_sense', industry: '', difficulty: '', extraContext: '' });
   const active = cases.find(c => c.id === selected);
-  const fields = interviewFields(active?.params.interviewType) || FIELDS;
+  const caseRoute = active?.caseRoute || [];
+  const fields = caseRoute.length ? routeFields(caseRoute) : interviewFields(active?.params?.interviewType) || FIELDS;
+  const evidenceStep = caseRoute.find(step => step.evidence);
+  const conditionText = evidenceStep && !active.answers[evidenceStep.id]?.trim()
+    ? active.caseText.replace(`\n\n**Дополнительный срез данных**\n\n${evidenceStep.evidence}`, '')
+    : active?.caseText;
   const selectedType = INTERVIEWS.find(t => t.id === params.interviewType) || INTERVIEWS[0];
   const attempts = active?.attempts || [];
   const attempt = attempts[attemptIndex ?? attempts.length - 1];
@@ -127,7 +133,10 @@ export default function MvpApp() {
       if ([...cases, ...loadCases()].some(item => caseWords(item.caseText) === caseWords(result.caseText))) {
         throw new Error('Получился повтор предыдущего кейса. Попробуй сгенерировать ещё раз.');
       }
-      const item = { id: crypto.randomUUID(), title: titleOf(result.caseText), caseText: result.caseText, params: { ...params }, answers: {}, attempts: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      if (params.interviewType === 'product_execution' && !result.caseRoute?.length) {
+        throw new Error('Не удалось подготовить шаги кейса. Попробуй сгенерировать ещё раз.');
+      }
+      const item = { id: crypto.randomUUID(), title: titleOf(result.caseText), caseText: result.caseText, caseRoute: result.caseRoute || [], params: { ...params }, answers: {}, attempts: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       setCases(prev => [item, ...prev]); open(item, 'solve');
     } catch (e) { setError(e.message || 'Не удалось сгенерировать кейс. Попробуй ещё раз.'); }
     finally { lock.current = false; setBusy(''); }
@@ -140,7 +149,7 @@ export default function MvpApp() {
     const item = active;
     const answers = { ...item.answers };
     try {
-      const result = await api.evaluate({ caseText: item.caseText, answers, trackId: item.params.trackId, interviewType: item.params.interviewType, mvp: true });
+      const result = await api.evaluate({ caseText: item.caseText, answers, trackId: item.params.trackId, interviewType: item.params.interviewType, mvp: true, ...(caseRoute.length ? { caseRoute } : {}) });
       if (!result.evaluation?.trim()) throw new Error('ИИ вернул пустой разбор. Попробуй ещё раз.');
       update(item.id, c => ({ ...c, attempts: [...c.attempts, { answers, questionVersion: 2, questions: fields, evaluation: result.evaluation, createdAt: new Date().toISOString() }] }));
       setAttemptIndex(null); go('review');
@@ -208,12 +217,12 @@ export default function MvpApp() {
         <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
         <div className="clean-eyebrow">Шаг 2 · Решение</div><h1>Твой ход</h1>
         <p className="mvp-lead">Один кейс, {fields.length} шагов. Отвечай на один вопрос за раз — все мысли сложатся в полное решение.</p>
-        <CaseFlow key={active.id} fields={fields} answers={active.answers} questionId={active.currentQuestionId}
+        <CaseFlow key={active.id} fields={fields} caseRoute={caseRoute} answers={active.answers} questionId={active.currentQuestionId}
           onQuestion={key => update(active.id, c => ({ ...c, currentQuestionId: key }))}
           onAnswer={(key, value) => update(active.id, c => ({ ...c, currentQuestionId: key, answers: { ...c.answers, [key]: value } }))}
           onEvaluate={evaluate} busy={busy} saveError={saveError} hasChanges={hasChanges} attempts={attempts}
           onReview={() => { setAttemptIndex(null); go('review'); }}
-          condition={<><p className="mvp-muted">Данные кейса сгенерированы ИИ для тренировки.</p><ConditionAssistant key={active.id} caseText={active.caseText}/><CaseContent text={active.caseText}/><CaseMaterials key={`materials-${active.id}`} item={active} savedIds={savedTheory} onToggle={toggleTheory} onOpenTheory={() => { setTheorySavedOnly(true); go('cards'); }}/>{attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation}/></details>}</>}/>
+          condition={<><p className="mvp-muted">Данные кейса вымышлены и даны для тренировки.</p><ConditionAssistant key={active.id} caseText={conditionText}/><CaseContent text={conditionText}/><CaseMaterials key={`materials-${active.id}`} item={active} savedIds={savedTheory} onToggle={toggleTheory} onOpenTheory={() => { setTheorySavedOnly(true); go('cards'); }}/>{attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation}/></details>}</>}/>
       </>}
       {screen === 'review' && active && attempt && <div className="mvp-narrow">
         <button className="mvp-back" onClick={() => go('library')}>← Мои кейсы</button>

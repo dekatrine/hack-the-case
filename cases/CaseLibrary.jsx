@@ -35,13 +35,15 @@ export default function CaseLibrary({ cases, interviewTypes, onOpen, onNew, onAr
       const state=caseStatus(item);
       const reviewed=item.attempts.length>0;
       const draft=state==='draft'||state==='new';
-      const label=interviewTypes.find(t=>t.id===item.params?.interviewType)?.label||'Продуктовый кейс';
+      const interview=interviewTypes.find(t=>t.id===item.params?.interviewType);
+      const label=interview?.label||'Продуктовый кейс';
       const title=String(item.title || item.caseText || 'Новый кейс').split('\n').find(v=>v.trim())?.replace(/^[#\s]+/,'').replace(/[*`]/g,'').trim().slice(0,100)||'Новый кейс';
       const filled=answeredCount(item);
-      const percentage=Math.min(100,Math.round(filled/8*100));
+      const totalSteps=item.caseRoute?.length||interview?.questions?.length||8;
+      const percentage=Math.min(100,Math.round(filled/totalSteps*100));
       return <article className="mycases-item" key={item.id}>
         <div className="mycases-item-top"><span>{label}</span><span>{dateLabel(item.updatedAt||item.createdAt)}</span></div>
-        <div className="mycases-item-main"><div><span className="mycases-state">{STATUS_LABELS[state]}</span><h2>{title}</h2><p>{item.params?.industry||'Без указанной отрасли'}{item.params?.difficulty?` · ${item.params.difficulty}`:''}</p></div><span className="mycases-count">{reviewed?`${item.attempts.length} версий`:`${filled} из 8 ответов`}</span></div>
+        <div className="mycases-item-main"><div><span className="mycases-state">{STATUS_LABELS[state]}</span><h2>{title}</h2><p>{item.params?.industry||'Без указанной отрасли'}{item.params?.difficulty?` · ${item.params.difficulty}`:''}</p></div><span className="mycases-count">{reviewed?`${item.attempts.length} версий`:`${filled} из ${totalSteps} ответов`}</span></div>
         {!reviewed && <div className="mycases-progress" aria-label={`Заполнено ${percentage}%`}><span style={{width:`${percentage}%`}}/></div>}
         <div className="mycases-actions">
           {!item.archivedAt && <button type="button" className="mycases-action-main" onClick={()=>onOpen(item,reviewed&&state==='reviewed'?'review':'solve')}>{reviewed&&state==='reviewed'?'Посмотреть AI-разбор':'Продолжить'} <ArrowRight size={15}/></button>}

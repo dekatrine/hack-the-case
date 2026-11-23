@@ -28,6 +28,34 @@ function fillCase(problem = 'Падает конверсия') {
   });
 }
 describe('MVP core flow', () => {
+  it('restores a case-specific route and reviews answers to its own questions', async () => {
+    const evidence = '| Версия | Ошибки |\n| --- | --- |\n| Новая | 14% |';
+    const caseRoute = [
+      { id: 'release_view', question: 'Какой срез запросишь?', hint: 'Выбери вариант.', options: ['По версиям', 'По регионам'] },
+      { id: 'release_read', question: 'Какой вывод сделаешь?', evidence },
+    ];
+    api.generate.mockResolvedValueOnce({ caseText: `# Проблема после релиза\n\n**Дополнительный срез данных**\n\n${evidence}`, caseRoute });
+    render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: /Почему падает конверсия/ }));
+    await screen.findByLabelText('02 / Отрасль');
+    fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
+    await screen.findByText('Шаг 1 из 2');
+    expect(screen.queryByRole('table')).toBeNull();
+    fireEvent.click(screen.getByRole('radio', { name: 'По версиям' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Дальше' }));
+    expect(screen.getByRole('table')).toBeTruthy();
+    cleanup(); render(<MvpApp/>);
+    expect(screen.getByText('1 из 2 ответов')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
+    expect(screen.getByText('Шаг 2 из 2')).toBeTruthy();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Проверю ошибки новой версии' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
+    await screen.findByRole('heading', { name: 'Разбор решения' });
+    expect(api.evaluate).toHaveBeenCalledWith(expect.objectContaining({
+      caseRoute, answers: { release_view: 'По версиям', release_read: 'Проверю ошибки новой версии' },
+    }));
+  });
+
   it('includes archived cases when generating and refuses a repeated condition', async () => {
     await newCase();
     const [previous] = JSON.parse(localStorage.getItem(STORAGE_KEY));
