@@ -131,6 +131,7 @@ export default function MvpApp() {
   const [configError, setConfigError] = useState('');
   const [error, setError] = useState('');
   const [saveError, setSaveError] = useState('');
+  const [reviewError, setReviewError] = useState('');
   const [busy, setBusy] = useState('');
   const [hintBusy, setHintBusy] = useState(false);
   const lock = useRef(false);
@@ -176,7 +177,7 @@ export default function MvpApp() {
     catch { setSaveError('Не удалось сохранить изменения в браузере. Не закрывай страницу, пока не скопируешь ответ.'); }
   }, [cases]);
   useEffect(() => { window.scrollTo?.({ top: 0, behavior: 'auto' }); }, [screen, selected]);
-  const go = (next) => { setError(''); if (next === 'generate') setVariantId('surprise'); setScreen(next); };
+  const go = (next) => { setError(''); setReviewError(''); if (next === 'generate') setVariantId('surprise'); setScreen(next); };
   const update = (id, fn) => setCases(prev => prev.map(c => c.id === id ? { ...fn(c), updatedAt: new Date().toISOString() } : c));
   const open = (c, next) => { setSelected(c.id); setAttemptIndex(null); go(next); };
   const archive = (item, shouldArchive) => update(item.id, c => ({ ...c, archivedAt: shouldArchive ? new Date().toISOString() : null, updatedAt: new Date().toISOString() }));
@@ -253,16 +254,29 @@ export default function MvpApp() {
     if (lock.current || hintLock.current || !active) return;
     const missing = fields.find(([key]) => !active.answers[key]?.trim());
     if (missing) { update(active.id, c => ({ ...c, currentQuestionId: missing[0] })); setError('Перед разбором заполни все ответы кейса.'); return; }
-    lock.current = true; setBusy('evaluate'); setError('');
+    lock.current = true; setBusy('evaluate'); setError(''); setReviewError('');
     const item = active;
     const answers = { ...item.answers };
     try {
       const hintedSteps = Object.entries(item.hints || {}).filter(([, hint]) => hint?.basic || hint?.ai?.length).map(([id]) => id);
-      const result = await api.evaluate({ caseText: story ? item.caseIntro : item.caseText, answers, trackId: item.params.trackId, interviewType: item.params.interviewType, mvp: true, hintUsage: countHints(item.hints), hintedSteps, ...(item.focusSkill ? { focusSkill: item.focusSkill } : {}), ...(caseRoute.length ? { caseRoute } : {}) });
+      const reviewRoute = caseRoute.map(({ id, question, scene, evidence }) => ({ id, question, scene, evidence }));
+      const result = await api.evaluate({
+        caseText: story ? item.caseIntro || item.caseText : item.caseText,
+        answers,
+        trackId: item.params.trackId,
+        interviewType: item.params.interviewType,
+        mvp: true,
+        hintUsage: countHints(item.hints),
+        hintedSteps,
+        ...(item.focusSkill ? { focusSkill: item.focusSkill } : {}),
+        ...(reviewRoute.length ? { caseRoute: reviewRoute } : {}),
+      });
       if (!result.evaluation?.trim()) throw new Error('ИИ вернул пустой разбор. Попробуй ещё раз.');
       update(item.id, c => ({ ...c, attempts: [...c.attempts, { answers, questionVersion: 2, questions: fields, evaluation: result.evaluation, score: result.score, practice: result.practice, createdAt: new Date().toISOString() }] }));
       setAttemptIndex(null); go('review');
-    } catch (e) { setError(e.message || 'Не удалось проверить решение. Твой ответ сохранён — попробуй ещё раз.'); }
+    } catch (e) {
+      setReviewError(e.message || 'Не удалось проверить решение.');
+    }
     finally { lock.current = false; setBusy(''); }
   };
   const hasChanges = active && hasAttemptChanges(active, attempts.at(-1));
@@ -365,7 +379,7 @@ export default function MvpApp() {
             ...c, currentQuestionId: key,
             answers: story ? storyAnswers(caseRoute, c.answers, key, value) : { ...c.answers, [key]: value },
           }))}
-          onEvaluate={evaluate} busy={busy} saveError={saveError} hasChanges={hasChanges} attempts={attempts}
+          onEvaluate={evaluate} busy={busy} saveError={saveError} reviewError={reviewError} hasChanges={hasChanges} attempts={attempts}
           onReview={() => { setAttemptIndex(null); go('review'); }}
           condition={<>
             <p className="mvp-muted">Данные кейса вымышлены и даны для тренировки.</p>

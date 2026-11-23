@@ -33,7 +33,7 @@ export function initialQuestion(fields, answers, savedQuestion) {
   return missing < 0 ? 0 : missing;
 }
 
-export default function CaseFlow({ fields, caseRoute = [], answers, questionId, onQuestion, onAnswer, onEvaluate, condition, busy, saveError, hasChanges, attempts, onReview, interviewType, hints = {}, hintBusy, onRevealHint, onRequestHint, selfCheck = false }) {
+export default function CaseFlow({ fields, caseRoute = [], answers, questionId, onQuestion, onAnswer, onEvaluate, condition, busy, saveError, reviewError, hasChanges, attempts, onReview, interviewType, hints = {}, hintBusy, onRevealHint, onRequestHint, selfCheck = false }) {
   const [currentKey, setCurrentKey] = useState(() => fields[initialQuestion(fields, answers, questionId)][0]);
   const index = Math.max(0, fields.findIndex(([id]) => id === currentKey));
   const [key, label, hint, placeholder] = fields[index];
@@ -134,6 +134,10 @@ export default function CaseFlow({ fields, caseRoute = [], answers, questionId, 
         {hintError?.key === key && <p className="mvp-step-error" role="alert">{hintError.message}</p>}</>}
         <p className="mvp-muted mvp-autosave" role="status">{saveError ? 'Сохранение недоступно' : 'Черновик сохраняется в этом браузере'}</p>
         <div className="mvp-step-navigation"><Button variant="neutral" disabled={!!busy || hintBusy || index === 0} onClick={() => move(index - 1)}>Назад</Button><Button variant="accent" disabled={!!busy || hintBusy || (!hasNext && !hasChanges)} icon={<ArrowRight size={17}/>} onClick={forward}>{busy ? 'Разбираем решение…' : hasNext ? 'Дальше' : attempts.length ? 'Проверить новую версию' : selfCheck ? 'Завершить и получить разбор' : 'Получить ИИ-разбор'}</Button></div>
+        {!hasNext && reviewError && <div role="alert" className="mvp-step-error">
+          {reviewError}
+          {!saveError && <div>Ответы сохранены в этом браузере.</div>}
+        </div>}
         {!hasNext && completed < fields.length && <p className="mvp-muted mvp-step-note">Перед разбором заполни все ответы. Кнопка вернёт к первому пропущенному вопросу.</p>}
         {!hasChanges && <p className="mvp-muted mvp-step-note">Измени ответ, чтобы проверить новую версию.</p>}
         {busy && <p role="status" className="mvp-step-note">Проверяем всё решение: аргументы, данные и рекомендацию…</p>}

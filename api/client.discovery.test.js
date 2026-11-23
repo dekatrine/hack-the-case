@@ -33,3 +33,14 @@ describe('local API discovery', () => {
     expect((await api.config()).industries.length).toBe(1);
   });
 });
+
+describe('API errors', () => {
+  it('shows a readable message for structured validation failures', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => response(422, 'application/json', {
+      detail: [{ loc: ['body', 'caseText'], msg: 'Field required', input: {} }],
+    })));
+    const { api } = await import('./client.js');
+    await expect(api.evaluate({ answers: { problem: 'Мой черновик' } }))
+      .rejects.toThrow('Сервер не принял данные для обработки.');
+  });
+});

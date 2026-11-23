@@ -67,7 +67,11 @@ async function request(path, options = {}) {
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     track('api_error', { path, status: response.status });
-    throw new Error(body.detail || `Ошибка API: ${response.status}`);
+    const detail = typeof body?.detail === 'string' ? body.detail.trim() : '';
+    const fallback = response.status === 422
+      ? 'Сервер не принял данные для обработки.'
+      : `Ошибка API: ${response.status}`;
+    throw new Error(detail || fallback);
   }
   return response.json();
 }

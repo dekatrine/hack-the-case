@@ -144,6 +144,22 @@ describe('MVP core flow', () => {
     expect(api.evaluate).toHaveBeenLastCalledWith(expect.objectContaining({ hintUsage: { basic: 1, ai: 1 } }));
   });
 
+  it('submits a saved story without a separate intro', async () => {
+    const caseText = 'Сохранённое условие.';
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([{
+      id: 'saved-story', title: 'Кейс', caseText,
+      caseRoute: [{ id: 'practice_final', chapter: 4, question: 'Какое решение предложишь?' }],
+      params: { interviewType: 'product_sense' }, answers: { practice_final: 'Запущу пилот.' }, attempts: [],
+    }]));
+    render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
+    await screen.findByRole('heading', { name: 'Разбор решения' });
+    expect(api.evaluate).toHaveBeenCalledWith(expect.objectContaining({
+      caseText, answers: { practice_final: 'Запущу пилот.' },
+    }));
+  });
+
   it('reveals only the chosen story branch and restores the new path after reloading', async () => {
     const chapter = { chapter: 1, chapterTitle: 'Первый выбор' };
     const caseRoute = [
@@ -213,7 +229,11 @@ describe('MVP core flow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
     await screen.findByRole('heading', { name: 'Разбор решения' });
     expect(api.evaluate).toHaveBeenCalledWith(expect.objectContaining({
-      caseRoute, answers: { release_view: 'По версиям', release_read: 'Проверю ошибки новой версии' },
+      caseRoute: [
+        { id: 'release_view', question: 'Какой срез запросишь?' },
+        { id: 'release_read', question: 'Какой вывод сделаешь?', evidence },
+      ],
+      answers: { release_view: 'По версиям', release_read: 'Проверю ошибки новой версии' },
     }));
   });
 
@@ -260,13 +280,21 @@ describe('MVP core flow', () => {
     fillCase('Мой черновик');
     api.evaluate.mockRejectedValueOnce(new Error('Временная ошибка'));
     fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
-    await screen.findByText('Временная ошибка');
+    const error = within(await screen.findByRole('alert'));
+    expect(error.getByText('Временная ошибка')).toBeTruthy();
+    expect(error.getByText('Ответы сохранены в этом браузере.')).toBeTruthy();
     cleanup(); render(<MvpApp/>);
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
     expect(screen.getByText('Шаг 8 из 8')).toBeTruthy();
     expect(screen.getByRole('textbox').value).toBe('Мой ответ на вопрос 8');
     fireEvent.click(screen.getByRole('button', { name: /^Шаг 1:/ }));
     expect(screen.getByLabelText(/1\. Какую задачу пользователя/).value).toBe('Мой черновик');
+    fireEvent.click(screen.getByRole('button', { name: /^Шаг 8:/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
+    await screen.findByRole('heading', { name: 'Разбор решения' });
+    expect(api.evaluate).toHaveBeenLastCalledWith(expect.objectContaining({
+      answers: expect.objectContaining({ problem: 'Мой черновик' }),
+    }));
   });
   it('shows one editable answer, retains it while typing and across backwards navigation', async () => {
     await newCase();
