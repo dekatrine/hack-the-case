@@ -135,6 +135,9 @@ export const api = {
   explainCondition: (payload) => request('/api/cases/explain', {
     method: 'POST', body: JSON.stringify(payload),
   }),
+  requestEvidence: (payload) => request('/api/cases/request-evidence', {
+    method: 'POST', body: JSON.stringify(payload),
+  }),
   config: () => request('/api/config'),
   generateStream,
   generate: (payload) =>

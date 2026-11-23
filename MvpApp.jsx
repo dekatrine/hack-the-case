@@ -10,6 +10,8 @@ import CaseLibrary from './cases/CaseLibrary.jsx';
 import { countHints, duplicateAsNewAttempt, hasAttemptChanges } from './cases/caseLibrary.js';
 import { hasStory, storyPath, storyAnswers } from './cases/storyPath.js';
 import CaseFlow from './CaseFlow.jsx';
+import SearchDiagnostic from './cases/SearchDiagnostic.jsx';
+import { SEARCH_CASE_INTRO, SEARCH_CASE_TITLE, SEARCH_ROUTE, SEARCH_SLICES } from './cases/searchDiagnostic.js';
 import ConditionAssistant from './ConditionAssistant.jsx';
 import TheoryPage from './TheoryPage.jsx';
 import BookTheoryPage from './BookTheoryPage.jsx';
@@ -145,8 +147,12 @@ export default function MvpApp() {
   const [variantId, setVariantId] = useState('surprise');
   const active = cases.find(c => c.id === selected);
   const selfCheck = active?.mode === 'self_check';
+  const diagnostic = active?.scenario === 'search_diagnostic';
+  const diagnosticSlice = diagnostic ? SEARCH_SLICES.find(slice => slice.id === active.diagnosticSource) : undefined;
   const story = hasStory(active?.caseRoute);
-  const caseRoute = story ? storyPath(active.caseRoute, active.answers) : active?.caseRoute || [];
+  const caseRoute = diagnosticSlice
+    ? [SEARCH_ROUTE[0], { ...SEARCH_ROUTE[1], question: diagnosticSlice.question, evidence: diagnosticSlice.evidence }]
+    : story ? storyPath(active.caseRoute, active.answers) : active?.caseRoute || [];
   const fields = caseRoute.length ? routeFields(caseRoute) : interviewFields(active?.params?.interviewType) || FIELDS;
   const evidenceStep = caseRoute.find(step => step.evidence);
   const conditionText = story
@@ -218,6 +224,33 @@ export default function MvpApp() {
       setHintBusy(false);
     }
   };
+  const startSearchDiagnostic = () => {
+    const now = new Date().toISOString();
+    const item = {
+      id: crypto.randomUUID(), scenario: 'search_diagnostic',
+      title: SEARCH_CASE_TITLE, caseText: SEARCH_CASE_INTRO, caseRoute: SEARCH_ROUTE,
+      params: { trackId: 'product', interviewType: 'product_execution' },
+      answers: {}, attempts: [], createdAt: now, updatedAt: now,
+    };
+    setCases(previous => [item, ...previous]);
+    open(item, 'solve');
+  };
+  const requestDiagnosticSlice = async () => {
+    if (lock.current) return false;
+    lock.current = true; setBusy('evidence');
+    try {
+      const { source } = await api.requestEvidence({
+        answer: active.answers.search_request.trim(),
+        sources: SEARCH_SLICES.map(slice => slice.label),
+      });
+      const selectedSlice = SEARCH_SLICES.find(slice => slice.label === source);
+      if (!selectedSlice) return false;
+      update(active.id, c => ({ ...c, diagnosticSource: selectedSlice.id }));
+      return true;
+    } finally {
+      lock.current = false; setBusy('');
+    }
+  };
   const startCase = async (caseParams, scenario, caseMode, practiceSource) => {
     if (lock.current) return;
     lock.current = true; setBusy('generate'); setError('');
@@ -277,7 +310,8 @@ export default function MvpApp() {
       });
       if (!result.evaluation?.trim()) throw new Error('ИИ вернул пустой разбор. Попробуй ещё раз.');
       update(item.id, c => ({ ...c, attempts: [...c.attempts, { answers, questionVersion: 2, questions: fields, evaluation: result.evaluation, score: result.score, practice: result.practice, createdAt: new Date().toISOString() }] }));
-      setAttemptIndex(null); go('review');
+      setAttemptIndex(null);
+      if (!diagnostic) go('review');
     } catch (e) {
       setReviewError(e.message || 'Не удалось проверить решение.');
     }
@@ -329,6 +363,11 @@ export default function MvpApp() {
       {screen === 'generate' && <>
         <div className="mvp-page-heading"><div><div className="clean-eyebrow">Новая тренировка</div><h1>Настрой свой кейс</h1>
         <p className="mvp-lead"><strong>Тренируйся на новых задачах сколько угодно.</strong> Как на собеседовании: знакомый навык, новая ситуация, другие данные и вопросы.</p></div><div className="mvp-flow"><b>01 Кейс</b><ArrowRight size={14}/><span>02 Решение</span><ArrowRight size={14}/><span>03 Разбор</span></div></div>
+        <button type="button" className="mvp-starter mvp-search-starter" disabled={!!busy} onClick={startSearchDiagnostic}>
+          <span className="mvp-starter-tag">Диагностика метрик · 2 хода<ArrowUpRight size={17}/></span>
+          <b>{SEARCH_CASE_TITLE}</b>
+          <p>Запроси данные, предложи действие и доработай его после короткого комментария.</p>
+        </button>
         {configError && <div role="alert" className="mvp-notice">{configError} <button onClick={fetchConfig}>Повторить загрузку</button></div>}
         {!config && !configError && <p role="status">Загружаем настройки…</p>}
         {config && <div className="mvp-setup-layout"><form className="mvp-card mvp-form mvp-setup" onSubmit={generate}>
@@ -369,7 +408,21 @@ export default function MvpApp() {
           {busy && <p role="status">ИИ готовит условие и данные. Это может занять около минуты.</p>}
         </form><aside className="mvp-setup-aside"><span className="mvp-kicker">Твоя тренировка</span><h2>{selectedType.label}</h2><p>{selectedType.description}. Условие, вопросы и разбор адаптируются под выбранный тип.</p><div className="mvp-setup-spec"><span>Направление<b>Продуктовое</b></span><span>Уровень<b>{params.difficulty}</b></span><span>Формат<b>Письменный кейс</b></span></div><div className="mvp-aside-bottom"><Sparkles size={20}/><b>Обратная связь по делу</b><p>Что получилось, где не хватает аргументов и что улучшить в следующей попытке.</p></div></aside></div>}
       </>}
-      {screen === 'solve' && active && <>
+      {screen === 'solve' && active && diagnostic && <>
+        <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
+        <h1>{active.title}</h1>
+        <SearchDiagnostic key={active.id} item={active} slice={diagnosticSlice} attempt={attempts.at(-1)} busy={busy}
+          reviewError={reviewError} hasChanges={hasChanges} onRequest={requestDiagnosticSlice}
+          onAnswer={(key, value) => update(active.id, c => ({ ...c, answers: { ...c.answers, [key]: value } }))}
+          onReset={() => {
+            setReviewError('');
+            update(active.id, c => ({
+              ...c, diagnosticSource: null, answers: { search_request: c.answers.search_request },
+            }));
+          }}
+          onEvaluate={evaluate} onReview={() => { setAttemptIndex(null); go('review'); }}/>
+      </>}
+      {screen === 'solve' && active && !diagnostic && <>
         <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
         {!story && <div className="clean-eyebrow">Шаг 2 · Решение</div>}<h1>{story ? active.title : 'Твой ход'}</h1>
         {(selfCheck || (active.focusSkill && skillLabel)) && <p className="mvp-muted">
@@ -400,7 +453,7 @@ export default function MvpApp() {
         <div className="clean-eyebrow">Шаг 3 · Обратная связь</div><h1>Разбор решения</h1><p className="mvp-lead">{titleOf(active.title || active.caseText)}</p>
         {selfCheck && <p className="mvp-muted">Результат самопроверки</p>}
         <label className="mvp-version">Версия решения<select value={attemptIndex ?? attempts.length - 1} onChange={e => setAttemptIndex(Number(e.target.value))}>{attempts.map((a, i) => <option key={i} value={i}>Версия {i + 1} · {new Date(a.createdAt).toLocaleString('ru-RU')}</option>)}</select></label>
-        <article className="mvp-card mvp-review"><Review value={attempt.evaluation} score={attempt.score}/>{/(конверс|воронк|метрик|conversion|funnel|metric)/i.test(attempt.evaluation) && <div className="mycases-learning-tip"><strong>Хочешь потренировать метрики?</strong><p>Это дополнительная практика по теме разбора, а не автоматическая оценка твоих навыков.</p><button type="button" onClick={() => go('learning')}>Перейти к урокам по метрикам →</button></div>}<details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div>{(!story || fields.some(([id]) => id === key)) && <button className="mvp-edit-step" onClick={() => { update(active.id, c => ({ ...c, currentQuestionId: key })); go('solve'); }}>Доработать этот шаг</button>}</section>)}</details></article>
+        <article className="mvp-card mvp-review"><Review value={attempt.evaluation} score={attempt.score}/>{/(конверс|воронк|метрик|conversion|funnel|metric)/i.test(attempt.evaluation) && <div className="mycases-learning-tip"><strong>Хочешь потренировать метрики?</strong><p>Это дополнительная практика по теме разбора, а не автоматическая оценка твоих навыков.</p><button type="button" onClick={() => go('learning')}>Перейти к урокам по метрикам →</button></div>}<details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div>{(!diagnostic && (!story || fields.some(([id]) => id === key))) && <button className="mvp-edit-step" onClick={() => { update(active.id, c => ({ ...c, currentQuestionId: key })); go('solve'); }}>Доработать этот шаг</button>}</section>)}</details></article>
         {canPractice && <section className="mvp-card mvp-practice-link">
           <h2>{skillLabel}</h2>
           {priorPractice ? <div className="mvp-practice-comparison">

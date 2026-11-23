@@ -2,13 +2,20 @@ import json
 import unittest
 from unittest.mock import patch
 from fastapi import HTTPException
-from app.main import ask_coach, generate_case, evaluate, PRODUCT_INTERVIEWS
-from app.schemas import CoachRequest, GenerateCaseRequest, EvaluateRequest
+from app.main import ask_coach, generate_case, evaluate, request_evidence, PRODUCT_INTERVIEWS
+from app.schemas import CoachRequest, GenerateCaseRequest, EvaluateRequest, EvidenceRequest
 from app.prompts import CASE_GENERATION_SYSTEM, CASE_NOVELTY_SYSTEM, MVP_RUBRIC_SYSTEM, MVP_STEP_HINT_SYSTEM
 from app.variant_cases import VARIANTS
 
 
 class MvpTests(unittest.TestCase):
+    @patch('app.main.call_yandex_gpt', side_effect=['1', '2', '0'])
+    def test_evidence_classifier_returns_only_an_available_slice(self, model):
+        sources = ["Воронка поиска", "Версии приложения"]
+        examples = ["Сравню этапы", "Сравню старую и новую версии", "Посмотрю аналитику"]
+        results = [request_evidence(EvidenceRequest(answer=answer, sources=sources)).source for answer in examples]
+        self.assertEqual(results, [*sources, None])
+
     @patch('app.main.call_yandex_gpt')
     def test_skill_checkpoint_is_graded_with_its_own_hint_history(self, model):
         model.return_value = json.dumps({

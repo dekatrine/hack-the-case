@@ -53,7 +53,7 @@ export function filterCases(cases, { query = '', status = 'active', type = 'all'
 }
 export function duplicateAsNewAttempt(item, id, date) {
   return {
-    ...item, id, answers: {}, hints: {}, attempts: [], currentQuestionId: null,
+    ...item, id, answers: {}, hints: {}, attempts: [], currentQuestionId: null, diagnosticSource: null,
     archivedAt: null, createdAt: date, updatedAt: date, sourceCaseId: item.id
   };
 }

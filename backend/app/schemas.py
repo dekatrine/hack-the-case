@@ -50,6 +50,15 @@ class CaseRouteStep(BaseModel):
     nextByAnswer: dict[str, str] = Field(default_factory=dict, max_length=4)
 
 
+class EvidenceRequest(BaseModel):
+    answer: str = Field(min_length=1, max_length=4000)
+    sources: list[Annotated[str, Field(min_length=1, max_length=160)]] = Field(min_length=1, max_length=4)
+
+
+class EvidenceResponse(BaseModel):
+    source: Optional[str] = None
+
+
 class GenerateCaseResponse(BaseModel):
     caseText: str
     suggestedStepIds: list[str] = Field(default_factory=list)

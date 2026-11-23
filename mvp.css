@@ -353,3 +353,12 @@ html:has(.mvp-condition-sheet[open]) { overflow:hidden; }
     font-size:16px;
   }
 }
+
+.mvp-search-case .mvp-search-intro { margin: 0; line-height: 1.6; }
+.mvp-search-case form { display: grid; gap: 12px; }
+.mvp-search-case .mvp-question-input { display: grid; gap: 10px; }
+.mvp-search-case .mvp-question-input > span { font-weight: 700; }
+.mvp-search-case .mvp-step-evidence { margin: 0; }
+.mvp-search-case .mvp-step-evidence > p { margin: 0 0 8px; }
+.mvp-search-case .mvp-step-navigation { flex-wrap: wrap; }
+.mvp-search-starter { margin-bottom: 20px; width: 100%; }

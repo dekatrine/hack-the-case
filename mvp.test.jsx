@@ -4,7 +4,8 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import MvpApp, { STORAGE_KEY } from './MvpApp.jsx';
 import { api } from './api/client.js';
 import INTERVIEWS from './backend/app/product_interviews.json';
-vi.mock('./api/client.js', () => ({ api: { config: vi.fn(), generate: vi.fn(), evaluate: vi.fn(), coach: vi.fn() } }));
+import { SEARCH_SLICES } from './cases/searchDiagnostic.js';
+vi.mock('./api/client.js', () => ({ api: { config: vi.fn(), generate: vi.fn(), requestEvidence: vi.fn(), evaluate: vi.fn(), coach: vi.fn() } }));
 const review = JSON.stringify({ summary: 'Проверь конверсию по этапам.', strengths: ['Есть гипотеза'], improvements: ['Нет расчёта'], topTips: ['Посчитай воронку'] });
 beforeEach(() => {
   localStorage.clear(); vi.resetAllMocks(); window.scrollTo = vi.fn();
@@ -40,6 +41,64 @@ function fillCase(problem = 'Падает конверсия') {
   });
 }
 describe('MVP core flow', () => {
+  it('reveals the requested slice and allows revision on the same screen', async () => {
+    const [funnel, versions] = SEARCH_SLICES;
+    const feedback = 'Ты локализовала падение. Чем проверишь, что оно связано с оплатой?';
+    api.requestEvidence.mockResolvedValueOnce({ source: null }).mockResolvedValueOnce({ source: versions.label });
+    api.evaluate.mockResolvedValue({
+      evaluation: JSON.stringify({ summary: 'Разбор', topTips: [feedback] }),
+    });
+    render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: 'Новый кейс' }));
+    await screen.findByLabelText('02 / Отрасль');
+    fireEvent.click(screen.getByRole('button', { name: /Падение заказов из поиска/ }));
+    expect(api.generate).not.toHaveBeenCalled();
+    const type = value => fireEvent.change(screen.getByRole('textbox'), { target: { value } });
+    const request = () => fireEvent.click(screen.getByRole('button', { name: 'Запросить данные' }));
+    type('Посмотрю аналитику.');
+    request();
+    expect((await screen.findByRole('alert')).textContent).toContain('Уточни один показатель');
+    expect(screen.queryByText(funnel.evidence)).toBeNull();
+    expect(screen.queryByText(versions.evidence)).toBeNull();
+
+    type('Сравню конверсию на старой и новой версиях.');
+    request();
+    expect(await screen.findByText(versions.evidence)).toBeTruthy();
+    expect(screen.queryByText(funnel.evidence)).toBeNull();
+    expect(screen.getByRole('textbox', { name: versions.question })).toBeTruthy();
+
+    type('Откатим новую версию, она сломала оплату.');
+    fireEvent.click(screen.getByRole('button', { name: 'Проверить ответ' }));
+    await screen.findByText(feedback);
+    expect(screen.getByRole('textbox').value).toBe('Откатим новую версию, она сломала оплату.');
+    expect(api.evaluate).toHaveBeenLastCalledWith(expect.objectContaining({
+      caseRoute: [
+        expect.objectContaining({ id: 'search_request' }),
+        expect.objectContaining({ id: 'search_decision', question: versions.question, evidence: versions.evidence }),
+      ],
+    }));
+    type('Приостановлю раскатку и сравню долю ошибок оплаты по версиям.');
+    expect(screen.getByText('Комментарий к прошлому ответу')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Проверить новую версию' }));
+    await waitFor(() => expect(JSON.parse(localStorage.getItem(STORAGE_KEY))[0].attempts).toHaveLength(2));
+    fireEvent.click(screen.getByRole('button', { name: 'Полный разбор' }));
+    expect(screen.getByRole('heading', { name: 'Разбор решения' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Улучшить решение' }));
+    fireEvent.click(screen.getByText('Твой запрос'));
+    fireEvent.click(screen.getByRole('button', { name: 'Изменить запрос и начать решение заново' }));
+    api.requestEvidence.mockResolvedValueOnce({ source: funnel.label });
+    type('Сравню переходы из поиска в корзину и заказ.');
+    request();
+    expect(await screen.findByText(funnel.evidence)).toBeTruthy();
+    expect(screen.queryByText(versions.evidence)).toBeNull();
+    expect(screen.getByRole('textbox').value).toBe('');
+
+    cleanup(); render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
+    expect(screen.getByText(funnel.evidence)).toBeTruthy();
+  });
+
   it('resumes a self-check with case data and shows the review after submission', async () => {
     render(<MvpApp/>);
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));

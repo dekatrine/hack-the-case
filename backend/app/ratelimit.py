@@ -18,6 +18,7 @@ WINDOW_SECONDS = 60
 LLM_PATH_PREFIXES = (
     "/api/cases/generate",
     "/api/cases/explain",
+    "/api/cases/request-evidence",
     "/api/interviews",
     "/api/coach",
     "/api/evaluate",
