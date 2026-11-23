@@ -847,6 +847,31 @@ def _practice_feedback(review, payload, fields):
     )
 
 
+def _grade_case(system, prompt, fields, answered):
+    for attempt in range(2):
+        raw = call_yandex_gpt(system, prompt, temperature=0.1)
+        match = re.search(r"\{.*\}", raw, re.DOTALL)
+        try:
+            review = json.loads(match.group(0)) if match else None
+        except ValueError:
+            review = None
+        if isinstance(review, dict):
+            grades = review.get("stepScores")
+            summary = review.get("summary")
+            if (
+                isinstance(summary, str) and summary.strip()
+                and isinstance(grades, dict)
+                and all(type(grades.get(key)) is int and 0 <= grades[key] <= 3 for key in answered)
+            ):
+                review["stepScores"] = {key: grades[key] if key in answered else 0 for key in fields}
+                review.pop("qualityScore", None)
+                if not any(review["stepScores"].values()):
+                    review["strengths"] = []
+                return review
+        prompt += "\nПроверь JSON: в stepScores нужны целые баллы 0–3 для всех непустых ответов."
+    raise RuntimeError("ИИ не вернул полный набор оценок")
+
+
 @app.post("/api/evaluate", response_model=EvaluateResponse)
 def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
     if payload.mvp:
@@ -868,7 +893,8 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
             fields = {step.id: step.question for step in case_route}
             if len(fields) != len(case_route):
                 raise HTTPException(status_code=422, detail="В маршруте повторяются шаги")
-        if not any(payload.answers.get(key, "").strip() for key in fields):
+        answered = {key for key in fields if payload.answers.get(key, "").strip()}
+        if not answered:
             raise HTTPException(status_code=422, detail="Сначала напиши решение")
         if case_route:
             answers = "\n\n".join(
@@ -880,7 +906,7 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
             )
         else:
             answers = "\n\n".join(
-                f"{f'[{key}] ' if interview else ''}{title}:\n{payload.answers.get(key, '').strip() or '(пропущено)'}"
+                f"[{key}] {title}:\n{payload.answers.get(key, '').strip() or '(пропущено)'}"
                 for key, title in fields.items()
             )
         prompt = f"КЕЙС:\n{payload.caseText}\n\nОТВЕТ ПОЛЬЗОВАТЕЛЯ:\n{answers}"
@@ -906,24 +932,20 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
                     "В observation назови конкретно, что уже получилось или чего не хватило. "
                     f"Доступные skillId и критерии applied=true: {skills}"
                 )
-            evaluation = call_yandex_gpt(system, prompt, temperature=0.3)
-            match = re.search(r"\{.*\}", evaluation, re.DOTALL)
-            try:
-                review = json.loads(match.group(0)) if match else {}
-            except ValueError:
-                review = {}
-            quality = review.get("qualityScore") if isinstance(review, dict) else None
-            if type(quality) is not int or not 0 <= quality <= 100:
-                quality = None
+            review = _grade_case(system, prompt, fields, answered)
+            quality = round(100 * sum(review["stepScores"].values()) / (3 * len(fields)))
             hints = payload.hintUsage
             penalty = hints.basic + 2 * hints.ai
             score = CaseScore(
-                quality=quality, final=max(0, quality - penalty) if quality is not None else None,
+                quality=quality, final=max(0, quality - penalty),
                 hintPenalty=penalty, hints=hints,
             )
-            return EvaluateResponse(evaluation=evaluation, score=score, practice=_practice_feedback(review, payload, fields))
+            return EvaluateResponse(
+                evaluation=json.dumps(review, ensure_ascii=False), score=score,
+                practice=_practice_feedback(review, payload, fields),
+            )
         except RuntimeError as exc:
-            raise HTTPException(status_code=502, detail=str(exc)) from exc
+            raise HTTPException(status_code=502, detail="Не удалось получить оценку по шагам. Попробуй ещё раз.") from exc
     answers_summary = []
     used_ids = set()
     for step in CASE_STEPS:

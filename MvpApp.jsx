@@ -103,8 +103,12 @@ function Review({ value, score }) {
   let parsed;
   try { parsed = JSON.parse(value.replace(/```(?:json)?/g, '').trim()); } catch { /* Display a readable model response even if JSON failed. */ }
   if (!parsed || typeof parsed.summary !== 'string') return <><ReviewScore score={score}/><div className="mvp-prose">{value}</div></>;
+  const steps = Object.values(parsed.stepScores || {});
   return <>
     <ReviewScore score={score}/>
+    {steps.length > 0 && <p className="mvp-muted">
+      Полный балл на {steps.filter(grade => grade === 3).length} из {steps.length} шагов
+    </p>}
     <p className="mvp-summary">{parsed.summary}</p>
     {[['strengths', 'Что получилось'], ['improvements', 'Что стоит улучшить'], ['topTips', 'Что исправить в первую очередь']].map(([key, label]) => (
       Array.isArray(parsed[key]) && parsed[key].length > 0 && <section key={key}>

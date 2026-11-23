@@ -12,7 +12,7 @@ class MvpTests(unittest.TestCase):
     @patch('app.main.call_yandex_gpt')
     def test_skill_checkpoint_is_graded_with_its_own_hint_history(self, model):
         model.return_value = json.dumps({
-            'summary': 'Разбор', 'qualityScore': 80,
+            'summary': 'Разбор', 'stepScores': {'skill_checkpoint': 3},
             'practice': {'applied': True, 'observation': 'Сравнила долю ошибок в двух группах.'},
         })
         result = evaluate(EvaluateRequest(
@@ -76,16 +76,52 @@ class MvpTests(unittest.TestCase):
         checkpoint = next(step for step in focused.caseRoute if step.id == 'skill_checkpoint')
         self.assertEqual(checkpoint.nextStepId, 'variant_final')
 
-    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","qualityScore":84}')
+    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","stepScores":{"problem":3}}')
     def test_mvp_score_applies_a_deduction_after_grading(self, model):
         request = EvaluateRequest(caseText='Кейс', mvp=True, answers={'problem': 'Вывод'})
         solo = evaluate(request).score
         assisted = evaluate(request.model_copy(update={
             'hintUsage': type(request.hintUsage)(basic=1, ai=2),
         })).score
-        self.assertEqual((solo.quality, solo.final), (84, 84))
-        self.assertEqual((assisted.quality, assisted.final, assisted.hintPenalty), (84, 79, 5))
+        self.assertEqual((solo.quality, solo.final), (12, 12))
+        self.assertEqual((assisted.quality, assisted.final, assisted.hintPenalty), (12, 7, 5))
         self.assertEqual(model.call_args_list[0].args, model.call_args_list[1].args)
+
+    @patch('app.main.call_yandex_gpt')
+    def test_review_calculates_from_individual_steps_and_ignores_extra_grades(self, model):
+        model.side_effect = [
+            '{"summary":"Неполная оценка","stepScores":{"problem":true}}',
+            json.dumps({
+                'summary': 'Нужны конкретные данные.',
+                'qualityScore': 100,
+                'stepScores': {'problem': 0, 'analysis': 1, 'metric': 3, 'risk': 3, 'unknown': 3},
+            }),
+        ]
+        request = EvaluateRequest(
+            caseText='Кейс', mvp=True, interviewType='product_sense',
+            caseRoute=[
+                {'id': 'problem', 'question': 'Что изменилось?'},
+                {'id': 'analysis', 'question': 'Какие данные запросишь и почему?'},
+                {'id': 'metric', 'question': 'Какую метрику измеришь?'},
+                {'id': 'risk', 'question': 'Назови риск.'},
+            ],
+            answers={'problem': 'лададададад', 'analysis': 'Посмотрю аналитику', 'metric': 'Конверсия в заказ'},
+        )
+        result = evaluate(request)
+        self.assertEqual(result.score.quality, 33)
+        review = json.loads(result.evaluation)
+        self.assertEqual(review['stepScores'], dict(problem=0, analysis=1, metric=3, risk=0))
+        self.assertNotIn('qualityScore', review)
+        self.assertEqual(model.call_count, 2)
+
+    @patch('app.main.call_yandex_gpt', return_value=json.dumps({
+        'summary': 'Нет содержательных ответов.', 'stepScores': {'problem': 0},
+        'strengths': ['Формальные похвалы'],
+    }))
+    def test_zero_review_has_no_strengths(self, model):
+        result = evaluate(EvaluateRequest(caseText='Кейс', mvp=True, answers={'problem': 'лададададад'}))
+        self.assertEqual(result.score.final, 0)
+        self.assertEqual(json.loads(result.evaluation)['strengths'], [])
 
     @patch('app.main.call_yandex_gpt', return_value='Укажи, с чем сравниваешь.')
     def test_step_hint_uses_the_current_draft_and_prior_hints(self, model):
@@ -167,7 +203,7 @@ class MvpTests(unittest.TestCase):
             self.assertTrue(any(step.evidence and step.evidence in case.caseText for step in case.caseRoute))
         self.assertEqual(model.call_count, 2)
 
-    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK"}')
+    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","stepScores":{"release_action":2}}')
     def test_evaluation_uses_case_specific_question(self, model):
         evaluate(EvaluateRequest(
             caseText='Условие', mvp=True, interviewType='product_execution',
@@ -185,7 +221,7 @@ class MvpTests(unittest.TestCase):
         self.assertEqual(error.exception.status_code, 502)
         self.assertIn('новым ходом решения', error.exception.detail)
 
-    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK"}')
+    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","stepScores":{"problem":1}}')
     def test_all_types_use_distinct_generation_and_evaluation(self, model):
         prompts = set()
         for type_id, definition in PRODUCT_INTERVIEWS.items():
@@ -214,7 +250,10 @@ class MvpTests(unittest.TestCase):
         phases.assert_not_called()
         model.assert_called_once()
 
-    @patch('app.main.call_yandex_gpt', return_value='{"summary":"Разбор"}')
+    @patch('app.main.call_yandex_gpt', return_value=json.dumps({
+        'summary': 'Разбор',
+        'stepScores': dict(problem=2, audience=3, validation=2, metric=3, risk=3),
+    }))
     def test_evaluation_uses_short_questions_and_full_case(self, model):
         case = 'A' * 4000 + 'ВАЖНОЕ ОГРАНИЧЕНИЕ'
         evaluate(EvaluateRequest(caseText=case, answers={'problem': 'Моя гипотеза', 'audience': 'Новые клиенты', 'validation': 'Проверю мобильную воронку', 'metric': 'Конверсия должна вырасти', 'risk': 'Рост отмен'}, mvp=True))
