@@ -221,7 +221,7 @@ export default function MvpApp() {
         <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
         {!story && <div className="clean-eyebrow">Шаг 2 · Решение</div>}<h1>{story ? active.title : 'Твой ход'}</h1>
         {!story && <p className="mvp-lead">Один кейс, {fields.length} шагов. Отвечай на один вопрос за раз — все мысли сложатся в полное решение.</p>}
-        <CaseFlow key={active.id} fields={fields} caseRoute={caseRoute} storyIntro={story ? active.caseIntro : undefined} answers={active.answers} questionId={active.currentQuestionId}
+        <CaseFlow key={active.id} fields={fields} caseRoute={caseRoute} answers={active.answers} questionId={active.currentQuestionId}
           onQuestion={key => update(active.id, c => ({ ...c, currentQuestionId: key }))}
           onAnswer={(key, value) => update(active.id, c => ({
             ...c, currentQuestionId: key,

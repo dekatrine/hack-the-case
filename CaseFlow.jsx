@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Check, ChevronDown, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, FileText, Sparkles, X } from 'lucide-react';
 import { Button } from './design/components/Button.jsx';
 import CaseContent from './CaseContent.jsx';
 import { answerCountLabel } from './cases/storyPath.js';
@@ -22,7 +22,7 @@ export function initialQuestion(fields, answers, savedQuestion) {
   return missing < 0 ? 0 : missing;
 }
 
-export default function CaseFlow({ fields, caseRoute = [], storyIntro, answers, questionId, onQuestion, onAnswer, onEvaluate, condition, busy, saveError, hasChanges, attempts, onReview }) {
+export default function CaseFlow({ fields, caseRoute = [], answers, questionId, onQuestion, onAnswer, onEvaluate, condition, busy, saveError, hasChanges, attempts, onReview }) {
   const [currentKey, setCurrentKey] = useState(() => fields[initialQuestion(fields, answers, questionId)][0]);
   const index = Math.max(0, fields.findIndex(([id]) => id === currentKey));
   const [key, label, hint, placeholder] = fields[index];
@@ -33,7 +33,9 @@ export default function CaseFlow({ fields, caseRoute = [], storyIntro, answers, 
   const completed = fields.filter(([id]) => answers[id]?.trim()).length;
   const [notice, setNotice] = useState('');
   const [showHint, setShowHint] = useState(false);
-  const [conditionOpen, setConditionOpen] = useState(() => typeof window.matchMedia !== 'function' || window.matchMedia('(min-width: 761px)').matches);
+  const conditionSheet = useRef(null);
+  const conditionBody = useRef(null);
+  const conditionButton = useRef(null);
   const heading = useRef(null);
   const input = useRef(null);
   const progress = useRef(null);
@@ -45,7 +47,7 @@ export default function CaseFlow({ fields, caseRoute = [], storyIntro, answers, 
     setNotice('');
     setCurrentKey(fields[next][0]);
     onQuestion(fields[next][0]);
-    if (story) progress.current?.scrollIntoView?.({ block: 'start' });
+    progress.current?.scrollIntoView?.({ block: 'start' });
   };
   const forward = () => {
     if (!answers[key]?.trim()) {
@@ -63,21 +65,25 @@ export default function CaseFlow({ fields, caseRoute = [], storyIntro, answers, 
       <div className="mvp-story-progress-segments" role="progressbar" aria-label="Пройденные главы" aria-valuemin={0} aria-valuemax={4} aria-valuenow={chapter - (completed < fields.length ? 1 : 0)}>
         {[1, 2, 3, 4].map(number => <span key={number} data-state={number < chapter ? 'done' : number === chapter ? 'active' : 'future'}/>)}
       </div>
-    </section> : <section className="mvp-case-progress" aria-label="Прохождение полного кейса">
+    </section> : <section ref={progress} className="mvp-case-progress" aria-label="Прохождение полного кейса">
       <div className="mvp-case-progress-caption"><span aria-live="polite">Шаг {index + 1} из {fields.length}</span><span>Заполнено {completed} из {fields.length}</span></div>
       <div className="mvp-case-progress-track" role="progressbar" aria-label="Заполненные ответы" aria-valuemin={0} aria-valuemax={fields.length} aria-valuenow={completed}><span style={{ width: `${completed / fields.length * 100}%` }}/></div>
       <nav className="mvp-question-steps" aria-label="Вопросы кейса">{fields.map(([id, title], i) => <button type="button" key={id} disabled={!!busy} aria-current={i === index ? 'step' : undefined} aria-label={`Шаг ${i + 1}: ${title}${answers[id]?.trim() ? ' — заполнено' : ''}`} onClick={() => move(i)}>{answers[id]?.trim() ? <Check size={15} aria-hidden="true"/> : i + 1}</button>)}</nav>
     </section>}
-    <div className={`mvp-workspace mvp-guided-workspace${story ? ' mvp-story-workspace' : ''}`}>
-      <aside className="mvp-card mvp-condition mvp-flow-condition"><details className="mvp-condition-disclosure" open={conditionOpen} onToggle={e => setConditionOpen(e.currentTarget.open)}><summary><span>{story ? 'Открытые материалы' : 'Условие кейса'}</span><ChevronDown size={17} aria-hidden="true"/></summary><div className="mvp-condition-body">{condition}</div></details></aside>
+    <div className={story ? 'mvp-story-workspace' : undefined}>
       <section className="mvp-card mvp-form mvp-question-card" aria-label="Твоё решение">
-        <span className="mvp-kicker">{story ? chapterTitle : 'Один вопрос · часть полного решения'}</span>
-        {story && index === 0 && storyIntro && <div className="mvp-story-scene"><CaseContent text={storyIntro}/></div>}
-        {scene && <div className="mvp-story-scene"><CaseContent text={scene}/></div>}
-        {previous && <details key={key} className="mvp-story-previous"><summary>Твой предыдущий ответ</summary><p>{previous}</p></details>}
+        <div className="mvp-question-toolbar">
+          {story && <span className="mvp-kicker">{chapterTitle}</span>}
+          <button ref={conditionButton} className="mvp-condition-trigger" type="button" aria-haspopup="dialog" aria-controls="case-condition-sheet"
+            onClick={() => {
+              conditionSheet.current.showModal();
+              conditionBody.current.scrollTop = 0;
+            }}>
+            <FileText size={16} aria-hidden="true"/>{evidence || scene ? 'Условие и данные' : 'Условие кейса'}
+          </button>
+        </div>
         <h2 ref={heading} tabIndex={-1} id={`question-${key}`}>{label}</h2>
         <p className="mvp-question-hint" id={`hint-${key}`}>{hint}</p>
-        {evidence && <div className="mvp-step-evidence" aria-label="Данные для шага"><CaseContent text={evidence}/></div>}
         {story && Object.keys(nextByAnswer || {}).length > 0 && fields.slice(index + 1).some(([id]) => answers[id]?.trim()) &&
           <p className="mvp-question-hint">Если изменить выбор, ответы после этого шага начнутся заново.</p>}
         {options?.length ? <fieldset className="mvp-step-options" aria-labelledby={`question-${key}`} aria-describedby={`hint-${key}${notice ? ' case-step-error' : ''}`} disabled={!!busy}>
@@ -97,5 +103,20 @@ export default function CaseFlow({ fields, caseRoute = [], storyIntro, answers, 
         {attempts.length > 0 && <button type="button" className="mvp-step-review-link" disabled={!!busy} onClick={onReview}>Посмотреть предыдущий разбор</button>}
       </section>
     </div>
+    <dialog ref={conditionSheet} id="case-condition-sheet" className="mvp-condition-sheet" aria-labelledby="case-condition-title"
+      onClose={() => conditionButton.current?.focus({ preventScroll: true })}
+      onClick={event => { if (event.target === event.currentTarget) event.currentTarget.close(); }}>
+      <header className="mvp-condition-sheet-header">
+        <h2 id="case-condition-title">Условие кейса</h2>
+        <button type="button" className="mvp-condition-close" aria-label="Закрыть условие"
+          onClick={() => conditionSheet.current.close()}><X size={20} aria-hidden="true"/></button>
+      </header>
+      <div ref={conditionBody} className="mvp-condition-sheet-body">
+        {scene && <div className="mvp-story-scene"><CaseContent text={scene}/></div>}
+        {evidence && <section className="mvp-step-evidence" aria-label="Данные для шага"><CaseContent text={evidence}/></section>}
+        {previous && <details key={key} className="mvp-story-previous"><summary>Твой предыдущий ответ</summary><p>{previous}</p></details>}
+        {condition}
+      </div>
+    </dialog>
   </div>;
 }

@@ -8,6 +8,11 @@ vi.mock('./api/client.js', () => ({ api: { config: vi.fn(), generate: vi.fn(), e
 const review = JSON.stringify({ summary: 'Проверь конверсию по этапам.', strengths: ['Есть гипотеза'], improvements: ['Нет расчёта'], topTips: ['Посчитай воронку'] });
 beforeEach(() => {
   localStorage.clear(); vi.resetAllMocks(); window.scrollTo = vi.fn();
+  HTMLDialogElement.prototype.showModal ??= function () { this.open = true; };
+  HTMLDialogElement.prototype.close ??= function () {
+    this.open = false;
+    this.dispatchEvent(new Event('close'));
+  };
   api.config.mockResolvedValue({ industries: ['Маркетплейсы'], difficultyLevels: { Начальный: 'Описание' } });
   api.generate.mockResolvedValue({ caseText: '# Падение конверсии\nКонверсия упала с 10% до 8%.' });
   api.evaluate.mockResolvedValue({ evaluation: review });
@@ -19,6 +24,13 @@ async function newCase() {
   await screen.findByLabelText('02 / Отрасль');
   fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
   await screen.findByRole('heading', { name: 'Твой ход' });
+}
+function openCondition() {
+  fireEvent.click(screen.getByRole('button', { name: /^Условие (кейса|и данные)$/ }));
+  return within(screen.getByRole('dialog', { name: 'Условие кейса' }));
+}
+function closeCondition() {
+  fireEvent.click(screen.getByRole('button', { name: 'Закрыть условие' }));
 }
 const productQuestions = INTERVIEWS.find(t => t.id === 'product_sense').questions;
 function fillCase(problem = 'Падает конверсия') {
@@ -46,16 +58,21 @@ describe('MVP core flow', () => {
     expect(screen.queryByText('Доступен один аналитик.')).toBeNull();
     fireEvent.click(screen.getByRole('radio', { name: 'Спрос' }));
     fireEvent.click(screen.getByRole('button', { name: 'Дальше' }));
-    expect(screen.getByText('В листе ожидания 80 заявок.')).toBeTruthy();
-    expect(screen.queryByText('Доступен один аналитик.')).toBeNull();
+    expect(screen.queryByRole('dialog')).toBeNull();
+    const demand = openCondition();
+    expect(demand.getByText('В листе ожидания 80 заявок.')).toBeTruthy();
+    expect(demand.queryByText('Доступен один аналитик.')).toBeNull();
+    closeCondition();
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Проверю намерение купить.' } });
     fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
     fireEvent.click(screen.getByRole('radio', { name: 'Ресурсы' }));
     fireEvent.click(screen.getByRole('button', { name: 'Дальше' }));
     cleanup(); render(<MvpApp/>);
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
-    expect(screen.getByText('Доступен один аналитик.')).toBeTruthy();
-    expect(screen.queryByText('В листе ожидания 80 заявок.')).toBeNull();
+    const team = openCondition();
+    expect(team.getByText('Доступен один аналитик.')).toBeTruthy();
+    expect(team.queryByText('В листе ожидания 80 заявок.')).toBeNull();
+    closeCondition();
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Проверю загрузку аналитика.' } });
     fireEvent.click(screen.getByRole('button', { name: 'Дальше' }));
     expect(screen.getByPlaceholderText('Разверни аргументы и опирайся на данные…')).toBeTruthy();
@@ -81,7 +98,9 @@ describe('MVP core flow', () => {
     expect(screen.queryByRole('table')).toBeNull();
     fireEvent.click(screen.getByRole('radio', { name: 'По версиям' }));
     fireEvent.click(screen.getByRole('button', { name: 'Дальше' }));
-    expect(screen.getByRole('table')).toBeTruthy();
+    expect(screen.queryByRole('table')).toBeNull();
+    expect(openCondition().getByRole('table')).toBeTruthy();
+    closeCondition();
     cleanup(); render(<MvpApp/>);
     expect(screen.getByText('1 из 2 ответов')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
@@ -208,7 +227,14 @@ describe('MVP core flow', () => {
   });
   it('saves a case material, restores it after reload and removes it from saved theory', async () => {
     await newCase();
-    const summary = screen.getByText('Какие материалы могут понадобиться');
+    const answer = screen.getByRole('textbox');
+    fireEvent.change(answer, { target: { value: 'Черновик ответа' } });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(openCondition().getByText('Конверсия упала с 10% до 8%.')).toBeTruthy();
+    closeCondition();
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('textbox').value).toBe('Черновик ответа');
+    const summary = openCondition().getByText('Какие материалы могут понадобиться');
     const panel = summary.closest('details');
     panel.open = true;
     fireEvent.click(within(panel).getAllByRole('button', { name: 'Добавить в мои карточки' })[0]);
