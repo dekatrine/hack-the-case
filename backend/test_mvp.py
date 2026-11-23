@@ -16,6 +16,23 @@ class MvpTests(unittest.TestCase):
         results = [request_evidence(EvidenceRequest(answer=answer, sources=sources)).source for answer in examples]
         self.assertEqual(results, [*sources, None])
 
+    @patch('app.main.call_yandex_gpt', return_value=json.dumps({
+        'summary': 'Разбор', 'grades': [3, 3], 'decisionCheck': 'unproven_cause',
+    }))
+    def test_search_diagnostic_caps_grade_for_unsupported_causation(self, model):
+        result = evaluate(EvaluateRequest(
+            mvp=True, interviewType='product_execution', caseText='Заказов стало меньше.',
+            caseRoute=[
+                {'id': 'search_request', 'question': 'Какой срез запросишь?'},
+                {'id': 'search_decision', 'question': 'Что сделаешь?',
+                 'evidence': 'Падение есть только на новой версии.'},
+            ],
+            answers={'search_request': 'Версии приложения', 'search_decision': 'Новая версия сломала оплату.'},
+        ))
+        review = json.loads(result.evaluation)
+        self.assertEqual(review['stepScores']['search_decision'], 1)
+        self.assertIn('Причина ещё не подтверждена.', review['topTips'][0])
+
     @patch('app.main.call_yandex_gpt')
     def test_skill_checkpoint_is_graded_with_its_own_hint_history(self, model):
         model.return_value = json.dumps({

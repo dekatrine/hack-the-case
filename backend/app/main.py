@@ -945,12 +945,18 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
                 system += f"\nТип интервью: {interview['label']}.\n{interview['instruction']}\nОценивай ответы именно на вопросы из запроса. Не требуй диагностики падения метрик в других типах интервью."
             if case_route:
                 system += "\nУчитывай только пройденный маршрут и информацию, открытую на его шагах. Оцени аргументацию, а не длину ответа."
-            if "search_request" in fields and "search_decision" in fields:
+            search_diagnostic = "search_request" in fields and "search_decision" in fields
+            if search_diagnostic:
                 system += (
-                    "\nВ topTips верни ровно один короткий комментарий к [search_decision]. "
-                    "Укажи, какой факт уже использован и что нужно уточнить в этом действии. "
-                    "Если вывод о причине не доказан, отметь этот разрыв и задай один вопрос. "
-                    "Не пиши готовый ответ. Если действие и аргумент достаточны, прямо подтверди это."
+                    '\nДля [search_decision] добавь в JSON поле decisionCheck. Допустимые значения: '
+                    'unproven_cause — кандидат назвал конкретную причину как установленный факт, '
+                    'хотя данные лишь показывают место падения. «Версия сломала оплату» — unproven_cause. '
+                    'supported — первое действие обосновано открытым фактом, а непроверенную причину '
+                    'кандидат оставляет гипотезой. «Приостановлю раскатку: падение только на новой версии. '
+                    'Сравню ошибки оплаты» — supported. Во всех остальных случаях верни incomplete. '
+                    'Классифицируй только текущий ответ [search_decision]. '
+                    'В topTips верни один короткий комментарий именно к этому действию и один вопрос '
+                    'для доработки, если ответ неполон. Не предлагай готовое решение.'
                 )
             if payload.focusSkill in PRACTICE_SKILLS and CHECKPOINT in fields:
                 skill = PRACTICE_SKILLS[payload.focusSkill]
@@ -969,6 +975,19 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
                     f"Доступные skillId и критерии applied=true: {skills}"
                 )
             review = _grade_case(system, prompt, fields, answered)
+            if search_diagnostic:
+                decision_check = review.pop("decisionCheck", None)
+                if decision_check == "unproven_cause":
+                    grade = review["stepScores"]["search_decision"]
+                    review["stepScores"]["search_decision"] = min(grade, 1)
+                    review["topTips"] = [
+                        "Ты увидела, где снизилась конверсия. Причина ещё не подтверждена. "
+                        "Какой проверкой отличишь свою гипотезу от других объяснений?"
+                    ]
+                elif decision_check == "supported" and review["stepScores"]["search_decision"] == 3:
+                    review["topTips"] = [
+                        "Ты обосновала первое действие данными и указала, как проверить возможную причину."
+                    ]
             quality = round(100 * sum(review["stepScores"].values()) / (3 * len(fields)))
             hints = payload.hintUsage
             penalty = hints.basic + 2 * hints.ai
