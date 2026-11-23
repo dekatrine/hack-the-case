@@ -15,7 +15,7 @@ class MvpTests(unittest.TestCase):
         model.side_effect = [f'**{old}**', paraphrase, '{"duplicate": true}', new, '{"duplicate": false}']
         result = generate_case(GenerateCaseRequest(
             industry='Retail', difficulty='Начальный', mvp=True,
-            interviewType='product_execution', extraContext='Падают заказы из поиска',
+            interviewType='product_sense', extraContext='Падают заказы из поиска',
             recentCases=[old],
         ))
         self.assertEqual(result.caseText, new)
@@ -26,6 +26,16 @@ class MvpTests(unittest.TestCase):
             CASE_GENERATION_SYSTEM, CASE_GENERATION_SYSTEM, CASE_NOVELTY_SYSTEM,
             CASE_GENERATION_SYSTEM, CASE_NOVELTY_SYSTEM,
         ])
+
+    @patch('app.main.random.sample', side_effect=lambda angles, size: list(angles)[:size])
+    @patch('app.main.call_yandex_gpt', return_value='**Заказов стало меньше**\nСравни данные и предложи проверку.')
+    def test_analytics_repetition_switches_to_unused_comparative_data(self, model, sample):
+        params = dict(industry='Retail', difficulty='Начальный', interviewType='product_execution', mvp=True)
+        first = generate_case(GenerateCaseRequest(**params)).caseText
+        second = generate_case(GenerateCaseRequest(**params, recentCases=[first])).caseText
+        self.assertIn('старую и новую версии приложения', first)
+        self.assertIn('наличие по складам', second)
+        self.assertEqual(model.call_count, 2)
 
     @patch('app.main.call_yandex_gpt', side_effect=['Новый текст', '{}'] * 3)
     def test_generation_does_not_accept_an_unverified_case(self, model):

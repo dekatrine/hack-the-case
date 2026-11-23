@@ -243,19 +243,33 @@ def _route_for_case(payload: GenerateCaseRequest, track_name: str, case_text: st
 
 EXECUTION_ANGLES = {
     "сбой после релиза: сравни старую и новую версии продукта и долю ошибок":
-        r"верси\w* (?:мобильного )?приложени\w*|(?:стар\w+|нов\w+) верси\w*",
+        (r"верси\w* (?:мобильного )?приложени\w*|(?:стар\w+|нов\w+) верси\w*",
+         "В одной платформе и в один период сравнили старую и новую версии приложения. "
+         "Доля технических ошибок — 2% и 14%, конверсия в целевое действие — 24% и 13% соответственно."),
     "региональный дефицит: сравни доступность предложения и конверсию по регионам или складам":
-        r"наличи\w*[^\n]*(?:склад|регион)|(?:склад|регион)[^\n]*наличи",
+        (r"наличи\w*[^\n]*(?:склад|регион)|(?:склад|регион)[^\n]*наличи",
+         "В регионе A наличие по складам по самым популярным позициям снизилось с 94% до 62%, "
+         "в регионе B — с 93% до 92%. Конверсия снизилась с 24% до 15% в A и с 23% до 22% в B."),
     "ошибка измерения: сравни логи событий с независимым источником фактических операций":
-        r"(?:фактическ\w+|реальн\w+) (?:операци\w*|заказ\w*)|лог\w* событи\w*",
+        (r"(?:фактическ\w+|реальн\w+) (?:операци\w*|заказ\w*)|лог\w* событи\w*",
+         "По операционному реестру число завершённых операций в проверенной когорте изменилось с 505 до 497. "
+         "В логах событий за те же периоды их 495 и 370. Определение когорты в обоих источниках одинаковое."),
     "изменение состава трафика: дай доли и конверсию внутри новых и старых сегментов":
-        r"(?:состав|структур\w*) трафика|(?:нов\w+|вернувш\w+) пользовател\w*",
+        (r"(?:состав|структур\w*) трафика|(?:нов\w+|вернувш\w+) пользовател\w*",
+         "Доля новых пользователей в сопоставимой выборке выросла с 25% до 55%. "
+         "Конверсия новых осталась 8%, а вернувшихся — 26% в обоих периодах."),
     "падение качества выдачи: сравни долю пустых результатов и конверсию по типам запросов":
-        r"пуст\w+ результат\w*|(?:релевантност\w*|качеств\w*) выдачи",
+        (r"пуст\w+ результат\w*|(?:релевантност\w*|качеств\w*) выдачи",
+         "Доля пустых результатов по запросам из двух и более слов выросла с 7% до 22%, "
+         "а конверсия снизилась с 20% до 14%. У коротких запросов обе метрики изменились менее чем на 1 п. п."),
     "изменение цены или тарифа: сравни динамику в затронутом и контрольном сегментах":
-        r"(?:изменен\w*|повышени\w*|снижени\w*) (?:цен\w*|тариф\w*)",
+        (r"(?:изменен\w*|повышени\w*|снижени\w*) (?:цен\w*|тариф\w*)",
+         "После повышения цены на 15% конверсия в затронутой группе снизилась с 21% до 15%. "
+         "В сопоставимой группе без изменения цены она осталась на уровне 20%."),
     "временный сбой внешнего партнёра: сравни группы с разными поставщиками и периоды до и после сбоя":
-        r"(?:сбой|сбоя|сбоем|сбоев)[^\n]*партн[её]р|внешн\w+ (?:партн[её]р\w*|поставщи\w*)",
+        (r"(?:сбой|сбоя|сбоем|сбоев)[^\n]*партн[её]р|внешн\w+ (?:партн[её]р\w*|поставщи\w*)",
+         "В выборке, которую обслуживает внешний партнёр A, доля отказов выросла с 3% до 19% за неделю. "
+         "В выборке партнёра B доля отказов за те же дни осталась 4%."),
 }
 
 CASE_ANGLES = {
@@ -290,8 +304,8 @@ def _generate_distinct_case(prompt: str, recent_cases: list[str], interview_type
     available_angles = CASE_ANGLES.get(interview_type, ())
     evidence_by_angle = EXECUTION_ANGLES if interview_type == "product_execution" else {}
     unused_angles = {
-        angle: evidence for angle, evidence in evidence_by_angle.items()
-        if not any(re.search(evidence, case, re.IGNORECASE) for case in recent_cases)
+        angle: exhibit for angle, (pattern, exhibit) in evidence_by_angle.items()
+        if not any(exhibit in case or re.search(pattern, case, re.IGNORECASE) for case in recent_cases)
     }
     attempts = 3 if recent_cases else 1
     preferred = list(unused_angles)
@@ -303,7 +317,10 @@ def _generate_distinct_case(prompt: str, recent_cases: list[str], interview_type
         angle = angles[0]
         if angle:
             prompt += f"\nИспользуй этот ракурс внутри выбранного контекста: {angle}. Покажи соответствующие данные и не раскрывай вывод."
-        return call_yandex_gpt(CASE_GENERATION_SYSTEM, prompt, temperature=0.8)
+        candidate = call_yandex_gpt(CASE_GENERATION_SYSTEM, prompt, temperature=0.8)
+        if candidate.strip() and angle in unused_angles:
+            return f"{candidate}\n\n**Дополнительный срез данных**\n\n{unused_angles[angle]}"
+        return candidate
 
     previous_words = {tuple(re.findall(r"[^\W_]+", case.casefold())) for case in recent_cases}
     for angle in angles:
@@ -317,10 +334,9 @@ def _generate_distinct_case(prompt: str, recent_cases: list[str], interview_type
         candidate = call_yandex_gpt(CASE_GENERATION_SYSTEM, generation_prompt, temperature=0.9)
         words = tuple(re.findall(r"[^\W_]+", candidate.casefold()))
         if words and words not in previous_words:
-            evidence = unused_angles.get(angle)
-            stats = re.findall(r"\d+(?:[.,]\d+)?\s*%", candidate)
-            if evidence and len(stats) >= 2 and re.search(evidence, candidate, re.IGNORECASE):
-                return candidate
+            exhibit = unused_angles.get(angle)
+            if exhibit:
+                return f"{candidate}\n\n**Дополнительный срез данных**\n\n{exhibit}"
             comparison = json.dumps({"new": candidate, "previous": recent_cases}, ensure_ascii=False)
             verdict = call_yandex_gpt(CASE_NOVELTY_SYSTEM, comparison, temperature=0, max_tokens=80)
             try:

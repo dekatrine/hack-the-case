@@ -14,7 +14,7 @@ class GenerateCaseRequest(BaseModel):
     grade: Optional[str] = None
     recentCases: list[Annotated[str, Field(max_length=2000)]] = Field(
         default_factory=list, max_length=12,
-        description="Previously seen case statements used to select and verify a different scenario.",
+        description="Prior case statements used to choose distinct supporting evidence.",
     )
 
 
