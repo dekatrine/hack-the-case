@@ -848,6 +848,7 @@ def _practice_feedback(review, payload, fields):
 
 
 def _grade_case(system, prompt, fields, answered):
+    prompt += f"\nПорядок для grades ({len(answered)} баллов): {', '.join(answered)}."
     for attempt in range(2):
         raw = call_yandex_gpt(system, prompt, temperature=0.1)
         match = re.search(r"\{.*\}", raw, re.DOTALL)
@@ -856,19 +857,21 @@ def _grade_case(system, prompt, fields, answered):
         except ValueError:
             review = None
         if isinstance(review, dict):
-            grades = review.get("stepScores")
+            grades = review.get("grades")
             summary = review.get("summary")
             if (
                 isinstance(summary, str) and summary.strip()
-                and isinstance(grades, dict)
-                and all(type(grades.get(key)) is int and 0 <= grades[key] <= 3 for key in answered)
+                and isinstance(grades, list) and len(grades) == len(answered)
+                and all(type(grade) is int and 0 <= grade <= 3 for grade in grades)
             ):
-                review["stepScores"] = {key: grades[key] if key in answered else 0 for key in fields}
+                grades_by_step = dict(zip(answered, grades))
+                review["stepScores"] = {key: grades_by_step.get(key, 0) for key in fields}
+                review.pop("grades", None)
                 review.pop("qualityScore", None)
-                if not any(review["stepScores"].values()):
+                if not any(grades):
                     review["strengths"] = []
                 return review
-        prompt += "\nПроверь JSON: в stepScores нужны целые баллы 0–3 для всех непустых ответов."
+        prompt += f"\nПроверь JSON: массив grades должен содержать ровно {len(answered)} целых баллов от 0 до 3."
     raise RuntimeError("ИИ не вернул полный набор оценок")
 
 
@@ -893,7 +896,7 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
             fields = {step.id: step.question for step in case_route}
             if len(fields) != len(case_route):
                 raise HTTPException(status_code=422, detail="В маршруте повторяются шаги")
-        answered = {key for key in fields if payload.answers.get(key, "").strip()}
+        answered = [key for key in fields if payload.answers.get(key, "").strip()]
         if not answered:
             raise HTTPException(status_code=422, detail="Сначала напиши решение")
         if case_route:

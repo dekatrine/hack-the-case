@@ -12,7 +12,7 @@ class MvpTests(unittest.TestCase):
     @patch('app.main.call_yandex_gpt')
     def test_skill_checkpoint_is_graded_with_its_own_hint_history(self, model):
         model.return_value = json.dumps({
-            'summary': 'Разбор', 'stepScores': {'skill_checkpoint': 3},
+            'summary': 'Разбор', 'grades': [3],
             'practice': {'applied': True, 'observation': 'Сравнила долю ошибок в двух группах.'},
         })
         result = evaluate(EvaluateRequest(
@@ -76,7 +76,7 @@ class MvpTests(unittest.TestCase):
         checkpoint = next(step for step in focused.caseRoute if step.id == 'skill_checkpoint')
         self.assertEqual(checkpoint.nextStepId, 'variant_final')
 
-    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","stepScores":{"problem":3}}')
+    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","grades":[3]}')
     def test_mvp_score_applies_a_deduction_after_grading(self, model):
         request = EvaluateRequest(caseText='Кейс', mvp=True, answers={'problem': 'Вывод'})
         solo = evaluate(request).score
@@ -88,13 +88,13 @@ class MvpTests(unittest.TestCase):
         self.assertEqual(model.call_args_list[0].args, model.call_args_list[1].args)
 
     @patch('app.main.call_yandex_gpt')
-    def test_review_calculates_from_individual_steps_and_ignores_extra_grades(self, model):
+    def test_review_retries_invalid_grades_and_counts_unanswered_steps_as_zero(self, model):
         model.side_effect = [
-            '{"summary":"Неполная оценка","stepScores":{"problem":true}}',
+            '{"summary":"Неполная оценка","grades":[true]}',
             json.dumps({
                 'summary': 'Нужны конкретные данные.',
                 'qualityScore': 100,
-                'stepScores': {'problem': 0, 'analysis': 1, 'metric': 3, 'risk': 3, 'unknown': 3},
+                'grades': [0, 1, 3],
             }),
         ]
         request = EvaluateRequest(
@@ -115,7 +115,7 @@ class MvpTests(unittest.TestCase):
         self.assertEqual(model.call_count, 2)
 
     @patch('app.main.call_yandex_gpt', return_value=json.dumps({
-        'summary': 'Нет содержательных ответов.', 'stepScores': {'problem': 0},
+        'summary': 'Нет содержательных ответов.', 'grades': [0],
         'strengths': ['Формальные похвалы'],
     }))
     def test_zero_review_has_no_strengths(self, model):
@@ -203,7 +203,7 @@ class MvpTests(unittest.TestCase):
             self.assertTrue(any(step.evidence and step.evidence in case.caseText for step in case.caseRoute))
         self.assertEqual(model.call_count, 2)
 
-    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","stepScores":{"release_action":2}}')
+    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","grades":[2]}')
     def test_evaluation_uses_case_specific_question(self, model):
         evaluate(EvaluateRequest(
             caseText='Условие', mvp=True, interviewType='product_execution',
@@ -221,7 +221,7 @@ class MvpTests(unittest.TestCase):
         self.assertEqual(error.exception.status_code, 502)
         self.assertIn('новым ходом решения', error.exception.detail)
 
-    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","stepScores":{"problem":1}}')
+    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","grades":[1]}')
     def test_all_types_use_distinct_generation_and_evaluation(self, model):
         prompts = set()
         for type_id, definition in PRODUCT_INTERVIEWS.items():
@@ -252,7 +252,7 @@ class MvpTests(unittest.TestCase):
 
     @patch('app.main.call_yandex_gpt', return_value=json.dumps({
         'summary': 'Разбор',
-        'stepScores': dict(problem=2, audience=3, validation=2, metric=3, risk=3),
+        'grades': [2, 3, 2, 3, 3],
     }))
     def test_evaluation_uses_short_questions_and_full_case(self, model):
         case = 'A' * 4000 + 'ВАЖНОЕ ОГРАНИЧЕНИЕ'
