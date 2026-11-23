@@ -1,8 +1,26 @@
+export function countHints(hints) {
+  const usage = { basic: 0, ai: 0 };
+  for (const step of Object.values(hints || {})) {
+    if (step?.basic) usage.basic += 1;
+    usage.ai += step?.ai?.length || 0;
+  }
+  return usage;
+}
+
+export function hasAttemptChanges(item, attempt) {
+  if (!attempt) return true;
+  const used = countHints(item.hints);
+  const previous = attempt.score?.hints;
+  return JSON.stringify(item.answers || {}) !== JSON.stringify(attempt.answers || {})
+    || used.basic !== (previous?.basic || 0)
+    || used.ai !== (previous?.ai || 0);
+}
+
 export function caseStatus(item) {
   if (item.archivedAt) return 'archived';
   const reviewed = Array.isArray(item.attempts) && item.attempts.length > 0;
   const latest = reviewed ? item.attempts[item.attempts.length - 1] : null;
-  if (reviewed && JSON.stringify(item.answers || {}) !== JSON.stringify(latest.answers || {})) return 'draft';
+  if (reviewed && hasAttemptChanges(item, latest)) return 'draft';
   if (reviewed) return 'reviewed';
   return Object.values(item.answers || {}).some(value => String(value || '').trim()) ? 'draft' : 'new';
 }
@@ -35,7 +53,7 @@ export function filterCases(cases, { query = '', status = 'active', type = 'all'
 }
 export function duplicateAsNewAttempt(item, id, date) {
   return {
-    ...item, id, answers: {}, attempts: [], currentQuestionId: null,
+    ...item, id, answers: {}, hints: {}, attempts: [], currentQuestionId: null,
     archivedAt: null, createdAt: date, updatedAt: date, sourceCaseId: item.id
   };
 }

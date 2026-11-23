@@ -292,7 +292,8 @@
 .mvp-screen-solve .mvp-story-workspace .mvp-question-input-long textarea { min-height:220px; }
 .mvp-screen-solve .mvp-question-input textarea { height:180px; min-height:140px; font-size:14px; line-height:1.8; border-radius:12px; }
 .mvp-visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-.mvp-step-hint-toggle { display:flex; align-items:center; gap:8px; align-self:flex-start; padding:12px 0; margin-top:12px; font-size:12px; font-weight:500; }
+.mvp-step-help { display:flex; align-items:center; flex-wrap:wrap; gap:0 16px; margin-top:10px; }
+.mvp-step-hint-toggle { display:flex; align-items:center; gap:8px; min-height:44px; padding:8px 0; font-size:14px; font-weight:550; }
 .mvp-step-hint { background:var(--surface-sunk); border-radius:12px; padding:18px; margin:4px 0 16px; }
 .mvp-step-hint b { font-size:12px; font-weight:600; }
 .mvp-step-hint p { font-size:13px; line-height:1.8; margin:10px 0 14px; }
@@ -315,6 +316,10 @@ html:has(.mvp-condition-sheet[open]) { overflow:hidden; }
 .mvp-condition-sheet-body { min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:18px 22px max(24px,env(safe-area-inset-bottom)); }
 .mvp-condition-sheet-body > .mvp-muted { margin-top:18px; font-size:12px; }
 .mvp-condition-sheet-body > .mvp-story-scene:first-child { margin-top:0; }
+.mvp-review-score { padding:14px 16px; margin:0 0 20px; border-radius:12px; background:var(--surface-sunk); }
+.mvp-review-score > strong { display:block; font-size:24px; }
+.mvp-review-score > p { margin:4px 0; }
+.mvp-review-score > small { color:var(--text-secondary); }
 @keyframes mvp-condition-enter { from { transform:translateY(100%); } to { transform:translateY(0); } }
 @media(prefers-reduced-motion:reduce) { .mvp-condition-sheet[open] { animation:none; } }
 @media(max-width:760px) {
@@ -332,4 +337,13 @@ html:has(.mvp-condition-sheet[open]) { overflow:hidden; }
   .mvp-question-steps { gap:4px; }
   .mvp-question-steps > button { width:32px; flex-basis:32px; }
   .mvp-step-navigation > button { font-size:11px !important; padding:12px 15px !important; }
+}
+
+@media(max-width:900px), (hover:none) and (pointer:coarse) {
+  .mvp-app :is(input:not([type="radio"]):not([type="checkbox"]), select, textarea),
+  .mvp-app .mvp-setup textarea,
+  .mvp-app .mvp-assistant-body textarea,
+  .mvp-app .mvp-screen-solve .mvp-question-input textarea {
+    font-size:16px;
+  }
 }

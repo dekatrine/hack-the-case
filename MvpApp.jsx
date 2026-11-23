@@ -7,7 +7,7 @@ import './mvp.css';
 import CaseContent from './CaseContent.jsx';
 import LearningPath from './learning/LearningPath.jsx';
 import CaseLibrary from './cases/CaseLibrary.jsx';
-import { duplicateAsNewAttempt } from './cases/caseLibrary.js';
+import { countHints, duplicateAsNewAttempt, hasAttemptChanges } from './cases/caseLibrary.js';
 import { hasStory, storyPath, storyAnswers } from './cases/storyPath.js';
 import CaseFlow from './CaseFlow.jsx';
 import ConditionAssistant from './ConditionAssistant.jsx';
@@ -57,11 +57,22 @@ function generationHistory(cases, params) {
 function titleOf(text) {
   return text.split('\n').find(line => line.trim())?.replace(/^[#\s]+/, '').replace(/[*`]/g, '').trim().slice(0, 100) || 'Новый кейс';
 }
-function Review({ value }) {
+function ReviewScore({ score }) {
+  if (!score) return null;
+  return <section className="mvp-review-score" aria-label="Итоговая оценка">
+    {Number.isInteger(score.final) && <strong>{score.final} из 100</strong>}
+    <p>{Number.isInteger(score.quality) && `Качество решения · ${score.quality} из 100. `}
+      {score.hintPenalty ? `За подсказки · −${score.hintPenalty}.` : 'Подсказки не использовались.'}
+    </p>
+    {!!score.hintPenalty && <small>Обычные · {score.hints.basic} · ИИ · {score.hints.ai}</small>}
+  </section>;
+}
+function Review({ value, score }) {
   let parsed;
   try { parsed = JSON.parse(value.replace(/```(?:json)?/g, '').trim()); } catch { /* Display a readable model response even if JSON failed. */ }
-  if (!parsed || typeof parsed.summary !== 'string') return <div className="mvp-prose">{value}</div>;
+  if (!parsed || typeof parsed.summary !== 'string') return <><ReviewScore score={score}/><div className="mvp-prose">{value}</div></>;
   return <>
+    <ReviewScore score={score}/>
     <p className="mvp-summary">{parsed.summary}</p>
     {[['strengths', 'Что получилось'], ['improvements', 'Что стоит улучшить'], ['topTips', 'Что исправить в первую очередь']].map(([key, label]) => (
       Array.isArray(parsed[key]) && parsed[key].length > 0 && <section key={key}>
@@ -89,7 +100,9 @@ export default function MvpApp() {
   const [error, setError] = useState('');
   const [saveError, setSaveError] = useState('');
   const [busy, setBusy] = useState('');
+  const [hintBusy, setHintBusy] = useState(false);
   const lock = useRef(false);
+  const hintLock = useRef(false);
   const [params, setParams] = useState({ trackId: 'product', interviewType: 'product_sense', industry: '', difficulty: '', extraContext: '' });
   const active = cases.find(c => c.id === selected);
   const story = hasStory(active?.caseRoute);
@@ -127,6 +140,35 @@ export default function MvpApp() {
   const open = (c, next) => { setSelected(c.id); setAttemptIndex(null); go(next); };
   const archive = (item, shouldArchive) => update(item.id, c => ({ ...c, archivedAt: shouldArchive ? new Date().toISOString() : null, updatedAt: new Date().toISOString() }));
   const retryCase = (item) => { const now = new Date().toISOString(); const copy = duplicateAsNewAttempt(item, crypto.randomUUID(), now); setCases(prev => [copy, ...prev]); open(copy, 'solve'); };
+  const revealHint = key => update(active.id, item => ({
+    ...item, hints: { ...item.hints, [key]: { ...item.hints?.[key], basic: true } },
+  }));
+  const requestHint = async (key, question, guidance) => {
+    const previous = active.hints?.[key]?.ai || [];
+    if (hintLock.current || lock.current || previous.length >= 2) return;
+    hintLock.current = true;
+    setHintBusy(true);
+    const item = active;
+    const step = caseRoute.find(entry => entry.id === key);
+    try {
+      const { message } = await api.coach({
+        stepHint: true, stepId: key, stepTitle: question, stepDescription: guidance,
+        trackId: item.params.trackId, caseText: [conditionText, step?.scene, step?.evidence].filter(Boolean).join('\n\n'),
+        answerText: item.answers[key] || '', userMessage: 'Дай подсказку к текущему шагу.',
+        chatHistory: previous.map(text => ({ role: 'coach', text })),
+      });
+      const hint = message?.trim();
+      if (!hint || previous.includes(hint)) throw new Error('Новая подсказка пока не получилась. Попробуй ещё раз.');
+      update(item.id, current => ({
+        ...current, hints: {
+          ...current.hints, [key]: { ...current.hints?.[key], ai: [...previous, hint] },
+        },
+      }));
+    } finally {
+      hintLock.current = false;
+      setHintBusy(false);
+    }
+  };
   const generate = async (event) => {
     event.preventDefault();
     if (lock.current) return;
@@ -146,21 +188,21 @@ export default function MvpApp() {
     finally { lock.current = false; setBusy(''); }
   };
   const evaluate = async () => {
-    if (lock.current || !active) return;
+    if (lock.current || hintLock.current || !active) return;
     const missing = fields.find(([key]) => !active.answers[key]?.trim());
     if (missing) { update(active.id, c => ({ ...c, currentQuestionId: missing[0] })); setError('Перед разбором заполни все ответы кейса.'); return; }
     lock.current = true; setBusy('evaluate'); setError('');
     const item = active;
     const answers = { ...item.answers };
     try {
-      const result = await api.evaluate({ caseText: story ? item.caseIntro : item.caseText, answers, trackId: item.params.trackId, interviewType: item.params.interviewType, mvp: true, ...(caseRoute.length ? { caseRoute } : {}) });
+      const result = await api.evaluate({ caseText: story ? item.caseIntro : item.caseText, answers, trackId: item.params.trackId, interviewType: item.params.interviewType, mvp: true, hintUsage: countHints(item.hints), ...(caseRoute.length ? { caseRoute } : {}) });
       if (!result.evaluation?.trim()) throw new Error('ИИ вернул пустой разбор. Попробуй ещё раз.');
-      update(item.id, c => ({ ...c, attempts: [...c.attempts, { answers, questionVersion: 2, questions: fields, evaluation: result.evaluation, createdAt: new Date().toISOString() }] }));
+      update(item.id, c => ({ ...c, attempts: [...c.attempts, { answers, questionVersion: 2, questions: fields, evaluation: result.evaluation, score: result.score, createdAt: new Date().toISOString() }] }));
       setAttemptIndex(null); go('review');
     } catch (e) { setError(e.message || 'Не удалось проверить решение. Твой ответ сохранён — попробуй ещё раз.'); }
     finally { lock.current = false; setBusy(''); }
   };
-  const hasChanges = active && (!attempts.length || JSON.stringify(active.answers) !== JSON.stringify(attempts.at(-1).answers));
+  const hasChanges = active && hasAttemptChanges(active, attempts.at(-1));
 
   return <div className="mvp-app">
     <header className="mvp-header">
@@ -222,6 +264,7 @@ export default function MvpApp() {
         {!story && <div className="clean-eyebrow">Шаг 2 · Решение</div>}<h1>{story ? active.title : 'Твой ход'}</h1>
         {!story && <p className="mvp-lead">Один кейс, {fields.length} шагов. Отвечай на один вопрос за раз — все мысли сложатся в полное решение.</p>}
         <CaseFlow key={active.id} fields={fields} caseRoute={caseRoute} answers={active.answers} questionId={active.currentQuestionId}
+          interviewType={active.params.interviewType} hints={active.hints} hintBusy={hintBusy} onRevealHint={revealHint} onRequestHint={requestHint}
           onQuestion={key => update(active.id, c => ({ ...c, currentQuestionId: key }))}
           onAnswer={(key, value) => update(active.id, c => ({
             ...c, currentQuestionId: key,
@@ -229,13 +272,13 @@ export default function MvpApp() {
           }))}
           onEvaluate={evaluate} busy={busy} saveError={saveError} hasChanges={hasChanges} attempts={attempts}
           onReview={() => { setAttemptIndex(null); go('review'); }}
-          condition={<><p className="mvp-muted">Данные кейса вымышлены и даны для тренировки.</p><ConditionAssistant key={active.id} caseText={conditionText}/><CaseContent text={conditionText}/><CaseMaterials key={`materials-${active.id}`} item={active} savedIds={savedTheory} onToggle={toggleTheory} onOpenTheory={() => { setTheorySavedOnly(true); go('cards'); }}/>{attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation}/></details>}</>}/>
+          condition={<><p className="mvp-muted">Данные кейса вымышлены и даны для тренировки.</p><ConditionAssistant key={active.id} caseText={conditionText}/><CaseContent text={conditionText}/><CaseMaterials key={`materials-${active.id}`} item={active} savedIds={savedTheory} onToggle={toggleTheory} onOpenTheory={() => { setTheorySavedOnly(true); go('cards'); }}/>{attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation} score={attempts.at(-1).score}/></details>}</>}/>
       </>}
       {screen === 'review' && active && attempt && <div className="mvp-narrow">
         <button className="mvp-back" onClick={() => go('library')}>← Мои кейсы</button>
         <div className="clean-eyebrow">Шаг 3 · Обратная связь</div><h1>Разбор решения</h1><p className="mvp-lead">{titleOf(active.title || active.caseText)}</p>
         <label className="mvp-version">Версия решения<select value={attemptIndex ?? attempts.length - 1} onChange={e => setAttemptIndex(Number(e.target.value))}>{attempts.map((a, i) => <option key={i} value={i}>Версия {i + 1} · {new Date(a.createdAt).toLocaleString('ru-RU')}</option>)}</select></label>
-        <article className="mvp-card mvp-review"><Review value={attempt.evaluation}/>{/(конверс|воронк|метрик|conversion|funnel|metric)/i.test(attempt.evaluation) && <div className="mycases-learning-tip"><strong>Хочешь потренировать метрики?</strong><p>Это дополнительная практика по теме разбора, а не автоматическая оценка твоих навыков.</p><button type="button" onClick={() => go('learning')}>Перейти к урокам по метрикам →</button></div>}<details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div>{(!story || fields.some(([id]) => id === key)) && <button className="mvp-edit-step" onClick={() => { update(active.id, c => ({ ...c, currentQuestionId: key })); go('solve'); }}>Доработать этот шаг</button>}</section>)}</details></article>
+        <article className="mvp-card mvp-review"><Review value={attempt.evaluation} score={attempt.score}/>{/(конверс|воронк|метрик|conversion|funnel|metric)/i.test(attempt.evaluation) && <div className="mycases-learning-tip"><strong>Хочешь потренировать метрики?</strong><p>Это дополнительная практика по теме разбора, а не автоматическая оценка твоих навыков.</p><button type="button" onClick={() => go('learning')}>Перейти к урокам по метрикам →</button></div>}<details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div>{(!story || fields.some(([id]) => id === key)) && <button className="mvp-edit-step" onClick={() => { update(active.id, c => ({ ...c, currentQuestionId: key })); go('solve'); }}>Доработать этот шаг</button>}</section>)}</details></article>
         <div className="mvp-actions"><Button variant="accent" onClick={() => go('solve')}>Улучшить решение</Button><Button variant="neutral" onClick={() => go('generate')}>Новый кейс</Button></div>
         <p className="mvp-muted">Редактирование продолжится с последнего черновика. ИИ может ошибаться — сверяй выводы с данными кейса.</p>
       </div>}

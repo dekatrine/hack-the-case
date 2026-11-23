@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import MvpApp, { STORAGE_KEY } from './MvpApp.jsx';
 import { api } from './api/client.js';
 import INTERVIEWS from './backend/app/product_interviews.json';
-vi.mock('./api/client.js', () => ({ api: { config: vi.fn(), generate: vi.fn(), evaluate: vi.fn() } }));
+vi.mock('./api/client.js', () => ({ api: { config: vi.fn(), generate: vi.fn(), evaluate: vi.fn(), coach: vi.fn() } }));
 const review = JSON.stringify({ summary: 'Проверь конверсию по этапам.', strengths: ['Есть гипотеза'], improvements: ['Нет расчёта'], topTips: ['Посчитай воронку'] });
 beforeEach(() => {
   localStorage.clear(); vi.resetAllMocks(); window.scrollTo = vi.fn();
@@ -40,6 +40,30 @@ function fillCase(problem = 'Падает конверсия') {
   });
 }
 describe('MVP core flow', () => {
+  it('counts revealed hints once, persists AI hints and reports the score adjustment', async () => {
+    await newCase();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Мой первый вывод' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Обычная подсказка · −1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Скрыть подсказку' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Обычная подсказка' }));
+    api.coach.mockRejectedValueOnce(new Error('Сбой')).mockResolvedValueOnce({ message: 'Уточни, для кого актуальна проблема.' });
+    fireEvent.click(screen.getByRole('button', { name: 'ИИ-подсказка · −2' }));
+    await screen.findByText('Сбой');
+    fireEvent.click(screen.getByRole('button', { name: 'ИИ-подсказка · −2' }));
+    await screen.findByText('Уточни, для кого актуальна проблема.');
+    expect(api.coach).toHaveBeenLastCalledWith(expect.objectContaining({ stepHint: true, stepId: 'problem', answerText: 'Мой первый вывод' }));
+    cleanup(); render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
+    expect(screen.getByText('Уточни, для кого актуальна проблема.')).toBeTruthy();
+    fillCase();
+    api.evaluate.mockResolvedValueOnce({
+      evaluation: review, score: { quality: 84, final: 81, hintPenalty: 3, hints: { basic: 1, ai: 1 } },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
+    await screen.findByText('81 из 100');
+    expect(api.evaluate).toHaveBeenLastCalledWith(expect.objectContaining({ hintUsage: { basic: 1, ai: 1 } }));
+  });
+
   it('reveals only the chosen story branch and restores the new path after reloading', async () => {
     const chapter = { chapter: 1, chapterTitle: 'Первый выбор' };
     const caseRoute = [

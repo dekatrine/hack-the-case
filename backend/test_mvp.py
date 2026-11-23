@@ -1,12 +1,35 @@
 import unittest
 from unittest.mock import patch
 from fastapi import HTTPException
-from app.main import generate_case, evaluate, PRODUCT_INTERVIEWS
-from app.schemas import GenerateCaseRequest, EvaluateRequest
-from app.prompts import CASE_GENERATION_SYSTEM, CASE_NOVELTY_SYSTEM, MVP_RUBRIC_SYSTEM
+from app.main import ask_coach, generate_case, evaluate, PRODUCT_INTERVIEWS
+from app.schemas import CoachRequest, GenerateCaseRequest, EvaluateRequest
+from app.prompts import CASE_GENERATION_SYSTEM, CASE_NOVELTY_SYSTEM, MVP_RUBRIC_SYSTEM, MVP_STEP_HINT_SYSTEM
 
 
 class MvpTests(unittest.TestCase):
+    @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","qualityScore":84}')
+    def test_mvp_score_applies_a_deduction_after_grading(self, model):
+        request = EvaluateRequest(caseText='Кейс', mvp=True, answers={'problem': 'Вывод'})
+        solo = evaluate(request).score
+        assisted = evaluate(request.model_copy(update={
+            'hintUsage': type(request.hintUsage)(basic=1, ai=2),
+        })).score
+        self.assertEqual((solo.quality, solo.final), (84, 84))
+        self.assertEqual((assisted.quality, assisted.final, assisted.hintPenalty), (84, 79, 5))
+        self.assertEqual(model.call_args_list[0].args, model.call_args_list[1].args)
+
+    @patch('app.main.call_yandex_gpt', return_value='Укажи, с чем сравниваешь.')
+    def test_step_hint_uses_the_current_draft_and_prior_hints(self, model):
+        response = ask_coach(CoachRequest(
+            stepHint=True, stepId='analysis', stepTitle='Какой аргумент сильнее?',
+            stepDescription='Одна цифра', caseText='Открытые данные', answerText='Сравню с прошлым месяцем',
+            userMessage='Подсказка', chatHistory=[{'role': 'coach', 'text': 'Укажи период'}],
+        ))
+        self.assertEqual(response.message, 'Укажи, с чем сравниваешь.')
+        self.assertEqual(model.call_args.args[0], MVP_STEP_HINT_SYSTEM)
+        self.assertIn('Сравню с прошлым месяцем', model.call_args.args[1])
+        self.assertIn('Укажи период', model.call_args.args[1])
+
     @patch('app.main.call_yandex_gpt', return_value="План роста\n\n**Контекст:** Запуск в новом сегменте.\n\n**Данные:** 80 заявок.\n\n**Ограничения:** один аналитик.")
     def test_story_cases_have_complete_branches_and_scoped_evidence(self, model):
         for interview_type in PRODUCT_INTERVIEWS:

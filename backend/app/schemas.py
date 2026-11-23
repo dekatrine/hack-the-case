@@ -101,10 +101,23 @@ class CoachRequest(BaseModel):
     previousAnswers: dict[str, str] = Field(default_factory=dict)
     trackId: Optional[str] = None
     chapterId: Optional[str] = None
+    stepHint: bool = False
 
 
 class CoachResponse(BaseModel):
     message: str
+
+
+class HintUsage(BaseModel):
+    basic: int = Field(default=0, ge=0, le=128)
+    ai: int = Field(default=0, ge=0, le=256)
+
+
+class CaseScore(BaseModel):
+    quality: Optional[int] = None
+    final: Optional[int] = None
+    hintPenalty: int
+    hints: HintUsage
 
 
 class EvaluateRequest(BaseModel):
@@ -114,10 +127,12 @@ class EvaluateRequest(BaseModel):
     answers: dict[str, str] = Field(default_factory=dict)
     trackId: Optional[str] = None
     caseRoute: list[CaseRouteStep] = Field(default_factory=list, max_length=64)
+    hintUsage: HintUsage = Field(default_factory=HintUsage)
 
 
 class EvaluateResponse(BaseModel):
     evaluation: str
+    score: Optional[CaseScore] = None
 
 
 class LearnExplainRequest(BaseModel):

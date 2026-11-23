@@ -26,6 +26,7 @@ from .prompts import (
     PHASE_GENERATION_SYSTEM,
     RUBRIC_SYSTEM,
     MVP_RUBRIC_SYSTEM,
+    MVP_STEP_HINT_SYSTEM,
     CONDITION_EXPLAIN_SYSTEM,
     CONDITION_GUARD_SYSTEM,
     STEP_SELECTION_SYSTEM,
@@ -34,6 +35,7 @@ from .prompts import (
 from .schemas import (
     CasePhase,
     CaseRouteStep,
+    CaseScore,
     ConditionExplainRequest,
     ConditionExplainResponse,
     CheckInterviewRequest,
@@ -769,6 +771,21 @@ def check_interview_answer(payload: CheckInterviewRequest) -> CheckInterviewResp
 
 @app.post("/api/coach", response_model=CoachResponse)
 def ask_coach(payload: CoachRequest) -> CoachResponse:
+    if payload.stepHint:
+        context = json.dumps({
+            "availableContext": payload.caseText[:6000],
+            "step": payload.stepTitle[:500],
+            "guidance": payload.stepDescription[:500],
+            "draft": payload.answerText[:1800],
+            "previousHints": [item.text[:800] for item in payload.chatHistory[-2:]],
+        }, ensure_ascii=False)
+        try:
+            message = call_yandex_gpt(MVP_STEP_HINT_SYSTEM, context, temperature=0.3, max_tokens=220).strip()
+            if not message:
+                raise RuntimeError("Пустая подсказка")
+            return CoachResponse(message=message)
+        except RuntimeError as exc:
+            raise HTTPException(status_code=502, detail="ИИ-подсказка сейчас недоступна. Попробуй ещё раз.") from exc
     context = build_coach_context(payload)
     try:
         message = call_yandex_gpt(
@@ -825,7 +842,21 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
             if case_route:
                 system += "\nУчитывай только пройденный маршрут и информацию, открытую на его шагах. Оцени аргументацию, а не длину ответа."
             evaluation = call_yandex_gpt(system, prompt, temperature=0.3)
-            return EvaluateResponse(evaluation=evaluation)
+            match = re.search(r"\{.*\}", evaluation, re.DOTALL)
+            try:
+                review = json.loads(match.group(0)) if match else {}
+            except ValueError:
+                review = {}
+            quality = review.get("qualityScore") if isinstance(review, dict) else None
+            if type(quality) is not int or not 0 <= quality <= 100:
+                quality = None
+            hints = payload.hintUsage
+            penalty = hints.basic + 2 * hints.ai
+            score = CaseScore(
+                quality=quality, final=max(0, quality - penalty) if quality is not None else None,
+                hintPenalty=penalty, hints=hints,
+            )
+            return EvaluateResponse(evaluation=evaluation, score=score)
         except RuntimeError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
     answers_summary = []
