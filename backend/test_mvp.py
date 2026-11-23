@@ -20,6 +20,8 @@ class MvpTests(unittest.TestCase):
         ))
         self.assertEqual(result.caseText, new)
         self.assertIn('Падают заказы из поиска', model.call_args_list[0].args[1])
+        generation_prompts = [call.args[1] for call in model.call_args_list if call.args[0] == CASE_GENERATION_SYSTEM]
+        self.assertEqual(len(set(generation_prompts)), 3)
         self.assertEqual([call.args[0] for call in model.call_args_list], [
             CASE_GENERATION_SYSTEM, CASE_GENERATION_SYSTEM, CASE_NOVELTY_SYSTEM,
             CASE_GENERATION_SYSTEM, CASE_NOVELTY_SYSTEM,
