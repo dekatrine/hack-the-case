@@ -241,16 +241,25 @@ def _route_for_case(payload: GenerateCaseRequest, track_name: str, case_text: st
     )
 
 
+EXECUTION_ANGLES = {
+    "сбой после релиза: сравни старую и новую версии продукта и долю ошибок":
+        r"верси\w* (?:мобильного )?приложени\w*|(?:стар\w+|нов\w+) верси\w*",
+    "региональный дефицит: сравни доступность предложения и конверсию по регионам или складам":
+        r"наличи\w*[^\n]*(?:склад|регион)|(?:склад|регион)[^\n]*наличи",
+    "ошибка измерения: сравни логи событий с независимым источником фактических операций":
+        r"(?:фактическ\w+|реальн\w+) (?:операци\w*|заказ\w*)|лог\w* событи\w*",
+    "изменение состава трафика: дай доли и конверсию внутри новых и старых сегментов":
+        r"(?:состав|структур\w*) трафика|(?:нов\w+|вернувш\w+) пользовател\w*",
+    "падение качества выдачи: сравни долю пустых результатов и конверсию по типам запросов":
+        r"пуст\w+ результат\w*|(?:релевантност\w*|качеств\w*) выдачи",
+    "изменение цены или тарифа: сравни динамику в затронутом и контрольном сегментах":
+        r"(?:изменен\w*|повышени\w*|снижени\w*) (?:цен\w*|тариф\w*)",
+    "временный сбой внешнего партнёра: сравни группы с разными поставщиками и периоды до и после сбоя":
+        r"(?:сбой|сбоя|сбоем|сбоев)[^\n]*партн[её]р|внешн\w+ (?:партн[её]р\w*|поставщи\w*)",
+}
+
 CASE_ANGLES = {
-    "product_execution": (
-        "сбой после релиза: сравни старую и новую версии продукта и долю ошибок",
-        "региональный дефицит: сравни доступность предложения и конверсию по регионам или складам",
-        "ошибка измерения: сравни логи событий с независимым источником фактических операций",
-        "изменение состава трафика: дай доли и конверсию внутри новых и старых сегментов",
-        "падение качества выдачи: сравни долю пустых результатов и конверсию по типам запросов",
-        "изменение цены или тарифа: сравни динамику в затронутом и контрольном сегментах",
-        "временный сбой внешнего партнёра: сравни группы с разными поставщиками и периоды до и после сбоя",
-    ),
+    "product_execution": tuple(EXECUTION_ANGLES),
     "product_sense": (
         "пользователь впервые сталкивается с незнакомым процессом",
         "частая задача занимает слишком много времени у постоянных пользователей",
@@ -277,11 +286,19 @@ CASE_ANGLES = {
     ),
 }
 
-
 def _generate_distinct_case(prompt: str, recent_cases: list[str], interview_type: str | None) -> str:
     available_angles = CASE_ANGLES.get(interview_type, ())
+    evidence_by_angle = EXECUTION_ANGLES if interview_type == "product_execution" else {}
+    unused_angles = {
+        angle: evidence for angle, evidence in evidence_by_angle.items()
+        if not any(re.search(evidence, case, re.IGNORECASE) for case in recent_cases)
+    }
     attempts = 3 if recent_cases else 1
-    angles = random.sample(available_angles, attempts) if available_angles else [""] * attempts
+    preferred = list(unused_angles)
+    other = [angle for angle in available_angles if angle not in unused_angles]
+    angles = (random.sample(preferred, len(preferred)) + random.sample(other, len(other)))[:attempts]
+    if not angles:
+        angles = [""] * attempts
     if not recent_cases:
         angle = angles[0]
         if angle:
@@ -300,6 +317,10 @@ def _generate_distinct_case(prompt: str, recent_cases: list[str], interview_type
         candidate = call_yandex_gpt(CASE_GENERATION_SYSTEM, generation_prompt, temperature=0.9)
         words = tuple(re.findall(r"[^\W_]+", candidate.casefold()))
         if words and words not in previous_words:
+            evidence = unused_angles.get(angle)
+            stats = re.findall(r"\d+(?:[.,]\d+)?\s*%", candidate)
+            if evidence and len(stats) >= 2 and re.search(evidence, candidate, re.IGNORECASE):
+                return candidate
             comparison = json.dumps({"new": candidate, "previous": recent_cases}, ensure_ascii=False)
             verdict = call_yandex_gpt(CASE_NOVELTY_SYSTEM, comparison, temperature=0, max_tokens=80)
             try:
