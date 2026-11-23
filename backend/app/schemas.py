@@ -12,7 +12,10 @@ class GenerateCaseRequest(BaseModel):
     chapterId: Optional[str] = None
     interviewType: Optional[str] = None
     grade: Optional[str] = None
-    recentCases: list[Annotated[str, Field(max_length=2000)]] = Field(default_factory=list, max_length=12)
+    recentCases: list[Annotated[str, Field(max_length=2000)]] = Field(
+        default_factory=list, max_length=12,
+        description="Previously seen case statements used to check for a different line of reasoning.",
+    )
 
 
 class PhaseQuestion(BaseModel):
