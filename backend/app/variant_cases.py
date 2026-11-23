@@ -138,7 +138,11 @@ def generate_variant(payload, call_model):
         f"Пожелания: {payload.extraContext}\n"
         "Выбери разные правдоподобные причины, аудитории или ограничения для задачи; "
         "поменяй ход решения, а не только имя компании и цифры. Придумай ровно два источника.\n"
-        f"Не повторяй ситуации, данные и вопросы из этого списка: {json.dumps([case[:1050] for case in payload.recentCases[:6]], ensure_ascii=False)}"
+        f"Прошлые кейсы: {json.dumps(payload.recentCases[:5], ensure_ascii=False)}\n"
+        "Если в истории есть эта же тема, запрещено использовать ту же пару сравнений, "
+        "те же группы или тот же решающий аргумент. Например, если сравнивали частоту заказов "
+        "и чек, задай задачу про отказы, окно доставки, переход между каналами или изменение "
+        "поведения после первого использования. Оставь исходную тему пользователя."
     )
     seen = set(payload.seenFingerprints)
     angles = sample([
@@ -148,7 +152,12 @@ def generate_variant(payload, call_model):
         "переход между каналами или ролями пользователей", "проверка данных перед обратимым решением",
     ], 3)
     for angle in angles:
-        raw = call_model(GENERATION_SYSTEM, f"{prompt}\nЕсли это подходит выбранной теме, используй ракурс: {angle}.", temperature=0.85, max_tokens=1900)
+        raw = call_model(
+            GENERATION_SYSTEM,
+            f"{prompt}\nОбязательный ракурс для этой попытки: {angle}. "
+            "Отрази его в срезах данных и в решении, которое нужно принять.",
+            temperature=0.85, max_tokens=1900,
+        )
         try:
             story = parse_story(raw)
         except (ValueError, ValidationError):
