@@ -15,6 +15,7 @@ import TheoryPage from './TheoryPage.jsx';
 import BookTheoryPage from './BookTheoryPage.jsx';
 import CaseMaterials, { readSavedTheory, SAVED_THEORY_KEY } from './CaseMaterials.jsx';
 import INTERVIEWS from './backend/app/product_interviews.json';
+import CASE_VARIANTS from './backend/app/case_variants.json';
 const interviewFields = type => INTERVIEWS.find(t => t.id === type)?.questions.map(q => [q.id, q.label, q.hint, 'Короткий ответ…']);
 const routeFields = route => route.map(step => [step.id, step.question, step.hint, 'Короткий ответ…']);
 
@@ -104,6 +105,7 @@ export default function MvpApp() {
   const lock = useRef(false);
   const hintLock = useRef(false);
   const [params, setParams] = useState({ trackId: 'product', interviewType: 'product_sense', industry: '', difficulty: '', extraContext: '' });
+  const [variantId, setVariantId] = useState('surprise');
   const active = cases.find(c => c.id === selected);
   const story = hasStory(active?.caseRoute);
   const caseRoute = story ? storyPath(active.caseRoute, active.answers) : active?.caseRoute || [];
@@ -115,6 +117,7 @@ export default function MvpApp() {
     ? active.caseText.replace(`\n\n**Дополнительный срез данных**\n\n${evidenceStep.evidence}`, '')
     : active?.caseText;
   const selectedType = INTERVIEWS.find(t => t.id === params.interviewType) || INTERVIEWS[0];
+  const variants = CASE_VARIANTS[selectedType.id];
   const attempts = active?.attempts || [];
   const attempt = attempts[attemptIndex ?? attempts.length - 1];
 
@@ -135,7 +138,7 @@ export default function MvpApp() {
     catch { setSaveError('Не удалось сохранить изменения в браузере. Не закрывай страницу, пока не скопируешь ответ.'); }
   }, [cases]);
   useEffect(() => { window.scrollTo?.({ top: 0, behavior: 'auto' }); }, [screen, selected]);
-  const go = (next) => { setError(''); setScreen(next); };
+  const go = (next) => { setError(''); if (next === 'generate') setVariantId('surprise'); setScreen(next); };
   const update = (id, fn) => setCases(prev => prev.map(c => c.id === id ? { ...fn(c), updatedAt: new Date().toISOString() } : c));
   const open = (c, next) => { setSelected(c.id); setAttemptIndex(null); go(next); };
   const archive = (item, shouldArchive) => update(item.id, c => ({ ...c, archivedAt: shouldArchive ? new Date().toISOString() : null, updatedAt: new Date().toISOString() }));
@@ -174,15 +177,22 @@ export default function MvpApp() {
     if (lock.current) return;
     lock.current = true; setBusy('generate'); setError('');
     try {
-      const result = await api.generate({ ...params, mvp: true, recentCases: generationHistory(cases, params) });
+      const history = [...cases, ...loadCases()];
+      const result = await api.generate({
+        ...params, mvp: true, variantId, recentCases: generationHistory(history, params),
+        seenVariants: [...new Set(history.filter(item => item.params?.interviewType === params.interviewType).map(item => item.params.variantId).filter(Boolean))],
+        seenFingerprints: [...new Set(history.flatMap(item => item.fingerprints || []))],
+      });
       if (!result.caseText?.trim()) throw new Error('ИИ вернул пустой кейс. Попробуй ещё раз.');
-      if ([...cases, ...loadCases()].some(item => caseWords(item.caseText) === caseWords(result.caseText))) {
+      const received = new Set(result.fingerprints || []);
+      if ([...cases, ...loadCases()].some(item => caseWords(item.caseText) === caseWords(result.caseText)
+          || item.fingerprints?.some(fingerprint => received.has(fingerprint)))) {
         throw new Error('Получился повтор предыдущего кейса. Попробуй сгенерировать ещё раз.');
       }
       if (params.interviewType === 'product_execution' && !result.caseRoute?.length) {
         throw new Error('Не удалось подготовить шаги кейса. Попробуй сгенерировать ещё раз.');
       }
-      const item = { id: crypto.randomUUID(), title: titleOf(result.caseText), caseText: result.caseText, caseIntro: result.caseIntro, caseRoute: result.caseRoute || [], params: { ...params }, answers: {}, attempts: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      const item = { id: crypto.randomUUID(), title: titleOf(result.caseText), caseText: result.caseText, caseIntro: result.caseIntro, caseRoute: result.caseRoute || [], fingerprints: result.fingerprints || [], params: { ...params, variantId: result.variantId || undefined }, answers: {}, attempts: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       setCases(prev => [item, ...prev]); open(item, 'solve');
     } catch (e) { setError(e.message || 'Не удалось сгенерировать кейс. Попробуй ещё раз.'); }
     finally { lock.current = false; setBusy(''); }
@@ -251,7 +261,14 @@ export default function MvpApp() {
         {configError && <div role="alert" className="mvp-notice">{configError} <button onClick={fetchConfig}>Повторить загрузку</button></div>}
         {!config && !configError && <p role="status">Загружаем настройки…</p>}
         {config && <div className="mvp-setup-layout"><form className="mvp-card mvp-form mvp-setup" onSubmit={generate}>
-          <fieldset><legend>01 / Тип продуктового собеседования</legend><div className="mvp-direction">{INTERVIEWS.map(t => <button type="button" className={params.interviewType === t.id ? 'selected' : ''} aria-pressed={params.interviewType === t.id} disabled={!!busy} key={t.id} onClick={() => setParams(p => ({ ...p, trackId: 'product', interviewType:t.id }))}><span className="mvp-direction-top"><Layers3 size={20}/><span className="mvp-choice-check">{params.interviewType === t.id && <Check size={12}/>}</span></span><b>{t.label}</b><small>{t.description}</small></button>)}</div></fieldset>
+          <fieldset><legend>01 / Направление</legend><div className="mvp-direction">{INTERVIEWS.map(t => <button type="button" className={params.interviewType === t.id ? 'selected' : ''} aria-pressed={params.interviewType === t.id} disabled={!!busy} key={t.id} onClick={() => { setVariantId('surprise'); setParams(p => ({ ...p, trackId: 'product', interviewType:t.id })); }}><span className="mvp-direction-top"><Layers3 size={20}/><span className="mvp-choice-check">{params.interviewType === t.id && <Check size={12}/>}</span></span><b>{t.label}</b><small>{t.description}</small></button>)}</div></fieldset>
+          <label>Вариант тренировки<span className="mvp-select-wrap">
+            <select value={variantId} disabled={!!busy} onChange={event => setVariantId(event.target.value)}>
+              <option value="surprise">Подобрать новый вариант</option>
+              {variants.map(([id, title]) => <option key={id} value={id}>{title}</option>)}
+            </select><ChevronDown size={16}/>
+          </span></label>
+          {variantId !== 'surprise' && <p className="mvp-muted">{variants.find(([id]) => id === variantId)?.[2]}</p>}
           <label>02 / Отрасль<span className="mvp-select-wrap"><select required disabled={!!busy} value={params.industry} onChange={e => setParams(p => ({ ...p, industry: e.target.value }))}>{config.industries.map(x => <option value={x} key={x}>{x.includes(' / ') ? x.split(' / ').slice(1).join(' / ') : x}</option>)}</select><ChevronDown size={16}/></span></label>
           <fieldset><legend>03 / Сложность</legend><div className="mvp-levels">{Object.keys(config.difficultyLevels).map(x => <button type="button" aria-pressed={params.difficulty === x} className={params.difficulty === x ? 'selected' : ''} disabled={!!busy} key={x} onClick={() => setParams(p => ({ ...p, difficulty:x }))}>{x}</button>)}</div></fieldset>
           <label><span>04 / Свой контекст <small className="mvp-muted">необязательно</small></span><textarea maxLength={2000} disabled={!!busy} value={params.extraContext} onChange={e => setParams(p => ({ ...p, extraContext: e.target.value }))} placeholder="Например: пользователи добавляют товары в корзину, но не оформляют заказ" rows={2}/></label>

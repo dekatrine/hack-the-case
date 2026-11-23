@@ -12,6 +12,9 @@ class GenerateCaseRequest(BaseModel):
     chapterId: Optional[str] = None
     interviewType: Optional[str] = None
     grade: Optional[str] = None
+    variantId: Optional[str] = Field(default=None, max_length=40)
+    seenVariants: list[Annotated[str, Field(max_length=40)]] = Field(default_factory=list, max_length=32)
+    seenFingerprints: list[Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]] = Field(default_factory=list)
     recentCases: list[Annotated[str, Field(max_length=2000)]] = Field(
         default_factory=list, max_length=12,
         description="Prior case statements used to choose distinct supporting evidence.",
@@ -51,6 +54,8 @@ class GenerateCaseResponse(BaseModel):
     phases: list[CasePhase] = Field(default_factory=list)
     caseRoute: list[CaseRouteStep] = Field(default_factory=list)
     caseIntro: str = ""
+    variantId: Optional[str] = None
+    fingerprints: list[str] = Field(default_factory=list)
 
 
 class GenerateInterviewRequest(BaseModel):

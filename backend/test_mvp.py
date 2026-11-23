@@ -1,12 +1,54 @@
+import json
 import unittest
 from unittest.mock import patch
 from fastapi import HTTPException
 from app.main import ask_coach, generate_case, evaluate, PRODUCT_INTERVIEWS
 from app.schemas import CoachRequest, GenerateCaseRequest, EvaluateRequest
 from app.prompts import CASE_GENERATION_SYSTEM, CASE_NOVELTY_SYSTEM, MVP_RUBRIC_SYSTEM, MVP_STEP_HINT_SYSTEM
+from app.variant_cases import VARIANTS
 
 
 class MvpTests(unittest.TestCase):
+    @patch('app.main.call_yandex_gpt')
+    def test_catalog_and_generated_variants_reject_reused_data_or_questions(self, model):
+        self.assertEqual(set(VARIANTS), set(PRODUCT_INTERVIEWS))
+        self.assertEqual(len(VARIANTS), 6)
+        self.assertTrue(all(len({item[0] for item in items}) == 8 for items in VARIANTS.values()))
+        first = {
+            "title": "Подписка для офисов",
+            "intro": "Команда доставки выбирает, на какой сегмент рассчитает пилот подписки.",
+            "openingQuestion": "Какое решение предстоит принять команде доставки?",
+            "choices": [
+                {"option": "Офисы в центре", "evidence": "В октябре у офисов 67 заказов и 26 повторных покупок.", "question": "Какой вывод о повторных покупках офисов можно сделать?"},
+                {"option": "Малые команды", "evidence": "В октябре у малых команд 33 заказа и 7 повторных покупок.", "question": "Как оценишь спрос со стороны малых команд?"},
+            ],
+            "twist": "На пилот выделили только один слот доставки.",
+            "finalQuestion": "Для какого типа команд запустишь подписку и почему?",
+        }
+        second = {
+            "title": "Выбор сегмента для клиента",
+            "intro": "Компания тестирует предложение для двух типов предприятий с разной регулярностью.",
+            "openingQuestion": "По какому критерию компания должна выбирать группу?",
+            "choices": [
+                {"option": "Регулярные закупки", "evidence": "В ноябре регулярные клиенты сделали 150 закупок, 68 из них повторные.", "question": "Что частота закупок говорит о готовности к пилоту?"},
+                {"option": "Разовые покупатели", "evidence": "В ноябре разовые клиенты сделали 91 закупку, 12 из них повторные.", "question": "Какой пробел мешает оценить разовых покупателей?"},
+            ],
+            "twist": "Операционная команда может обслуживать лишь два района.",
+            "finalQuestion": "Какой группе предложишь пилот и в каких районах начнёшь?",
+        }
+        model.side_effect = [json.dumps(first), json.dumps(first), json.dumps(second)]
+        params = dict(industry="Retail", difficulty="Начальный", mvp=True,
+                      interviewType="product_segmentation", variantId="behavior")
+        initial = generate_case(GenerateCaseRequest(**params))
+        fresh = generate_case(GenerateCaseRequest(**params, seenFingerprints=initial.fingerprints))
+        self.assertEqual(model.call_count, 3)
+        self.assertEqual(fresh.variantId, 'behavior')
+        self.assertFalse(set(initial.fingerprints) & set(fresh.fingerprints))
+        self.assertNotIn('150', fresh.caseIntro)
+        self.assertIn('150 закупок', fresh.caseText)
+        first_choice = next(step for step in fresh.caseRoute if step.id == "variant_source")
+        self.assertEqual(set(first_choice.nextByAnswer), {"Регулярные закупки", "Разовые покупатели"})
+
     @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","qualityScore":84}')
     def test_mvp_score_applies_a_deduction_after_grading(self, model):
         request = EvaluateRequest(caseText='Кейс', mvp=True, answers={'problem': 'Вывод'})

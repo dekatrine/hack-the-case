@@ -15,6 +15,7 @@ from .ratelimit import build_rate_limit_middleware
 from .data import CASE_STEPS, COURSE_MODULES, DIFFICULTY_LEVELS, INDUSTRIES, SOURCE_NOTES
 from .diagnostic_routes import diagnostic_route
 from .story_routes import build_story
+from .variant_cases import VARIANTS, generate_variant, variant_route, variant_text
 from .llm import call_yandex_gpt, stream_yandex_gpt
 from .prompts import (
     CASE_GENERATION_SYSTEM,
@@ -381,10 +382,27 @@ def _case_response(payload: GenerateCaseRequest, track_name: str, case_text: str
     )
 
 
+def _validate_variant(payload):
+    options = VARIANTS.get(payload.interviewType, [])
+    if not payload.mvp or not options or payload.variantId not in {"surprise", *(option[0] for option in options)}:
+        raise HTTPException(status_code=422, detail="Выбранный сценарий недоступен для этого направления.")
+
+
+def _selected_variant(payload):
+    variant_id, story, fingerprints = generate_variant(payload, call_yandex_gpt)
+    return GenerateCaseResponse(
+        caseText=variant_text(story), caseIntro=story.intro, caseRoute=variant_route(story),
+        variantId=variant_id, fingerprints=fingerprints,
+    )
+
+
 @app.post("/api/cases/generate", response_model=GenerateCaseResponse)
 def generate_case(payload: GenerateCaseRequest) -> GenerateCaseResponse:
     track_name, prompt = _case_prompt(payload)
     try:
+        if payload.variantId:
+            _validate_variant(payload)
+            return _selected_variant(payload)
         case_text = _generate_distinct_case(prompt, payload.recentCases, payload.interviewType)
         return _case_response(payload, track_name, case_text)
     except RuntimeError as exc:
@@ -400,6 +418,8 @@ def generate_case_stream(payload: GenerateCaseRequest) -> StreamingResponse:
     в формате обычного ответа; {"type":"error","detail":...} — ошибка.
     """
     track_name, prompt = _case_prompt(payload)
+    if payload.variantId:
+        _validate_variant(payload)
 
     def sse(obj: dict) -> str:
         return f"data: {json.dumps(obj, ensure_ascii=False)}\n\n"
@@ -407,6 +427,10 @@ def generate_case_stream(payload: GenerateCaseRequest) -> StreamingResponse:
     def event_stream():
         case_text = ""
         try:
+            if payload.variantId:
+                yield sse({"type": "status", "stage": "route"})
+                yield sse({"type": "done", **_selected_variant(payload).model_dump()})
+                return
             if payload.recentCases or (payload.mvp and payload.interviewType == "product_execution"):
                 case_text = _generate_distinct_case(prompt, payload.recentCases, payload.interviewType)
                 yield sse({"type": "chunk", "text": case_text})

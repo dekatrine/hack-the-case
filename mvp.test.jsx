@@ -40,6 +40,23 @@ function fillCase(problem = 'Падает конверсия') {
   });
 }
 describe('MVP core flow', () => {
+  it('shows eight variants per direction and submits the chosen training', async () => {
+    render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
+    await screen.findByLabelText('02 / Отрасль');
+    for (const type of INTERVIEWS) {
+      fireEvent.click(screen.getByRole('button', { name: new RegExp(type.label) }));
+      expect(within(screen.getByLabelText('Вариант тренировки')).getAllByRole('option')).toHaveLength(9);
+    }
+    expect(INTERVIEWS).toHaveLength(6);
+    fireEvent.change(screen.getByLabelText('Вариант тренировки'), { target: { value: 'behavior' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
+    await screen.findByRole('heading', { name: 'Твой ход' });
+    expect(api.generate).toHaveBeenCalledWith(expect.objectContaining({
+      interviewType: 'product_segmentation', variantId: 'behavior',
+    }));
+  });
+
   it('counts revealed hints once, persists AI hints and reports the score adjustment', async () => {
     await newCase();
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Мой первый вывод' } });
