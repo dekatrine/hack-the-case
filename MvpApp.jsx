@@ -257,14 +257,14 @@ export default function MvpApp() {
         </> : <CaseLibrary cases={cases} interviewTypes={INTERVIEWS} onOpen={open} onNew={() => go('generate')} onArchive={archive} onRetry={retryCase} onLearn={() => go('learning')}/>)}
       {screen === 'generate' && <>
         <div className="mvp-page-heading"><div><div className="clean-eyebrow">Новая тренировка</div><h1>Настрой свой кейс</h1>
-        <p className="mvp-lead">Выбери задачу. Условие и данные подготовит ИИ.</p></div><div className="mvp-flow"><b>01 Кейс</b><ArrowRight size={14}/><span>02 Решение</span><ArrowRight size={14}/><span>03 Разбор</span></div></div>
+        <p className="mvp-lead"><strong>Тренируйся на новых задачах сколько угодно.</strong> Как на собеседовании: знакомый навык, новая ситуация, другие данные и вопросы.</p></div><div className="mvp-flow"><b>01 Кейс</b><ArrowRight size={14}/><span>02 Решение</span><ArrowRight size={14}/><span>03 Разбор</span></div></div>
         {configError && <div role="alert" className="mvp-notice">{configError} <button onClick={fetchConfig}>Повторить загрузку</button></div>}
         {!config && !configError && <p role="status">Загружаем настройки…</p>}
         {config && <div className="mvp-setup-layout"><form className="mvp-card mvp-form mvp-setup" onSubmit={generate}>
           <fieldset><legend>01 / Направление</legend><div className="mvp-direction">{INTERVIEWS.map(t => <button type="button" className={params.interviewType === t.id ? 'selected' : ''} aria-pressed={params.interviewType === t.id} disabled={!!busy} key={t.id} onClick={() => { setVariantId('surprise'); setParams(p => ({ ...p, trackId: 'product', interviewType:t.id })); }}><span className="mvp-direction-top"><Layers3 size={20}/><span className="mvp-choice-check">{params.interviewType === t.id && <Check size={12}/>}</span></span><b>{t.label}</b><small>{t.description}</small></button>)}</div></fieldset>
           <label>Вариант тренировки<span className="mvp-select-wrap">
             <select value={variantId} disabled={!!busy} onChange={event => setVariantId(event.target.value)}>
-              <option value="surprise">Подобрать новый вариант</option>
+              <option value="surprise">Подобрать сценарий</option>
               {variants.map(([id, title]) => <option key={id} value={id}>{title}</option>)}
             </select><ChevronDown size={16}/>
           </span></label>
