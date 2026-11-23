@@ -320,6 +320,12 @@ html:has(.mvp-condition-sheet[open]) { overflow:hidden; }
 .mvp-review-score > strong { display:block; font-size:24px; }
 .mvp-review-score > p { margin:4px 0; }
 .mvp-review-score > small { color:var(--text-secondary); }
+.mvp-practice-link { margin-top:20px; }
+.mvp-practice-link h2 { margin:0 0 10px; }
+.mvp-practice-link p { margin:6px 0; }
+.mvp-practice-link small { color:var(--text-secondary); }
+.mvp-practice-link > button { margin-top:16px; }
+.mvp-practice-comparison { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr)); gap:16px; }
 @keyframes mvp-condition-enter { from { transform:translateY(100%); } to { transform:translateY(0); } }
 @media(prefers-reduced-motion:reduce) { .mvp-condition-sheet[open] { animation:none; } }
 @media(max-width:760px) {

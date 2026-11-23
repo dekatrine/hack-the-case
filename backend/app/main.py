@@ -15,7 +15,7 @@ from .ratelimit import build_rate_limit_middleware
 from .data import CASE_STEPS, COURSE_MODULES, DIFFICULTY_LEVELS, INDUSTRIES, SOURCE_NOTES
 from .diagnostic_routes import diagnostic_route
 from .story_routes import build_story
-from .variant_cases import VARIANTS, generate_variant, variant_route, variant_text
+from .variant_cases import CHECKPOINT, PRACTICE_SKILLS, VARIANTS, generate_variant, variant_route, variant_text
 from .llm import call_yandex_gpt, stream_yandex_gpt
 from .prompts import (
     CASE_GENERATION_SYSTEM,
@@ -37,6 +37,7 @@ from .schemas import (
     CasePhase,
     CaseRouteStep,
     CaseScore,
+    PracticeFeedback,
     ConditionExplainRequest,
     ConditionExplainResponse,
     CheckInterviewRequest,
@@ -386,13 +387,15 @@ def _validate_variant(payload):
     options = VARIANTS.get(payload.interviewType, [])
     if not payload.mvp or not options or payload.variantId not in {"surprise", *(option[0] for option in options)}:
         raise HTTPException(status_code=422, detail="Выбранный сценарий недоступен для этого направления.")
+    if payload.focusSkill and payload.focusSkill not in PRACTICE_SKILLS:
+        raise HTTPException(status_code=422, detail="Неизвестный навык для тренировки.")
 
 
 def _selected_variant(payload):
     variant_id, story, fingerprints = generate_variant(payload, call_yandex_gpt)
     return GenerateCaseResponse(
-        caseText=variant_text(story), caseIntro=story.intro, caseRoute=variant_route(story),
-        variantId=variant_id, fingerprints=fingerprints,
+        caseText=variant_text(story), caseIntro=story.intro, caseRoute=variant_route(story, payload.focusSkill),
+        variantId=variant_id, fingerprints=fingerprints, focusSkill=payload.focusSkill,
     )
 
 
@@ -822,6 +825,28 @@ def ask_coach(payload: CoachRequest) -> CoachResponse:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
+def _practice_feedback(review, payload, fields):
+    raw = review.get("practice") if isinstance(review, dict) else None
+    raw = raw if isinstance(raw, dict) else {}
+    focused = payload.focusSkill in PRACTICE_SKILLS and CHECKPOINT in fields
+    skill = payload.focusSkill if focused else raw.get("skillId")
+    step_id = CHECKPOINT if focused else raw.get("stepId")
+    if not isinstance(skill, str) or skill not in PRACTICE_SKILLS:
+        return None
+    if not isinstance(step_id, str) or step_id not in fields or not payload.answers.get(step_id, "").strip():
+        return None
+    observation = raw.get("observation")
+    observation = observation.strip()[:360] if isinstance(observation, str) else ""
+    applied = raw.get("applied")
+    if not observation and not focused:
+        return None
+    return PracticeFeedback(
+        skillId=skill, stepId=step_id, observation=observation,
+        applied=applied if type(applied) is bool and observation else None,
+        assisted=step_id in payload.hintedSteps if payload.hintedSteps is not None else None,
+    )
+
+
 @app.post("/api/evaluate", response_model=EvaluateResponse)
 def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
     if payload.mvp:
@@ -848,14 +873,14 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
         if case_route:
             answers = "\n\n".join(
                 "\n".join(filter(None, (
-                    step.question, step.scene, step.evidence,
+                    f"[{step.id}] {step.question}", step.scene, step.evidence,
                     "Ответ: " + (payload.answers.get(step.id, "").strip() or "(пропущено)"),
                 )))
                 for step in case_route
             )
         else:
             answers = "\n\n".join(
-                f"{title}:\n{payload.answers.get(key, '').strip() or '(пропущено)'}"
+                f"{f'[{key}] ' if interview else ''}{title}:\n{payload.answers.get(key, '').strip() or '(пропущено)'}"
                 for key, title in fields.items()
             )
         prompt = f"КЕЙС:\n{payload.caseText}\n\nОТВЕТ ПОЛЬЗОВАТЕЛЯ:\n{answers}"
@@ -865,6 +890,22 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
                 system += f"\nТип интервью: {interview['label']}.\n{interview['instruction']}\nОценивай ответы именно на вопросы из запроса. Не требуй диагностики падения метрик в других типах интервью."
             if case_route:
                 system += "\nУчитывай только пройденный маршрут и информацию, открытую на его шагах. Оцени аргументацию, а не длину ответа."
+            if payload.focusSkill in PRACTICE_SKILLS and CHECKPOINT in fields:
+                skill = PRACTICE_SKILLS[payload.focusSkill]
+                system += (
+                    f"\nДобавь поле practice с полями applied (true или false) и observation (одно конкретное "
+                    f"наблюдение). Оцени только ответ на шаге [{CHECKPOINT}]. Навык: {skill['label']}. "
+                    f"Критерий applied=true: {skill['criterion']} Не вычисляй, использовал ли человек подсказки."
+                )
+            elif interview:
+                skills = "; ".join(f"{id}: {data['criterion']}" for id, data in PRACTICE_SKILLS.items())
+                system += (
+                    '\nДобавь в JSON поле practice: {"skillId":"…","stepId":"…",'
+                    '"applied":false,"observation":"…"}. Выбери один навык, который полезно '
+                    "потренировать дальше. stepId скопируй из квадратных скобок рядом с реальным ответом. "
+                    "В observation назови конкретно, что уже получилось или чего не хватило. "
+                    f"Доступные skillId и критерии applied=true: {skills}"
+                )
             evaluation = call_yandex_gpt(system, prompt, temperature=0.3)
             match = re.search(r"\{.*\}", evaluation, re.DOTALL)
             try:
@@ -880,7 +921,7 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
                 quality=quality, final=max(0, quality - penalty) if quality is not None else None,
                 hintPenalty=penalty, hints=hints,
             )
-            return EvaluateResponse(evaluation=evaluation, score=score)
+            return EvaluateResponse(evaluation=evaluation, score=score, practice=_practice_feedback(review, payload, fields))
         except RuntimeError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
     answers_summary = []

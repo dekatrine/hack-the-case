@@ -16,6 +16,7 @@ import BookTheoryPage from './BookTheoryPage.jsx';
 import CaseMaterials, { readSavedTheory, SAVED_THEORY_KEY } from './CaseMaterials.jsx';
 import INTERVIEWS from './backend/app/product_interviews.json';
 import CASE_VARIANTS from './backend/app/case_variants.json';
+import PRACTICE_SKILLS from './backend/app/practice_skills.json';
 
 const DIRECTION_ICONS = {
   product_sense: Lightbulb,
@@ -25,6 +26,27 @@ const DIRECTION_ICONS = {
   product_estimation: Calculator,
   product_segmentation: UsersRound,
 };
+const DEFAULT_PRACTICE = {
+  product_sense: 'evidence',
+  product_execution: 'validation',
+  product_strategy: 'tradeoffs',
+  product_experiment: 'metrics',
+  product_estimation: 'assumptions',
+  product_segmentation: 'segments',
+};
+
+function PracticeStatus({ feedback }) {
+  if (!feedback) return null;
+  const details = [
+    feedback.applied === true ? 'Критерий выполнен' : feedback.applied === false ? 'Навык стоит закрепить' : '',
+    feedback.assisted === true ? 'Подсказки открывались на этом шаге'
+      : feedback.assisted === false ? 'Без подсказок на этом шаге' : '',
+  ].filter(Boolean);
+  return <>
+    {feedback.observation && <p>{feedback.observation}</p>}
+    {details.length > 0 && <small>{details.join(' · ')}</small>}
+  </>;
+}
 const interviewFields = type => INTERVIEWS.find(t => t.id === type)?.questions.map(q => [q.id, q.label, q.hint, 'Короткий ответ…']);
 const routeFields = route => route.map(step => [step.id, step.question, step.hint, 'Короткий ответ…']);
 
@@ -129,6 +151,11 @@ export default function MvpApp() {
   const variants = CASE_VARIANTS[selectedType.id];
   const attempts = active?.attempts || [];
   const attempt = attempts[attemptIndex ?? attempts.length - 1];
+  const practice = attempt?.practice;
+  const priorPractice = active?.practiceSource;
+  const practiceSkill = active?.focusSkill || practice?.skillId || DEFAULT_PRACTICE[active?.params?.interviewType];
+  const skillLabel = PRACTICE_SKILLS[practiceSkill]?.label;
+  const canPractice = skillLabel && active?.params?.industry && active?.params?.difficulty;
 
   const fetchConfig = () => {
     api.config().then(data => {
@@ -181,15 +208,15 @@ export default function MvpApp() {
       setHintBusy(false);
     }
   };
-  const generate = async (event) => {
-    event.preventDefault();
+  const startCase = async (caseParams, scenario, practiceSource) => {
     if (lock.current) return;
     lock.current = true; setBusy('generate'); setError('');
     try {
       const history = [...cases, ...loadCases()];
       const result = await api.generate({
-        ...params, mvp: true, variantId, recentCases: generationHistory(history, params),
-        seenVariants: [...new Set(history.filter(item => item.params?.interviewType === params.interviewType).map(item => item.params.variantId).filter(Boolean))],
+        ...caseParams, mvp: true, variantId: scenario, recentCases: generationHistory(history, caseParams),
+        ...(practiceSource ? { focusSkill: practiceSource.skillId, previousVariant: caseParams.variantId } : {}),
+        seenVariants: [...new Set(history.filter(item => item.params?.interviewType === caseParams.interviewType).map(item => item.params.variantId).filter(Boolean))],
         seenFingerprints: [...new Set(history.flatMap(item => item.fingerprints || []))],
       });
       if (!result.caseText?.trim()) throw new Error('ИИ вернул пустой кейс. Попробуй ещё раз.');
@@ -198,14 +225,25 @@ export default function MvpApp() {
           || item.fingerprints?.some(fingerprint => received.has(fingerprint)))) {
         throw new Error('Получился повтор предыдущего кейса. Попробуй сгенерировать ещё раз.');
       }
-      if (params.interviewType === 'product_execution' && !result.caseRoute?.length) {
+      if (caseParams.interviewType === 'product_execution' && !result.caseRoute?.length) {
         throw new Error('Не удалось подготовить шаги кейса. Попробуй сгенерировать ещё раз.');
       }
-      const item = { id: crypto.randomUUID(), title: titleOf(result.caseText), caseText: result.caseText, caseIntro: result.caseIntro, caseRoute: result.caseRoute || [], fingerprints: result.fingerprints || [], params: { ...params, variantId: result.variantId || undefined }, answers: {}, attempts: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      if (practiceSource && (result.focusSkill !== practiceSource.skillId || !result.caseRoute?.some(step => step.id === 'skill_checkpoint'))) {
+        throw new Error('Не удалось подготовить тренировку навыка. Попробуй ещё раз.');
+      }
+      const item = { id: crypto.randomUUID(), title: titleOf(result.caseText), caseText: result.caseText, caseIntro: result.caseIntro, caseRoute: result.caseRoute || [], fingerprints: result.fingerprints || [], params: { ...caseParams, variantId: result.variantId || undefined }, focusSkill: result.focusSkill, practiceSource, answers: {}, attempts: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       setCases(prev => [item, ...prev]); open(item, 'solve');
     } catch (e) { setError(e.message || 'Не удалось сгенерировать кейс. Попробуй ещё раз.'); }
     finally { lock.current = false; setBusy(''); }
   };
+  const generate = event => {
+    event.preventDefault();
+    startCase(params, variantId);
+  };
+  const practiceAgain = () => startCase(active.params, 'surprise', {
+    skillId: practiceSkill, title: active.title || titleOf(active.caseText),
+    feedback: practice?.skillId === practiceSkill ? practice : undefined,
+  });
   const evaluate = async () => {
     if (lock.current || hintLock.current || !active) return;
     const missing = fields.find(([key]) => !active.answers[key]?.trim());
@@ -214,9 +252,10 @@ export default function MvpApp() {
     const item = active;
     const answers = { ...item.answers };
     try {
-      const result = await api.evaluate({ caseText: story ? item.caseIntro : item.caseText, answers, trackId: item.params.trackId, interviewType: item.params.interviewType, mvp: true, hintUsage: countHints(item.hints), ...(caseRoute.length ? { caseRoute } : {}) });
+      const hintedSteps = Object.entries(item.hints || {}).filter(([, hint]) => hint?.basic || hint?.ai?.length).map(([id]) => id);
+      const result = await api.evaluate({ caseText: story ? item.caseIntro : item.caseText, answers, trackId: item.params.trackId, interviewType: item.params.interviewType, mvp: true, hintUsage: countHints(item.hints), hintedSteps, ...(item.focusSkill ? { focusSkill: item.focusSkill } : {}), ...(caseRoute.length ? { caseRoute } : {}) });
       if (!result.evaluation?.trim()) throw new Error('ИИ вернул пустой разбор. Попробуй ещё раз.');
-      update(item.id, c => ({ ...c, attempts: [...c.attempts, { answers, questionVersion: 2, questions: fields, evaluation: result.evaluation, score: result.score, createdAt: new Date().toISOString() }] }));
+      update(item.id, c => ({ ...c, attempts: [...c.attempts, { answers, questionVersion: 2, questions: fields, evaluation: result.evaluation, score: result.score, practice: result.practice, createdAt: new Date().toISOString() }] }));
       setAttemptIndex(null); go('review');
     } catch (e) { setError(e.message || 'Не удалось проверить решение. Твой ответ сохранён — попробуй ещё раз.'); }
     finally { lock.current = false; setBusy(''); }
@@ -302,6 +341,7 @@ export default function MvpApp() {
       {screen === 'solve' && active && <>
         <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
         {!story && <div className="clean-eyebrow">Шаг 2 · Решение</div>}<h1>{story ? active.title : 'Твой ход'}</h1>
+        {active.focusSkill && skillLabel && <p className="mvp-muted">Фокус тренировки · {skillLabel}</p>}
         {!story && <p className="mvp-lead">Один кейс, {fields.length} шагов. Отвечай на один вопрос за раз — все мысли сложатся в полное решение.</p>}
         <CaseFlow key={active.id} fields={fields} caseRoute={caseRoute} answers={active.answers} questionId={active.currentQuestionId}
           interviewType={active.params.interviewType} hints={active.hints} hintBusy={hintBusy} onRevealHint={revealHint} onRequestHint={requestHint}
@@ -315,11 +355,25 @@ export default function MvpApp() {
           condition={<><p className="mvp-muted">Данные кейса вымышлены и даны для тренировки.</p><ConditionAssistant key={active.id} caseText={conditionText}/><CaseContent text={conditionText}/><CaseMaterials key={`materials-${active.id}`} item={active} savedIds={savedTheory} onToggle={toggleTheory} onOpenTheory={() => { setTheorySavedOnly(true); go('cards'); }}/>{attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation} score={attempts.at(-1).score}/></details>}</>}/>
       </>}
       {screen === 'review' && active && attempt && <div className="mvp-narrow">
-        <button className="mvp-back" onClick={() => go('library')}>← Мои кейсы</button>
+        <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
         <div className="clean-eyebrow">Шаг 3 · Обратная связь</div><h1>Разбор решения</h1><p className="mvp-lead">{titleOf(active.title || active.caseText)}</p>
         <label className="mvp-version">Версия решения<select value={attemptIndex ?? attempts.length - 1} onChange={e => setAttemptIndex(Number(e.target.value))}>{attempts.map((a, i) => <option key={i} value={i}>Версия {i + 1} · {new Date(a.createdAt).toLocaleString('ru-RU')}</option>)}</select></label>
         <article className="mvp-card mvp-review"><Review value={attempt.evaluation} score={attempt.score}/>{/(конверс|воронк|метрик|conversion|funnel|metric)/i.test(attempt.evaluation) && <div className="mycases-learning-tip"><strong>Хочешь потренировать метрики?</strong><p>Это дополнительная практика по теме разбора, а не автоматическая оценка твоих навыков.</p><button type="button" onClick={() => go('learning')}>Перейти к урокам по метрикам →</button></div>}<details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div>{(!story || fields.some(([id]) => id === key)) && <button className="mvp-edit-step" onClick={() => { update(active.id, c => ({ ...c, currentQuestionId: key })); go('solve'); }}>Доработать этот шаг</button>}</section>)}</details></article>
-        <div className="mvp-actions"><Button variant="accent" onClick={() => go('solve')}>Улучшить решение</Button><Button variant="neutral" onClick={() => go('generate')}>Новый кейс</Button></div>
+        {canPractice && <section className="mvp-card mvp-practice-link">
+          <h2>{skillLabel}</h2>
+          {priorPractice ? <div className="mvp-practice-comparison">
+            <div><strong>Прошлый кейс · {priorPractice.title}</strong>
+              {priorPractice.feedback ? <PracticeStatus feedback={priorPractice.feedback}/> : <p>Сравнение по этому навыку началось с текущей тренировки.</p>}
+            </div>
+            <div><strong>Текущий кейс</strong>
+              {practice?.skillId === practiceSkill ? <PracticeStatus feedback={practice}/> : <p>Нет оценки контрольного шага.</p>}
+            </div>
+          </div> : practice ? <PracticeStatus feedback={practice}/> : <p>В новом кейсе будет отдельный вопрос на этот навык.</p>}
+          <Button variant="accent" disabled={!!busy} onClick={practiceAgain}>
+            {busy ? 'Подбираем кейс…' : active.focusSkill ? 'Ещё кейс на этот навык' : 'Потренировать этот навык'}
+          </Button>
+        </section>}
+        <div className="mvp-actions"><Button variant={canPractice ? 'neutral' : 'accent'} disabled={!!busy} onClick={() => go('solve')}>Улучшить решение</Button><Button variant="neutral" disabled={!!busy} onClick={() => go('generate')}>Новый кейс</Button></div>
         <p className="mvp-muted">Редактирование продолжится с последнего черновика. ИИ может ошибаться — сверяй выводы с данными кейса.</p>
       </div>}
     </main>

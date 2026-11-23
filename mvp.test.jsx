@@ -40,6 +40,40 @@ function fillCase(problem = 'Падает конверсия') {
   });
 }
 describe('MVP core flow', () => {
+  it('starts a new case from the review and compares the same skill across attempts', async () => {
+    const params = { trackId: 'product', interviewType: 'product_strategy', industry: 'Маркетплейсы', difficulty: 'Начальный', variantId: 'portfolio' };
+    const feedback = { skillId: 'validation', observation: 'Не хватило критерия проверки.', applied: false, assisted: true };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([{
+      id: 'origin', title: 'Пилот доставки', caseText: 'Первый кейс.', params,
+      answers: { validation: 'Спрошу пользователей' },
+      attempts: [{ answers: { validation: 'Спрошу пользователей' }, evaluation: review, practice: feedback, createdAt: '2026-11-23' }],
+    }]));
+    api.generate.mockResolvedValueOnce({
+      caseText: '# Запуск подписки\nНовая задача', caseIntro: 'Команда сравнивает варианты.',
+      variantId: 'monetization', focusSkill: 'validation',
+      caseRoute: [{ id: 'skill_checkpoint', chapter: 4, chapterTitle: 'Решение', question: 'Какую проверку проведёшь?', longAnswer: true }],
+    });
+    api.evaluate.mockResolvedValueOnce({
+      evaluation: review,
+      practice: { skillId: 'validation', observation: 'Есть проверка и порог решения.', applied: true, assisted: false },
+    });
+    render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: 'Посмотреть AI-разбор' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Потренировать этот навык' }));
+    await screen.findByRole('heading', { name: 'Запуск подписки' });
+    expect(api.generate).toHaveBeenCalledWith(expect.objectContaining({
+      focusSkill: 'validation', variantId: 'surprise', previousVariant: 'portfolio',
+    }));
+    expect(screen.getByText('Фокус тренировки · Проверка гипотез')).toBeTruthy();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Сравню две группы по оплатам и зафиксирую порог.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
+    await screen.findByText('Есть проверка и порог решения.');
+    expect(screen.getByText('Не хватило критерия проверки.')).toBeTruthy();
+    expect(screen.getByText('Критерий выполнен · Без подсказок на этом шаге')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Ещё кейс на этот навык' })).toBeTruthy();
+    expect(api.evaluate).toHaveBeenCalledWith(expect.objectContaining({ focusSkill: 'validation', hintedSteps: [] }));
+  });
+
   it('shows eight variants per direction and submits the chosen training', async () => {
     render(<MvpApp/>);
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));

@@ -13,6 +13,8 @@ class GenerateCaseRequest(BaseModel):
     interviewType: Optional[str] = None
     grade: Optional[str] = None
     variantId: Optional[str] = Field(default=None, max_length=40)
+    focusSkill: Optional[str] = Field(default=None, max_length=40)
+    previousVariant: Optional[str] = Field(default=None, max_length=40)
     seenVariants: list[Annotated[str, Field(max_length=40)]] = Field(default_factory=list, max_length=32)
     seenFingerprints: list[Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]] = Field(default_factory=list)
     recentCases: list[Annotated[str, Field(max_length=2000)]] = Field(
@@ -55,6 +57,7 @@ class GenerateCaseResponse(BaseModel):
     caseRoute: list[CaseRouteStep] = Field(default_factory=list)
     caseIntro: str = ""
     variantId: Optional[str] = None
+    focusSkill: Optional[str] = None
     fingerprints: list[str] = Field(default_factory=list)
 
 
@@ -133,11 +136,22 @@ class EvaluateRequest(BaseModel):
     trackId: Optional[str] = None
     caseRoute: list[CaseRouteStep] = Field(default_factory=list, max_length=64)
     hintUsage: HintUsage = Field(default_factory=HintUsage)
+    focusSkill: Optional[str] = Field(default=None, max_length=40)
+    hintedSteps: Optional[list[Annotated[str, Field(max_length=48)]]] = Field(default=None, max_length=128)
+
+
+class PracticeFeedback(BaseModel):
+    skillId: str
+    stepId: Optional[str] = None
+    observation: str = ""
+    applied: Optional[bool] = None
+    assisted: Optional[bool] = None
 
 
 class EvaluateResponse(BaseModel):
     evaluation: str
     score: Optional[CaseScore] = None
+    practice: Optional[PracticeFeedback] = None
 
 
 class LearnExplainRequest(BaseModel):

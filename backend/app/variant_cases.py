@@ -11,6 +11,8 @@ from .story_routes import assemble_story, decision, question
 
 
 VARIANTS = json.loads(Path(__file__).with_name("case_variants.json").read_text(encoding="utf-8"))
+PRACTICE_SKILLS = json.loads(Path(__file__).with_name("practice_skills.json").read_text(encoding="utf-8"))
+CHECKPOINT = "skill_checkpoint"
 
 
 class EvidenceChoice(BaseModel):
@@ -118,7 +120,8 @@ def generate_variant(payload, call_model):
     variants = VARIANTS.get(payload.interviewType, [])
     by_id = {entry[0]: entry for entry in variants}
     if payload.variantId == "surprise":
-        variant = choice([entry for entry in variants if entry[0] not in payload.seenVariants] or variants)
+        eligible = [entry for entry in variants if entry[0] != payload.previousVariant] or variants
+        variant = choice([entry for entry in eligible if entry[0] not in payload.seenVariants] or eligible)
     else:
         variant = by_id[payload.variantId]
     variant_id, title, focus = variant
@@ -145,6 +148,13 @@ def generate_variant(payload, call_model):
         "поведения после первого использования. Оставь исходную тему пользователя."
     )
     seen = set(payload.seenFingerprints)
+    if payload.focusSkill:
+        skill = PRACTICE_SKILLS[payload.focusSkill]
+        prompt += (
+            f"\nВ этом кейсе тренируем навык «{skill['label']}». "
+            f"Подготовь контекст и данные, по которым можно ответить на вопрос: {skill['question']} "
+            "На обеих ветках должно хватать информации для проверки этого навыка."
+        )
     angles = sample([
         "срочный выбор при ограниченной мощности", "разные потребности постоянных и новых клиентов",
         "компромисс между маржой и охватом", "несовпадение спроса и фактического использования",
@@ -170,7 +180,7 @@ def generate_variant(payload, call_model):
     raise RuntimeError("Не удалось создать новый вариант. Попробуй сгенерировать ещё раз.")
 
 
-def variant_route(story):
+def variant_route(story, focus_skill=None):
     paths = {}
     for index, choice in enumerate(story.choices):
         paths[choice.option] = [
@@ -178,6 +188,15 @@ def variant_route(story):
             question(f"variant_gap_{index}", choice.followUp or "Какой вывод из этого среза пока нельзя сделать?",
                      hint="Укажи ограничение выборки или недостающую разбивку."),
         ]
+    closing = [
+        question("variant_metric", "Назови метрику результата и срок измерения."),
+        question("variant_risk", "Какой сигнал заставит тебя остановить или пересмотреть план?"),
+    ]
+    if focus_skill:
+        skill = PRACTICE_SKILLS[focus_skill]
+        closing.append(question(CHECKPOINT, skill["question"], long=True, hint=skill["hint"]))
+    closing.append(question("variant_final", story.finalQuestion, long=True,
+                            hint="Обоснуй выбор данными из открытого среза и назови следующий шаг."))
     return assemble_story([
         ("Первый запрос", [
             question("variant_open", story.openingQuestion),
@@ -213,12 +232,7 @@ def variant_route(story):
             }),
             question("variant_tradeoff", "Каким компромиссом платишь за этот выбор?"),
         ]),
-        ("Финальное решение", [
-            question("variant_metric", "Назови метрику результата и срок измерения."),
-            question("variant_risk", "Какой сигнал заставит тебя остановить или пересмотреть план?"),
-            question("variant_final", story.finalQuestion, long=True,
-                     hint="Обоснуй выбор данными из открытого среза и назови следующий шаг."),
-        ]),
+        ("Финальное решение", closing),
     ])
 
 

@@ -10,6 +10,22 @@ from app.variant_cases import VARIANTS
 
 class MvpTests(unittest.TestCase):
     @patch('app.main.call_yandex_gpt')
+    def test_skill_checkpoint_is_graded_with_its_own_hint_history(self, model):
+        model.return_value = json.dumps({
+            'summary': 'Разбор', 'qualityScore': 80,
+            'practice': {'applied': True, 'observation': 'Сравнила долю ошибок в двух группах.'},
+        })
+        result = evaluate(EvaluateRequest(
+            mvp=True, interviewType='product_execution', caseText='Сбой при оформлении',
+            focusSkill='validation', hintedSteps=['variant_open'],
+            caseRoute=[{'id': 'skill_checkpoint', 'question': 'Как различишь причины сбоя?'}],
+            answers={'skill_checkpoint': 'Сравню долю ошибок до и после релиза по двум версиям.'},
+        ))
+        self.assertEqual((result.practice.skillId, result.practice.stepId), ('validation', 'skill_checkpoint'))
+        self.assertEqual((result.practice.applied, result.practice.assisted), (True, False))
+        self.assertIn('[skill_checkpoint]', model.call_args.args[0])
+
+    @patch('app.main.call_yandex_gpt')
     def test_catalog_and_generated_variants_reject_reused_data_or_questions(self, model):
         self.assertEqual(set(VARIANTS), set(PRODUCT_INTERVIEWS))
         self.assertEqual(len(VARIANTS), 6)
@@ -48,6 +64,17 @@ class MvpTests(unittest.TestCase):
         self.assertIn('150 закупок', fresh.caseText)
         first_choice = next(step for step in fresh.caseRoute if step.id == "variant_source")
         self.assertEqual(set(first_choice.nextByAnswer), {"Регулярные закупки", "Разовые покупатели"})
+        model.side_effect = None
+        model.return_value = json.dumps(second)
+        focused = generate_case(GenerateCaseRequest(**{
+            **params, 'variantId': 'surprise', 'focusSkill': 'validation',
+            'seenVariants': [item[0] for item in VARIANTS['product_segmentation']],
+            'previousVariant': 'behavior',
+        }))
+        self.assertEqual(focused.focusSkill, 'validation')
+        self.assertNotEqual(focused.variantId, 'behavior')
+        checkpoint = next(step for step in focused.caseRoute if step.id == 'skill_checkpoint')
+        self.assertEqual(checkpoint.nextStepId, 'variant_final')
 
     @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","qualityScore":84}')
     def test_mvp_score_applies_a_deduction_after_grading(self, model):
