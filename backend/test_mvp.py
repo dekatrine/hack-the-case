@@ -3,10 +3,37 @@ from unittest.mock import patch
 from fastapi import HTTPException
 from app.main import generate_case, evaluate, PRODUCT_INTERVIEWS
 from app.schemas import GenerateCaseRequest, EvaluateRequest
-from app.prompts import MVP_RUBRIC_SYSTEM
+from app.prompts import CASE_GENERATION_SYSTEM, CASE_NOVELTY_SYSTEM, MVP_RUBRIC_SYSTEM
 
 
 class MvpTests(unittest.TestCase):
+    @patch('app.main.call_yandex_gpt')
+    def test_generation_discards_verbatim_and_semantic_repeats(self, model):
+        old = 'Заказы упали после релиза iOS. Проверь ошибки оплаты.'
+        paraphrase = 'После обновления iPhone покупатели реже платят. Найди причину.'
+        new = 'Заказов меньше вечером: топовые товары пропадают из наличия.'
+        model.side_effect = [f'**{old}**', paraphrase, '{"duplicate": true}', new, '{"duplicate": false}']
+        result = generate_case(GenerateCaseRequest(
+            industry='Retail', difficulty='Начальный', mvp=True,
+            interviewType='product_execution', extraContext='Падают заказы из поиска',
+            recentCases=[old],
+        ))
+        self.assertEqual(result.caseText, new)
+        self.assertIn('Падают заказы из поиска', model.call_args_list[0].args[1])
+        self.assertEqual([call.args[0] for call in model.call_args_list], [
+            CASE_GENERATION_SYSTEM, CASE_GENERATION_SYSTEM, CASE_NOVELTY_SYSTEM,
+            CASE_GENERATION_SYSTEM, CASE_NOVELTY_SYSTEM,
+        ])
+
+    @patch('app.main.call_yandex_gpt', side_effect=['Новый текст', '{}'] * 3)
+    def test_generation_does_not_accept_an_unverified_case(self, model):
+        with self.assertRaises(HTTPException) as error:
+            generate_case(GenerateCaseRequest(
+                industry='Retail', difficulty='Начальный', mvp=True, recentCases=['Ранее показанный кейс'],
+            ))
+        self.assertEqual(error.exception.status_code, 502)
+        self.assertIn('новым ходом решения', error.exception.detail)
+
     @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK"}')
     def test_all_types_use_distinct_generation_and_evaluation(self, model):
         prompts = set()

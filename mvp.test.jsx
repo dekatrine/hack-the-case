@@ -28,6 +28,20 @@ function fillCase(problem = 'Падает конверсия') {
   });
 }
 describe('MVP core flow', () => {
+  it('includes archived cases when generating and refuses a repeated condition', async () => {
+    await newCase();
+    const [previous] = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    cleanup();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([{ ...previous, archivedAt: new Date().toISOString() }]));
+    render(<MvpApp/>);
+    fireEvent.click(screen.getAllByRole('button', { name: /Новый кейс/ })[0]);
+    await screen.findByLabelText('02 / Отрасль');
+    fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
+    await screen.findByText('Получился повтор предыдущего кейса. Попробуй сгенерировать ещё раз.');
+    expect(api.generate).toHaveBeenLastCalledWith(expect.objectContaining({ recentCases: [previous.caseText] }));
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY))).toHaveLength(1);
+  });
+
   it('generates, saves, evaluates and keeps immutable versions when improving', async () => {
     await newCase();
     expect(api.generate).toHaveBeenCalledWith(expect.objectContaining({ mvp: true, industry: 'Маркетплейсы' }));

@@ -39,6 +39,19 @@ function loadCases() {
     return Array.isArray(data) ? data.filter(c => c && typeof c.id === 'string' && typeof c.caseText === 'string' && c.answers && Array.isArray(c.attempts)) : [];
   } catch { return []; }
 }
+const caseWords = text => text.toLowerCase().match(/[\p{L}\p{N}]+/gu)?.join(' ') || '';
+function generationHistory(cases, params) {
+  const relevance = item => Number(item.params?.industry === params.industry) + Number(item.params?.interviewType === params.interviewType);
+  const distinct = new Map();
+  for (const item of [...cases].sort((a, b) => relevance(b) - relevance(a))) {
+    const key = caseWords(item.caseText);
+    if (!key || distinct.has(key)) continue;
+    const text = item.caseText.trim();
+    distinct.set(key, text.length > 2000 ? `${text.slice(0, 1250)}\n…\n${text.slice(-745)}` : text);
+    if (distinct.size === 12) break;
+  }
+  return [...distinct.values()];
+}
 function titleOf(text) {
   return text.split('\n').find(line => line.trim())?.replace(/^[#\s]+/, '').replace(/[*`]/g, '').trim().slice(0, 100) || 'Новый кейс';
 }
@@ -109,8 +122,11 @@ export default function MvpApp() {
     if (lock.current) return;
     lock.current = true; setBusy('generate'); setError('');
     try {
-      const result = await api.generate({ ...params, mvp: true });
+      const result = await api.generate({ ...params, mvp: true, recentCases: generationHistory(cases, params) });
       if (!result.caseText?.trim()) throw new Error('ИИ вернул пустой кейс. Попробуй ещё раз.');
+      if ([...cases, ...loadCases()].some(item => caseWords(item.caseText) === caseWords(result.caseText))) {
+        throw new Error('Получился повтор предыдущего кейса. Попробуй сгенерировать ещё раз.');
+      }
       const item = { id: crypto.randomUUID(), title: titleOf(result.caseText), caseText: result.caseText, params: { ...params }, answers: {}, attempts: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       setCases(prev => [item, ...prev]); open(item, 'solve');
     } catch (e) { setError(e.message || 'Не удалось сгенерировать кейс. Попробуй ещё раз.'); }

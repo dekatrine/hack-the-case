@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Annotated, Optional
 
 from pydantic import BaseModel, Field
 
@@ -12,6 +12,7 @@ class GenerateCaseRequest(BaseModel):
     chapterId: Optional[str] = None
     interviewType: Optional[str] = None
     grade: Optional[str] = None
+    recentCases: list[Annotated[str, Field(max_length=2000)]] = Field(default_factory=list, max_length=12)
 
 
 class PhaseQuestion(BaseModel):
