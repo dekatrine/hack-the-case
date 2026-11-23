@@ -33,7 +33,7 @@ export function initialQuestion(fields, answers, savedQuestion) {
   return missing < 0 ? 0 : missing;
 }
 
-export default function CaseFlow({ fields, caseRoute = [], answers, questionId, onQuestion, onAnswer, onEvaluate, condition, busy, saveError, hasChanges, attempts, onReview, interviewType, hints = {}, hintBusy, onRevealHint, onRequestHint }) {
+export default function CaseFlow({ fields, caseRoute = [], answers, questionId, onQuestion, onAnswer, onEvaluate, condition, busy, saveError, hasChanges, attempts, onReview, interviewType, hints = {}, hintBusy, onRevealHint, onRequestHint, selfCheck = false }) {
   const [currentKey, setCurrentKey] = useState(() => fields[initialQuestion(fields, answers, questionId)][0]);
   const index = Math.max(0, fields.findIndex(([id]) => id === currentKey));
   const [key, label, hint, placeholder] = fields[index];
@@ -51,6 +51,7 @@ export default function CaseFlow({ fields, caseRoute = [], answers, questionId, 
     : interviewType === 'product_strategy' && key === 'analysis' ? 'Выбери одну цифру о рынке или ресурсах и объясни, почему она усиливает выбранный вариант.'
     : RESPONSE_GUIDANCE[key] || (evidence ? 'Открой данные шага и укажи, какое сравнение поддерживает твой вывод.' : 'Достаточно одного конкретного аргумента, который связан с условием.');
   const guidance = [hint, detail].filter(Boolean).join(' ');
+  const answerDescription = [!selfCheck && `hint-${key}`, notice && 'case-step-error'].filter(Boolean).join(' ') || undefined;
   const conditionSheet = useRef(null);
   const conditionBody = useRef(null);
   const conditionButton = useRef(null);
@@ -109,17 +110,17 @@ export default function CaseFlow({ fields, caseRoute = [], answers, questionId, 
           </button>
         </div>
         <h2 ref={heading} tabIndex={-1} id={`question-${key}`}>{label}</h2>
-        <p className="mvp-question-hint" id={`hint-${key}`}>{guidance}</p>
+        {!selfCheck && <p className="mvp-question-hint" id={`hint-${key}`}>{guidance}</p>}
         {story && Object.keys(nextByAnswer || {}).length > 0 && fields.slice(index + 1).some(([id]) => answers[id]?.trim()) &&
           <p className="mvp-question-hint">Если изменить выбор, ответы после этого шага начнутся заново.</p>}
-        {options?.length ? <fieldset className="mvp-step-options" aria-labelledby={`question-${key}`} aria-describedby={`hint-${key}${notice ? ' case-step-error' : ''}`} disabled={!!busy}>
+        {options?.length ? <fieldset className="mvp-step-options" aria-labelledby={`question-${key}`} aria-describedby={answerDescription} disabled={!!busy}>
           {options.map((option, optionIndex) => <label key={option}>
             <input ref={optionIndex === 0 ? input : undefined} type="radio" name={`answer-${key}`} value={option} checked={answers[key] === option} onChange={() => { setNotice(''); onAnswer(key, option); }}/>
             <span>{option}</span>
           </label>)}
-        </fieldset> : <label className={`mvp-question-input${longAnswer ? ' mvp-question-input-long' : ''}`} htmlFor={`answer-${key}`}><span className="mvp-visually-hidden">{index + 1}. {label}</span><textarea ref={input} id={`answer-${key}`} aria-describedby={`hint-${key}${notice ? ' case-step-error' : ''}`} aria-invalid={notice ? true : undefined} placeholder={longAnswer ? 'Разверни аргументы и опирайся на данные…' : placeholder || 'Запиши ход своих мыслей…'} rows={longAnswer ? 9 : story ? 3 : 6} disabled={!!busy} value={answers[key] || ''} onChange={e => { setNotice(''); onAnswer(key, e.target.value); }}/></label>}
+        </fieldset> : <label className={`mvp-question-input${longAnswer ? ' mvp-question-input-long' : ''}`} htmlFor={`answer-${key}`}><span className="mvp-visually-hidden">{index + 1}. {label}</span><textarea ref={input} id={`answer-${key}`} aria-describedby={answerDescription} aria-invalid={notice ? true : undefined} placeholder={selfCheck ? 'Твой ответ…' : longAnswer ? 'Разверни аргументы и опирайся на данные…' : placeholder || 'Запиши ход своих мыслей…'} rows={longAnswer ? 9 : story ? 3 : 6} disabled={!!busy} value={answers[key] || ''} onChange={e => { setNotice(''); onAnswer(key, e.target.value); }}/></label>}
         {notice && <p id="case-step-error" role="alert" className="mvp-step-error">{notice}</p>}
-        <div className="mvp-step-help">
+        {!selfCheck && <><div className="mvp-step-help">
           <button type="button" className="mvp-step-hint-toggle" disabled={!!busy || hintBusy} aria-expanded={showHint} aria-controls="case-step-hint" onClick={() => {
             if (!showHint && !hints[key]?.basic) onRevealHint(key);
             setShowHint(!showHint);
@@ -130,13 +131,13 @@ export default function CaseFlow({ fields, caseRoute = [], answers, questionId, 
         </div>
         {showHint && <div id="case-step-hint" className="mvp-step-hint"><b>С чего начать</b><p>{GUIDES[key] || 'Запиши, что уже известно из условия, и отдельно назови одно допущение, которое меняет твой вывод.'}</p></div>}
         {!!stepHints.length && <div className="mvp-step-hint" aria-live="polite"><b>ИИ-подсказки</b>{stepHints.map(text => <p key={text}>{text}</p>)}</div>}
-        {hintError?.key === key && <p className="mvp-step-error" role="alert">{hintError.message}</p>}
+        {hintError?.key === key && <p className="mvp-step-error" role="alert">{hintError.message}</p>}</>}
         <p className="mvp-muted mvp-autosave" role="status">{saveError ? 'Сохранение недоступно' : 'Черновик сохраняется в этом браузере'}</p>
-        <div className="mvp-step-navigation"><Button variant="neutral" disabled={!!busy || hintBusy || index === 0} onClick={() => move(index - 1)}>Назад</Button><Button variant="accent" disabled={!!busy || hintBusy || (!hasNext && !hasChanges)} icon={<ArrowRight size={17}/>} onClick={forward}>{busy ? 'Разбираем решение…' : hasNext ? 'Дальше' : attempts.length ? 'Проверить новую версию' : 'Получить ИИ-разбор'}</Button></div>
+        <div className="mvp-step-navigation"><Button variant="neutral" disabled={!!busy || hintBusy || index === 0} onClick={() => move(index - 1)}>Назад</Button><Button variant="accent" disabled={!!busy || hintBusy || (!hasNext && !hasChanges)} icon={<ArrowRight size={17}/>} onClick={forward}>{busy ? 'Разбираем решение…' : hasNext ? 'Дальше' : attempts.length ? 'Проверить новую версию' : selfCheck ? 'Завершить и получить разбор' : 'Получить ИИ-разбор'}</Button></div>
         {!hasNext && completed < fields.length && <p className="mvp-muted mvp-step-note">Перед разбором заполни все ответы. Кнопка вернёт к первому пропущенному вопросу.</p>}
         {!hasChanges && <p className="mvp-muted mvp-step-note">Измени ответ, чтобы проверить новую версию.</p>}
         {busy && <p role="status" className="mvp-step-note">Проверяем всё решение: аргументы, данные и рекомендацию…</p>}
-        {attempts.length > 0 && <button type="button" className="mvp-step-review-link" disabled={!!busy} onClick={onReview}>Посмотреть предыдущий разбор</button>}
+        {!selfCheck && attempts.length > 0 && <button type="button" className="mvp-step-review-link" disabled={!!busy} onClick={onReview}>Посмотреть предыдущий разбор</button>}
       </section>
     </div>
     <dialog ref={conditionSheet} id="case-condition-sheet" className="mvp-condition-sheet" aria-labelledby="case-condition-title"

@@ -44,7 +44,7 @@ export default function CaseLibrary({ cases, interviewTypes, onOpen, onNew, onAr
       const totalSteps=item.caseRoute?.length||interview?.questions?.length||8;
       const percentage=Math.min(100,Math.round(filled/totalSteps*100));
       return <article className="mycases-item" key={item.id}>
-        <div className="mycases-item-top"><span>{label}</span><span>{dateLabel(item.updatedAt||item.createdAt)}</span></div>
+        <div className="mycases-item-top"><span>{label}{item.mode === 'self_check' ? ' · Самопроверка' : ''}</span><span>{dateLabel(item.updatedAt||item.createdAt)}</span></div>
         <div className="mycases-item-main"><div><span className="mycases-state">{STATUS_LABELS[state]}</span><h2>{title}</h2><p>{item.params?.industry||'Без указанной отрасли'}{item.params?.difficulty?` · ${item.params.difficulty}`:''}</p></div><span className="mycases-count">{reviewed?`${item.attempts.length} версий`:story?answerCountLabel(filled):`${filled} из ${totalSteps} ответов`}</span></div>
         {!reviewed && !story && <div className="mycases-progress" aria-label={`Заполнено ${percentage}%`}><span style={{width:`${percentage}%`}}/></div>}
         <div className="mycases-actions">

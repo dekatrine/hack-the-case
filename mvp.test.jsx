@@ -40,6 +40,35 @@ function fillCase(problem = 'Падает конверсия') {
   });
 }
 describe('MVP core flow', () => {
+  it('resumes a self-check with case data and shows the review after submission', async () => {
+    render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
+    await screen.findByLabelText('02 / Отрасль');
+    fireEvent.click(screen.getByRole('button', { name: 'Самопроверка' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
+    await screen.findByText('Самопроверка');
+    expect(openCondition().getByText('Конверсия упала с 10% до 8%.')).toBeTruthy();
+    expect(screen.queryByText('Разобраться в условии')).toBeNull();
+    closeCondition();
+    expect(screen.queryByRole('button', { name: /подсказка/i })).toBeNull();
+    expect(screen.getByRole('textbox').getAttribute('aria-describedby')).toBeNull();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Начну с причины падения.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Дальше' }));
+    expect(api.evaluate).not.toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY))[0].mode).toBe('self_check');
+    cleanup(); render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
+    expect(screen.getByText('Самопроверка')).toBeTruthy();
+    expect(screen.getByText('Шаг 2 из 8')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
+    expect(screen.getByRole('textbox').value).toBe('Начну с причины падения.');
+    fillCase();
+    fireEvent.click(screen.getByRole('button', { name: 'Завершить и получить разбор' }));
+    await screen.findByText('Результат самопроверки');
+    expect(api.evaluate).toHaveBeenCalledTimes(1);
+    expect(api.evaluate).toHaveBeenCalledWith(expect.objectContaining({ hintedSteps: [], hintUsage: { basic: 0, ai: 0 } }));
+  });
+
   it('starts a new case from the review and compares the same skill across attempts', async () => {
     const params = { trackId: 'product', interviewType: 'product_strategy', industry: 'Маркетплейсы', difficulty: 'Начальный', variantId: 'portfolio' };
     const feedback = { skillId: 'validation', observation: 'Не хватило критерия проверки.', applied: false, assisted: true };

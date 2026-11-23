@@ -136,8 +136,10 @@ export default function MvpApp() {
   const lock = useRef(false);
   const hintLock = useRef(false);
   const [params, setParams] = useState({ trackId: 'product', interviewType: 'product_sense', industry: '', difficulty: '', extraContext: '' });
+  const [mode, setMode] = useState('practice');
   const [variantId, setVariantId] = useState('surprise');
   const active = cases.find(c => c.id === selected);
+  const selfCheck = active?.mode === 'self_check';
   const story = hasStory(active?.caseRoute);
   const caseRoute = story ? storyPath(active.caseRoute, active.answers) : active?.caseRoute || [];
   const fields = caseRoute.length ? routeFields(caseRoute) : interviewFields(active?.params?.interviewType) || FIELDS;
@@ -179,12 +181,15 @@ export default function MvpApp() {
   const open = (c, next) => { setSelected(c.id); setAttemptIndex(null); go(next); };
   const archive = (item, shouldArchive) => update(item.id, c => ({ ...c, archivedAt: shouldArchive ? new Date().toISOString() : null, updatedAt: new Date().toISOString() }));
   const retryCase = (item) => { const now = new Date().toISOString(); const copy = duplicateAsNewAttempt(item, crypto.randomUUID(), now); setCases(prev => [copy, ...prev]); open(copy, 'solve'); };
-  const revealHint = key => update(active.id, item => ({
-    ...item, hints: { ...item.hints, [key]: { ...item.hints?.[key], basic: true } },
-  }));
+  const revealHint = key => {
+    if (selfCheck) return;
+    update(active.id, item => ({
+      ...item, hints: { ...item.hints, [key]: { ...item.hints?.[key], basic: true } },
+    }));
+  };
   const requestHint = async (key, question, guidance) => {
     const previous = active.hints?.[key]?.ai || [];
-    if (hintLock.current || lock.current || previous.length >= 2) return;
+    if (selfCheck || hintLock.current || lock.current || previous.length >= 2) return;
     hintLock.current = true;
     setHintBusy(true);
     const item = active;
@@ -208,7 +213,7 @@ export default function MvpApp() {
       setHintBusy(false);
     }
   };
-  const startCase = async (caseParams, scenario, practiceSource) => {
+  const startCase = async (caseParams, scenario, caseMode, practiceSource) => {
     if (lock.current) return;
     lock.current = true; setBusy('generate'); setError('');
     try {
@@ -231,16 +236,16 @@ export default function MvpApp() {
       if (practiceSource && (result.focusSkill !== practiceSource.skillId || !result.caseRoute?.some(step => step.id === 'skill_checkpoint'))) {
         throw new Error('Не удалось подготовить тренировку навыка. Попробуй ещё раз.');
       }
-      const item = { id: crypto.randomUUID(), title: titleOf(result.caseText), caseText: result.caseText, caseIntro: result.caseIntro, caseRoute: result.caseRoute || [], fingerprints: result.fingerprints || [], params: { ...caseParams, variantId: result.variantId || undefined }, focusSkill: result.focusSkill, practiceSource, answers: {}, attempts: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      const item = { id: crypto.randomUUID(), title: titleOf(result.caseText), caseText: result.caseText, caseIntro: result.caseIntro, caseRoute: result.caseRoute || [], fingerprints: result.fingerprints || [], params: { ...caseParams, variantId: result.variantId || undefined }, mode: caseMode, focusSkill: result.focusSkill, practiceSource, answers: {}, attempts: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       setCases(prev => [item, ...prev]); open(item, 'solve');
     } catch (e) { setError(e.message || 'Не удалось сгенерировать кейс. Попробуй ещё раз.'); }
     finally { lock.current = false; setBusy(''); }
   };
   const generate = event => {
     event.preventDefault();
-    startCase(params, variantId);
+    startCase(params, variantId, mode);
   };
-  const practiceAgain = () => startCase(active.params, 'surprise', {
+  const practiceAgain = () => startCase(active.params, 'surprise', active.mode || 'practice', {
     skillId: practiceSkill, title: active.title || titleOf(active.caseText),
     feedback: practice?.skillId === practiceSkill ? practice : undefined,
   });
@@ -334,6 +339,14 @@ export default function MvpApp() {
           <label>02 / Отрасль<span className="mvp-select-wrap"><select required disabled={!!busy} value={params.industry} onChange={e => setParams(p => ({ ...p, industry: e.target.value }))}>{config.industries.map(x => <option value={x} key={x}>{x.includes(' / ') ? x.split(' / ').slice(1).join(' / ') : x}</option>)}</select><ChevronDown size={16}/></span></label>
           <fieldset><legend>03 / Сложность</legend><div className="mvp-levels">{Object.keys(config.difficultyLevels).map(x => <button type="button" aria-pressed={params.difficulty === x} className={params.difficulty === x ? 'selected' : ''} disabled={!!busy} key={x} onClick={() => setParams(p => ({ ...p, difficulty:x }))}>{x}</button>)}</div></fieldset>
           <label><span>04 / Свой контекст <small className="mvp-muted">необязательно</small></span><textarea maxLength={2000} disabled={!!busy} value={params.extraContext} onChange={e => setParams(p => ({ ...p, extraContext: e.target.value }))} placeholder="Например: пользователи добавляют товары в корзину, но не оформляют заказ" rows={2}/></label>
+          <fieldset>
+            <legend>Режим прохождения</legend>
+            <div className="mvp-levels">
+              <button type="button" className={mode === 'practice' ? 'selected' : ''} aria-pressed={mode === 'practice'} disabled={!!busy} onClick={() => setMode('practice')}>Тренировка</button>
+              <button type="button" className={mode === 'self_check' ? 'selected' : ''} aria-pressed={mode === 'self_check'} disabled={!!busy} onClick={() => setMode('self_check')}>Самопроверка</button>
+            </div>
+            <p className="mvp-muted">{mode === 'self_check' ? 'Решаешь самостоятельно. Разбор откроется в конце.' : 'Подсказки и материалы доступны по ходу кейса.'}</p>
+          </fieldset>
           <div className="mvp-form-footer"><span><Clock3 size={14}/>15–20 минут на решение</span><Button variant="accent" type="submit" icon={<ArrowRight size={17}/>} disabled={!!busy}>{busy ? 'Генерируем кейс…' : 'Сгенерировать кейс'}</Button></div>
           {busy && <p role="status">ИИ готовит условие и данные. Это может занять около минуты.</p>}
         </form><aside className="mvp-setup-aside"><span className="mvp-kicker">Твоя тренировка</span><h2>{selectedType.label}</h2><p>{selectedType.description}. Условие, вопросы и разбор адаптируются под выбранный тип.</p><div className="mvp-setup-spec"><span>Направление<b>Продуктовое</b></span><span>Уровень<b>{params.difficulty}</b></span><span>Формат<b>Письменный кейс</b></span></div><div className="mvp-aside-bottom"><Sparkles size={20}/><b>Обратная связь по делу</b><p>Что получилось, где не хватает аргументов и что улучшить в следующей попытке.</p></div></aside></div>}
@@ -341,10 +354,12 @@ export default function MvpApp() {
       {screen === 'solve' && active && <>
         <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
         {!story && <div className="clean-eyebrow">Шаг 2 · Решение</div>}<h1>{story ? active.title : 'Твой ход'}</h1>
-        {active.focusSkill && skillLabel && <p className="mvp-muted">Фокус тренировки · {skillLabel}</p>}
+        {(selfCheck || (active.focusSkill && skillLabel)) && <p className="mvp-muted">
+          {selfCheck ? 'Самопроверка' : 'Фокус тренировки'}{active.focusSkill && skillLabel ? ` · ${skillLabel}` : ''}
+        </p>}
         {!story && <p className="mvp-lead">Один кейс, {fields.length} шагов. Отвечай на один вопрос за раз — все мысли сложатся в полное решение.</p>}
         <CaseFlow key={active.id} fields={fields} caseRoute={caseRoute} answers={active.answers} questionId={active.currentQuestionId}
-          interviewType={active.params.interviewType} hints={active.hints} hintBusy={hintBusy} onRevealHint={revealHint} onRequestHint={requestHint}
+          interviewType={active.params.interviewType} hints={active.hints} hintBusy={hintBusy} onRevealHint={revealHint} onRequestHint={requestHint} selfCheck={selfCheck}
           onQuestion={key => update(active.id, c => ({ ...c, currentQuestionId: key }))}
           onAnswer={(key, value) => update(active.id, c => ({
             ...c, currentQuestionId: key,
@@ -352,11 +367,20 @@ export default function MvpApp() {
           }))}
           onEvaluate={evaluate} busy={busy} saveError={saveError} hasChanges={hasChanges} attempts={attempts}
           onReview={() => { setAttemptIndex(null); go('review'); }}
-          condition={<><p className="mvp-muted">Данные кейса вымышлены и даны для тренировки.</p><ConditionAssistant key={active.id} caseText={conditionText}/><CaseContent text={conditionText}/><CaseMaterials key={`materials-${active.id}`} item={active} savedIds={savedTheory} onToggle={toggleTheory} onOpenTheory={() => { setTheorySavedOnly(true); go('cards'); }}/>{attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation} score={attempts.at(-1).score}/></details>}</>}/>
+          condition={<>
+            <p className="mvp-muted">Данные кейса вымышлены и даны для тренировки.</p>
+            {!selfCheck && <ConditionAssistant key={active.id} caseText={conditionText}/>}
+            <CaseContent text={conditionText}/>
+            {!selfCheck && <>
+              <CaseMaterials key={`materials-${active.id}`} item={active} savedIds={savedTheory} onToggle={toggleTheory} onOpenTheory={() => { setTheorySavedOnly(true); go('cards'); }}/>
+              {attempts.length > 0 && <details><summary>Предыдущий разбор</summary><Review value={attempts.at(-1).evaluation} score={attempts.at(-1).score}/></details>}
+            </>}
+          </>}/>
       </>}
       {screen === 'review' && active && attempt && <div className="mvp-narrow">
         <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
         <div className="clean-eyebrow">Шаг 3 · Обратная связь</div><h1>Разбор решения</h1><p className="mvp-lead">{titleOf(active.title || active.caseText)}</p>
+        {selfCheck && <p className="mvp-muted">Результат самопроверки</p>}
         <label className="mvp-version">Версия решения<select value={attemptIndex ?? attempts.length - 1} onChange={e => setAttemptIndex(Number(e.target.value))}>{attempts.map((a, i) => <option key={i} value={i}>Версия {i + 1} · {new Date(a.createdAt).toLocaleString('ru-RU')}</option>)}</select></label>
         <article className="mvp-card mvp-review"><Review value={attempt.evaluation} score={attempt.score}/>{/(конверс|воронк|метрик|conversion|funnel|metric)/i.test(attempt.evaluation) && <div className="mycases-learning-tip"><strong>Хочешь потренировать метрики?</strong><p>Это дополнительная практика по теме разбора, а не автоматическая оценка твоих навыков.</p><button type="button" onClick={() => go('learning')}>Перейти к урокам по метрикам →</button></div>}<details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div>{(!story || fields.some(([id]) => id === key)) && <button className="mvp-edit-step" onClick={() => { update(active.id, c => ({ ...c, currentQuestionId: key })); go('solve'); }}>Доработать этот шаг</button>}</section>)}</details></article>
         {canPractice && <section className="mvp-card mvp-practice-link">
