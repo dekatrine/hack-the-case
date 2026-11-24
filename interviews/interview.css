@@ -147,3 +147,5 @@ button.iv-card:hover { border-color: var(--iv-lime); }
 .iv-answer-format strong { color: #e6e9e6; font-weight: 650; }
 .iv-bubble { padding: 15px 16px; }
 .iv-form textarea { min-height: 96px; line-height: 1.45; }
+.iv-confirm { display: grid; gap: 8px; border-color: var(--iv-lime); }
+.iv-resume .iv-card { border-color: var(--iv-lime); }

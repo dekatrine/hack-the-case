@@ -3,14 +3,14 @@ import { ArrowLeft, ArrowRight, Check, Clock3, Lock, X } from 'lucide-react';
 import { api } from '../api/client.js';
 import { track } from '../api/analytics.js';
 import { advance, createRun, currentTurn, optionLabel, plan, skeletons, targetEntry } from './engine.js';
-import { debrief } from './rubric.js';
+import { assessTurn, debrief } from './rubric.js';
 import InterviewBrief, { InterviewCondition } from './InterviewBrief.jsx';
 import InterviewSetup, { defaultInterviewSettings } from './InterviewSetup.jsx';
 import { configuredRun, configuredRemaining, configuredReviewPayload } from './configured.js';
 import CaseContent from '../CaseContent.jsx';
 import {
   discardLocalDrafts, discardRemoteDrafts, mergeRuns, pullRuns, pushRun,
-  readRuns, readSeenRuns, rememberRuns, saveRuns,
+  readRuns, readSeenRuns, rememberRuns, saveRuns, readDraft, saveDraft, clearDraft,
 } from './storage.js';
 import './interview.css';
 
@@ -44,6 +44,37 @@ function DecisionMap({ entries }) {
     </summary>
     <dl>{latest.map(entry => <div key={entry.id}><dt>{entry.label}{entry.revises ? ' · пересмотрено' : ''}</dt><dd>{entry.value}</dd></div>)}</dl>
   </details>;
+}
+
+function Drill({ run, result }) {
+  const [text, setText] = useState('');
+  const [checked, setChecked] = useState(null);
+  const target = result.results.filter(row => row.turnId && row.grade < 3).sort((a, b) => a.grade - b.grade)[0];
+  const entry = target && run.history.find(item => item.id === target.turnId);
+  const move = entry && plan(run.skeleton).find(turn => turn.id === entry.id.replace(/_clarify$/, ''));
+  if (!entry || !move) return null;
+  const before = Math.round(entry.assessment.grade);
+  function check(e) {
+    e.preventDefault();
+    const { grade, error } = assessTurn(run, move, text, '', []);
+    setChecked({ grade, error });
+  }
+  return <section className="iv-bubble iv-drill" aria-label="Тренировка">
+    <span className="iv-tag">Тренировка · {target.label}</span>
+    <h2>Перепиши свой ответ из хода «{entry.label.replace(/^Уточнение · /, '')}»</h2>
+    <blockquote>{entry.answer}</blockquote>
+    <p className="iv-muted">{move.hint}</p>
+    <form className="iv-form" onSubmit={check}>
+      <textarea value={text} rows={4} maxLength={1200} onChange={e => { setText(e.target.value); setChecked(null); }} placeholder="Новая версия ответа"/>
+      <button className="iv-primary" type="submit" disabled={!text.trim()}>Проверить</button>
+    </form>
+    {checked && <p role="status" className={checked.grade >= 2 && !checked.error ? 'iv-feedback' : 'iv-warning'}>
+      {checked.error ? checked.error
+        : checked.grade >= 3 ? `Было ${before} из 3, стало 3 из 3. Ответ закрывает все признаки хода.`
+        : checked.grade > before ? `Было ${before} из 3, стало ${checked.grade} из 3. Ещё не хватает: ${move.hint.toLowerCase()}`
+        : `Пока ${checked.grade} из 3. Попробуй так: ${move.hint.toLowerCase()}`}
+    </p>}
+  </section>;
 }
 
 function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError }) {
@@ -104,7 +135,8 @@ function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError }) {
     {result.errors.length > 0 && <section className="iv-bubble iv-warning"><h2>Сверка с данными</h2>
       {result.errors.map(entry => <div key={entry.id}><blockquote>{entry.answer}</blockquote><p>{entry.assessment.error}</p></div>)}
     </section>}
-    <section className="iv-bubble"><h2>Как усилить решение</h2><p>{result.recommendation}</p></section></>}
+    <section className="iv-bubble"><h2>Как усилить решение</h2><p>{result.recommendation}</p></section>
+    <Drill run={run} result={result}/></>}
     <button className="iv-primary" onClick={onNext}>Следующий кейс <ArrowRight size={18}/></button>
   </>;
 }
@@ -119,7 +151,11 @@ function shuffled(list, key) {
 }
 
 export default function Interview({ onExit }) {
-  const [runs, setRuns] = useState(readRuns);
+  const [runs, setRuns] = useState(() => {
+    const draft = readDraft();
+    return draft ? [draft, ...readRuns()] : readRuns();
+  });
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const [id, setId] = useState(null);
   const [sessionSeconds, setSessionSeconds] = useState(0);
   const [saveError, setSaveError] = useState(false);
@@ -155,6 +191,8 @@ export default function Interview({ onExit }) {
       try { rememberRuns([nextItem]); }
       catch { setSaveError(true); }
     }
+    try { saveDraft(nextItem); }
+    catch { setSaveError(true); }
     if (finished) pushRun(nextItem).catch(() => {});
     return nextItem;
   }
@@ -307,10 +345,17 @@ export default function Interview({ onExit }) {
 
   function leave() {
     if (run && run.status !== 'finished') {
+      const current = runsRef.current.find(item => item.id === run.id) || run;
+      if (started.current !== null) save({ ...current, elapsed: current.elapsed + Math.max(0, Date.now() - started.current) });
       started.current = null;
-      setAll(runsRef.current.filter(item => item.id !== run.id), false);
+      // Начатое интервью остаётся черновиком на 24 часа, пустое убираем.
+      if (!current.history.length) {
+        setAll(runsRef.current.filter(item => item.id !== run.id), false);
+        try { clearDraft(run.id); } catch { /* ignore */ }
+      }
       event('case_abandoned', run);
     }
+    setConfirmLeave(false);
     setId(null);
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
@@ -361,6 +406,7 @@ export default function Interview({ onExit }) {
     .map(entry => run.configured.graph[entry.id])
     .filter(step => step?.caseEvidence && step.caseEvidence !== move?.caseEvidence) : [];
   const finishedRuns = runs.filter(item => item.status === 'finished');
+  const draftRun = runs.find(item => item.status !== 'finished' && item.status !== 'briefing' && item.history.length > 0 && Date.now() - item.updatedAt < 24 * 3600 * 1000);
   const remaining = run?.configured ? configuredRemaining(run) : run?.queue.length;
   const rawOptions = move?.options === 'segments' ? run.seed.groups : move?.options;
   // Порядок вариантов зависит от попытки и хода, а не от того, какой из них верный.
@@ -372,6 +418,12 @@ export default function Interview({ onExit }) {
     {!run && !setup && <>
       <button className="iv-text-button" onClick={onExit}><ArrowLeft size={18}/> Мои кейсы</button>
       <h1 ref={heading} tabIndex={-1}>Кейс-интервью</h1>
+      {draftRun && <section className="iv-menu iv-resume">
+        <h2>Продолжить собес</h2>
+        <button type="button" className="iv-card" onClick={() => open(draftRun)}>
+          <span><strong>{draftRun.configured ? draftRun.skeleton.title : draftRun.skeleton.label}</strong><small>Ход {draftRun.history.length + 1} · {draftRun.seed.industry.split(' / ').at(-1)}</small></span><ArrowRight size={17}/>
+        </button>
+      </section>}
       <section className="iv-menu iv-new-interview">
         <h2>Новое интервью</h2>
         <button type="button" className="iv-primary" onClick={() => openSetup()}>
@@ -402,12 +454,18 @@ export default function Interview({ onExit }) {
       <h2>Фазы интервью</h2>
       <ol className="iv-phases">{run.skeleton.phases.map(phase => <li key={phase.id}>{phase.label}</li>)}</ol>
       <p className="iv-muted">{run.configured ? `Около ${remaining} ходов. Вопросы и данные зависят от твоего выбора.` : `${plan(run.skeleton).length} ходов по плану. Вопросы меняются по ходу интервью.`}</p>
-      <p className="iv-muted">Если выйти, следующая попытка начнётся с нового кейса.</p>
+      <p className="iv-muted">Если выйти, ответы сохранятся на 24 часа.</p>
       {preparing && !run.configured && <div className="iv-loading" role="status">Готовим брифинг…</div>}
       <button className="iv-primary" onClick={start} disabled={preparing && !run.configured}>Начать интервью <ArrowRight size={18}/></button>
     </>}
     {run?.status === 'active' && move && <>
-      <div className="iv-progress"><button aria-label="Выйти из интервью" onClick={leave}><X size={18}/></button><strong>Ход {run.history.length + 1} из {run.history.length + remaining}</strong><span aria-label="Осталось времени"><Clock3 size={15}/> {clock}</span></div>
+      <div className="iv-progress"><button aria-label="Выйти из интервью" onClick={() => run.history.length ? setConfirmLeave(true) : leave()}><X size={18}/></button><strong>Ход {run.history.length + 1} из {run.history.length + remaining}</strong><span aria-label="Осталось времени"><Clock3 size={15}/> {clock}</span></div>
+      {confirmLeave && <div className="iv-bubble iv-confirm" role="alertdialog" aria-label="Выйти из собеса?">
+        <h2>Выйти из собеса?</h2>
+        <p className="iv-muted">Ответы сохранятся на 24 часа. Продолжишь с хода {run.history.length + 1}.</p>
+        <button type="button" className="iv-primary" onClick={() => setConfirmLeave(false)}>Остаться</button>
+        <button type="button" className="iv-card" onClick={leave}>Выйти и сохранить</button>
+      </div>}
       <div className="iv-phase-status"><span>Фаза {phaseIndex + 1} из {run.skeleton.phases.length} · {run.skeleton.phases[phaseIndex].label}</span><div aria-hidden="true">{run.skeleton.phases.map((phase, i) => <i className={i <= phaseIndex ? 'iv-phase-on' : ''} key={phase.id}/>)}</div></div>
       <div className="iv-turn-context">
         <InterviewCondition key={move.id} run={run}/>

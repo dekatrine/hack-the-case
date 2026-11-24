@@ -14,6 +14,25 @@ function readList(key) {
 
 const storedRuns = () => readList(KEY).filter(run => run?.skeleton?.id && run.seed && Array.isArray(run.queue));
 export const readRuns = () => storedRuns().filter(run => run.status === 'finished');
+const DRAFT_KEY = 'htc_interview_draft_v1';
+export const DRAFT_TTL = 24 * 60 * 60 * 1000;
+export function readDraft(now = Date.now()) {
+  try {
+    const run = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    if (!run?.skeleton?.id || !run.seed || !Array.isArray(run.queue) || run.status === 'finished') return null;
+    if (now - (run.updatedAt || 0) > DRAFT_TTL) { localStorage.removeItem(DRAFT_KEY); return null; }
+    return run;
+  } catch { return null; }
+}
+export function saveDraft(run) {
+  if (run.status === 'finished') return clearDraft(run.id);
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(run));
+}
+export function clearDraft(id) {
+  try {
+    if (!id || JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null')?.id === id) localStorage.removeItem(DRAFT_KEY);
+  } catch { localStorage.removeItem(DRAFT_KEY); }
+}
 export const readSeenRuns = () => readList(SEEN_KEY);
 
 function seenRun(run) {

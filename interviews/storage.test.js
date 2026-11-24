@@ -1,4 +1,4 @@
-import { expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../api/sync.js';
 import { pushRun } from './storage.js';
 
@@ -19,4 +19,18 @@ it('serializes writes and sends the latest queued snapshot after the in-flight r
   complete({ ok: true });
   await Promise.all([first, second, last]);
   expect(apiFetch.mock.calls.map(([, options]) => JSON.parse(options.body).updatedAt)).toEqual([100, 102]);
+});
+
+describe('черновик интервью', () => {
+  it('хранится 24 часа и очищается после завершения', async () => {
+    const { saveDraft, readDraft, clearDraft } = await import('./storage.js');
+    const run = { id: 'r1', skeleton: { id: 'discovery' }, seed: {}, queue: [{}], status: 'active', updatedAt: 1000 };
+    saveDraft(run);
+    expect(readDraft(2000)?.id).toBe('r1');
+    expect(readDraft(1000 + 25 * 3600 * 1000)).toBeNull();
+    saveDraft(run);
+    saveDraft({ ...run, status: 'finished' });
+    expect(readDraft(2000)).toBeNull();
+    clearDraft('r1');
+  });
 });
