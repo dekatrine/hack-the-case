@@ -17,7 +17,7 @@ import { CASES_KEY } from './home/attempts.js';
 import Home from './home/Home.jsx';
 import Progress from './home/Progress.jsx';
 import Onboarding from './home/Onboarding.jsx';
-import { preferredSkeleton, readOnboarding } from './home/onboarding.js';
+import { needsSplit, preferredSkeleton, readOnboarding } from './home/onboarding.js';
 import { debrief } from './interviews/rubric.js';
 import SearchDiagnostic from './cases/SearchDiagnostic.jsx';
 import { SEARCH_CASE_INTRO, SEARCH_CASE_TITLE, SEARCH_ROUTE, SEARCH_SLICES } from './cases/searchDiagnostic.js';
@@ -395,7 +395,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
       {screen === 'theory' && <BookTheoryPage initialChapter={bookChapter} savedIds={savedTheory} onToggle={toggleTheory} onResume={active ? () => go('solve') : null}/>}
       {screen === 'cards' && <TheoryPage onOpenChapter={number => { setBookChapter(number); go('theory'); }} savedIds={savedTheory} onToggle={toggleTheory} initialSavedOnly={theorySavedOnly} onResume={active ? () => go('solve') : null}/>}
       {screen === 'home' && !profile && cases.length === 0 && readRuns().length === 0 && <Onboarding onDone={answers => { setProfile(answers); }}/>}
-      {screen === 'home' && (profile || cases.length > 0 || readRuns().length > 0) && <Home preferred={preferredSkeleton(profile)} onStart={id => { setInterviewStart({ skeleton: id }); go('interviews'); }} onResume={id => { setInterviewStart({ open: id }); go('interviews'); }} onProgress={() => go('progress')} onLibrary={() => go('library')}/>}
+      {screen === 'home' && (profile || cases.length > 0 || readRuns().length > 0) && <Home preferred={preferredSkeleton(profile)} split={needsSplit(profile)} onStart={id => { setInterviewStart({ skeleton: id }); go('interviews'); }} onResume={id => { setInterviewStart({ open: id }); go('interviews'); }} onProgress={() => go('progress')} onLibrary={() => go('library')}/>}
       {screen === 'progress' && <Progress onStart={id => { setInterviewStart({ skeleton: id }); go('interviews'); }}/>}
       {screen === 'library' && <div className="mvp-lib-filter" role="group" aria-label="Тип практики">
         {[['all', 'Все'], ['interview', 'Собесы'], ['self', 'В своём темпе']].map(([key, label]) => <button type="button" key={key} aria-pressed={libFilter === key} onClick={() => setLibFilter(key)}>{label}</button>)}

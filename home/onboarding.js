@@ -1,3 +1,5 @@
+import { skeletons } from '../interviews/engine.js';
+
 const KEY = 'htc_onboarding_v1';
 export const ROLES = [
   ['pm', 'Продуктовый менеджер', 'discovery'],
@@ -14,6 +16,11 @@ export function readOnboarding() {
 export function saveOnboarding(value) {
   try { localStorage.setItem(KEY, JSON.stringify(value)); } catch { /* ignore */ }
 }
+// Первый собес до появления истории: время и опыт из онбординга важнее роли.
 export function preferredSkeleton(profile) {
+  if (profile?.minutes === '15') return [...skeletons].sort((a, b) => a.minutes - b.minutes)[0].id;
+  if (profile?.experience === 'many') return profile.role === 'analyst' ? 'experiments' : 'strategy';
   return ROLES.find(([id]) => id === profile?.role)?.[2] || 'discovery';
 }
+
+export const needsSplit = profile => profile?.minutes === '15';

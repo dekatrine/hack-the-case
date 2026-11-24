@@ -21,7 +21,7 @@ export function Trend({ scores }) {
   return <svg className="home-trend" viewBox="0 0 320 90" role="img" aria-label={`Баллы: ${last.join(', ')}`}><polyline fill="none" stroke="#6d8f00" strokeWidth="3" points={points}/></svg>;
 }
 
-export default function Home({ preferred = 'discovery', onStart, onResume, onProgress, onLibrary }) {
+export default function Home({ preferred = 'discovery', split = false, onStart, onResume, onProgress, onLibrary }) {
   const { attempts, summary, rhythm } = useProgress();
   const draft = readDraft();
   const skeletonId = summary.weakest ? recommendedSkeleton(summary) : preferred;
@@ -35,6 +35,7 @@ export default function Home({ preferred = 'discovery', onStart, onResume, onPro
       <p className="home-muted">{summary.weakest
         ? `Слабое место по последним собесам: ${summary.weakest.label.toLowerCase()}. Этот собес тренирует его.`
         : 'Интервьюер задаёт вопросы, ты запрашиваешь данные и защищаешь решения. В конце разбор по цитатам из твоих ответов.'}</p>
+      {split && !summary.weakest && <p className="home-muted">Времени мало? Собес можно пройти за два захода: ответы сохраняются на 24 часа.</p>}
       <button type="button" className="home-btn" onClick={() => onStart(skeleton.id)}>Начать собес <ArrowRight size={18}/></button>
     </section>
     {draft && <section className="home-card">

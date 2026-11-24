@@ -18,6 +18,7 @@ it('shows onboarding once, then the home with a recommended interview', () => {
   fireEvent.click(screen.getByRole('radio', { name: /До 15 минут/ })); next();
   expect(screen.getByText('Начни с первого собеса')).toBeTruthy();
   expect(screen.getByText(/Диагностика метрики/)).toBeTruthy();
+  expect(screen.getByText(/за два захода/)).toBeTruthy();
   cleanup();
   render(<MvpApp/>);
   expect(screen.queryByText('Готовишься к кейс-собесу?')).toBeNull();
