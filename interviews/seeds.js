@@ -38,13 +38,13 @@ function makeSeed(skeleton, axes) {
   const focus = truthIndex % groups.length;
   const marketRates = [12, 6, 3].map(rate => rate + industryIndex % 3);
   const topDown = [2, 1.8, 2.4][trapIndex];
-  const strategyRates = [26, 32, 22].map((rate, i) => (rate + industryIndex % 3) * (i === truthIndex % 3 ? 0.45 : 1));
+  const strategyRates = [26, 32, 22].map((rate, i) => Math.round((rate + industryIndex % 3) * (i === truthIndex % 3 ? 0.45 : 1) * 10) / 10);
   const reported = [1.4, 1.25, 1.6][trapIndex];
-  const base = strategy ? strategyRates.map(rate => rate * reported) : market ? marketRates.map(rate => rate * topDown) : experiments ? [3.2, 6.1, 9.4].map(rate => rate + industryIndex / 20) : discovery ? [6, 22, 32].map(rate => rate + industryIndex % 3) : [4, 4.5, 4.15].map(rate => rate + industryIndex / 10);
+  const base = strategy ? strategyRates.map(rate => Math.round(rate * reported * 10) / 10) : market ? marketRates.map(rate => rate * topDown) : experiments ? [3.2, 6.1, 9.4].map(rate => rate + industryIndex / 20) : discovery ? [6, 22, 32].map(rate => rate + industryIndex % 3) : [4, 4.5, 4.15].map(rate => rate + industryIndex / 10);
   const effect = [1.6, 2.1, 1.2][trapIndex];
   const rates = strategy ? strategyRates : market ? marketRates : experiments ? base.map((rate, i) => i === focus ? rate + effect : rate) : discovery ? base : base.map((rate, i) => i === focus ? rate - 1.5 : rate);
-  const before = mean(shares, base);
-  const current = mean(shares, rates);
+  const before = strategy ? Math.round(mean(shares, base) * 10) / 10 : mean(shares, base);
+  const current = strategy ? Math.round(mean(shares, rates) * 10) / 10 : mean(shares, rates);
   const recovery = [87, 80, 92][trapIndex];
   const pilot = current + (before - current) * recovery / 100;
   const goal = Math.round(before) + 6;
