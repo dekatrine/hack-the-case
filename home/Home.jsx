@@ -18,10 +18,10 @@ export function Trend({ scores }) {
   return <svg className="home-trend" viewBox="0 0 320 90" role="img" aria-label={`Баллы: ${last.join(', ')}`}><polyline fill="none" stroke="#6d8f00" strokeWidth="3" points={points}/></svg>;
 }
 
-export default function Home({ onStart, onResume, onProgress, onLibrary }) {
+export default function Home({ preferred = 'discovery', onStart, onResume, onProgress, onLibrary }) {
   const { runs, summary, rhythm } = useProgress();
   const draft = readDraft();
-  const skeletonId = recommendedSkeleton(summary);
+  const skeletonId = summary.weakest ? recommendedSkeleton(summary) : preferred;
   const skeleton = skeletons.find(item => item.id === skeletonId) || skeletons[0];
   return <div className="home">
     <div className="home-eyebrow">Сегодня</div>

@@ -9,7 +9,7 @@ function dateLabel(value) {
   const parsed = Date.parse(value || '');
   return Number.isFinite(parsed) ? new Date(parsed).toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'}) : 'Дата не указана';
 }
-export default function CaseLibrary({ cases, interviewTypes, onOpen, onNew, onArchive, onRetry, onLearn }) {
+export default function CaseLibrary({ cases, interviewTypes, onOpen, onNew, onArchive, onRetry, onLearn, onInterview }) {
   const [query,setQuery]=useState('');
   const [status,setStatus]=useState('active');
   const [type,setType]=useState('all');
@@ -51,6 +51,7 @@ export default function CaseLibrary({ cases, interviewTypes, onOpen, onNew, onAr
           {!item.archivedAt && <button type="button" className="mycases-action-main" onClick={()=>onOpen(item,reviewed&&state==='reviewed'?'review':'solve')}>{reviewed&&state==='reviewed'?'Посмотреть AI-разбор':'Продолжить'} <ArrowRight size={15}/></button>}
           {reviewed&&!item.archivedAt&&state!=='reviewed'&&<button type="button" onClick={()=>onOpen(item,'review')}>Предыдущий разбор</button>}
           {reviewed&&!item.archivedAt&&<button type="button" onClick={()=>onRetry(item)}><RotateCcw size={14}/> Новая попытка</button>}
+          {onInterview&&!item.archivedAt&&<button type="button" onClick={()=>onInterview(item)}>Пройти как собес</button>}
           <button type="button" onClick={()=>onArchive(item,!item.archivedAt)}><Archive size={14}/> {item.archivedAt?'Восстановить':'В архив'}</button>
         </div>
       </article>;

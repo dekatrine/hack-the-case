@@ -15,6 +15,8 @@ import Interview from './interviews/Interview.jsx';
 import { readRuns } from './interviews/storage.js';
 import Home from './home/Home.jsx';
 import Progress from './home/Progress.jsx';
+import Onboarding from './home/Onboarding.jsx';
+import { preferredSkeleton, readOnboarding } from './home/onboarding.js';
 import { debrief } from './interviews/rubric.js';
 import SearchDiagnostic from './cases/SearchDiagnostic.jsx';
 import { SEARCH_CASE_INTRO, SEARCH_CASE_TITLE, SEARCH_ROUTE, SEARCH_SLICES } from './cases/searchDiagnostic.js';
@@ -167,6 +169,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
   const [screen, setScreen] = useState(initialScreen);
   const [interviewStart, setInterviewStart] = useState(null);
   const [libFilter, setLibFilter] = useState('all');
+  const [profile, setProfile] = useState(readOnboarding);
   const [selected, setSelected] = useState(null);
   const [attemptIndex, setAttemptIndex] = useState(null);
   const [config, setConfig] = useState(null);
@@ -378,7 +381,8 @@ export default function MvpApp({ initialScreen = 'home' }) {
       {screen === 'learning' && <LearningPath onOpenCases={() => go('library')}/>}
       {screen === 'theory' && <BookTheoryPage initialChapter={bookChapter} savedIds={savedTheory} onToggle={toggleTheory} onResume={active ? () => go('solve') : null}/>}
       {screen === 'cards' && <TheoryPage onOpenChapter={number => { setBookChapter(number); go('theory'); }} savedIds={savedTheory} onToggle={toggleTheory} initialSavedOnly={theorySavedOnly} onResume={active ? () => go('solve') : null}/>}
-      {screen === 'home' && <Home onStart={id => { setInterviewStart({ skeleton: id }); go('interviews'); }} onResume={id => { setInterviewStart({ open: id }); go('interviews'); }} onProgress={() => go('progress')} onLibrary={() => go('library')}/>}
+      {screen === 'home' && !profile && cases.length === 0 && readRuns().length === 0 && <Onboarding onDone={answers => { setProfile(answers); }}/>}
+      {screen === 'home' && (profile || cases.length > 0 || readRuns().length > 0) && <Home preferred={preferredSkeleton(profile)} onStart={id => { setInterviewStart({ skeleton: id }); go('interviews'); }} onResume={id => { setInterviewStart({ open: id }); go('interviews'); }} onProgress={() => go('progress')} onLibrary={() => go('library')}/>}
       {screen === 'progress' && <Progress onStart={id => { setInterviewStart({ skeleton: id }); go('interviews'); }}/>}
       {screen === 'library' && <div className="mvp-lib-filter" role="group" aria-label="Тип практики">
         {[['all', 'Все'], ['interview', 'Собесы'], ['self', 'В своём темпе']].map(([key, label]) => <button type="button" key={key} aria-pressed={libFilter === key} onClick={() => setLibFilter(key)}>{label}</button>)}
@@ -406,7 +410,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
             ['Продуктовая стратегия','Как вырастить прибыль?','Разбери экономику и выбери точку роста.', 'Рост прибыли маркетплейса при ограниченном бюджете'],
           ].map(([tag,t,d,context],i) => <button className="mvp-starter" key={tag} onClick={() => { setParams(p => ({ ...p, trackId: 'product', interviewType: ['product_execution', 'product_sense', 'product_strategy'][i], extraContext: context })); go('generate'); }}><span className="mvp-starter-tag">{tag}<ArrowUpRight size={17}/></span><b>{t}</b><p>{d}</p></button>)}</div>
           <p className="mvp-storage-note">Здесь появятся твои кейсы, черновики и разборы. Они сохраняются в этом браузере.</p>
-        </> : <CaseLibrary cases={cases} interviewTypes={INTERVIEWS} onOpen={open} onNew={() => go('generate')} onArchive={archive} onRetry={retryCase} onLearn={() => go('learning')}/>)}
+        </> : <CaseLibrary cases={cases} interviewTypes={INTERVIEWS} onOpen={open} onNew={() => go('generate')} onArchive={archive} onRetry={retryCase} onLearn={() => go('learning')} onInterview={item => { setInterviewStart({ skeleton: item.params?.interviewType === 'product_execution' ? 'diagnosis' : 'discovery' }); go('interviews'); }}/>)}
       {screen === 'generate' && <>
         <button type="button" className="mvp-starter mvp-search-starter" onClick={() => go('interviews')}>
           <span className="mvp-starter-tag">Кейс-интервью<ArrowUpRight size={17}/></span>

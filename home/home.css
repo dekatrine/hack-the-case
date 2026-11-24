@@ -18,3 +18,7 @@
 .home-meter { height: 6px; border-radius: 9px; background: #e6e9e4; overflow: hidden; margin-top: 4px; }
 .home-meter b { display: block; height: 100%; background: #6d8f00; }
 .home-next { border-left: 3px solid #d4ff3a; }
+.home-options { display: grid; gap: 10px; }
+.home-option { text-align: left; min-height: 48px; padding: 0 16px; border: 1px solid #dfe2dd; border-radius: 12px; background: #fff; font: inherit; cursor: pointer; }
+.home-option.on { border-color: #111315; background: #f3ffc2; font-weight: 650; }
+.home-btn:disabled { opacity: .45; cursor: default; }
