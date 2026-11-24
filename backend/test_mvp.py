@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from app.main import ask_coach, generate_case, evaluate, request_evidence, PRODUCT_INTERVIEWS
 from app.schemas import CoachRequest, GenerateCaseRequest, EvaluateRequest, EvidenceRequest
 from app.prompts import CASE_GENERATION_SYSTEM, CASE_NOVELTY_SYSTEM, MVP_RUBRIC_SYSTEM, MVP_STEP_HINT_SYSTEM
-from app.variant_cases import VARIANTS
+from app.variant_cases import VARIANTS, VariantStory, validate_profile
 
 
 class MvpTests(unittest.TestCase):
@@ -121,6 +121,29 @@ class MvpTests(unittest.TestCase):
         self.assertEqual(model.call_count, 2)
         self.assertIn("120 новых покупателей", result.caseIntro)
         self.assertNotIn("35", result.caseIntro)
+
+    def test_detailed_profile_needs_a_visible_operating_rule(self):
+        story = VariantStory(
+            title="Занятия для школьников", intro="За неделю 120 школьников открыли курс, и 35 завершили первый тест.",
+            product="Онлайн-курс геометрии с проверочными задачами.",
+            audience="Девятиклассники, которые готовятся к экзамену после школы.",
+            difference="Уникальный алгоритм подбирает индивидуальные программы обучения.",
+            change="Команда хочет проверить подбор задач после входного теста.",
+            openingQuestion="Какой результат первого теста нужно проверить?",
+            openingFormat="Назови две группы и один результат для сравнения.",
+            choices=[
+                dict(option="Первый тест", evidence="Тест начали 120 человек, закончили 35.", question="Что показывает доля завершений?"),
+                dict(option="Время работы", evidence="20 студентов решали задачи дольше 50 минут.", question="Что известно о времени решения?"),
+            ],
+            twist="На проверку каждого набора задач даётся только два дня.",
+            finalQuestion="Будешь запускать подбор задач после первого теста?",
+        )
+        with self.assertRaisesRegex(ValueError, "видимое правило"):
+            validate_profile(story, "")
+        refined = story.model_copy(update={
+            "difference": "Следующий набор задач подбирается по результатам входного теста и открывается только после его завершения.",
+        })
+        validate_profile(refined, "")
 
     @patch("app.variant_cases.sample", side_effect=lambda values, count: list(values)[:count])
     @patch("app.main.call_yandex_gpt")
