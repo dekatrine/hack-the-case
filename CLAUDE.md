@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AI-simulator for solving business cases (PM interviews and consulting). Two services:
-- **Root-level React+Vite frontend** — the active frontend deployed to Render
+Case-interview trainer for product managers and analysts. The interviewer asks, the person requests data and defends decisions, and the debrief quotes their own answers. Two services:
+- **Root-level React+Vite frontend** — the only frontend, deployed to Render from `main`
 - **`backend/`** — Python FastAPI that calls YandexGPT
 
-The `frontend/` subdirectory is an **old copy** and is not built or deployed by Render. All active frontend work happens in the root.
+The old `frontend/` copy no longer exists. Do not recreate it.
 
 ## Commands
 
@@ -46,24 +46,20 @@ VITE_API_BASE_URL=http://localhost:8000 npm run dev
 
 ### Frontend
 
-Everything is in a single `main.jsx` (~4000 lines). All screens are React components rendered inside one root `App` component that uses `useState` to track the current `screen`. There is no router.
+`main.jsx` mounts `MvpApp.jsx` and nothing else (the rest of `main.jsx` is legacy screens, not rendered). `MvpApp.jsx` holds the app shell: a `screen` state, no router. Screens: `home` (default), `library` (Мои кейсы), `progress`, `interviews`, `generate`, `solve`, `review`, `learning`.
 
-Key screen/component mapping:
-- `Landing` — home dashboard with sidebar navigation
-- `TrackDetail` — case configuration form (industry, difficulty, interview type, grade)
-- `Workspace` — the solve screen: left rail `StepsRail`, main `StepBlock` editor, right `CoachPanel` (desktop), floating sheet on mobile
-- `InterviewTogether` → `InterviewTask` — mock interview mode with 5 structured rounds
-- `LearnPage` — tabbed learning section (Notes, Flashcards, Question Bank, Key Definitions, AI Mentor)
-- `PMQuestHifi` (in `pmquest-hifi.jsx`) — standalone hi-fi prototype
+Modules:
+- `interviews/` — interview engine. `skeletons/*.json` define phases and turns (kinds ASK, DATA, CLARIFY, CHALLENGE, TWIST, DEMAND); `seeds.js` builds a random case per run (industry × hidden truth × twist × trap, with numbers, scenes, clues); `engine.js` runs a session; `rubric.js` grades answers locally by 7 skills (checks are regexes, plus `numberCheck` against the seed's numbers); `compare.js` compares with the previous interview; `configured.js` builds an LLM-generated interview ("configured"), graded by `/api/evaluate`; `Interview.jsx` is the UI (draft kept 24 h, drill on the weakest answer). `calibration.json` holds a strong answer for every turn of every skeleton.
+- `home/` — home, progress, onboarding. `attempts.js` is the single read model over interviews and case attempts; `progress.js` computes the summary, weekly rhythm and which scenario to recommend for the weakest skill.
+- `cases/` — case library and the self-paced case flow (`CaseFlow.jsx`, `caseWriting.js`).
+- `learning/` — lessons, theory, flashcards.
+- `api/client.js` — fetch wrapper (base URL from `VITE_API_BASE_URL`); `api/sync.js` mirrors some localStorage keys to the server.
 
-**Static data files:**
-- `courseData.js` — `PM_CHAPTERS`, `FLASHCARDS`, `PRACTICE_QUESTIONS`, `KEY_DEFINITIONS`
-- `quizData.js` — `QUIZ_CATEGORIES`, `QUIZ_QUESTIONS`
-- `tracks.py` (Python, root) — loaded by backend at startup via `importlib`; also duplicated in frontend state via `/api/config`
+localStorage keys: `htc_mvp_cases_v1` (cases and their attempts), `htc_interview_runs_v1` (finished interviews only), `htc_interview_draft_v1` (unfinished interview, 24 h), `htc_interview_seen_v1` (repeat protection), `htc_onboarding_v1`. Cases and onboarding are local-only; finished interviews are pushed to the server by `interviews/storage.js`.
 
-**API client:** `api/client.js` — thin `fetch` wrapper; base URL is `VITE_API_BASE_URL` in prod, `http://localhost:8000` in dev.
+Adding an interview scenario: new `skeletons/<id>.json`, a branch in `seeds.js` (groups, numbers, clues, intro, scenes, replies, a flag like `strategy`), a strong answer for every turn in `calibration.json`, an entry in `home/progress.js` `recommendedSkeleton`. Rules enforced by `engine.test.js`: every turn must be gradable from text (checks, evidence, or plain options); scoping questions that need no numbers carry `scoping: true`; weak runs average at most 40, strong at least 80.
 
-**Styling:** `styles.css` (~2000 lines vanilla CSS, one file). No CSS modules, no Tailwind yet. CSS custom properties for theming (`--ink`, `--paper`, `--mint`, `--rust`, `--amber`, etc.).
+**Styling:** `styles.css`, `mvp.css`, plus per-module CSS (`interviews/interview.css`, `home/home.css`, `cases/case-library.css`). Vanilla CSS with custom properties. No Tailwind yet.
 
 ### Backend
 
