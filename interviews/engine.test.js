@@ -3,6 +3,7 @@ import calibration from './calibration.json';
 import { advance, createRun, currentTurn, optionLabel, plan, skeletons, targetEntry } from './engine.js';
 import { assessTurn, debrief } from './rubric.js';
 import { chooseSeed, validateSeed } from './seeds.js';
+import { compareWithPrevious } from './compare.js';
 
 const weakExamples = [
   'Не знаю.',
@@ -209,5 +210,19 @@ describe('содержание сценариев', () => {
     const experiment = createRun(discovery, []).seed.scenes.experiment;
     expect(experiment).toMatch(/отписок/);
     expect(experiment).toMatch(/Заработок с одного заказа/);
+  });
+});
+
+describe('comparison with the previous interview', () => {
+  const skeleton = skeletons.find(item => item.id === 'discovery');
+  it('shows score and skill changes against the latest earlier interview', () => {
+    const weak = { ...simulate(skeleton, 0, false), id: 'w', updatedAt: 1000 };
+    const strong = { ...simulate(skeleton, 0, true), id: 's', updatedAt: 2000 };
+    const result = compareWithPrevious(strong, [weak, strong]);
+    expect(result.previous.id).toBe('w');
+    expect(result.delta).toBeGreaterThan(0);
+    expect(result.changes.length).toBeGreaterThan(0);
+    expect(result.changes.every(skill => skill.delta >= 0.5 || skill.delta <= -0.5)).toBe(true);
+    expect(compareWithPrevious(weak, [weak, strong])).toBeNull();
   });
 });

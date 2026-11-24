@@ -4,6 +4,7 @@ import { api } from '../api/client.js';
 import { track } from '../api/analytics.js';
 import { advance, createRun, currentTurn, optionLabel, plan, skeletons, targetEntry } from './engine.js';
 import { assessTurn, debrief } from './rubric.js';
+import { compareWithPrevious } from './compare.js';
 import InterviewBrief, { InterviewCondition } from './InterviewBrief.jsx';
 import InterviewSetup, { defaultInterviewSettings } from './InterviewSetup.jsx';
 import { configuredRun, configuredRemaining, configuredReviewPayload } from './configured.js';
@@ -82,6 +83,8 @@ function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError }) {
   let evaluated;
   try { evaluated = JSON.parse(run.review?.evaluation || 'null'); } catch { /* Plain text feedback. */ }
   const { seed, skeleton } = run;
+  let comparison = null;
+  try { comparison = compareWithPrevious(run, readRuns()); } catch { comparison = null; }
   return <>
     <button className="iv-text-button" onClick={onBack}><ArrowLeft size={18}/> Интервью</button>
     <h1>Разбор интервью</h1>
@@ -90,6 +93,14 @@ function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError }) {
       <div><strong>{result.quality}</strong><span>Качество</span></div>
       <div><strong>{result.penalty ? `−${result.penalty}` : '0'}</strong><span>За подсказки</span></div>
     </section>
+    {comparison && <section className="iv-bubble iv-compare" aria-label="Сравнение с прошлым собесом">
+      <h2>Сравнение с прошлым собесом</h2>
+      <p>{comparison.previous.label}: {comparison.previous.final} → {result.final} ({comparison.delta >= 0 ? '+' : ''}{comparison.delta})</p>
+      {comparison.changes.length > 0 ? <ul>{comparison.changes.map(skill => <li key={skill.id}>
+        {skill.label}: {Number(skill.from.toFixed(1))} → {Number(skill.to.toFixed(1))} {skill.delta > 0 ? '▲' : '▼'}</li>)}</ul>
+        : <p>Навыки остались на прежнем уровне.</p>}
+      {comparison.changes.length > 0 && comparison.unchanged > 0 && <small>Остальные навыки без заметных изменений.</small>}
+    </section>}
     <section className="iv-bubble">
       <h2>{skeleton.id === 'discovery' ? 'Что показали данные' : 'Что произошло'}</h2>
       <p>{seed.truth}</p>
