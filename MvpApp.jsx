@@ -226,6 +226,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
     catch { setSaveError('Не удалось сохранить изменения в браузере. Не закрывай страницу, пока не скопируешь ответ.'); }
   }, [cases]);
   useEffect(() => { window.scrollTo?.({ top: 0, behavior: 'auto' }); }, [screen, selected]);
+  const startInterviewFor = item => { setInterviewStart({ skeleton: item?.params?.interviewType === 'product_execution' ? 'diagnosis' : 'discovery' }); go('interviews'); };
   const go = (next) => { setError(''); setReviewError(''); if (next === 'generate') setVariantId('surprise'); setScreen(next); };
   const update = (id, fn) => setCases(prev => prev.map(c => c.id === id ? { ...fn(c), updatedAt: new Date().toISOString() } : c));
   const open = (c, next) => { setSelected(c.id); setAttemptIndex(null); go(next); };
@@ -410,7 +411,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
             ['Продуктовая стратегия','Как вырастить прибыль?','Разбери экономику и выбери точку роста.', 'Рост прибыли маркетплейса при ограниченном бюджете'],
           ].map(([tag,t,d,context],i) => <button className="mvp-starter" key={tag} onClick={() => { setParams(p => ({ ...p, trackId: 'product', interviewType: ['product_execution', 'product_sense', 'product_strategy'][i], extraContext: context })); go('generate'); }}><span className="mvp-starter-tag">{tag}<ArrowUpRight size={17}/></span><b>{t}</b><p>{d}</p></button>)}</div>
           <p className="mvp-storage-note">Здесь появятся твои кейсы, черновики и разборы. Они сохраняются в этом браузере.</p>
-        </> : <CaseLibrary cases={cases} interviewTypes={INTERVIEWS} onOpen={open} onNew={() => go('generate')} onArchive={archive} onRetry={retryCase} onLearn={() => go('learning')} onInterview={item => { setInterviewStart({ skeleton: item.params?.interviewType === 'product_execution' ? 'diagnosis' : 'discovery' }); go('interviews'); }}/>)}
+        </> : <CaseLibrary cases={cases} interviewTypes={INTERVIEWS} onOpen={open} onNew={() => go('generate')} onArchive={archive} onRetry={retryCase} onLearn={() => go('learning')} onInterview={startInterviewFor}/>)}
       {screen === 'generate' && <>
         <button type="button" className="mvp-starter mvp-search-starter" onClick={() => go('interviews')}>
           <span className="mvp-starter-tag">Кейс-интервью<ArrowUpRight size={17}/></span>
@@ -480,6 +481,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
       </>}
       {screen === 'solve' && active && !diagnostic && <>
         <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
+        <button className="mvp-back" disabled={!!busy} onClick={() => startInterviewFor(active)}>Пройти как собес →</button>
         {!story && <div className="clean-eyebrow">Шаг 2 · Решение</div>}<h1>{story ? active.title : 'Твой ход'}</h1>
         {(selfCheck || (active.focusSkill && skillLabel)) && <p className="mvp-muted">
           {selfCheck ? 'Самопроверка' : 'Фокус тренировки'}{active.focusSkill && skillLabel ? ` · ${skillLabel}` : ''}
