@@ -36,7 +36,8 @@ export function recommendedSkeleton(summary) {
   if (!summary.weakest) return 'discovery';
   if (DIAGNOSIS_SKILLS.includes(summary.weakest.id)) return 'diagnosis';
   if (summary.weakest.id === 'hypotheses') return 'experiments';
-  return summary.weakest.id === 'structure' ? 'market' : 'discovery';
+  if (summary.weakest.id === 'structure') return 'market';
+  return summary.weakest.id === 'choice' ? 'strategy' : 'discovery';
 }
 
 // Недельный ритм: сколько недель из последних четырёх есть хотя бы один собес.

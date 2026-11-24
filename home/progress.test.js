@@ -23,5 +23,6 @@ it('recommends the scenario that trains the weakest skill', () => {
   expect(recommendedSkeleton(weakest('metrics'))).toBe('diagnosis');
   expect(recommendedSkeleton(weakest('hypotheses'))).toBe('experiments');
   expect(recommendedSkeleton(weakest('structure'))).toBe('market');
-  expect(recommendedSkeleton(weakest('choice'))).toBe('discovery');
+  expect(recommendedSkeleton(weakest('choice'))).toBe('strategy');
+  expect(recommendedSkeleton(weakest('communication'))).toBe('discovery');
 });

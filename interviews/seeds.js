@@ -32,14 +32,17 @@ function makeSeed(skeleton, axes) {
   const discovery = skeleton.id === 'discovery';
   const experiments = skeleton.id === 'experiments';
   const market = skeleton.id === 'market';
-  const groups = market ? ['Частные клиенты', 'Малый бизнес', 'Крупные компании'] : experiments ? ['Новые', 'Вернувшиеся', 'Постоянные'] : discovery ? ['Разовые', 'Периодические', 'Регулярные'] : ['Группа A', 'Группа B', 'Группа C'];
+  const strategy = skeleton.id === 'strategy';
+  const groups = strategy ? ['Новые клиенты', 'Постоянные клиенты', 'Корпоративные'] : market ? ['Частные клиенты', 'Малый бизнес', 'Крупные компании'] : experiments ? ['Новые', 'Вернувшиеся', 'Постоянные'] : discovery ? ['Разовые', 'Периодические', 'Регулярные'] : ['Группа A', 'Группа B', 'Группа C'];
   const shares = [40 + industryIndex % 5, 34 - industryIndex % 5, 26];
   const focus = truthIndex % groups.length;
   const marketRates = [12, 6, 3].map(rate => rate + industryIndex % 3);
   const topDown = [2, 1.8, 2.4][trapIndex];
-  const base = market ? marketRates.map(rate => rate * topDown) : experiments ? [3.2, 6.1, 9.4].map(rate => rate + industryIndex / 20) : discovery ? [6, 22, 32].map(rate => rate + industryIndex % 3) : [4, 4.5, 4.15].map(rate => rate + industryIndex / 10);
+  const strategyRates = [26, 32, 22].map((rate, i) => (rate + industryIndex % 3) * (i === truthIndex % 3 ? 0.45 : 1));
+  const reported = [1.4, 1.25, 1.6][trapIndex];
+  const base = strategy ? strategyRates.map(rate => rate * reported) : market ? marketRates.map(rate => rate * topDown) : experiments ? [3.2, 6.1, 9.4].map(rate => rate + industryIndex / 20) : discovery ? [6, 22, 32].map(rate => rate + industryIndex % 3) : [4, 4.5, 4.15].map(rate => rate + industryIndex / 10);
   const effect = [1.6, 2.1, 1.2][trapIndex];
-  const rates = market ? marketRates : experiments ? base.map((rate, i) => i === focus ? rate + effect : rate) : discovery ? base : base.map((rate, i) => i === focus ? rate - 1.5 : rate);
+  const rates = strategy ? strategyRates : market ? marketRates : experiments ? base.map((rate, i) => i === focus ? rate + effect : rate) : discovery ? base : base.map((rate, i) => i === focus ? rate - 1.5 : rate);
   const before = mean(shares, base);
   const current = mean(shares, rates);
   const recovery = [87, 80, 92][trapIndex];
@@ -51,7 +54,11 @@ function makeSeed(skeleton, axes) {
   const audience = 5 + industryIndex;
   const yearly = [600, 900, 1500][trapIndex];
   const billions = value => (audience * value / 100 * yearly / 1000).toLocaleString('ru-RU', { maximumFractionDigits: 1 });
-  const trapNote = market ? [
+  const trapNote = strategy ? [
+    'Часть общих затрат отнесена к самой маленькой группе.',
+    'Тест скидок шёл в сезон высокого спроса.',
+    'Данные по затратам на привлечение за прошлый квартал неполные.',
+  ][trapIndex] : market ? [
     'Оценка сверху складывает группы, которые частично пересекаются.',
     'В расчёт вошли регионы, где услуга пока недоступна.',
     'Опрос охватил только тех, кто уже пользуется услугой.',
@@ -65,17 +72,26 @@ function makeSeed(skeleton, axes) {
     'Журнал операций и аналитика показывают разные числа. Проверь, что считает каждый источник.',
   ][trapIndex];
   const scenes = {
-    segments: table('Показатели по группам', market ? ['Группа', 'Доля аудитории', 'Готовы платить'] : experiments ? ['Группа', 'Доля пользователей', 'Контроль', 'Вариант'] : discovery ? ['Группа', 'Доля покупателей', 'Купили снова'] : ['Группа', 'Доля пользователей', 'Конверсия до', 'Конверсия после'],
-      groups.map((group, i) => market ? [group, percent(shares[i]), percent(rates[i])] : [group, percent(shares[i]), percent(base[i]), ...(!discovery ? [percent(rates[i])] : [])])),
+    segments: table('Показатели по группам', strategy ? ['Группа', 'Доля выручки', 'Маржа с учётом затрат'] : market ? ['Группа', 'Доля аудитории', 'Готовы платить'] : experiments ? ['Группа', 'Доля пользователей', 'Контроль', 'Вариант'] : discovery ? ['Группа', 'Доля покупателей', 'Купили снова'] : ['Группа', 'Доля пользователей', 'Конверсия до', 'Конверсия после'],
+      groups.map((group, i) => strategy || market ? [group, percent(shares[i]), percent(rates[i])] : [group, percent(shares[i]), percent(base[i]), ...(!discovery ? [percent(rates[i])] : [])])),
     voice,
     experiment: `По сравнению с группой без изменений доля повторных заказов выросла на ${lift} п.п., а отписок стало на ${guardrail}% больше. Заработок с одного заказа снизился на ${margin}%. ${trapNote}`,
     pilot: table('Конверсия до и после исправления', ['До падения', 'На минимуме', 'После пробного исправления'], [[percent(before, 4), percent(current, 4), percent(pilot, 4)]]),
     channels: trapNote,
-    result: market ? `Оценка сверху: ${billions(before)} млрд ₽ в год. Оценка снизу по данным: ${billions(current)} млрд ₽ в год. ${trapNote}` : `Вариант: ${percent(current)} против ${percent(before)} в контроле, разница ${pp(current - before)} п.п. Заработок с одного заказа в варианте ниже на ${margin}%. ${trapNote}`,
+    result: strategy ? `Отчётная маржа: ${percent(before)}. С учётом всех затрат: ${percent(current)}. Самая слабая группа: ${groups[focus]} с маржой ${percent(rates[focus])}. ${trapNote}` : market ? `Оценка сверху: ${billions(before)} млрд ₽ в год. Оценка снизу по данным: ${billions(current)} млрд ₽ в год. ${trapNote}` : `Вариант: ${percent(current)} против ${percent(before)} в контроле, разница ${pp(current - before)} п.п. Заработок с одного заказа в варианте ниже на ${margin}%. ${trapNote}`,
   };
   const sizeA = truthId === 'srm' ? 54 : 50;
   const days = truthId === 'novelty' ? [2.4, 0.9, 0.1] : [current - before, current - before, current - before];
-  const clues = market ? [
+  const clues = strategy ? [
+    evidence('margin', 'маржа|прибыл|затрат|расход|отчёт|с учётом|реальн', table('Маржа по группам', ['Группа', 'По отчёту', 'С учётом всех затрат'],
+      groups.map((group, i) => [group, percent(base[i]), percent(rates[i])])), true),
+    evidence('cohort', 'удержан|остаётся|остается|отток|уход|когорт|как долго', table('Сколько клиентов остаётся', ['Срок', 'Остаётся'], [
+      ['Через 6 месяцев', truthId === 'churn' ? '48%' : '74%'], ['Через 12 месяцев', truthId === 'churn' ? '31%' : '61%'],
+    ]), true),
+    evidence('cac', 'привлеч|стоимост|окупа|cac|реклам', table('Привлечение и доход', ['Показатель', 'Значение'], [
+      ['Стоимость привлечения, ₽', truthId === 'cac' ? '2 400' : '900'], ['Доход с клиента за год, ₽', '1 500'],
+    ])),
+  ] : market ? [
     evidence('funnel', 'воронк|доля|шаг|сколько|аудитор|доступн', table('Воронка до платящих клиентов', ['Шаг', 'Доля аудитории'], [
       ['Вся аудитория', '100%'], [truthId === 'sam' ? 'Доступно в регионе' : 'Знают о продукте', truthId === 'sam' ? '35%' : '70%'], ['Готовы платить', percent(current)],
     ]), true),
@@ -118,11 +134,13 @@ function makeSeed(skeleton, axes) {
   return {
     ...axes, id: `${industry}:${truthId}:${twistId}:${traps[trapIndex]}`,
     pair: `${industry}:${truthId}`, industry: label, transaction, groups,
-    truth: discovery || experiments || market ? truth : voice,
-    example: discovery || experiments || market ? diagnosticSignal : '',
+    truth: discovery || experiments || market || strategy ? truth : voice,
+    example: discovery || experiments || market || strategy ? diagnosticSignal : '',
     focusGroup: groups[focus], twist, trapNote, recovery,
     profile: names[(industryIndex + truthIndex) % names.length],
-    intro: market
+    intro: strategy
+      ? `Команда продукта из отрасли «${label}» хочет вырасти в прибыли при ограниченном бюджете. По отчёту маржа ${percent(before)}. Нужно решить, куда направить деньги.`
+      : market
       ? `Команда продукта из отрасли «${label}» хочет выйти с новым платным сервисом. Сверху рынок оценили в ${billions(before)} млрд ₽ в год. Нужно решить, стоит ли входить.`
       : experiments
       ? `Команда продукта из отрасли «${label}» провела A/B-тест нового шага «${transaction}»: ${percent(current)} в варианте против ${percent(before)} в контроле. Решаем, раскатывать ли.`
@@ -134,7 +152,7 @@ function makeSeed(skeleton, axes) {
       discount: 'Со скидкой 10% доля повторных покупок выросла на 1 процентный пункт, а с заказа стали зарабатывать меньше.',
       competitors: 'У двух конкурентов легко найти прошлую покупку из истории. У нашего продукта история спрятана глубже.',
       test: 'Главная метрика — доля оформивших заказ среди всех зашедших. Тест шёл две недели, пользователей делили между контролем и вариантом по плану поровну.',
-      scope: market ? 'Считаем годовую выручку в одной стране от частных клиентов и малого бизнеса.' : `Сравниваем две соседние недели. Берём всех, кто начал, и считаем, какая их доля успешно завершила действие «${transaction}».`,
+      scope: strategy ? 'Растим операционную прибыль за ближайшие 12 месяцев. Дополнительный бюджет не больше 10% выручки.' : market ? 'Считаем годовую выручку в одной стране от частных клиентов и малого бизнеса.' : `Сравниваем две соседние недели. Берём всех, кто начал, и считаем, какая их доля успешно завершила действие «${transaction}».`,
     },
     scenes, clues, numbers: { shares, rates, base, before, current, pilot },
   };
