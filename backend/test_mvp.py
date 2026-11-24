@@ -16,6 +16,19 @@ class MvpTests(unittest.TestCase):
         results = [request_evidence(EvidenceRequest(answer=answer, sources=sources)).source for answer in examples]
         self.assertEqual(results, [*sources, None])
 
+    @patch("app.main.call_yandex_gpt", side_effect=RuntimeError("Model timed out"))
+    def test_same_edtech_setup_has_distinct_grounded_fallbacks(self, model):
+        settings = dict(industry="EdTech / Образование", difficulty="Начальный", mvp=True,
+                        detailedInterview=True, interviewType="product_sense", variantId="onboarding")
+        first = generate_case(GenerateCaseRequest(**settings))
+        second = generate_case(GenerateCaseRequest(**settings, seenFingerprints=first.fingerprints,
+                                                   recentCases=[first.caseIntro]))
+        self.assertEqual(model.call_count, 2)
+        self.assertNotEqual(first.caseIntro.splitlines()[0], second.caseIntro.splitlines()[0])
+        self.assertNotEqual(first.caseRoute[0].question, second.caseRoute[0].question)
+        self.assertTrue(set(first.fingerprints[:4]).isdisjoint(second.fingerprints[:4]))
+        self.assertIn("**Для кого**", second.caseIntro)
+
     @patch('app.main.call_yandex_gpt', return_value=json.dumps({
         'summary': 'Разбор', 'grades': [3, 3], 'decisionCheck': 'unproven_cause',
     }))

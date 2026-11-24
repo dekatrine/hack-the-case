@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 import re
 from random import sample
 from pathlib import Path
@@ -7,13 +8,14 @@ from random import choice
 
 from pydantic import BaseModel, Field, ValidationError
 
-from .case_worlds import MARKETPLACE_WORLDS, OTHER_WORLDS
+from .case_worlds import EDTECH_PROFILES, MARKETPLACE_WORLDS, OTHER_WORLDS
 from .story_routes import assemble_story, decision, question
 
 
 VARIANTS = json.loads(Path(__file__).with_name("case_variants.json").read_text(encoding="utf-8"))
 PRACTICE_SKILLS = json.loads(Path(__file__).with_name("practice_skills.json").read_text(encoding="utf-8"))
 CHECKPOINT = "skill_checkpoint"
+logger = logging.getLogger(__name__)
 
 
 class EvidenceChoice(BaseModel):
@@ -41,7 +43,8 @@ class VariantStory(BaseModel):
     def from_lines(cls, raw):
         fields = {}
         for line in raw.splitlines():
-            key, separator, value = line.strip().lstrip("#* ").partition(":")
+            clean = re.sub(r"^\s*\d+[.)]\s*", "", line).lstrip("#*- ")
+            key, separator, value = clean.partition(":")
             if separator and value.strip():
                 fields[key.strip("* ").upper()] = value.strip().strip("*").strip()
         return cls.model_validate({
@@ -193,6 +196,36 @@ def validate_profile(story, marker):
         raise ValueError("Назови конкретное изменение или выбор, который делает команда")
 
 
+def edtech_onboarding_fallback(payload, variant_id, seen):
+    profiles = list(EDTECH_PROFILES)
+    for key, title, product, audience, difference, idea, action, constraint in sample(profiles, len(profiles)):
+        identity = fingerprint("world", f"{normalized(payload.industry)}:{key}")
+        if identity in seen:
+            continue
+        index = next(i for i, row in enumerate(profiles) if row[0] == key)
+        first, second = 120 + index * 13, 180 + index * 19
+        first_actions, second_actions = first * 3 // 10 + 3, second * 4 // 10 + 5
+        change = f"Команда предлагает {idea}. Нужно решить, поможет ли это новичкам дойти до первого результата."
+        story = VariantStory(
+            title=title, product=product, audience=audience, difference=difference, change=change[:240],
+            intro=f"За две недели {first} новых пользователей начали путь в продукте. У {first_actions} получилось завершить {action}. Команда хочет понять, что поможет большему числу людей дойти до результата.",
+            openingQuestion=f"Что проверишь первым, чтобы понять, где людям труднее завершить {action}?",
+            openingFormat="Назови один шаг пути и сравнение, которое покажет, что на нём происходит.",
+            choices=[
+                EvidenceChoice(option="Переходы между шагами", evidence=f"Из {first} новых пользователей до следующего шага дошли {first * 2 // 3}, а целевое действие завершили {first_actions}. Все числа за те же две недели.",
+                               question="На каком переходе потеряли больше людей? Подкрепи вывод двумя числами."),
+                EvidenceChoice(option="Результаты первого теста", evidence=f"Две недели прежний интерфейс увидели {first} человек. Действие завершили {first_actions}. Из {second} человек с изменением это сделали {second_actions}.",
+                               question="Сравни доли завершений в двух группах. Что ещё важно проверить перед выводом?"),
+            ],
+            twist=f"Появилось ограничение. Теперь {constraint}.",
+            finalQuestion=f"Как поступишь с предложением «{idea}» с учётом данных и нового ограничения? Объясни выбор.",
+        )
+        fingerprints = story_fingerprints(story)
+        if seen.isdisjoint(fingerprints[:4]) and not recent_profile_repeated(story, payload.recentCases):
+            return variant_id, story, [*fingerprints, identity]
+    return None
+
+
 def generate_variant(payload, call_model):
     variants = VARIANTS.get(payload.interviewType, [])
     by_id = {entry[0]: entry for entry in variants}
@@ -282,6 +315,9 @@ def generate_variant(payload, call_model):
     else:
         candidates = [("", "", "")] * len(angles)
 
+    fallback_allowed = (detailed and payload.interviewType == "product_sense" and variant_id == "onboarding"
+                        and not payload.extraContext.strip() and not payload.focusSkill
+                        and re.search(r"edtech|образован", normalized(payload.industry)))
     for angle, (world, premise, marker) in zip(angles, candidates):
         scenario = ""
         if detailed:
@@ -290,12 +326,21 @@ def generate_variant(payload, call_model):
                 "Встрой её в продукт, данные и проверяемое решение. "
                 "Если пользователь прямо назвал другую аудиторию, нишу или конкретный сценарий, его условия важнее."
             )
-        raw = call_model(
-            GENERATION_SYSTEM,
-            f"{prompt}\nОбязательный ракурс для этой попытки: {angle}. "
-            "Отрази его в срезах данных и в решении, которое нужно принять." + scenario,
-            temperature=0.85, max_tokens=2400 if detailed else 1900,
-        )
+        try:
+            raw = call_model(
+                GENERATION_SYSTEM,
+                f"{prompt}\nОбязательный ракурс для этой попытки: {angle}. "
+                "Отрази его в срезах данных и в решении, которое нужно принять." + scenario,
+                temperature=0.85, max_tokens=2400 if detailed else 1900,
+                **({"max_retries": 1, "timeout": 21} if detailed else {}),
+            )
+        except RuntimeError:
+            if not detailed:
+                raise
+            logger.info("Detailed interview generation request failed")
+            if fallback_allowed and (fallback := edtech_onboarding_fallback(payload, variant_id, seen)):
+                return fallback
+            continue
         try:
             story = parse_story(raw)
             if detailed:
@@ -304,6 +349,9 @@ def generate_variant(payload, call_model):
                 raise ValueError("В условии нужны исходные числа для сравнения")
         except (ValueError, ValidationError) as error:
             if detailed:
+                logger.info("Detailed interview rejected by format validation: %s", type(error).__name__)
+                if fallback_allowed and (fallback := edtech_onboarding_fallback(payload, variant_id, seen)):
+                    return fallback
                 prompt += f"\nИсправь черновик: {error.args[0] if type(error) is ValueError else 'Заполни все шестнадцать строк.'}."
             prompt += "\nПроверь формат: полные поля, два разных среза, минимум по два разных числа в каждом. Если нужен исходный путь в INTRO, напиши шаги и два исходных числа."
             continue
@@ -320,6 +368,8 @@ def generate_variant(payload, call_model):
                 fingerprints.append(fingerprint("world", f"{industry}:{world}"))
             return variant_id, story, fingerprints
         prompt += "\nСовпали данные или вопросы. Возьми другую бизнес-ситуацию и другие численные сравнения."
+    if fallback_allowed and (fallback := edtech_onboarding_fallback(payload, variant_id, seen)):
+        return fallback
     raise RuntimeError("Не удалось создать новый вариант. Попробуй сгенерировать ещё раз.")
 
 
