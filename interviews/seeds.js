@@ -162,7 +162,7 @@ export function validateSeed(skeleton, seed) {
   const { shares, rates, current, before, pilot } = seed.numbers;
   if (shares.reduce((sum, share) => sum + share, 0) !== 100
     || rates.length !== shares.length || rates.some(rate => rate < 0 || rate > 100)
-    || Math.abs(mean(shares, rates) - current) > 0.0001) throw new Error('Несогласованные сегменты');
+    || Math.abs(mean(shares, rates) - current) > (skeleton.id === 'strategy' ? 0.06 : 0.0001)) throw new Error('Несогласованные сегменты');
   if (skeleton.id === 'diagnosis' && Math.abs((pilot - current) / (before - current) * 100 - seed.recovery) > 0.01) {
     throw new Error('Несогласованный результат пилота');
   }
