@@ -23,6 +23,6 @@ export default function Progress({ onStart }) {
     {weakest && <section className="home-card home-next"><span className="home-label">Следующий шаг</span>
       <p>{weakest.label} — слабее всего. Один собес на этот навык даст больше всего.</p>
       <button type="button" className="home-btn" onClick={() => onStart(recommendedSkeleton(summary))}>Начать собес <ArrowRight size={18}/></button></section>}
-    <p className="home-muted">Навыки считаются по собесам из готовых сценариев. Настроенные интервью учитываются только в числе собесов.</p>
+    <p className="home-muted">Навыки считаются по собесам из готовых сценариев ({summary.skillRuns}). У настроенных интервью в график попадает итоговый балл после ИИ-разбора.</p>
   </div>;
 }

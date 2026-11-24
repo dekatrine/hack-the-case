@@ -11,6 +11,11 @@ export function summarize(runs) {
   const scored = runs.filter(run => run.status === 'finished' && !run.configured)
     .map(run => ({ run, result: debrief(run) }))
     .sort((a, b) => a.run.updatedAt - b.run.updatedAt);
+  // Настроенные интервью оцениваются LLM: в график идёт только итоговый балл, навыков у них нет.
+  const reviewed = runs.filter(run => run.status === 'finished' && run.configured && Number.isFinite(run.review?.score?.final))
+    .map(run => ({ updatedAt: run.updatedAt, final: run.review.score.final }));
+  const timeline = [...scored.map(({ run, result }) => ({ updatedAt: run.updatedAt, final: result.final })), ...reviewed]
+    .sort((a, b) => a.updatedAt - b.updatedAt);
   const skills = Object.keys(SKILL_LABELS).map(id => {
     const grades = scored.map(({ result }) => result.results.find(row => row.id === id)?.grade).filter(Number.isFinite);
     const recent = grades.slice(-3);
@@ -20,8 +25,9 @@ export function summarize(runs) {
   const weakest = known[0] || null;
   return {
     total: runs.filter(run => run.status === 'finished').length,
-    scores: scored.map(({ result }) => result.final),
-    average: scored.length ? Math.round(scored.reduce((s, { result }) => s + result.final, 0) / scored.length) : null,
+    scores: timeline.map(item => item.final),
+    average: timeline.length ? Math.round(timeline.reduce((sum, item) => sum + item.final, 0) / timeline.length) : null,
+    skillRuns: scored.length,
     skills, weakest, strongest: known.at(-1) || null,
   };
 }
