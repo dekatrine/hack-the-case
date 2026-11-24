@@ -72,8 +72,8 @@ function makeSeed(skeleton, axes) {
     'Журнал операций и аналитика показывают разные числа. Проверь, что считает каждый источник.',
   ][trapIndex];
   const scenes = {
-    segments: table('Показатели по группам', strategy ? ['Группа', 'Доля выручки', 'Маржа с учётом затрат'] : market ? ['Группа', 'Доля аудитории', 'Готовы платить'] : experiments ? ['Группа', 'Доля пользователей', 'Контроль', 'Вариант'] : discovery ? ['Группа', 'Доля покупателей', 'Купили снова'] : ['Группа', 'Доля пользователей', 'Конверсия до', 'Конверсия после'],
-      groups.map((group, i) => strategy || market ? [group, percent(shares[i]), percent(rates[i])] : [group, percent(shares[i]), percent(base[i]), ...(!discovery ? [percent(rates[i])] : [])])),
+    segments: table('Показатели по группам', strategy ? ['Группа', 'Доля выручки', 'Маржа по отчёту'] : market ? ['Группа', 'Доля аудитории', 'Готовы платить'] : experiments ? ['Группа', 'Доля пользователей', 'Контроль', 'Вариант'] : discovery ? ['Группа', 'Доля покупателей', 'Купили снова'] : ['Группа', 'Доля пользователей', 'Конверсия до', 'Конверсия после'],
+      groups.map((group, i) => strategy ? [group, percent(shares[i]), percent(base[i])] : market ? [group, percent(shares[i]), percent(rates[i])] : [group, percent(shares[i]), percent(base[i]), ...(!discovery ? [percent(rates[i])] : [])])),
     voice,
     experiment: `По сравнению с группой без изменений доля повторных заказов выросла на ${lift} п.п., а отписок стало на ${guardrail}% больше. Заработок с одного заказа снизился на ${margin}%. ${trapNote}`,
     pilot: table('Конверсия до и после исправления', ['До падения', 'На минимуме', 'После пробного исправления'], [[percent(before, 4), percent(current, 4), percent(pilot, 4)]]),
