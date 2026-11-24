@@ -29,6 +29,22 @@ class MvpTests(unittest.TestCase):
         self.assertTrue(set(first.fingerprints[:4]).isdisjoint(second.fingerprints[:4]))
         self.assertIn("**Для кого**", second.caseIntro)
 
+    @patch("app.main.call_yandex_gpt", side_effect=["Неполный ответ", RuntimeError("Model timed out")])
+    def test_automatic_marketplace_interview_recovers_from_invalid_or_unavailable_generation(self, model):
+        settings = dict(industry="E-commerce / Маркетплейсы", difficulty="Начальный", mvp=True,
+                        detailedInterview=True, interviewType="product_sense", variantId="surprise")
+        first = generate_case(GenerateCaseRequest(**settings))
+        second = generate_case(GenerateCaseRequest(**settings, seenFingerprints=first.fingerprints,
+                                                   recentCases=[first.caseIntro]))
+        self.assertEqual(model.call_count, 2)
+        self.assertEqual(first.variantId, "onboarding")
+        self.assertEqual(second.variantId, "onboarding")
+        self.assertNotEqual(first.caseIntro.splitlines()[0], second.caseIntro.splitlines()[0])
+        self.assertNotEqual(first.caseRoute[0].question, second.caseRoute[0].question)
+        for case in (first, second):
+            self.assertIn("**Особенность**", case.caseIntro)
+            self.assertEqual(sum(bool(step.evidence) for step in case.caseRoute), 2)
+
     @patch('app.main.call_yandex_gpt', return_value=json.dumps({
         'summary': 'Разбор', 'grades': [3, 3], 'decisionCheck': 'unproven_cause',
     }))

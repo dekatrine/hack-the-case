@@ -8,7 +8,7 @@ from random import choice
 
 from pydantic import BaseModel, Field, ValidationError
 
-from .case_worlds import EDTECH_PROFILES, MARKETPLACE_WORLDS, OTHER_WORLDS
+from .case_worlds import EDTECH_PROFILES, MARKETPLACE_PROFILES, MARKETPLACE_WORLDS, OTHER_WORLDS
 from .story_routes import assemble_story, decision, question
 
 
@@ -196,14 +196,14 @@ def validate_profile(story, marker):
         raise ValueError("Назови конкретное изменение или выбор, который делает команда")
 
 
-def edtech_onboarding_fallback(payload, variant_id, seen):
-    profiles = list(EDTECH_PROFILES)
-    for key, title, product, audience, difference, idea, action, constraint in sample(profiles, len(profiles)):
+def onboarding_fallback(payload, seen, profiles):
+    for index, profile in sample(list(enumerate(profiles)), len(profiles)):
+        key, title, product, audience, difference, idea, action, constraint = profile
         identity = fingerprint("world", f"{normalized(payload.industry)}:{key}")
         if identity in seen:
             continue
-        index = next(i for i, row in enumerate(profiles) if row[0] == key)
-        first, second = 120 + index * 13, 180 + index * 19
+        baseline = 280 if profiles is MARKETPLACE_PROFILES else 120
+        first, second = baseline + index * 13, baseline + 60 + index * 19
         first_actions, second_actions = first * 3 // 10 + 3, second * 4 // 10 + 5
         change = f"Команда предлагает {idea}. Нужно решить, поможет ли это новичкам дойти до первого результата."
         story = VariantStory(
@@ -222,7 +222,7 @@ def edtech_onboarding_fallback(payload, variant_id, seen):
         )
         fingerprints = story_fingerprints(story)
         if seen.isdisjoint(fingerprints[:4]) and not recent_profile_repeated(story, payload.recentCases):
-            return variant_id, story, [*fingerprints, identity]
+            return "onboarding", story, [*fingerprints, identity]
     return None
 
 
@@ -303,9 +303,10 @@ def generate_variant(payload, call_model):
         "неодинаковый результат у двух сопоставимых групп", "изменение поведения после ограничения услуги",
         "переход между каналами или ролями пользователей", "проверка данных перед обратимым решением",
     ], 3)
+    industry = normalized(payload.industry)
+    is_marketplace = bool(re.search(r"маркетплейс|marketplace|e commerce", industry))
     if detailed:
-        industry = normalized(payload.industry)
-        worlds = MARKETPLACE_WORLDS if re.search(r"маркетплейс|marketplace|e commerce", industry) else OTHER_WORLDS
+        worlds = MARKETPLACE_WORLDS if is_marketplace else OTHER_WORLDS
         available = [(key, premise, marker) for key, premise, marker in worlds
                      if fingerprint("world", f"{industry}:{key}") not in seen]
         if not available:
@@ -315,9 +316,12 @@ def generate_variant(payload, call_model):
     else:
         candidates = [("", "", "")] * len(angles)
 
-    fallback_allowed = (detailed and payload.interviewType == "product_sense" and variant_id == "onboarding"
-                        and not payload.extraContext.strip() and not payload.focusSkill
-                        and re.search(r"edtech|образован", normalized(payload.industry)))
+    fallback_profiles = ()
+    if detailed and payload.interviewType == "product_sense" and not payload.extraContext.strip() and not payload.focusSkill:
+        if is_marketplace and payload.variantId in ("surprise", "onboarding"):
+            fallback_profiles = MARKETPLACE_PROFILES
+        elif variant_id == "onboarding" and re.search(r"edtech|образован", industry):
+            fallback_profiles = EDTECH_PROFILES
     for angle, (world, premise, marker) in zip(angles, candidates):
         scenario = ""
         if detailed:
@@ -338,7 +342,7 @@ def generate_variant(payload, call_model):
             if not detailed:
                 raise
             logger.info("Detailed interview generation request failed")
-            if fallback_allowed and (fallback := edtech_onboarding_fallback(payload, variant_id, seen)):
+            if fallback_profiles and (fallback := onboarding_fallback(payload, seen, fallback_profiles)):
                 return fallback
             continue
         try:
@@ -350,7 +354,7 @@ def generate_variant(payload, call_model):
         except (ValueError, ValidationError) as error:
             if detailed:
                 logger.info("Detailed interview rejected by format validation: %s", type(error).__name__)
-                if fallback_allowed and (fallback := edtech_onboarding_fallback(payload, variant_id, seen)):
+                if fallback_profiles and (fallback := onboarding_fallback(payload, seen, fallback_profiles)):
                     return fallback
                 prompt += f"\nИсправь черновик: {error.args[0] if type(error) is ValueError else 'Заполни все шестнадцать строк.'}."
             prompt += "\nПроверь формат: полные поля, два разных среза, минимум по два разных числа в каждом. Если нужен исходный путь в INTRO, напиши шаги и два исходных числа."
@@ -368,7 +372,7 @@ def generate_variant(payload, call_model):
                 fingerprints.append(fingerprint("world", f"{industry}:{world}"))
             return variant_id, story, fingerprints
         prompt += "\nСовпали данные или вопросы. Возьми другую бизнес-ситуацию и другие численные сравнения."
-    if fallback_allowed and (fallback := edtech_onboarding_fallback(payload, variant_id, seen)):
+    if fallback_profiles and (fallback := onboarding_fallback(payload, seen, fallback_profiles)):
         return fallback
     raise RuntimeError("Не удалось создать новый вариант. Попробуй сгенерировать ещё раз.")
 
