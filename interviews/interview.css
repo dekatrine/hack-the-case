@@ -101,3 +101,20 @@ button.iv-configure { border-color: var(--iv-lime); }
 .iv-shell .mvp-case-content { color: inherit; }
 .iv-shell .mvp-case-content p { color: inherit; }
 .iv-shell .mvp-case-content p + p { margin-top: 8px; }
+
+.iv-brief-card { display: grid; gap: 10px; padding: 16px; }
+.iv-brief-card > p { margin: 0; }
+.iv-brief-product { font-weight: 750; }
+.iv-brief-audience { color: var(--iv-muted); font-size: 14px; }
+.iv-brief-task { border-left: 2px solid var(--iv-lime); padding-left: 10px; }
+.iv-brief-facts { margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.iv-brief-facts li { padding: 7px 0; border-top: 1px solid var(--iv-border); }
+.iv-brief-card .iv-condition { background: #121516; }
+.iv-turn-context { min-width: 0; }
+.iv-turn-context .iv-condition:not([open]) { display: inline-block; background: transparent; }
+.iv-turn-context .iv-condition summary { font-weight: 600; font-size: 13px; }
+.iv-panel h1.iv-question { font-size: clamp(19px, 5vw, 24px); line-height: 1.3; }
+.iv-panel .iv-answer-format { margin: 9px 0 0; color: var(--iv-muted); font-size: 14px; line-height: 1.5; }
+.iv-answer-format strong { color: #f2f3f2; }
+.iv-form textarea { font-size: 16px; }
+.iv-turn-form { margin-top: 0; }

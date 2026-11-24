@@ -1,6 +1,6 @@
 import React from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import Interview from './Interview.jsx';
 import calibration from './calibration.json';
 import { currentTurn, optionLabel } from './engine.js';
@@ -29,7 +29,9 @@ it('resumes a saved draft offline and opens the full debrief with a flagged fact
   await waitFor(() => expect(begin.disabled).toBe(false));
   const brief = latest().seed.intro;
   fireEvent.click(begin);
-  const condition = () => screen.getByText('Условие кейса').closest('details');
+  const condition = () => screen.getByText('Условие', { exact: true }).closest('details');
+  expect(condition().open).toBe(false);
+  fireEvent.click(screen.getByText('Условие', { exact: true }));
   expect(condition().open).toBe(true);
   expect(condition().textContent).toContain(brief);
   const text = calibration.diagnosis.scope;
@@ -41,7 +43,7 @@ it('resumes a saved draft offline and opens the full debrief with a flagged fact
   render(<Interview onExit={vi.fn()}/>);
   click(/Продолжить с хода 1/);
   expect(screen.getByRole('textbox').value).toBe(text);
-  expect(condition().open).toBe(true);
+  expect(condition().open).toBe(false);
   expect(condition().textContent).toContain(brief);
   expect(screen.getByText('−1 балл к итогу')).toBeTruthy();
   for (let i = 0; latest().status === 'active' && i < 17; i += 1) {
@@ -105,8 +107,16 @@ it('creates a configured interview, opens the selected evidence and evaluates on
   expect(api.generate).toHaveBeenCalledWith(expect.objectContaining({
     interviewType: 'product_sense', difficulty: 'Средний', extraContext: 'Первый заказ', mvp: true, detailedInterview: true,
   }));
+  const brief = screen.getByRole('region', { name: 'Короткий брифинг' });
+  expect(within(brief).getByRole('list', { name: 'Исходные цифры' }).textContent).toContain('200 оформили');
+  const full = within(brief).getByText('Полное условие').closest('details');
+  expect(full.open).toBe(false);
+  expect(full.textContent).toContain('Те, кто покупает после закрытия магазинов.');
+
   click('Начать интервью');
-  expect(screen.getByRole('heading', { name: 'Что уточнишь про покупку ночью?' })).toBeTruthy();
+  const question = screen.getByRole('heading', { name: 'Что уточнишь про покупку ночью?' });
+  expect(question.parentElement.textContent).toContain('Что написать.');
+  expect(screen.getByText('Условие', { exact: true }).closest('details').open).toBe(false);
   answer('Корзина');
   expect(screen.getByRole('heading', { name: /Назови шаг, одно возможное препятствие/ })).toBeTruthy();
   answer('Проверю переход из корзины к оплате новых заказов.');

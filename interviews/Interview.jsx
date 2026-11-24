@@ -4,6 +4,7 @@ import { api } from '../api/client.js';
 import { track } from '../api/analytics.js';
 import { advance, createRun, currentTurn, optionLabel, plan, skeletons, targetEntry } from './engine.js';
 import { debrief } from './rubric.js';
+import InterviewBrief, { InterviewCondition } from './InterviewBrief.jsx';
 import InterviewSetup, { defaultInterviewSettings } from './InterviewSetup.jsx';
 import { configuredRun, configuredRemaining, configuredReviewPayload } from './configured.js';
 import CaseContent from '../CaseContent.jsx';
@@ -155,7 +156,7 @@ export default function Interview({ onExit }) {
 
   useEffect(() => {
     setTurnError('');
-    heading.current?.focus();
+    heading.current?.focus({ preventScroll: true });
   }, [id, move?.id, run?.status]);
 
   useEffect(() => {
@@ -269,12 +270,14 @@ export default function Interview({ onExit }) {
 
   function start() {
     const item = save({ ...run, status: 'active' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
     event('case_started', item);
     shown(item);
   }
 
   function open(item) {
     setId(item.id);
+    window.scrollTo({ top: 0, behavior: 'auto' });
     if (item.status === 'active') { event('resumed', item); shown(item); }
     if (item.status === 'finished') event('debrief_opened', item);
   }
@@ -368,7 +371,7 @@ export default function Interview({ onExit }) {
       <button className="iv-text-button" onClick={() => pause()}><ArrowLeft size={18}/> Интервью</button>
       <h1 ref={heading} tabIndex={-1}>{run.skeleton.title}</h1>
       <div className="iv-person"><span>{run.seed.profile[0]}</span><div><strong>{run.seed.profile}</strong><small>Интервьюер · {run.seed.industry}</small></div></div>
-      <div className="iv-bubble">{run.configured ? <CaseContent text={run.seed.intro}/> : run.seed.intro}{run.story && <p>{run.story}</p>}</div>
+      <InterviewBrief run={run}/>
       {run.configured && <p className="iv-muted">{run.skeleton.label} · {run.settings.difficulty}</p>}
       <h2>Фазы интервью</h2>
       <ol className="iv-phases">{run.skeleton.phases.map(phase => <li key={phase.id}>{phase.label}</li>)}</ol>
@@ -380,14 +383,9 @@ export default function Interview({ onExit }) {
     {run?.status === 'active' && move && <>
       <div className="iv-progress"><button aria-label="Пауза" onClick={() => pause()}><X size={18}/></button><strong>Ход {run.history.length + 1} из {run.history.length + remaining}</strong><span aria-label="Осталось времени"><Clock3 size={15}/> {clock}</span></div>
       <div className="iv-phase-status"><span>Фаза {phaseIndex + 1} из {run.skeleton.phases.length} · {run.skeleton.phases[phaseIndex].label}</span><div aria-hidden="true">{run.skeleton.phases.map((phase, i) => <i className={i <= phaseIndex ? 'iv-phase-on' : ''} key={phase.id}/>)}</div></div>
-      <details className="iv-condition" open={run.history.length === 0}>
-        <summary>Условие кейса</summary>
-        <div className="iv-condition-content">
-          {run.configured ? <CaseContent text={run.seed.intro}/> : <p>{run.seed.intro}</p>}
-          {run.story && <p>{run.story}</p>}
-        </div>
-      </details>
-      <Map entries={run.map}/>
+      <div className="iv-turn-context">
+        <InterviewCondition key={move.id} run={run}/>
+      </div>
       {seconds === 0 && <p className="iv-muted">Плановое время вышло. Можно закончить без штрафа.</p>}
       {run.lastReply && <div className="iv-bubble" role="status">{run.lastReply}</div>}
       {run.history.at(-1)?.opened.length > 0 && <p className="iv-feedback" role="status"><Check size={16}/> Улика открыта и добавлена в карту</p>}
@@ -398,24 +396,27 @@ export default function Interview({ onExit }) {
         {selected && <blockquote>{selected.value !== selected.quote && <strong>{selected.value} · </strong>}«{selected.quote}»</blockquote>}
         {move.kind === 'TWIST' && !run.configured && <p>{run.seed.twist}</p>}
         <h1 className="iv-question" ref={heading} tabIndex={-1}>{move.prompt}</h1>
+        {move.answerFormat && <p className="iv-answer-format" id="iv-answer-format">
+          <strong>{options ? 'Как выбрать. ' : 'Что написать. '}</strong>{move.answerFormat}
+        </p>}
       </div>
       {move.scene && <div className="iv-data"><CaseContent text={move.scene}/></div>}
       {move.caseEvidence && <section className="iv-data" aria-label="Данные по твоему запросу"><CaseContent text={move.caseEvidence}/></section>}
       {priorData.length > 0 && <details className="iv-opened"><summary>Открытые данные ({priorData.length})</summary>
         {priorData.map(step => <section className="iv-data" key={step.id}><CaseContent text={step.caseEvidence}/></section>)}
       </details>}
-      {move.answerFormat && <p className="iv-muted"><strong>{options ? 'Как выбрать. ' : 'Что написать. '}</strong>{move.answerFormat}</p>}
       <Table value={run.seed.scenes[move.scene || move.public]}/>
       {run.seed.clues.filter(clue => move.evidence?.includes(clue.id) && !run.opened.includes(clue.id)).map(clue =>
         <p className="iv-locked" key={clue.id}><Lock size={15}/> {clue.title}</p>)}
       {run.opened.length > 0 && <details className="iv-opened" open={run.history.at(-1)?.opened.length > 0 || undefined}><summary>Открытые улики ({run.opened.length})</summary>
         {run.seed.clues.filter(clue => run.opened.includes(clue.id)).map(clue => <Table key={clue.id} value={clue}/>)}
       </details>}
-      <form className="iv-form" onSubmit={submit}>
-        {options && <fieldset><legend>{run.configured || move.justify ? 'Выбери один вариант' : 'Выбери один вопрос'}</legend>{options.map(option =>
+      <Map entries={run.map}/>
+      <form className="iv-form iv-turn-form" onSubmit={submit}>
+        {options && <fieldset aria-describedby={move.answerFormat ? 'iv-answer-format' : undefined}><legend>{run.configured || move.justify ? 'Выбери один вариант' : 'Выбери один вопрос'}</legend>{options.map(option =>
           <button type="button" key={option} aria-pressed={run.choice === option} onClick={() => edit({ choice: option })}>{optionLabel(move, option)}</button>)}</fieldset>}
         {(!options || move.justify || run.hints[move.id]) && <label> {move.justify ? 'Почему этот вариант?' : move.evidence ? 'Какие данные запросишь?' : 'Твой ответ'}
-          <textarea value={run.draft} rows={3} maxLength={1200} onChange={e => edit({ draft: e.target.value })} placeholder={move.evidence ? 'Напиши, что с чем сравнить' : 'Ответь своими словами'}/>
+          <textarea aria-describedby={move.answerFormat ? 'iv-answer-format' : undefined} value={run.draft} rows={3} maxLength={1200} onChange={e => edit({ draft: e.target.value })} placeholder={move.evidence ? 'Напиши, что с чем сравнить' : 'Ответь своими словами'}/>
         </label>}
         {turnError && <p role="alert" className="iv-warning">{turnError}</p>}
         {run.hints[move.id] ? <p className="iv-hint">{move.hint} <small>−1 балл к итогу</small></p>
