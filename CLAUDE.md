@@ -46,7 +46,7 @@ VITE_API_BASE_URL=http://localhost:8000 npm run dev
 
 ### Frontend
 
-`main.jsx` mounts `MvpApp.jsx` and nothing else (the rest of `main.jsx` is legacy screens, not rendered). `MvpApp.jsx` holds the app shell: a `screen` state, no router. Screens: `home` (default), `library` (Мои кейсы), `progress`, `interviews`, `generate`, `solve`, `review`, `learning`.
+`main.jsx` mounts `MvpApp.jsx` and nothing else (the rest of `main.jsx` is legacy screens, not rendered). `MvpApp.jsx` holds the app shell: a `screen` state, no router. Screens: `home` (default), `library` (Практика: собесы и кейсы), `progress`, `interviews`, `generate`, `solve`, `review`, `learning`, `cards`, `theory`. The header has three sections plus the «Новый кейс» button: Главная (home and progress), Практика (library), Учёба (learning; cards and theory are opened from it).
 
 Modules:
 - `interviews/` — interview engine. `skeletons/*.json` define phases and turns (kinds ASK, DATA, CLARIFY, CHALLENGE, TWIST, DEMAND); `seeds.js` builds a random case per run (industry × hidden truth × twist × trap, with numbers, scenes, clues); `engine.js` runs a session; `rubric.js` grades answers locally by 7 skills (checks are regexes, plus `numberCheck` against the seed's numbers); `compare.js` compares with the previous interview; `configured.js` builds an LLM-generated interview ("configured"), graded by `/api/evaluate`; `Interview.jsx` is the UI (draft kept 24 h, drill on the weakest answer). `calibration.json` holds a strong answer for every turn of every skeleton.

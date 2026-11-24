@@ -375,15 +375,11 @@ export default function MvpApp({ initialScreen = 'home' }) {
 
   return <div className="mvp-app">
     <header className="mvp-header">
-      <button className="clean-brand" disabled={!!busy} onClick={() => go('library')} aria-label="Hack the Case — мои кейсы"><span className="mark">H</span><b>Hack the Case</b></button>
+      <button className="clean-brand" disabled={!!busy} onClick={() => go('library')} aria-label="Hack the Case — практика"><span className="mark">H</span><b>Hack the Case</b></button>
       <nav aria-label="Основная навигация">
-        <button disabled={!!busy} onClick={() => go('interviews')}>Интервью</button>
-        <button aria-current={screen === 'home' ? 'page' : undefined} disabled={!!busy} onClick={() => go('home')}>Главная</button>
-        <button aria-current={screen === 'library' ? 'page' : undefined} disabled={!!busy} onClick={() => go('library')}>Мои кейсы</button>
-        <button aria-current={screen === 'progress' ? 'page' : undefined} disabled={!!busy} onClick={() => go('progress')}>Прогресс</button>
-        <button aria-current={screen === 'learning' ? 'page' : undefined} disabled={!!busy} onClick={() => go('learning')}>Обучение</button>
-        <button aria-current={screen === 'cards' ? 'page' : undefined} disabled={!!busy} onClick={() => { setTheorySavedOnly(false); go('cards'); }}>Карточки</button>
-        <button aria-current={screen === 'theory' ? 'page' : undefined} disabled={!!busy} onClick={() => go('theory')}>Теория</button>
+        <button aria-current={screen === 'home' || screen === 'progress' ? 'page' : undefined} disabled={!!busy} onClick={() => go('home')}>Главная</button>
+        <button aria-current={screen === 'library' ? 'page' : undefined} disabled={!!busy} onClick={() => go('library')}>Практика</button>
+        <button aria-current={['learning', 'cards', 'theory'].includes(screen) ? 'page' : undefined} disabled={!!busy} onClick={() => go('learning')}>Учёба</button>
         <Button variant="accent" size="sm" disabled={!!busy} onClick={() => go('generate')}>Новый кейс</Button>
       </nav>
     </header>
@@ -391,7 +387,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
       {saveError && <p role="alert" className="mvp-notice">{saveError}</p>}
       {error && <p role="alert" className="mvp-notice">{error}</p>}
       {theoryError && <p role="alert" className="mvp-notice">{theoryError}</p>}
-      {screen === 'learning' && <LearningPath onOpenCases={() => go('library')}/>}
+      {screen === 'learning' && <LearningPath onOpenCases={() => go('library')} onOpenCards={() => { setTheorySavedOnly(false); go('cards'); }} onOpenTheory={() => go('theory')}/>}
       {screen === 'theory' && <BookTheoryPage initialChapter={bookChapter} savedIds={savedTheory} onToggle={toggleTheory} onResume={active ? () => go('solve') : null}/>}
       {screen === 'cards' && <TheoryPage onOpenChapter={number => { setBookChapter(number); go('theory'); }} savedIds={savedTheory} onToggle={toggleTheory} initialSavedOnly={theorySavedOnly} onResume={active ? () => go('solve') : null}/>}
       {screen === 'home' && !profile && cases.length === 0 && readRuns().length === 0 && <Onboarding onDone={answers => { setProfile(answers); }}/>}
