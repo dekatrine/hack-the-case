@@ -3,6 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import Interview from './Interview.jsx';
 import calibration from './calibration.json';
+import { currentTurn, optionLabel } from './engine.js';
 import { readRuns } from './storage.js';
 
 vi.mock('../api/analytics.js', () => ({ track: vi.fn() }));
@@ -43,12 +44,14 @@ it('resumes a saved draft offline and opens the full debrief with a flagged fact
   expect(condition().textContent).toContain(brief);
   expect(screen.getByText('−1 балл к итогу')).toBeTruthy();
   for (let i = 0; latest().status === 'active' && i < 17; i += 1) {
-    const { queue: [turn], seed } = latest();
-    if (turn.options) click(turn.options === 'segments' ? seed.groups[0] : turn.options[0]);
+    const run = latest();
+    const turn = currentTurn(run);
+    const { seed } = run;
+    if (turn.options) click(turn.options === 'segments' ? seed.groups[0] : optionLabel(turn, turn.options[0]));
     if (!turn.options || turn.justify) {
       type(turn.fact ? 'Пилот отыграл две трети падения.' : (calibration.diagnosis[turn.id] || calibration.diagnosis[turn.id.replace('_clarify', '')]).replace('{recovery}', seed.recovery));
     }
-    if (turn.kind === 'CHALLENGE') expect(screen.getByText('Перебивает')).toBeTruthy();
+    if (turn.kind === 'CHALLENGE') expect(screen.getByText('Уточнение интервьюера')).toBeTruthy();
     click(turn.kind === 'DEMAND' ? 'Завершить интервью' : turn.evidence ? 'Запросить данные' : 'Ответить');
     if (i === 0) {
       expect(condition().open).toBe(false);

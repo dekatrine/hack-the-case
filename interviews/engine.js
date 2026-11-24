@@ -4,18 +4,27 @@ import { chooseSeed, matchingClues } from './seeds.js';
 export const skeletons = Object.values(import.meta.glob('./skeletons/*.json', { eager: true, import: 'default' }));
 export const plan = skeleton => skeleton.phases.flatMap(phase => phase.turns.map(turn => ({ ...turn, phase: phase.id })));
 
-const scope = skeletons.find(skeleton => skeleton.id === 'diagnosis')?.phases
-  .flatMap(phase => phase.turns).find(turn => turn.id === 'scope');
+const currentPlans = new Map(skeletons.map(skeleton => [skeleton.id, new Map(plan(skeleton).map(turn => [turn.id, turn]))]));
 
 export function currentTurn(run) {
   const move = run?.queue[0];
-  // Saved interviews keep a snapshot of the original questions.
-  if (!scope || run?.skeleton.id !== 'diagnosis') return move;
-  if (move?.id === 'scope') return { ...move, prompt: scope.prompt, hint: scope.hint, checks: scope.checks };
-  if (move?.id === 'scope_clarify') {
-    return { ...move, prompt: scope.hint, hint: scope.hint, checks: scope.checks, reply: scope.reply };
+  if (!move) return move;
+  // Preserve the saved route and choices while applying the current wording.
+  const clarification = move.kind === 'CLARIFY';
+  const originalId = clarification ? move.id.replace(/_clarify$/, '') : move.id;
+  const current = currentPlans.get(run.skeleton.id)?.get(originalId);
+  if (!current) return move;
+  if (clarification) {
+    return {
+      ...move, label: `Уточнение · ${current.label}`, prompt: current.hint, hint: current.hint,
+      checks: current.checks, reply: originalId === 'scope' ? current.reply : move.reply,
+    };
   }
-  return move;
+  return { ...move, label: current.label, prompt: current.prompt, hint: current.hint, checks: current.checks, optionLabels: current.optionLabels };
+}
+
+export function optionLabel(move, value) {
+  return move.optionLabels?.[move.options.indexOf(value)] || value;
 }
 
 export function createRun(skeleton, previous, now = Date.now()) {
@@ -39,7 +48,7 @@ function mapEntry(run, move, answer, choice) {
   const previous = revisedKey && [...run.map].reverse().find(entry => entry.label.toLowerCase() === revisedKey[1].trim().toLowerCase());
   const quote = answer.length > 160 ? answer.slice(0, 160).replace(/\s+\S*$/, '') : answer;
   return {
-    id: move.id, phase: move.phase, label: move.label, value: choice || quote, quote,
+    id: move.id, phase: move.phase, label: move.label, value: optionLabel(move, choice) || quote, quote,
     ...(previous ? { revises: previous.id, label: previous.label, value: revisedKey[2] } : {}),
   };
 }
@@ -53,11 +62,11 @@ export function advance(run, answer, choice, tookMs, now = Date.now()) {
   const matches = matchingClues(run, move, text);
   const newlyOpened = matches.filter(clue => !run.opened.includes(clue.id));
   if (move.evidence && !move.public && !matches.length && !run.hints[move.id]) {
-    return { ...run, requestError: 'Уточни срез и показатель. Можно открыть подсказку и продолжить.' };
+    return { ...run, requestError: 'Напиши, какие данные тебе нужны и что хочешь сравнить. Если нужна помощь, открой подсказку.' };
   }
   const assessment = assessTurn(run, move, text, choice, matches);
   const target = move.target ? targetEntry(run, move) : null;
-  const entry = { id: move.id, phase: move.phase, kind: move.kind, label: move.label, answer: text, choice, assessment, tookMs, opened: newlyOpened.map(clue => clue.id), ...(target ? { targetId: target.id, targetQuote: target.quote } : {}) };
+  const entry = { id: move.id, phase: move.phase, kind: move.kind, label: move.label, answer: text, choice, choiceLabel: optionLabel(move, choice), assessment, tookMs, opened: newlyOpened.map(clue => clue.id), ...(target ? { targetId: target.id, targetQuote: target.quote } : {}) };
   const history = [...run.history, entry];
   const clarified = [...run.clarified];
   if (assessment.grade === 3 && queue[0]?.optional && history.length + queue.length > run.skeleton.min) {
@@ -68,7 +77,8 @@ export function advance(run, answer, choice, tookMs, now = Date.now()) {
     const followUp = {
       ...move, id: `${move.id}_clarify`, kind: 'CLARIFY', label: `Уточнение · ${move.label}`,
       prompt: move.hint, target: move.id, hint: move.hint, options: undefined, justify: false,
-      fact: undefined, evidence: undefined, reply: undefined, optional: false,
+      fact: undefined, evidence: undefined, reply: move.id === 'scope' ? move.reply : undefined,
+      optional: false, optionLabels: undefined,
     };
     if (existing >= 0) queue.splice(existing, 1);
     queue.unshift(followUp);

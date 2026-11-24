@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Clock3, Lock, X } from 'lucide-react';
 import { api } from '../api/client.js';
 import { track } from '../api/analytics.js';
-import { advance, createRun, currentTurn, plan, skeletons, targetEntry } from './engine.js';
+import { advance, createRun, currentTurn, optionLabel, plan, skeletons, targetEntry } from './engine.js';
 import { debrief } from './rubric.js';
 import { mergeRuns, pullRuns, pushRun, readRuns, saveRuns } from './storage.js';
 import './interview.css';
@@ -58,7 +58,7 @@ function Debrief({ run, onNext, onBack }) {
         <summary>{phase.label}</summary>
         <ol>{run.history.filter(entry => entry.phase === phase.id).map(entry => <li id={`iv-answer-${entry.id}`} key={entry.id}>
           <strong>{entry.label}</strong>
-          <p>{entry.choice && entry.choice !== entry.answer && <strong>{entry.choice} · </strong>}{entry.answer}</p>
+          <p>{entry.choice === entry.answer ? (entry.choiceLabel || entry.answer) : <>{entry.choice && <strong>{entry.choiceLabel || entry.choice} · </strong>}{entry.answer}</>}</p>
           {entry.targetQuote && <small>Опирается на ответ «{entry.targetQuote}»</small>}
           {run.map.some(item => item.id === entry.id && item.revises) && <small>Выбор пересмотрен</small>}
         </li>)}</ol>
@@ -290,7 +290,7 @@ export default function Interview({ onExit }) {
       {run.history.at(-1)?.opened.length > 0 && <p className="iv-feedback" role="status"><Check size={16}/> Улика открыта и добавлена в карту</p>}
       {run.history.at(-1)?.assessment.error && <p className="iv-warning" role="status">{run.history.at(-1).assessment.error}</p>}
       <div className={move.kind === 'CHALLENGE' ? 'iv-bubble iv-challenge' : 'iv-bubble'}>
-        {move.kind === 'CHALLENGE' && <span className="iv-tag">Перебивает</span>}
+        {move.kind === 'CHALLENGE' && <span className="iv-tag">Уточнение интервьюера</span>}
         {move.kind === 'TWIST' && <span className="iv-tag">Новое условие</span>}
         {selected && <blockquote>{selected.value !== selected.quote && <strong>{selected.value} · </strong>}«{selected.quote}»</blockquote>}
         {move.kind === 'TWIST' && <p>{run.seed.twist}</p>}
@@ -303,14 +303,14 @@ export default function Interview({ onExit }) {
         {run.seed.clues.filter(clue => run.opened.includes(clue.id)).map(clue => <Table key={clue.id} value={clue}/>)}
       </details>}
       <form className="iv-form" onSubmit={submit}>
-        {options && <fieldset><legend>{move.justify ? 'Твой выбор' : 'Твой вопрос'}</legend>{options.map(option =>
-          <button type="button" key={option} aria-pressed={run.choice === option} onClick={() => edit({ choice: option })}>{option}</button>)}</fieldset>}
-        {(!options || move.justify || run.hints[move.id]) && <label> {move.justify ? 'Почему этот вариант?' : move.evidence ? 'Твой запрос к данным' : 'Твой ответ'}
-          <textarea value={run.draft} rows={3} maxLength={1200} onChange={e => edit({ draft: e.target.value })} placeholder="Одна–три фразы"/>
+        {options && <fieldset><legend>{move.justify ? 'Выбери один вариант' : 'Выбери один вопрос'}</legend>{options.map(option =>
+          <button type="button" key={option} aria-pressed={run.choice === option} onClick={() => edit({ choice: option })}>{optionLabel(move, option)}</button>)}</fieldset>}
+        {(!options || move.justify || run.hints[move.id]) && <label> {move.justify ? 'Почему этот вариант?' : move.evidence ? 'Какие данные запросишь?' : 'Твой ответ'}
+          <textarea value={run.draft} rows={3} maxLength={1200} onChange={e => edit({ draft: e.target.value })} placeholder={move.evidence ? 'Напиши, что с чем сравнить' : 'Ответь своими словами'}/>
         </label>}
         {turnError && <p role="alert" className="iv-warning">{turnError}</p>}
         {run.hints[move.id] ? <p className="iv-hint">{move.hint} <small>−1 балл к итогу</small></p>
-          : <button className="iv-text-button" type="button" onClick={useHint}>Не знаю, с чего начать</button>}
+          : move.kind !== 'CLARIFY' && <button className="iv-text-button" type="button" onClick={useHint}>Не знаю, с чего начать</button>}
         <button className="iv-primary" type="submit" disabled={move.justify ? !run.choice || !run.draft.trim() : !run.choice && !run.draft.trim()}>
           {move.kind === 'DEMAND' ? 'Завершить интервью' : move.kind === 'DATA' && move.evidence ? 'Запросить данные' : options && !move.justify ? 'Спросить' : 'Ответить'} <ArrowRight size={18}/>
         </button>

@@ -13,8 +13,8 @@ const industries = [
 const twists = [
   ['capacity', 'Команда может выделить двух разработчиков на три недели.'],
   ['access', 'Команда временно не может менять серверную часть.'],
-  ['metric', 'До следующего релиза команда может наблюдать только основную метрику и один защитный показатель.'],
-  ['priority', 'Интервьюер просит защитить текущую выручку, даже если это замедлит рост.'],
+  ['metric', 'До следующего обновления команда может следить только за двумя показателями. Один должен показывать пользу, другой — возможный вред.'],
+  ['priority', 'Команда просит сохранить текущую выручку, даже если рост замедлится.'],
 ];
 const traps = ['partial', 'confounder', 'tracking'];
 const names = ['Марина Орлова', 'Саша Волкова', 'Алексей Соколов'];
@@ -42,16 +42,16 @@ function makeSeed(skeleton, axes) {
   const lift = [2, 3, 1][trapIndex];
   const guardrail = [8, 12, 6][trapIndex];
   const trapNote = [
-    'В выборке нет пользователей без согласия на аналитику. Экстраполяция на всех требует проверки.',
+    'В выборке нет пользователей без согласия на аналитику. Проверь, можно ли ожидать такой же результат у остальных.',
     'В тот же период изменилась доля рекламного трафика. Сравни результат внутри каналов.',
-    'В журнале есть расхождение со счётчиком аналитики. Проверь определение событий.',
+    'Журнал операций и аналитика показывают разные числа. Проверь, что считает каждый источник.',
   ][trapIndex];
   const scenes = {
-    segments: table('Сегменты', discovery ? ['Сегмент', 'Доля', 'Повтор'] : ['Сегмент', 'Доля', 'До', 'После'],
+    segments: table('Показатели по группам', discovery ? ['Группа', 'Доля покупателей', 'Купили снова'] : ['Группа', 'Доля пользователей', 'Конверсия до', 'Конверсия после'],
       groups.map((group, i) => [group, percent(shares[i]), percent(base[i]), ...(!discovery ? [percent(rates[i])] : [])])),
     voice,
-    experiment: `Тест показал рост доли повторных заказов на ${lift} п.п. и рост отписок на ${guardrail}% относительно контроля. ${trapNote}`,
-    pilot: table('Пилот исправления', ['До просадки', 'На минимуме', 'После пилота'], [[percent(before, 4), percent(current, 4), percent(pilot, 4)]]),
+    experiment: `По сравнению с группой без изменений доля повторных заказов выросла на ${lift} п.п., а отписок стало на ${guardrail}% больше. ${trapNote}`,
+    pilot: table('Конверсия до и после исправления', ['До падения', 'На минимуме', 'После пробного исправления'], [[percent(before, 4), percent(current, 4), percent(pilot, 4)]]),
     channels: trapNote,
   };
   const clues = discovery ? [
@@ -82,13 +82,13 @@ function makeSeed(skeleton, axes) {
     focusGroup: groups[focus], twist, trapNote, recovery,
     profile: names[(industryIndex + truthIndex) % names.length],
     intro: discovery
-      ? `${percent(before)} новых клиентов возвращаются за второй покупкой. Продукту «${label}» нужно поднять повтор, сохранив маржу.`
-      : `В продукте «${label}» конверсия в действие «${transaction}» снизилась с ${percent(before)} до ${percent(current)}. Что изменилось?`,
+      ? `${percent(before)} новых клиентов возвращаются за второй покупкой. Команда «${label}» хочет, чтобы больше клиентов возвращались, при этом важно сохранить заработок с заказа.`
+      : `Сервис «${label}» заметил падение конверсии для действия «${transaction}» с ${percent(before)} до ${percent(current)}. Помоги команде выяснить причину.`,
     replies: {
       repeat: `Считаем второй оплаченный заказ в течение 30 дней. Цель на квартал — ${goal}%.`,
-      discount: 'Скидка 10% на вторую покупку подняла повтор на 1 п.п. и снизила маржу.',
+      discount: 'Со скидкой 10% доля повторных покупок выросла на 1 процентный пункт, а с заказа стали зарабатывать меньше.',
       competitors: 'У двух конкурентов легко найти прошлую покупку из истории. У нашего продукта история спрятана глубже.',
-      scope: `Сравниваем две соседние недели. Метрика — доля начавших сценарий, завершивших действие «${transaction}».`,
+      scope: `Сравниваем две соседние недели. Берём всех, кто начал, и считаем, какая их доля успешно завершила действие «${transaction}».`,
     },
     scenes, clues, numbers: { shares, rates, before, current, pilot },
   };
@@ -127,7 +127,16 @@ export function chooseSeed(skeleton, runs, random = Math.random) {
   return validateSeed(skeleton, makeSeed(skeleton, { ...allowed[0], twistIndex: 0, trapIndex: 0 }));
 }
 
+const requestAliases = {
+  channel: /откуда|реклам|органик/i,
+  categories: /перв.{0,18}(покуп|заказ)|что.{0,14}купили/i,
+  segments: /устройств|телефон|браузер/i,
+  independent: /запис|подтвержд|журнал/i,
+  channels: /откуда|источник.{0,14}посещ/i,
+};
+
 export function matchingClues(run, move, request) {
-  if (!/дол|повтор|конверс|потер|сравн|период|заказ|измен|ошиб|подтвержд|метрик/i.test(request)) return [];
-  return run.seed.clues.filter(clue => move.evidence?.includes(clue.id) && new RegExp(clue.pattern, 'i').test(request));
+  if (!/дол|повтор|конверс|потер|сравн|период|заказ|измен|ошиб|подтвержд|метрик|покупк|покупа|купил|вернул|успешн|сколько|заверш|оплат/i.test(request)) return [];
+  return run.seed.clues.filter(clue => move.evidence?.includes(clue.id)
+    && (new RegExp(clue.pattern, 'i').test(request) || requestAliases[clue.id]?.test(request)));
 }

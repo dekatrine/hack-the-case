@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import calibration from './calibration.json';
-import { advance, createRun, currentTurn, plan, skeletons, targetEntry } from './engine.js';
+import { advance, createRun, currentTurn, optionLabel, plan, skeletons, targetEntry } from './engine.js';
 import { assessTurn, debrief } from './rubric.js';
 import { chooseSeed, validateSeed } from './seeds.js';
 
@@ -125,4 +125,21 @@ it('rephrases a saved diagnostic clarification and accepts an answer in everyday
   const finished = advance(stored, calibration.diagnosis.scope, '', 1000);
   expect(finished.history.at(-1).assessment.grade).toBe(3);
   expect(finished.lastReply).toBe(start.seed.replies.scope);
+});
+
+
+it('uses the new wording with saved choices and opens evidence requested in everyday language', () => {
+  const skeleton = skeletons.find(item => item.id === 'discovery');
+  const start = { ...createRun(skeleton, []), status: 'active' };
+  const [goal] = start.queue;
+  const stored = { ...start, queue: [{ ...goal, prompt: 'Старый вопрос', optionLabels: undefined }, ...start.queue.slice(1)] };
+  expect(currentTurn(stored).prompt).toContain('Выбери, что спросишь');
+  expect(optionLabel(currentTurn(stored), goal.options[0])).toContain('Что считается повторной покупкой');
+  const next = advance(stored, '', goal.options[0], 1000);
+  expect(next.history[0].choice).toBe(goal.options[0]);
+  expect(next.lastReply).toBe(start.seed.replies.repeat);
+
+  const dataTurn = start.queue.find(turn => turn.id === 'segment_data');
+  const result = advance({ ...start, queue: [dataTurn] }, 'Сравню, сколько людей купили снова в зависимости от того, откуда они пришли.', '', 1000);
+  expect(result.opened).toEqual(['channel']);
 });
