@@ -22,12 +22,12 @@ it('navigates book chapters and searches the table of contents', async () => {
 });
 it('opens the source chapter from a book card and saves it into My cards', async () => {
   render(<MvpApp initialScreen="library"/>);
-  fireEvent.click(screen.getByRole('button', { name: 'Учёба' })); fireEvent.click(screen.getByRole('button', { name: 'Карточки по понятиям →' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Учёба' })); fireEvent.click(screen.getByRole('button', { name: 'Карточки' }));
   fireEvent.change(screen.getByLabelText('Поиск по карточкам'), { target: { value: 'Velocity' } });
   fireEvent.click(screen.getByRole('button', { name: 'Читать главу 15 →' }));
   expect(screen.getByRole('heading', { name: 'Теория по главам' })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'Добавить в мои карточки' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Учёба' })); fireEvent.click(screen.getByRole('button', { name: 'Карточки по понятиям →' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Учёба' })); fireEvent.click(screen.getByRole('button', { name: 'Карточки' }));
   fireEvent.click(screen.getByRole('button', { name: 'Мои карточки · 1' }));
   expect(screen.getByRole('heading', { name: 'Velocity и Capacity' })).toBeTruthy();
   expect(screen.queryByRole('heading', { name: 'Сегментация' })).toBeNull();

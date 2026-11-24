@@ -429,7 +429,7 @@ describe('MVP core flow', () => {
   it('opens theory from a solution and returns without losing the draft', async () => {
     await newCase();
     fireEvent.change(screen.getByLabelText(/1\. Какую задачу пользователя/), { target: { value: 'Сохранённая мысль' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Учёба' })); fireEvent.click(screen.getByRole('button', { name: 'Карточки по понятиям →' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Учёба' })); fireEvent.click(screen.getByRole('button', { name: 'Карточки' }));
     expect(screen.getByRole('heading', { name: 'Карточки для практики' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Вернуться к решению' }));
     expect(screen.getByLabelText(/1\. Какую задачу пользователя/).value).toBe('Сохранённая мысль');
@@ -452,7 +452,7 @@ describe('MVP core flow', () => {
     expect(screen.getByRole('heading', { name: 'Сегментация' })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Конверсия' })).toBeNull();
     cleanup(); render(<MvpApp initialScreen="library"/>);
-    fireEvent.click(screen.getByRole('button', { name: 'Учёба' })); fireEvent.click(screen.getByRole('button', { name: 'Карточки по понятиям →' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Учёба' })); fireEvent.click(screen.getByRole('button', { name: 'Карточки' }));
     fireEvent.click(screen.getByRole('button', { name: 'Мои карточки · 1' }));
     fireEvent.click(screen.getByRole('button', { name: 'В моих карточках · убрать' }));
     expect(screen.getByRole('button', { name: 'Мои карточки · 0' })).toBeTruthy();

@@ -169,7 +169,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
   const [cases, setCases] = useState(loadCases);
   const [screen, setScreen] = useState(initialScreen);
   const [interviewStart, setInterviewStart] = useState(null);
-  const [libFilter, setLibFilter] = useState('all');
+  const [libFilter, setLibFilter] = useState(() => { try { return loadCases().length > 0 || readRuns().length === 0 ? 'self' : 'interview'; } catch { return 'self'; } });
   const [profile, setProfile] = useState(readOnboarding);
   const [selected, setSelected] = useState(null);
   const [attemptIndex, setAttemptIndex] = useState(null);
@@ -371,7 +371,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
   };
   const hasChanges = active && hasAttemptChanges(active, attempts.at(-1));
 
-  if (screen === 'interviews') return <Interview start={interviewStart} onExit={() => { setInterviewStart(null); go('home'); }}/>;
+  if (screen === 'interviews') return <Interview start={interviewStart} onExit={() => { setInterviewStart(null); go('home'); }} onStudy={target => { setInterviewStart(null); if (target === 'cards') setTheorySavedOnly(false); go(target); }}/>;
 
   return <div className="mvp-app">
     <header className="mvp-header">
@@ -387,17 +387,21 @@ export default function MvpApp({ initialScreen = 'home' }) {
       {saveError && <p role="alert" className="mvp-notice">{saveError}</p>}
       {error && <p role="alert" className="mvp-notice">{error}</p>}
       {theoryError && <p role="alert" className="mvp-notice">{theoryError}</p>}
-      {screen === 'learning' && <LearningPath onOpenCases={() => go('library')} onOpenCards={() => { setTheorySavedOnly(false); go('cards'); }} onOpenTheory={() => go('theory')}/>}
+      {['learning', 'theory', 'cards'].includes(screen) && <div className="mvp-lib-filter" role="group" aria-label="Раздел учёбы">
+        {[['learning', 'Путь'], ['theory', 'Теория'], ['cards', 'Карточки']].map(([key, label]) => <button type="button" key={key} aria-pressed={screen === key} onClick={() => { if (key === 'cards') setTheorySavedOnly(false); go(key); }}>{label}</button>)}
+      </div>}
+      {screen === 'learning' && <LearningPath onOpenCases={() => go('library')}/>}
       {screen === 'theory' && <BookTheoryPage initialChapter={bookChapter} savedIds={savedTheory} onToggle={toggleTheory} onResume={active ? () => go('solve') : null}/>}
       {screen === 'cards' && <TheoryPage onOpenChapter={number => { setBookChapter(number); go('theory'); }} savedIds={savedTheory} onToggle={toggleTheory} initialSavedOnly={theorySavedOnly} onResume={active ? () => go('solve') : null}/>}
       {screen === 'home' && !profile && cases.length === 0 && readRuns().length === 0 && <Onboarding onDone={answers => { setProfile(answers); }}/>}
       {screen === 'home' && (profile || cases.length > 0 || readRuns().length > 0) && <Home preferred={preferredSkeleton(profile)} split={needsSplit(profile)} onStart={id => { setInterviewStart({ skeleton: id }); go('interviews'); }} onResume={id => { setInterviewStart({ open: id }); go('interviews'); }} onProgress={() => go('progress')} onLibrary={() => go('library')}/>}
       {screen === 'progress' && <Progress onStart={id => { setInterviewStart({ skeleton: id }); go('interviews'); }}/>}
       {screen === 'library' && <div className="mvp-lib-filter" role="group" aria-label="Тип практики">
-        {[['all', 'Все'], ['interview', 'Собесы'], ['self', 'В своём темпе']].map(([key, label]) => <button type="button" key={key} aria-pressed={libFilter === key} onClick={() => setLibFilter(key)}>{label}</button>)}
+        {[['interview', 'Собесы'], ['self', 'Кейсы'], ['history', 'История']].map(([key, label]) => <button type="button" key={key} aria-pressed={libFilter === key} onClick={() => setLibFilter(key)}>{label}</button>)}
       </div>}
-      {screen === 'library' && libFilter !== 'self' && <InterviewEntry onOpen={() => go('interviews')} onOpenRun={id => { setInterviewStart({ open: id }); go('interviews'); }} showList/>}
-      {screen === 'library' && libFilter !== 'interview' && (cases.length === 0 ? <>
+      {screen === 'library' && libFilter === 'history' && <Progress onStart={id => { setInterviewStart({ skeleton: id }); go('interviews'); }}/>}
+      {screen === 'library' && libFilter === 'interview' && <InterviewEntry onOpen={() => go('interviews')} onOpenRun={id => { setInterviewStart({ open: id }); go('interviews'); }} showList/>}
+      {screen === 'library' && libFilter === 'self' && (cases.length === 0 ? <>
         <div className="mvp-page-heading"><div><div className="clean-eyebrow">Твоя практика</div>
         <h1>Мои кейсы<span className="mvp-count">{String(cases.length).padStart(2, '0')}</span></h1>
         <p className="mvp-lead">От первой гипотезы до уверенного решения.</p></div><span className="mvp-small-note"><Clock3 size={15}/>15–20 минут на практику</span></div>

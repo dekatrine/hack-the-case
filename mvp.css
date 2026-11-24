@@ -367,3 +367,13 @@ html:has(.mvp-condition-sheet[open]) { overflow:hidden; }
 .mvp-lib-filter button { min-height: 40px; padding: 0 14px; border: 1px solid #dfe2dd; border-radius: 999px; background: #fff; font: inherit; cursor: pointer; }
 .mvp-lib-filter button[aria-pressed="true"] { background: #111315; color: #f2f3f2; border-color: #111315; }
 .mvp-interview-list { display: grid; gap: 10px; margin-bottom: 14px; }
+
+/* Mobile: main sections move to a bottom bar, the new-case button floats above it */
+.iv-study-links { display:flex; flex-wrap:wrap; gap:8px 16px; }
+@media(max-width:680px) {
+  .mvp-header nav { position:fixed; left:0; right:0; bottom:0; z-index:30; display:grid; grid-template-columns:repeat(3,1fr); gap:0; background:#14171a; border-top:1px solid #2b3033; padding:8px 8px calc(8px + env(safe-area-inset-bottom)); flex-wrap:nowrap; }
+  .mvp-header nav > button { color:#9aa1a5; font-size:12px !important; min-height:44px; background:none; border:0; }
+  .mvp-header nav > button[aria-current="page"] { color:#D4FF3A; }
+  .mvp-header nav > :last-child { position:fixed; right:16px; bottom:calc(76px + env(safe-area-inset-bottom)); box-shadow:0 6px 18px rgba(0,0,0,.4); }
+  .mvp-app { padding-bottom:140px; }
+}

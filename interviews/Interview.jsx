@@ -78,7 +78,7 @@ function Drill({ run, result }) {
   </section>;
 }
 
-function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError }) {
+function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError, onStudy }) {
   const result = run.configured ? null : debrief(run);
   let evaluated;
   try { evaluated = JSON.parse(run.review?.evaluation || 'null'); } catch { /* Plain text feedback. */ }
@@ -148,6 +148,10 @@ function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError }) {
     </section>}
     <section className="iv-bubble"><h2>Как усилить решение</h2><p>{result.recommendation}</p></section>
     <Drill run={run} result={result}/></>}
+    {onStudy && <section className="iv-bubble iv-study" aria-label="Чтобы подтянуть слабое место"><h2>Чтобы подтянуть слабое место</h2>
+      <p>Короткая учёба по навыкам, которые просели в этом разборе.</p>
+      <div className="iv-study-links"><button className="iv-text-button" onClick={() => onStudy('learning')}>Уроки по навыкам →</button><button className="iv-text-button" onClick={() => onStudy('theory')}>Теория по главам →</button><button className="iv-text-button" onClick={() => onStudy('cards')}>Карточки по понятиям →</button></div>
+    </section>}
     <button className="iv-primary" onClick={onNext}>Следующий кейс <ArrowRight size={18}/></button>
   </>;
 }
@@ -161,7 +165,7 @@ function shuffled(list, key) {
   return out;
 }
 
-export default function Interview({ onExit, start: startOptions }) {
+export default function Interview({ onExit, start: startOptions, onStudy }) {
   const [runs, setRuns] = useState(() => {
     const draft = readDraft();
     return draft ? [draft, ...readRuns()] : readRuns();
@@ -543,7 +547,7 @@ export default function Interview({ onExit, start: startOptions }) {
         </button>
       </form>
     </>}
-    {run?.status === 'finished' && <Debrief run={run} onBack={leave} onReview={() => review(run)} reviewing={reviewing === run.id} reviewError={reviewError?.id === run.id ? reviewError.message : ''}
+    {run?.status === 'finished' && <Debrief run={run} onStudy={onStudy} onBack={leave} onReview={() => review(run)} reviewing={reviewing === run.id} reviewError={reviewError?.id === run.id ? reviewError.message : ''}
       onNext={() => { event('next_case_clicked', run); if (run.configured) openSetup(run.settings); else select(run.skeleton); }}/>}
   </div></div>;
 }
