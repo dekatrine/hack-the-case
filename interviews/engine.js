@@ -48,8 +48,12 @@ function mapEntry(run, move, answer, choice) {
   const revisedKey = answer.match(/^пересматриваю\s+([^:]+):\s*(.+)$/i);
   const previous = revisedKey && [...run.map].reverse().find(entry => entry.label.toLowerCase() === revisedKey[1].trim().toLowerCase());
   const quote = answer.length > 160 ? answer.slice(0, 160).replace(/\s+\S*$/, '') : answer;
+  const sentence = answer.split(/(?<=[.!?])\s/)[0];
+  const short = sentence.length > 60 ? `${sentence.slice(0, 60).replace(/\s+\S*$/, '')}…` : sentence.replace(/[.!?]$/, '');
+  const clarify = !run.configured && move.kind === 'CLARIFY' && move.target;
   return {
-    id: move.id, phase: move.phase, label: move.label, value: optionLabel(move, choice) || quote, quote,
+    id: clarify ? move.target : move.id, phase: move.phase, label: clarify ? move.label.replace(/^Уточнение · /, '') : move.label,
+    value: optionLabel(move, choice) || short, quote,
     ...(previous ? { revises: previous.id, label: previous.label, value: revisedKey[2] } : {}),
   };
 }
@@ -86,8 +90,11 @@ export function advance(run, answer, choice, tookMs, now = Date.now()) {
     queue.unshift(followUp);
     clarified.push(move.phase);
   }
+  // Слабый ответ не попадает в карту: интервьюер сначала задаёт уточнение.
+  const deferred = queue[0]?.id === `${move.id}_clarify`;
   const nextMap = mapEntry(run, move, text, choice);
-  const map = [...run.map, nextMap, ...newlyOpened.map(clue => ({
+  const base = run.map.filter(entry => entry.id !== nextMap.id);
+  const map = [...base, ...(deferred ? [] : [nextMap]), ...newlyOpened.map(clue => ({
     id: `evidence_${clue.id}`, phase: move.phase, label: 'Улика', value: clue.title, quote: text,
   }))];
   return {

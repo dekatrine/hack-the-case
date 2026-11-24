@@ -12,6 +12,8 @@ import { hasStory, storyPath, storyAnswers } from './cases/storyPath.js';
 import { guideCaseRoute } from './cases/caseWriting.js';
 import CaseFlow from './CaseFlow.jsx';
 import Interview from './interviews/Interview.jsx';
+import { readRuns } from './interviews/storage.js';
+import { debrief } from './interviews/rubric.js';
 import SearchDiagnostic from './cases/SearchDiagnostic.jsx';
 import { SEARCH_CASE_INTRO, SEARCH_CASE_TITLE, SEARCH_ROUTE, SEARCH_SLICES } from './cases/searchDiagnostic.js';
 import ConditionAssistant from './ConditionAssistant.jsx';
@@ -121,6 +123,21 @@ function Review({ value, score }) {
     ))}
   </>;
 }
+function InterviewEntry({ onOpen }) {
+  let finished = [];
+  try { finished = readRuns(); } catch { finished = []; }
+  const last = finished[0];
+  let score = null;
+  try { score = last ? debrief(last).final : null; } catch { score = null; }
+  return <button type="button" className="mvp-starter mvp-search-starter" onClick={onOpen}>
+    <span className="mvp-starter-tag">Собеседование<ArrowUpRight size={17}/></span>
+    <b>{finished.length ? 'Пройти ещё одно собеседование' : 'Пройти кейс как собеседование'}</b>
+    <p>{finished.length
+      ? `Пройдено: ${finished.length}${score !== null ? `. Последний результат: ${score}/100` : ''}. Каждый раз новый кейс.`
+      : 'Интервьюер задаёт вопросы, ты запрашиваешь данные и защищаешь решения. В конце разбор с цитатами из твоих ответов.'}</p>
+  </button>;
+}
+
 export default function MvpApp() {
   const [savedTheory, setSavedTheory] = useState(readSavedTheory);
   const [bookChapter, setBookChapter] = useState(1);
@@ -342,6 +359,7 @@ export default function MvpApp() {
       {screen === 'learning' && <LearningPath onOpenCases={() => go('library')}/>}
       {screen === 'theory' && <BookTheoryPage initialChapter={bookChapter} savedIds={savedTheory} onToggle={toggleTheory} onResume={active ? () => go('solve') : null}/>}
       {screen === 'cards' && <TheoryPage onOpenChapter={number => { setBookChapter(number); go('theory'); }} savedIds={savedTheory} onToggle={toggleTheory} initialSavedOnly={theorySavedOnly} onResume={active ? () => go('solve') : null}/>}
+      {screen === 'library' && <InterviewEntry onOpen={() => go('interviews')}/>}
       {screen === 'library' && (cases.length === 0 ? <>
         <div className="mvp-page-heading"><div><div className="clean-eyebrow">Твоя практика</div>
         <h1>Мои кейсы<span className="mvp-count">{String(cases.length).padStart(2, '0')}</span></h1>

@@ -143,3 +143,41 @@ it('uses the new wording with saved choices and opens evidence requested in ever
   const result = advance({ ...start, queue: [dataTurn] }, 'Сравню, сколько людей купили снова в зависимости от того, откуда они пришли.', '', 1000);
   expect(result.opened).toEqual(['channel']);
 });
+
+describe('калибровка слабых ответов, которые выглядят прилично', () => {
+  const discovery = skeletons.find(skeleton => skeleton.id === 'discovery');
+  const run = createRun(discovery, []);
+  const turn = id => plan(discovery).find(move => move.id === id);
+  const grade = (id, answer, choice = '') => assessTurn(run, turn(id), answer, choice, []);
+
+  it('W1: ключевые слова без чисел и правил не получают высокий балл по метрикам', () => {
+    expect(grade('metric', 'Повтор вырастет, порог будет, отписки отслеживаем, 30 дней, остановим, если ухудшится.').grade).toBeLessThanOrEqual(2);
+    expect(grade('metric', 'Повтор, порог, отписки, период, остановим, контроль, защитный показатель.').grade).toBeLessThanOrEqual(1);
+  });
+  it('W2: неверная доля группы помечается как ошибка', () => {
+    const wrong = grade('segment_choice', `Беру группу «${run.seed.groups[1]}»: их около 50% покупателей, повтор 22%.`, run.seed.groups[1]);
+    expect(wrong.error).toBeTruthy();
+    expect(wrong.grade).toBeLessThanOrEqual(1);
+    const share = Math.round(run.seed.numbers.shares[1]);
+    expect(grade('segment_choice', `Беру группу «${run.seed.groups[1]}»: их ${share}% покупателей.`, run.seed.groups[1]).error).toBeFalsy();
+  });
+  it('W3: расплывчатое решение без опоры на данные не проходит', () => {
+    expect(grade('decision', 'Доработаем потом, пока непонятно, что там с данными и людьми вообще.', 'Доработать').grade).toBeLessThanOrEqual(1);
+  });
+  it('W4: оценка не зависит от того, где стоит вариант', () => {
+    const a = createRun(discovery, []);
+    const b = { ...createRun(discovery, []), id: 'other-run' };
+    expect(a.id).not.toBe(b.id);
+    const move = turn('goal');
+    expect(move.options[0]).toBeTruthy(); // верный вариант хранится отдельно от порядка показа
+  });
+  it('W5: гладкая вода без действия и итога не набирает баллов', () => {
+    expect(grade('pain_choice', 'Важно системно подойти к проблеме, учесть интересы пользователей и бизнеса, выстроить процессы и обеспечить взаимодействие для достижения результата.').grade).toBeLessThanOrEqual(1);
+  });
+  it('слабая попытка не попадает в карту решений до уточнения', () => {
+    let state = { ...createRun(discovery, []), status: 'active' };
+    state = advance(state, 'норм', '', 1000);
+    expect(state.queue[0].kind).toBe('CLARIFY');
+    expect(state.map.some(entry => /норм/.test(entry.quote))).toBe(false);
+  });
+});

@@ -109,6 +109,15 @@ function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError }) {
   </>;
 }
 
+function shuffled(list, key) {
+  let h = 2166136261;
+  for (const ch of key) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  const rand = () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h ^= h >>> 13; return (h >>> 0) / 4294967296; };
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i -= 1) { const j = Math.floor(rand() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
+  return out;
+}
+
 export default function Interview({ onExit }) {
   const [runs, setRuns] = useState(readRuns);
   const [id, setId] = useState(null);
@@ -353,7 +362,9 @@ export default function Interview({ onExit }) {
     .filter(step => step?.caseEvidence && step.caseEvidence !== move?.caseEvidence) : [];
   const finishedRuns = runs.filter(item => item.status === 'finished');
   const remaining = run?.configured ? configuredRemaining(run) : run?.queue.length;
-  const options = move?.options === 'segments' ? run.seed.groups : move?.options;
+  const rawOptions = move?.options === 'segments' ? run.seed.groups : move?.options;
+  // Порядок вариантов зависит от попытки и хода, а не от того, какой из них верный.
+  const options = rawOptions && !run?.configured ? shuffled(rawOptions, `${run.id}:${move.id}`) : rawOptions;
 
   return <div className="iv-shell"><div className="iv-panel">
     {saveError && <p role="alert" className="iv-warning">Не удалось сохранить историю в браузере.</p>}
@@ -415,7 +426,7 @@ export default function Interview({ onExit }) {
           <strong>{options ? 'Как выбрать. ' : 'Что написать. '}</strong>{move.answerFormat}
         </p>}
       </div>
-      {move.scene && <div className="iv-data"><CaseContent text={move.scene}/></div>}
+      {move.scene && run.configured && <div className="iv-data"><CaseContent text={move.scene}/></div>}
       {move.caseEvidence && <section className="iv-data" aria-label="Данные по твоему запросу"><CaseContent text={move.caseEvidence}/></section>}
       {priorData.length > 0 && <details className="iv-opened"><summary>Открытые данные ({priorData.length})</summary>
         {priorData.map(step => <section className="iv-data" key={step.id}><CaseContent text={step.caseEvidence}/></section>)}
