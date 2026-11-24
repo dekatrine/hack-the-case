@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import calibration from './calibration.json';
-import { advance, createRun, plan, skeletons, targetEntry } from './engine.js';
+import { advance, createRun, currentTurn, plan, skeletons, targetEntry } from './engine.js';
 import { assessTurn, debrief } from './rubric.js';
 import { chooseSeed, validateSeed } from './seeds.js';
 
@@ -108,4 +108,21 @@ it('flags the incorrect fraction even in a fluent answer and applies the scoring
   const checked = debrief({ ...run, history: run.history.map(entry => entry.id === turn.id ? { ...entry, assessment: bad } : entry) });
   expect(checked.results.filter(row => ['data', 'communication'].includes(row.id)).every(row => row.grade <= 1)).toBe(true);
   expect(checked.final).toBeLessThan(100);
+});
+
+
+it('rephrases a saved diagnostic clarification and accepts an answer in everyday language', () => {
+  const skeleton = skeletons.find(item => item.id === 'diagnosis');
+  const start = { ...createRun(skeleton, []), status: 'active' };
+  const next = advance(start, 'Пользователи стали реже покупать услуги сервиса.', '', 1000);
+  expect(currentTurn(next).id).toBe('scope_clarify');
+  const stored = {
+    ...next,
+    queue: [{ ...next.queue[0], prompt: 'Назови числитель, знаменатель и окно сравнения.', hint: 'Назови знаменатель.', checks: ['знаменател'] }, ...next.queue.slice(1)],
+  };
+  expect(currentTurn(stored).prompt).toContain('с какого шага');
+  expect(currentTurn(stored).prompt).not.toContain('знаменатель');
+  const finished = advance(stored, calibration.diagnosis.scope, '', 1000);
+  expect(finished.history.at(-1).assessment.grade).toBe(3);
+  expect(finished.lastReply).toBe(start.seed.replies.scope);
 });

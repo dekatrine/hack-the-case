@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Clock3, Lock, X } from 'lucide-react';
 import { api } from '../api/client.js';
 import { track } from '../api/analytics.js';
-import { advance, createRun, plan, skeletons, targetEntry } from './engine.js';
+import { advance, createRun, currentTurn, plan, skeletons, targetEntry } from './engine.js';
 import { debrief } from './rubric.js';
 import { mergeRuns, pullRuns, pushRun, readRuns, saveRuns } from './storage.js';
 import './interview.css';
@@ -92,7 +92,7 @@ export default function Interview({ onExit }) {
   const persistedDraft = useRef(null);
   const heading = useRef(null);
   const run = runs.find(item => item.id === id);
-  const move = run?.queue[0];
+  const move = currentTurn(run);
 
   function setAll(next) {
     runsRef.current = next;

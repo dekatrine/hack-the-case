@@ -4,6 +4,20 @@ import { chooseSeed, matchingClues } from './seeds.js';
 export const skeletons = Object.values(import.meta.glob('./skeletons/*.json', { eager: true, import: 'default' }));
 export const plan = skeleton => skeleton.phases.flatMap(phase => phase.turns.map(turn => ({ ...turn, phase: phase.id })));
 
+const scope = skeletons.find(skeleton => skeleton.id === 'diagnosis')?.phases
+  .flatMap(phase => phase.turns).find(turn => turn.id === 'scope');
+
+export function currentTurn(run) {
+  const move = run?.queue[0];
+  // Saved interviews keep a snapshot of the original questions.
+  if (!scope || run?.skeleton.id !== 'diagnosis') return move;
+  if (move?.id === 'scope') return { ...move, prompt: scope.prompt, hint: scope.hint, checks: scope.checks };
+  if (move?.id === 'scope_clarify') {
+    return { ...move, prompt: scope.hint, hint: scope.hint, checks: scope.checks, reply: scope.reply };
+  }
+  return move;
+}
+
 export function createRun(skeleton, previous, now = Date.now()) {
   return {
     id: crypto.randomUUID(), skeleton, rubricVersion: RUBRIC_VERSION, seed: chooseSeed(skeleton, previous),
@@ -31,8 +45,9 @@ function mapEntry(run, move, answer, choice) {
 }
 
 export function advance(run, answer, choice, tookMs, now = Date.now()) {
-  const [move, ...queue] = run.queue;
+  const move = currentTurn(run);
   if (!move || run.status !== 'active') return run;
+  const queue = run.queue.slice(1);
   const text = answer.trim() || choice;
   if (!text || (move.justify && (!answer.trim() || !choice))) return run;
   const matches = matchingClues(run, move, text);
