@@ -181,3 +181,27 @@ describe('калибровка слабых ответов, которые вы�
     expect(state.map.some(entry => /норм/.test(entry.quote))).toBe(false);
   });
 });
+
+describe('содержание сценариев', () => {
+  const discovery = skeletons.find(skeleton => skeleton.id === 'discovery');
+  it('таблица по группам не показывается до запроса и открывается на ходе выбора', () => {
+    const turns = plan(discovery);
+    expect(turns.find(turn => turn.id === 'segment_data').public).toBeUndefined();
+    expect(turns.find(turn => turn.id === 'segment_choice').scene).toBe('segments');
+  });
+  it('вопрос про первую версию зависит от нового условия', () => {
+    const prompts = new Set();
+    for (let twistIndex = 0; twistIndex < 4; twistIndex += 1) {
+      const run = createRun(discovery, []);
+      const [industry, truth, , trap] = run.seed.id.split(':');
+      const seeded = { ...run, seed: { ...run.seed, id: `${industry}:${truth}:${['capacity', 'access', 'metric', 'priority'][twistIndex]}:${trap}` } };
+      prompts.add(currentTurn({ ...seeded, queue: [plan(discovery).find(turn => turn.id === 'mvp')] }).prompt);
+    }
+    expect(prompts.size).toBe(4);
+  });
+  it('результат теста называет и отписки, и заработок с заказа', () => {
+    const experiment = createRun(discovery, []).seed.scenes.experiment;
+    expect(experiment).toMatch(/отписок/);
+    expect(experiment).toMatch(/Заработок с одного заказа/);
+  });
+});

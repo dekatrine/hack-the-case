@@ -21,7 +21,8 @@ export function currentTurn(run) {
       checks: current.checks, reply: originalId === 'scope' ? current.reply : move.reply,
     };
   }
-  return { ...move, label: current.label, prompt: current.prompt, hint: current.hint, checks: current.checks, optionLabels: current.optionLabels };
+  const twistId = run.seed.id?.split(':')[2];
+  return { ...move, label: current.label, prompt: current.promptByTwist?.[twistId] || current.prompt, hint: current.hint, checks: current.checks, optionLabels: current.optionLabels };
 }
 
 export function optionLabel(move, value) {

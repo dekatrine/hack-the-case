@@ -41,6 +41,7 @@ function makeSeed(skeleton, axes) {
   const goal = Math.round(before) + 6;
   const lift = [2, 3, 1][trapIndex];
   const guardrail = [8, 12, 6][trapIndex];
+  const margin = [4, 6, 2][trapIndex];
   const trapNote = [
     'В выборке нет пользователей без согласия на аналитику. Проверь, можно ли ожидать такой же результат у остальных.',
     'В тот же период изменилась доля рекламного трафика. Сравни результат внутри каналов.',
@@ -50,7 +51,7 @@ function makeSeed(skeleton, axes) {
     segments: table('Показатели по группам', discovery ? ['Группа', 'Доля покупателей', 'Купили снова'] : ['Группа', 'Доля пользователей', 'Конверсия до', 'Конверсия после'],
       groups.map((group, i) => [group, percent(shares[i]), percent(base[i]), ...(!discovery ? [percent(rates[i])] : [])])),
     voice,
-    experiment: `По сравнению с группой без изменений доля повторных заказов выросла на ${lift} п.п., а отписок стало на ${guardrail}% больше. ${trapNote}`,
+    experiment: `По сравнению с группой без изменений доля повторных заказов выросла на ${lift} п.п., а отписок стало на ${guardrail}% больше. Заработок с одного заказа снизился на ${margin}%. ${trapNote}`,
     pilot: table('Конверсия до и после исправления', ['До падения', 'На минимуме', 'После пробного исправления'], [[percent(before, 4), percent(current, 4), percent(pilot, 4)]]),
     channels: trapNote,
   };
@@ -82,8 +83,8 @@ function makeSeed(skeleton, axes) {
     focusGroup: groups[focus], twist, trapNote, recovery,
     profile: names[(industryIndex + truthIndex) % names.length],
     intro: discovery
-      ? `${percent(before)} новых клиентов возвращаются за второй покупкой. Команда «${label}» хочет, чтобы больше клиентов возвращались, при этом важно сохранить заработок с заказа.`
-      : `Сервис «${label}» заметил падение конверсии для действия «${transaction}» с ${percent(before)} до ${percent(current)}. Помоги команде выяснить причину.`,
+      ? `${percent(before)} новых клиентов возвращаются за второй покупкой. Команда продукта из отрасли «${label}» хочет, чтобы больше клиентов возвращались, при этом важно сохранить заработок с заказа.`
+      : `Сервис из отрасли «${label}» заметил падение конверсии для действия «${transaction}» с ${percent(before)} до ${percent(current)}. Помоги команде выяснить причину.`,
     replies: {
       repeat: `Считаем второй оплаченный заказ в течение 30 дней. Цель на квартал — ${goal}%.`,
       discount: 'Со скидкой 10% доля повторных покупок выросла на 1 процентный пункт, а с заказа стали зарабатывать меньше.',

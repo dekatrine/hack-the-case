@@ -59,7 +59,6 @@
             "конверс|дол|успешн|заверш"
           ],
           "hint": "Можно запросить сравнение по платформам или версиям приложения.",
-          "public": "segments",
           "evidence": [
             "segments",
             "independent"
@@ -80,7 +79,8 @@
           "hint": "Посмотри, какая доля пользователей в группе и насколько в ней упал показатель.",
           "options": "segments",
           "justify": true,
-          "focus": true
+          "focus": true,
+          "scene": "segments"
         },
         {
           "id": "segment_challenge",
