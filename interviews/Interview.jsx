@@ -4,10 +4,17 @@ import { api } from '../api/client.js';
 import { track } from '../api/analytics.js';
 import { advance, createRun, currentTurn, optionLabel, plan, skeletons, targetEntry } from './engine.js';
 import { debrief } from './rubric.js';
+import InterviewSetup, { defaultInterviewSettings } from './InterviewSetup.jsx';
+import { configuredRun, configuredRemaining, configuredReviewPayload } from './configured.js';
+import CaseContent from '../CaseContent.jsx';
 import { mergeRuns, pullRuns, pushRun, readRuns, saveRuns } from './storage.js';
 import './interview.css';
 
-const upcoming = ['Эксперименты', 'Приоритизация и стратегия', 'Рынок и экономика'];
+const configurableDirections = [
+  ['product_experiment', 'Эксперименты'],
+  ['product_strategy', 'Приоритизация и стратегия'],
+  ['product_estimation', 'Рынок и экономика'],
+];
 
 function event(name, run, details = {}) {
   track(name, { schemaVersion: 1, runId: run.id, skeleton: run.skeleton.id, seed: run.seed.id, version: run.skeleton.version, ...details });
@@ -36,13 +43,15 @@ function Map({ entries }) {
   </details>;
 }
 
-function Debrief({ run, onNext, onBack }) {
-  const result = debrief(run);
+function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError }) {
+  const result = run.configured ? null : debrief(run);
+  let evaluated;
+  try { evaluated = JSON.parse(run.review?.evaluation || 'null'); } catch { /* Plain text feedback. */ }
   const { seed, skeleton } = run;
   return <>
     <button className="iv-text-button" onClick={onBack}><ArrowLeft size={18}/> Интервью</button>
     <h1>Разбор интервью</h1>
-    <section className="iv-scores" aria-label="Оценки">
+    {result && <><section className="iv-scores" aria-label="Оценки">
       <div><strong>{result.final}</strong><span>Итого из 100</span></div>
       <div><strong>{result.quality}</strong><span>Качество</span></div>
       <div><strong>{result.penalty ? `−${result.penalty}` : '0'}</strong><span>За подсказки</span></div>
@@ -51,7 +60,24 @@ function Debrief({ run, onNext, onBack }) {
       <h2>{skeleton.id === 'discovery' ? 'Что показали данные' : 'Что произошло'}</h2>
       <p>{seed.truth}</p>
       {seed.example && <p>Точка для сравнения с твоим решением — {seed.example.toLowerCase()}.</p>}
-    </section>
+    </section></>}
+    {run.configured && <section className="iv-bubble">
+      <h2>Разбор кейса</h2>
+      {Number.isFinite(run.review?.score?.final) && <div className="iv-scores" aria-label="Оценки">
+        <div><strong>{run.review.score.final}</strong><span>Итого из 100</span></div>
+        <div><strong>{run.review.score.quality}</strong><span>Качество</span></div>
+        <div><strong>{run.review.score.hintPenalty ? `−${run.review.score.hintPenalty}` : '0'}</strong><span>За подсказки</span></div>
+      </div>}
+      {run.review && (evaluated ? <>
+        {evaluated.summary && <p>{evaluated.summary}</p>}
+        {[['strengths', 'Что получилось'], ['improvements', 'Что улучшить'], ['topTips', 'Что попробовать дальше']].map(([key, title]) =>
+          Array.isArray(evaluated[key]) && evaluated[key].length > 0 &&
+          <details key={key}><summary>{title}</summary><ul>{evaluated[key].filter(item => typeof item === 'string').map((item, i) => <li key={i}>{item}</li>)}</ul></details>)}
+      </> : <CaseContent text={run.review.evaluation}/>)}
+      {reviewing && <p role="status">Проверяем решение и аргументы…</p>}
+      {reviewError && <p role="alert" className="iv-warning">{reviewError}</p>}
+      {!run.review && !reviewing && <button className="iv-text-button" onClick={onReview}>Получить ИИ-разбор</button>}
+    </section>}
     <section className="iv-debrief-section">
       <h2>Цепочка решений</h2>
       {skeleton.phases.map(phase => <details key={phase.id}>
@@ -64,7 +90,7 @@ function Debrief({ run, onNext, onBack }) {
         </li>)}</ol>
       </details>)}
     </section>
-    <section className="iv-debrief-section">
+    {result && <><section className="iv-debrief-section">
       <h2>Оценка по критериям</h2>
       {result.results.map(row => <details key={row.id}>
         <summary>{row.label}<b>{Number(row.grade.toFixed(1))} / 3</b></summary>
@@ -75,7 +101,7 @@ function Debrief({ run, onNext, onBack }) {
     {result.errors.length > 0 && <section className="iv-bubble iv-warning"><h2>Сверка с данными</h2>
       {result.errors.map(entry => <div key={entry.id}><blockquote>{entry.answer}</blockquote><p>{entry.assessment.error}</p></div>)}
     </section>}
-    <section className="iv-bubble"><h2>Как усилить решение</h2><p>{result.recommendation}</p></section>
+    <section className="iv-bubble"><h2>Как усилить решение</h2><p>{result.recommendation}</p></section></>}
     <button className="iv-primary" onClick={onNext}>Следующий кейс <ArrowRight size={18}/></button>
   </>;
 }
@@ -87,6 +113,13 @@ export default function Interview({ onExit }) {
   const [saveError, setSaveError] = useState(false);
   const [turnError, setTurnError] = useState('');
   const [preparing, setPreparing] = useState(false);
+  const [setup, setSetup] = useState(null);
+  const [generating, setGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState('');
+  const [reviewing, setReviewing] = useState(null);
+  const [reviewError, setReviewError] = useState(null);
+  const generationLock = useRef(false);
+  const reviewLock = useRef(false);
   const runsRef = useRef(runs);
   const started = useRef(null);
   const persistedDraft = useRef(null);
@@ -154,7 +187,7 @@ export default function Interview({ onExit }) {
   }, [id, run?.status]);
 
   useEffect(() => {
-    if (run?.status !== 'briefing' || run.storyUsage) return;
+    if (run?.status !== 'briefing' || run.storyUsage || run.configured) return;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 2800);
     let mounted = true;
@@ -174,6 +207,56 @@ export default function Interview({ onExit }) {
     const sorted = [...runsRef.current].sort((a, b) => b.createdAt - a.createdAt);
     const item = save(createRun(skeleton, sorted));
     setId(item.id);
+  }
+
+  async function generate(settings, directionLabel) {
+    if (generationLock.current) return;
+    generationLock.current = true;
+    setGenerating(true);
+    setGenerationError('');
+    try {
+      const previous = runsRef.current.filter(item => item.configured && item.settings.interviewType === settings.interviewType).slice(0, 12);
+      const result = await api.generate({
+        ...settings, trackId: 'product', mvp: true,
+        recentCases: previous.map(item => item.seed.intro),
+        seenVariants: [...new Set(previous.map(item => item.configured.variantId).filter(Boolean))],
+        seenFingerprints: [...new Set(previous.flatMap(item => item.configured.fingerprints))].slice(0, 240),
+      });
+      const item = save(configuredRun(result, settings, directionLabel));
+      setSetup(null);
+      setId(item.id);
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    } catch (error) {
+      setGenerationError(error.message || 'Не удалось создать интервью. Попробуй ещё раз.');
+    } finally {
+      generationLock.current = false;
+      setGenerating(false);
+    }
+  }
+
+  async function review(item) {
+    if (reviewLock.current || item.review) return;
+    reviewLock.current = true;
+    setReviewing(item.id);
+    setReviewError(null);
+    try {
+      const { evaluation, score } = await api.evaluate(configuredReviewPayload(item));
+      if (!evaluation?.trim()) throw new Error('Разбор не получился. Попробуй ещё раз.');
+      const current = runsRef.current.find(entry => entry.id === item.id);
+      if (current) save({ ...current, review: { evaluation, score } });
+    } catch (error) {
+      setReviewError({ id: item.id, message: error.message || 'Не удалось получить разбор. Ответы сохранены.' });
+    } finally {
+      reviewLock.current = false;
+      setReviewing(null);
+    }
+  }
+
+  function openSetup(settings = defaultInterviewSettings) {
+    setGenerationError('');
+    setId(null);
+    setSetup(settings);
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
   function shown(item) {
@@ -229,12 +312,17 @@ export default function Interview({ onExit }) {
     save(item);
     window.scrollTo({ top: 0, behavior: 'auto' });
     const entry = item.history.at(-1);
-    event('turn_answered', item, { turn: entry.id, length: entry.answer.length, elapsedMs: elapsed, targetId: entry.targetId, grade: entry.assessment.grade });
+    event('turn_answered', item, { turn: entry.id, length: entry.answer.length, elapsedMs: elapsed, targetId: entry.targetId, grade: entry.assessment?.grade });
     for (const clue of entry.opened) event('data_requested', item, { clue });
     if (entry.kind === 'CHALLENGE') event('challenge_answered', item, { targetId: entry.targetId, revised: !!item.map.find(row => row.id === entry.id)?.revises });
     if (item.status === 'finished') {
-      const { final, quality, penalty } = debrief(item);
-      event('case_finished', item, { final, quality, penalty, inputTokens: item.storyUsage?.input || 0, outputTokens: item.storyUsage?.output || 0, costRub: item.storyUsage?.cost ?? null });
+      if (item.configured) {
+        event('case_finished', item);
+        review(item);
+      } else {
+        const { final, quality, penalty } = debrief(item);
+        event('case_finished', item, { final, quality, penalty, inputTokens: item.storyUsage?.input || 0, outputTokens: item.storyUsage?.output || 0, costRub: item.storyUsage?.cost ?? null });
+      }
       event('debrief_opened', item);
     } else shown(item);
   }
@@ -243,44 +331,56 @@ export default function Interview({ onExit }) {
   const phaseIndex = run && move ? run.skeleton.phases.findIndex(phase => phase.id === move.phase) : 0;
   const seconds = run ? Math.max(0, run.skeleton.minutes * 60 - Math.floor(run.elapsed / 1000) - sessionSeconds) : 0;
   const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  const priorData = run?.configured ? run.history
+    .map(entry => run.configured.graph[entry.id])
+    .filter(step => step?.caseEvidence && step.caseEvidence !== move?.caseEvidence) : [];
+  const remaining = run?.configured ? configuredRemaining(run) : run?.queue.length;
   const options = move?.options === 'segments' ? run.seed.groups : move?.options;
 
   return <div className="iv-shell"><div className="iv-panel">
     {saveError && <p role="alert" className="iv-warning">Не удалось сохранить черновик в браузере.</p>}
-    {!run && <>
+    {setup && <InterviewSetup initial={setup} busy={generating} error={generationError} onGenerate={generate} onBack={() => setSetup(null)}/>}
+    {!run && !setup && <>
       <button className="iv-text-button" onClick={onExit}><ArrowLeft size={18}/> Мои кейсы</button>
       <h1 ref={heading} tabIndex={-1}>Кейс-интервью</h1>
       {runs.length > 0 && <section className="iv-menu"><h2>Твои интервью</h2>
         {runs.map(item => <button className="iv-card" key={item.id} onClick={() => open(item)}>
-          <span><strong>{item.skeleton.label}</strong><small>{item.seed.industry} · {item.status === 'finished' ? 'Разбор' : item.status === 'briefing' ? 'Брифинг' : `Продолжить с хода ${item.history.length + 1}`}</small></span><ArrowRight size={18}/>
+          <span><strong>{item.configured ? item.skeleton.title : item.skeleton.label}</strong><small>{item.seed.industry} · {item.status === 'finished' ? 'Разбор' : item.status === 'briefing' ? 'Брифинг' : `Продолжить с хода ${item.history.length + 1}`}</small></span><ArrowRight size={18}/>
         </button>)}
       </section>}
       <section className="iv-menu"><h2>Новое интервью</h2>
+        <button type="button" className="iv-card iv-configure" onClick={() => openSetup()}>
+          <span><strong>Настроить своё интервью</strong><small>Направление, отрасль, сложность и своя тема</small></span><ArrowRight size={18}/>
+        </button>
         {skeletons.map(skeleton => <button className="iv-card" key={skeleton.id} onClick={() => select(skeleton)}>
           <span><strong>{skeleton.label}</strong><small>{skeleton.min}–{skeleton.max} ходов · около {skeleton.minutes} мин</small></span><ArrowRight size={18}/>
         </button>)}
-        {upcoming.filter(label => !skeletons.some(skeleton => skeleton.label === label)).map(label => <div className="iv-card iv-upcoming" key={label}><span><strong>{label}</strong><small>Следующий этап</small></span><Lock size={17}/></div>)}
+        {configurableDirections.map(([interviewType, label]) => <button type="button" className="iv-card" key={interviewType}
+          onClick={() => openSetup({ ...defaultInterviewSettings, interviewType })}>
+          <span><strong>{label}</strong><small>Настроить интервью</small></span><ArrowRight size={18}/>
+        </button>)}
       </section>
     </>}
     {run?.status === 'briefing' && <>
       <button className="iv-text-button" onClick={() => pause()}><ArrowLeft size={18}/> Интервью</button>
       <h1 ref={heading} tabIndex={-1}>{run.skeleton.title}</h1>
       <div className="iv-person"><span>{run.seed.profile[0]}</span><div><strong>{run.seed.profile}</strong><small>Интервьюер · {run.seed.industry}</small></div></div>
-      <div className="iv-bubble">{run.seed.intro}{run.story && <p>{run.story}</p>}</div>
+      <div className="iv-bubble">{run.configured ? <CaseContent text={run.seed.intro}/> : run.seed.intro}{run.story && <p>{run.story}</p>}</div>
+      {run.configured && <p className="iv-muted">{run.skeleton.label} · {run.settings.difficulty}</p>}
       <h2>Фазы интервью</h2>
       <ol className="iv-phases">{run.skeleton.phases.map(phase => <li key={phase.id}>{phase.label}</li>)}</ol>
-      <p className="iv-muted">{plan(run.skeleton).length} ходов по плану. Вопросы меняются по ходу интервью.</p>
+      <p className="iv-muted">{run.configured ? `Около ${remaining} ходов. Вопросы и данные зависят от твоего выбора.` : `${plan(run.skeleton).length} ходов по плану. Вопросы меняются по ходу интервью.`}</p>
       <p className="iv-muted">Запрашивай данные и защищай выбор. Можно сделать паузу.</p>
-      {preparing && <div className="iv-loading" role="status">Готовим брифинг…</div>}
-      <button className="iv-primary" onClick={start} disabled={preparing}>Начать интервью <ArrowRight size={18}/></button>
+      {preparing && !run.configured && <div className="iv-loading" role="status">Готовим брифинг…</div>}
+      <button className="iv-primary" onClick={start} disabled={preparing && !run.configured}>Начать интервью <ArrowRight size={18}/></button>
     </>}
     {run?.status === 'active' && move && <>
-      <div className="iv-progress"><button aria-label="Пауза" onClick={() => pause()}><X size={18}/></button><strong>Ход {run.history.length + 1} из {run.history.length + run.queue.length}</strong><span aria-label="Осталось времени"><Clock3 size={15}/> {clock}</span></div>
+      <div className="iv-progress"><button aria-label="Пауза" onClick={() => pause()}><X size={18}/></button><strong>Ход {run.history.length + 1} из {run.history.length + remaining}</strong><span aria-label="Осталось времени"><Clock3 size={15}/> {clock}</span></div>
       <div className="iv-phase-status"><span>Фаза {phaseIndex + 1} из {run.skeleton.phases.length} · {run.skeleton.phases[phaseIndex].label}</span><div aria-hidden="true">{run.skeleton.phases.map((phase, i) => <i className={i <= phaseIndex ? 'iv-phase-on' : ''} key={phase.id}/>)}</div></div>
       <details className="iv-condition" open={run.history.length === 0}>
         <summary>Условие кейса</summary>
         <div className="iv-condition-content">
-          <p>{run.seed.intro}</p>
+          {run.configured ? <CaseContent text={run.seed.intro}/> : <p>{run.seed.intro}</p>}
           {run.story && <p>{run.story}</p>}
         </div>
       </details>
@@ -288,14 +388,20 @@ export default function Interview({ onExit }) {
       {seconds === 0 && <p className="iv-muted">Плановое время вышло. Можно закончить без штрафа.</p>}
       {run.lastReply && <div className="iv-bubble" role="status">{run.lastReply}</div>}
       {run.history.at(-1)?.opened.length > 0 && <p className="iv-feedback" role="status"><Check size={16}/> Улика открыта и добавлена в карту</p>}
-      {run.history.at(-1)?.assessment.error && <p className="iv-warning" role="status">{run.history.at(-1).assessment.error}</p>}
+      {run.history.at(-1)?.assessment?.error && <p className="iv-warning" role="status">{run.history.at(-1).assessment.error}</p>}
       <div className={move.kind === 'CHALLENGE' ? 'iv-bubble iv-challenge' : 'iv-bubble'}>
-        {move.kind === 'CHALLENGE' && <span className="iv-tag">Уточнение интервьюера</span>}
+        {['CHALLENGE', 'CLARIFY'].includes(move.kind) && <span className="iv-tag">Уточнение интервьюера</span>}
         {move.kind === 'TWIST' && <span className="iv-tag">Новое условие</span>}
         {selected && <blockquote>{selected.value !== selected.quote && <strong>{selected.value} · </strong>}«{selected.quote}»</blockquote>}
-        {move.kind === 'TWIST' && <p>{run.seed.twist}</p>}
+        {move.kind === 'TWIST' && !run.configured && <p>{run.seed.twist}</p>}
         <h1 className="iv-question" ref={heading} tabIndex={-1}>{move.prompt}</h1>
       </div>
+      {move.scene && <div className="iv-data"><CaseContent text={move.scene}/></div>}
+      {move.caseEvidence && <section className="iv-data" aria-label="Данные по твоему запросу"><CaseContent text={move.caseEvidence}/></section>}
+      {priorData.length > 0 && <details className="iv-opened"><summary>Открытые данные ({priorData.length})</summary>
+        {priorData.map(step => <section className="iv-data" key={step.id}><CaseContent text={step.caseEvidence}/></section>)}
+      </details>}
+      {move.answerFormat && <p className="iv-muted"><strong>{options ? 'Как выбрать. ' : 'Что написать. '}</strong>{move.answerFormat}</p>}
       <Table value={run.seed.scenes[move.scene || move.public]}/>
       {run.seed.clues.filter(clue => move.evidence?.includes(clue.id) && !run.opened.includes(clue.id)).map(clue =>
         <p className="iv-locked" key={clue.id}><Lock size={15}/> {clue.title}</p>)}
@@ -303,19 +409,20 @@ export default function Interview({ onExit }) {
         {run.seed.clues.filter(clue => run.opened.includes(clue.id)).map(clue => <Table key={clue.id} value={clue}/>)}
       </details>}
       <form className="iv-form" onSubmit={submit}>
-        {options && <fieldset><legend>{move.justify ? 'Выбери один вариант' : 'Выбери один вопрос'}</legend>{options.map(option =>
+        {options && <fieldset><legend>{run.configured || move.justify ? 'Выбери один вариант' : 'Выбери один вопрос'}</legend>{options.map(option =>
           <button type="button" key={option} aria-pressed={run.choice === option} onClick={() => edit({ choice: option })}>{optionLabel(move, option)}</button>)}</fieldset>}
         {(!options || move.justify || run.hints[move.id]) && <label> {move.justify ? 'Почему этот вариант?' : move.evidence ? 'Какие данные запросишь?' : 'Твой ответ'}
           <textarea value={run.draft} rows={3} maxLength={1200} onChange={e => edit({ draft: e.target.value })} placeholder={move.evidence ? 'Напиши, что с чем сравнить' : 'Ответь своими словами'}/>
         </label>}
         {turnError && <p role="alert" className="iv-warning">{turnError}</p>}
         {run.hints[move.id] ? <p className="iv-hint">{move.hint} <small>−1 балл к итогу</small></p>
-          : move.kind !== 'CLARIFY' && <button className="iv-text-button" type="button" onClick={useHint}>Не знаю, с чего начать</button>}
+          : move.kind !== 'CLARIFY' && (!run.configured || (move.hint && move.hint !== move.answerFormat)) && <button className="iv-text-button" type="button" onClick={useHint}>Не знаю, с чего начать</button>}
         <button className="iv-primary" type="submit" disabled={move.justify ? !run.choice || !run.draft.trim() : !run.choice && !run.draft.trim()}>
-          {move.kind === 'DEMAND' ? 'Завершить интервью' : move.kind === 'DATA' && move.evidence ? 'Запросить данные' : options && !move.justify ? 'Спросить' : 'Ответить'} <ArrowRight size={18}/>
+          {move.kind === 'DEMAND' ? 'Завершить интервью' : move.kind === 'DATA' && move.evidence ? 'Запросить данные' : options && !move.justify ? (run.configured ? 'Подтвердить выбор' : 'Спросить') : 'Ответить'} <ArrowRight size={18}/>
         </button>
       </form>
     </>}
-    {run?.status === 'finished' && <Debrief run={run} onBack={() => pause()} onNext={() => { event('next_case_clicked', run); select(run.skeleton); }}/>}
+    {run?.status === 'finished' && <Debrief run={run} onBack={() => pause()} onReview={() => review(run)} reviewing={reviewing === run.id} reviewError={reviewError?.id === run.id ? reviewError.message : ''}
+      onNext={() => { event('next_case_clicked', run); if (run.configured) openSetup(run.settings); else select(run.skeleton); }}/>}
   </div></div>;
 }

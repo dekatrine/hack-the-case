@@ -82,3 +82,22 @@ button.iv-card:hover { border-color: var(--iv-lime); }
 .iv-debrief-section li p { overflow-wrap: anywhere; }
 .iv-debrief-section li { margin: 8px 0; }
 .iv-loading { background: var(--iv-surface); color: var(--iv-muted); border-radius: 10px; padding: 10px; border-left: 3px solid var(--iv-lime); }
+
+button.iv-configure { border-color: var(--iv-lime); }
+.iv-setup-form { margin-top: 0; }
+.iv-setup-form select {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--iv-border);
+  border-radius: 10px;
+  background: var(--iv-surface);
+  color: inherit;
+  color-scheme: dark;
+  font: inherit;
+}
+.iv-setup-form select:focus-visible { outline: 2px solid var(--iv-lime); outline-offset: 2px; }
+.iv-shell .mvp-case-table { overflow-x: auto; }
+.iv-shell .mvp-case-content { color: inherit; }
+.iv-shell .mvp-case-content p { color: inherit; }
+.iv-shell .mvp-case-content p + p { margin-top: 8px; }

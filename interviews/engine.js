@@ -1,5 +1,6 @@
 import { assessTurn, RUBRIC_VERSION } from './rubric.js';
 import { chooseSeed, matchingClues } from './seeds.js';
+import { nextConfiguredTurn } from './configured.js';
 
 export const skeletons = Object.values(import.meta.glob('./skeletons/*.json', { eager: true, import: 'default' }));
 export const plan = skeleton => skeleton.phases.flatMap(phase => phase.turns.map(turn => ({ ...turn, phase: phase.id })));
@@ -40,7 +41,7 @@ export function targetEntry(run, move) {
   for (const entry of run.map) {
     if (selected && entry.revises === selected.id) selected = entry;
   }
-  return selected || (move.kind === 'CHALLENGE' ? run.map.at(-1) : null);
+  return selected || (run.configured || move.kind === 'CHALLENGE' ? run.map.at(-1) : null);
 }
 
 function mapEntry(run, move, answer, choice) {
@@ -56,9 +57,10 @@ function mapEntry(run, move, answer, choice) {
 export function advance(run, answer, choice, tookMs, now = Date.now()) {
   const move = currentTurn(run);
   if (!move || run.status !== 'active') return run;
-  const queue = run.queue.slice(1);
   const text = answer.trim() || choice;
   if (!text || (move.justify && (!answer.trim() || !choice))) return run;
+  if (run.configured) return advanceConfigured(run, move, text, choice, tookMs, now);
+  const queue = run.queue.slice(1);
   const matches = matchingClues(run, move, text);
   const newlyOpened = matches.filter(clue => !run.opened.includes(clue.id));
   if (move.evidence && !move.public && !matches.length && !run.hints[move.id]) {
@@ -93,5 +95,32 @@ export function advance(run, answer, choice, tookMs, now = Date.now()) {
     opened: [...run.opened, ...entry.opened], draft: '', choice: '', requestError: '',
     elapsed: run.elapsed + tookMs, status: queue.length ? 'active' : 'finished',
     lastReply: move.reply && assessment.grade >= 2 ? run.seed.replies[move.reply] : '',
+  };
+}
+
+
+function advanceConfigured(run, move, text, choice, tookMs, now) {
+  if (move.options?.length && !move.options.includes(choice)) return run;
+  const target = targetEntry(run, move);
+  const next = nextConfiguredTurn(run, move, choice);
+  const askAgain = move.kind !== 'CLARIFY' && move.kind !== 'DEMAND' && !move.options
+    && move.answerFormat && !run.clarified.includes(move.phase)
+    && (text.match(/[\p{L}\p{N}]+/gu)?.length || 0) < 4;
+  const clarification = askAgain ? {
+    id: `${move.id}_follow_up`, label: 'Уточнение интервьюера', phase: move.phase, kind: 'CLARIFY',
+    prompt: move.answerFormat, target: move.id, nextStepId: next?.id,
+  } : null;
+  const continuation = clarification || next;
+  const entry = {
+    id: move.id, phase: move.phase, label: move.label, kind: move.kind,
+    answer: text, choice, opened: [], tookMs,
+    ...(target ? { targetId: target.id, targetQuote: target.quote } : {}),
+  };
+  return {
+    ...run, updatedAt: now, status: continuation ? 'active' : 'finished',
+    queue: continuation ? [continuation] : [], history: [...run.history, entry],
+    map: [...run.map, mapEntry(run, move, text, choice)],
+    clarified: askAgain ? [...run.clarified, move.phase] : run.clarified,
+    elapsed: run.elapsed + tookMs, draft: '', choice: '',
   };
 }
