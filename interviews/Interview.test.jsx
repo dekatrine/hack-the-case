@@ -125,3 +125,25 @@ it('creates a configured interview, opens the selected evidence and evaluates on
   click(/Первый заказ на маркетплейсе/);
   expect(screen.getByText('Аргумент связан с данными.')).toBeTruthy();
 });
+
+it('builds an interview from a saved case without calling the generator', async () => {
+  localStorage.clear();
+  window.scrollTo = vi.fn();
+  api.generate.mockClear();
+  const result = {
+    caseText: '# Первый заказ на маркетплейсе',
+    caseIntro: '**Продукт** Ночная доставка бытовых товаров.\n\n**Для кого** Те, кто покупает после закрытия магазинов.\n\nНа маркетплейсе 1000 новых покупателей. Из них 200 оформили первый заказ.',
+    variantId: 'onboarding', fingerprints: [],
+    caseRoute: [
+      { id: 'variant_open', question: 'Что уточнишь про покупку ночью?', chapter: 1, chapterTitle: 'Контекст', nextStepId: 'variant_source' },
+      { id: 'variant_source', question: 'Что запросишь?', chapter: 1, chapterTitle: 'Контекст',
+        options: ['По этапам', 'По устройствам'], nextByAnswer: { 'По этапам': 'variant_read_0', 'По устройствам': 'variant_read_0' } },
+      { id: 'variant_read_0', question: 'Сколько дошли до оплаты?', chapter: 2, chapterTitle: 'Данные', evidence: 'Из корзины к оплате перешли 120 человек.', nextStepId: 'variant_final' },
+      { id: 'variant_final', question: 'Какое решение?', chapter: 4, chapterTitle: 'Решение' },
+    ],
+  };
+  render(<Interview onExit={vi.fn()} start={{ fromCase: { result, settings: { industry: 'Маркетплейс', interviewType: 'product_sense' }, label: 'Product Sense' } }}/>);
+  await screen.findByRole('heading', { name: 'Первый заказ на маркетплейсе' });
+  expect(api.generate).not.toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: 'Начать интервью' })).toBeTruthy();
+});

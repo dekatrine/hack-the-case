@@ -227,7 +227,18 @@ export default function MvpApp({ initialScreen = 'home' }) {
     catch { setSaveError('Не удалось сохранить изменения в браузере. Не закрывай страницу, пока не скопируешь ответ.'); }
   }, [cases]);
   useEffect(() => { window.scrollTo?.({ top: 0, behavior: 'auto' }); }, [screen, selected]);
-  const startInterviewFor = item => { setInterviewStart({ skeleton: item?.params?.interviewType === 'product_execution' ? 'diagnosis' : 'discovery' }); go('interviews'); };
+  const startInterviewFor = item => {
+    // Если у кейса есть данные и развилки, собес идёт по нему самому. Иначе берём готовый сценарий.
+    const route = item?.caseRoute;
+    const hasRoute = item?.caseIntro && Array.isArray(route) && route.some(step => step.evidence) && route.some(step => step.nextByAnswer && Object.keys(step.nextByAnswer).length);
+    setInterviewStart(hasRoute
+      ? { fromCase: {
+        result: { caseText: item.caseText, caseIntro: item.caseIntro, caseRoute: route, variantId: item.params?.variantId, fingerprints: item.fingerprints || [] },
+        settings: item.params, label: INTERVIEWS.find(type => type.id === item.params?.interviewType)?.label || item.title || 'Кейс',
+      } }
+      : { skeleton: item?.params?.interviewType === 'product_execution' ? 'diagnosis' : 'discovery' });
+    go('interviews');
+  };
   const go = (next) => { setError(''); setReviewError(''); if (next === 'generate') setVariantId('surprise'); setScreen(next); };
   const update = (id, fn) => setCases(prev => prev.map(c => c.id === id ? { ...fn(c), updatedAt: new Date().toISOString() } : c));
   const open = (c, next) => { setSelected(c.id); setAttemptIndex(null); go(next); };

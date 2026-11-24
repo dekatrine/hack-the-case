@@ -227,6 +227,16 @@ export default function Interview({ onExit, start: startOptions }) {
     if (startOptions.open) {
       const item = runsRef.current.find(entry => entry.id === startOptions.open);
       if (item) setId(item.id);
+    } else if (startOptions.fromCase) {
+      // Собес из сохранённого кейса: условие, данные и развилки берём из него, без нового запроса к ИИ.
+      const { result, settings, label } = startOptions.fromCase;
+      try {
+        const item = save(configuredRun(result, settings, label));
+        setId(item.id);
+      } catch {
+        const fallback = skeletons.find(entry => entry.id === (settings?.interviewType === 'product_execution' ? 'diagnosis' : 'discovery'));
+        if (fallback) select(fallback);
+      }
     } else if (startOptions.skeleton) {
       const skeleton = skeletons.find(entry => entry.id === startOptions.skeleton);
       if (skeleton) select(skeleton);
