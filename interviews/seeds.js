@@ -18,6 +18,7 @@ const twists = [
 ];
 const traps = ['partial', 'confounder', 'tracking'];
 const names = ['Марина Орлова', 'Саша Волкова', 'Алексей Соколов'];
+const pp = value => value.toLocaleString('ru-RU', { maximumFractionDigits: 2 });
 const percent = (value, digits = 2) => value.toLocaleString('ru-RU', { maximumFractionDigits: digits }) + '%';
 const mean = (shares, rates) => rates.reduce((sum, rate, i) => sum + rate * shares[i] / 100, 0);
 const table = (title, headers, rows) => ({ title, headers, rows });
@@ -29,11 +30,13 @@ function makeSeed(skeleton, axes) {
   const [truthId, truth, voice, diagnosticSignal] = skeleton.truths[truthIndex];
   const [twistId, twist] = twists[twistIndex];
   const discovery = skeleton.id === 'discovery';
-  const groups = discovery ? ['Разовые', 'Периодические', 'Регулярные'] : ['Группа A', 'Группа B', 'Группа C'];
+  const experiments = skeleton.id === 'experiments';
+  const groups = experiments ? ['Новые', 'Вернувшиеся', 'Постоянные'] : discovery ? ['Разовые', 'Периодические', 'Регулярные'] : ['Группа A', 'Группа B', 'Группа C'];
   const shares = [40 + industryIndex % 5, 34 - industryIndex % 5, 26];
   const focus = truthIndex % groups.length;
-  const base = discovery ? [6, 22, 32].map(rate => rate + industryIndex % 3) : [4, 4.5, 4.15].map(rate => rate + industryIndex / 10);
-  const rates = discovery ? base : base.map((rate, i) => i === focus ? rate - 1.5 : rate);
+  const base = experiments ? [3.2, 6.1, 9.4].map(rate => rate + industryIndex / 20) : discovery ? [6, 22, 32].map(rate => rate + industryIndex % 3) : [4, 4.5, 4.15].map(rate => rate + industryIndex / 10);
+  const effect = [1.6, 2.1, 1.2][trapIndex];
+  const rates = experiments ? base.map((rate, i) => i === focus ? rate + effect : rate) : discovery ? base : base.map((rate, i) => i === focus ? rate - 1.5 : rate);
   const before = mean(shares, base);
   const current = mean(shares, rates);
   const recovery = [87, 80, 92][trapIndex];
@@ -42,20 +45,37 @@ function makeSeed(skeleton, axes) {
   const lift = [2, 3, 1][trapIndex];
   const guardrail = [8, 12, 6][trapIndex];
   const margin = [4, 6, 2][trapIndex];
-  const trapNote = [
+  const trapNote = experiments ? [
+    'Часть пользователей могла видеть оба варианта после смены устройства.',
+    'Тест шёл в неделю распродажи, когда спрос выше обычного.',
+    'Журнал назначения групп и аналитика показывают разное число людей.',
+  ][trapIndex] : [
     'В выборке нет пользователей без согласия на аналитику. Проверь, можно ли ожидать такой же результат у остальных.',
     'В тот же период изменилась доля рекламного трафика. Сравни результат внутри каналов.',
     'Журнал операций и аналитика показывают разные числа. Проверь, что считает каждый источник.',
   ][trapIndex];
   const scenes = {
-    segments: table('Показатели по группам', discovery ? ['Группа', 'Доля покупателей', 'Купили снова'] : ['Группа', 'Доля пользователей', 'Конверсия до', 'Конверсия после'],
+    segments: table('Показатели по группам', experiments ? ['Группа', 'Доля пользователей', 'Контроль', 'Вариант'] : discovery ? ['Группа', 'Доля покупателей', 'Купили снова'] : ['Группа', 'Доля пользователей', 'Конверсия до', 'Конверсия после'],
       groups.map((group, i) => [group, percent(shares[i]), percent(base[i]), ...(!discovery ? [percent(rates[i])] : [])])),
     voice,
     experiment: `По сравнению с группой без изменений доля повторных заказов выросла на ${lift} п.п., а отписок стало на ${guardrail}% больше. Заработок с одного заказа снизился на ${margin}%. ${trapNote}`,
     pilot: table('Конверсия до и после исправления', ['До падения', 'На минимуме', 'После пробного исправления'], [[percent(before, 4), percent(current, 4), percent(pilot, 4)]]),
     channels: trapNote,
+    result: `Вариант: ${percent(current)} против ${percent(before)} в контроле, разница ${pp(current - before)} п.п. Заработок с одного заказа в варианте ниже на ${margin}%. ${trapNote}`,
   };
-  const clues = discovery ? [
+  const sizeA = truthId === 'srm' ? 54 : 50;
+  const days = truthId === 'novelty' ? [2.4, 0.9, 0.1] : [current - before, current - before, current - before];
+  const clues = experiments ? [
+    evidence('split', 'дол|размер|групп|поровну|соотношен|назнач|числ', table('Размер групп в тесте', ['Группа', 'Попало в тест', 'По плану'], [
+      ['Контроль', `${sizeA}%`, '50%'], ['Вариант', `${100 - sizeA}%`, '50%'],
+    ]), true),
+    evidence('daily', 'динамик|по дням|день|дни|недел|ход теста', table('Разница вариант минус контроль по дням', ['День', 'Разница, п.п.'], [
+      ['День 1', pp(days[0])], ['День 7', pp(days[1])], ['День 14', pp(days[2])],
+    ]), true),
+    evidence('aov', 'чек|заработ|выруч|стоимост', table('Заработок с одного заказа', ['Показатель', 'Контроль', 'Вариант'], [
+      ['Заработок с заказа', '100%', `${100 - margin}%`],
+    ])),
+  ] : discovery ? [
     evidence('channel', 'канал|источник', table('Повтор по каналу привлечения', ['Канал', 'Повтор', 'Где теряется покупатель'], [
       ['Органика', percent(before + 2), truth], ['Платное привлечение', percent(before - 2), truth],
     ]), true),
@@ -78,20 +98,23 @@ function makeSeed(skeleton, axes) {
   return {
     ...axes, id: `${industry}:${truthId}:${twistId}:${traps[trapIndex]}`,
     pair: `${industry}:${truthId}`, industry: label, transaction, groups,
-    truth: discovery ? truth : voice,
-    example: discovery ? diagnosticSignal : '',
+    truth: discovery || experiments ? truth : voice,
+    example: discovery || experiments ? diagnosticSignal : '',
     focusGroup: groups[focus], twist, trapNote, recovery,
     profile: names[(industryIndex + truthIndex) % names.length],
-    intro: discovery
+    intro: experiments
+      ? `Команда продукта из отрасли «${label}» провела A/B-тест нового шага «${transaction}»: ${percent(current)} в варианте против ${percent(before)} в контроле. Решаем, раскатывать ли.`
+      : discovery
       ? `${percent(before)} новых клиентов возвращаются за второй покупкой. Команда продукта из отрасли «${label}» хочет, чтобы больше клиентов возвращались, при этом важно сохранить заработок с заказа.`
       : `Сервис из отрасли «${label}» заметил падение конверсии для действия «${transaction}» с ${percent(before)} до ${percent(current)}. Помоги команде выяснить причину.`,
     replies: {
       repeat: `Считаем второй оплаченный заказ в течение 30 дней. Цель на квартал — ${goal}%.`,
       discount: 'Со скидкой 10% доля повторных покупок выросла на 1 процентный пункт, а с заказа стали зарабатывать меньше.',
       competitors: 'У двух конкурентов легко найти прошлую покупку из истории. У нашего продукта история спрятана глубже.',
+      test: 'Главная метрика — доля оформивших заказ среди всех зашедших. Тест шёл две недели, пользователей делили между контролем и вариантом по плану поровну.',
       scope: `Сравниваем две соседние недели. Берём всех, кто начал, и считаем, какая их доля успешно завершила действие «${transaction}».`,
     },
-    scenes, clues, numbers: { shares, rates, before, current, pilot },
+    scenes, clues, numbers: { shares, rates, base, before, current, pilot },
   };
 }
 
@@ -137,7 +160,7 @@ const requestAliases = {
 };
 
 export function matchingClues(run, move, request) {
-  if (!/дол|повтор|конверс|потер|сравн|период|заказ|измен|ошиб|подтвержд|метрик|покупк|покупа|купил|вернул|успешн|сколько|заверш|оплат/i.test(request)) return [];
+  if (!/дол|повтор|конверс|потер|сравн|период|заказ|измен|ошиб|подтвержд|метрик|покупк|покупа|купил|вернул|успешн|сколько|заверш|оплат|групп|динамик|чек|заработ|размер/i.test(request)) return [];
   return run.seed.clues.filter(clue => move.evidence?.includes(clue.id)
     && (new RegExp(clue.pattern, 'i').test(request) || requestAliases[clue.id]?.test(request)));
 }

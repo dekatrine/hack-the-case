@@ -489,7 +489,7 @@ export default function Interview({ onExit, start: startOptions }) {
         {['ASK', 'DATA', 'DEMAND'].includes(move.kind) && <div className="iv-who"><span aria-hidden="true">{run.seed.profile[0]}</span><small>{run.seed.profile} · интервьюер</small></div>}
         {['CHALLENGE', 'CLARIFY'].includes(move.kind) && <span className="iv-tag">Уточнение интервьюера</span>}
         {move.kind === 'TWIST' && <span className="iv-tag">Новое условие</span>}
-        {selected && <blockquote>{selected.value !== selected.quote && <strong>{selected.value} · </strong>}«{selected.quote}»</blockquote>}
+        {selected && <blockquote>{selected.value !== selected.quote && !selected.quote.startsWith(selected.value.replace(/…$/, '')) && <strong>{selected.value} · </strong>}«{selected.quote}»</blockquote>}
         {move.kind === 'TWIST' && !run.configured && <p>{run.seed.twist}</p>}
         <h1 className="iv-question" ref={heading} tabIndex={-1}>{move.prompt}</h1>
         {move.answerFormat && <p className="iv-answer-format" id="iv-answer-format">

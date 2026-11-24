@@ -34,10 +34,10 @@ const stem = name => {
 
 // Сверяет проценты рядом с названием группы с числами сида (долей и показателей).
 export function numberCheck(answer, seed) {
-  const { shares, rates, before, current } = seed.numbers;
+  const { shares, rates, base = [], before, current } = seed.numbers;
   const overall = [before, current, before + 6];
   for (let i = 0; i < seed.groups.length; i += 1) {
-    const allowed = [shares[i], rates[i], ...overall];
+    const allowed = [shares[i], rates[i], base[i], ...overall].filter(Number.isFinite);
     const pattern = new RegExp(`${stem(seed.groups[i]).replace(/\s+/g, '\\s*')}[^.\n]{0,40}?(-?\\d+(?:[.,]\\d+)?)\\s*(?:%|процент)`, 'gi');
     for (const match of answer.matchAll(pattern)) {
       const value = Number(match[1].replace(',', '.'));

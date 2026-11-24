@@ -17,3 +17,10 @@ it('counts weeks with at least one finished interview', () => {
   const runs = [{ status: 'finished', updatedAt: 100 * day - 1 * day }, { status: 'finished', updatedAt: 100 * day - 15 * day }];
   expect(weeklyRhythm(runs, 100 * day)).toBe(2);
 });
+
+it('recommends the scenario that trains the weakest skill', () => {
+  const weakest = id => ({ weakest: { id } });
+  expect(recommendedSkeleton(weakest('metrics'))).toBe('diagnosis');
+  expect(recommendedSkeleton(weakest('hypotheses'))).toBe('experiments');
+  expect(recommendedSkeleton(weakest('choice'))).toBe('discovery');
+});

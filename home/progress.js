@@ -33,7 +33,9 @@ export function summarize(runs) {
 }
 
 export function recommendedSkeleton(summary) {
-  return summary.weakest && DIAGNOSIS_SKILLS.includes(summary.weakest.id) ? 'diagnosis' : 'discovery';
+  if (!summary.weakest) return 'discovery';
+  if (DIAGNOSIS_SKILLS.includes(summary.weakest.id)) return 'diagnosis';
+  return summary.weakest.id === 'hypotheses' ? 'experiments' : 'discovery';
 }
 
 // Недельный ритм: сколько недель из последних четырёх есть хотя бы один собес.
