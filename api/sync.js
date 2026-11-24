@@ -24,7 +24,7 @@ const SYNC_KEYS = [
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
 const API_BASE_URL =
   configuredApiBaseUrl?.replace(/\/+$/, '') ||
-  (import.meta.env.DEV ? 'http://localhost:8000' : 'https://hack-the-case-api.onrender.com');
+  (import.meta.env.DEV ? '' : 'https://hack-the-case-api.onrender.com');
 
 let lastPushedSnapshot = null;
 
@@ -51,7 +51,7 @@ function applySnapshot(json) {
   }
 }
 
-async function apiFetch(path, options = {}) {
+export async function apiFetch(path, options = {}) {
   const token = localStorage.getItem(TOKEN_KEY);
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
@@ -60,7 +60,7 @@ async function apiFetch(path, options = {}) {
     },
     ...options,
   });
-  if (!response.ok) throw new Error(`sync: ${response.status}`);
+  if (!response.ok) throw Object.assign(new Error(`sync: ${response.status}`), { status: response.status });
   return response.json();
 }
 

@@ -132,6 +132,9 @@ async function generateStream(payload, onChunk) {
 }
 
 export const api = {
+  interviewStory: (payload, signal) => request('/api/interviews/story', {
+    method: 'POST', body: JSON.stringify(payload), signal,
+  }),
   explainCondition: (payload) => request('/api/cases/explain', {
     method: 'POST', body: JSON.stringify(payload),
   }),

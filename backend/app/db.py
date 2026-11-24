@@ -10,6 +10,7 @@
   link_codes(code, user_id, expires_at)  — короткие коды переноса на другое устройство
 """
 
+import json
 import os
 import secrets
 import sqlite3
@@ -43,6 +44,13 @@ def _connect() -> sqlite3.Connection:
             user_id TEXT PRIMARY KEY REFERENCES users(id),
             data TEXT NOT NULL,
             updated_at INTEGER NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS interview_runs (
+            user_id TEXT NOT NULL REFERENCES users(id),
+            id TEXT NOT NULL,
+            data TEXT NOT NULL,
+            updated_at INTEGER NOT NULL,
+            PRIMARY KEY (user_id, id)
         );
         CREATE TABLE IF NOT EXISTS link_codes (
             code TEXT PRIMARY KEY,
@@ -141,3 +149,26 @@ def claim_link_code(code: str) -> Optional[dict]:
     if not token_row:
         return None
     return {"userId": user_id, "token": token_row[0]}
+
+
+def get_interview_runs(user_id: str) -> list[dict]:
+    with _lock:
+        rows = get_conn().execute(
+            "SELECT data FROM interview_runs WHERE user_id = ? ORDER BY updated_at DESC LIMIT 30",
+            (user_id,),
+        ).fetchall()
+    return [json.loads(row[0]) for row in rows]
+
+
+def put_interview_run(user_id: str, run_id: str, data: str, updated_at: int) -> None:
+    with _lock:
+        conn = get_conn()
+        conn.execute(
+            """
+            INSERT INTO interview_runs (user_id, id, data, updated_at) VALUES (?, ?, ?, ?)
+            ON CONFLICT(user_id, id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at
+            WHERE excluded.updated_at > interview_runs.updated_at
+            """,
+            (user_id, run_id, data, updated_at),
+        )
+        conn.commit()

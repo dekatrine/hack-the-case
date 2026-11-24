@@ -1,5 +1,7 @@
 import importlib.util
 import json
+import logging
+import os
 import random
 import re
 from pathlib import Path
@@ -154,6 +156,75 @@ def write_progress(
     updated_at = int(payload.get("updatedAt") or 0)
     db.put_progress(user_id, data, updated_at)
     return {"ok": True}
+
+
+@app.get("/api/interview-runs")
+def read_interview_runs(authorization: str = Header(default="")) -> dict:
+    return {"runs": db.get_interview_runs(_require_user(authorization))}
+
+
+@app.put("/api/interview-runs")
+def save_interview_run(payload: dict = Body(...), authorization: str = Header(default="")) -> dict:
+    user_id = _require_user(authorization)
+    run_id = payload.get("id")
+    updated_at = payload.get("updatedAt")
+    encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    if (
+        not isinstance(run_id, str) or not re.fullmatch(r"[a-f0-9-]{36}", run_id)
+        or type(updated_at) is not int or not 0 < updated_at < 10**14
+        or len(encoded.encode("utf-8")) > 120_000
+        or payload.get("status") not in ("briefing", "active", "finished")
+        or not isinstance(payload.get("skeleton"), dict)
+        or not isinstance(payload.get("seed"), dict)
+        or not isinstance(payload.get("queue"), list)
+    ):
+        raise HTTPException(status_code=422, detail="Некорректное прохождение")
+    db.put_interview_run(user_id, run_id, encoded, updated_at)
+    return {"ok": True}
+
+
+@app.post("/api/interviews/story")
+def interview_story(payload: dict = Body(...)) -> dict:
+    """Write a short briefing overlay. The seed, facts and turns remain deterministic."""
+    industry = payload.get("industry")
+    transaction = payload.get("transaction")
+    if any(
+        not isinstance(value, str) or not re.fullmatch(r"[A-Za-zА-Яа-яЁё –-]{3,80}", value)
+        for value in (industry, transaction)
+    ) or payload.get("type") not in {"discovery", "diagnosis"}:
+        raise HTTPException(status_code=422, detail="Некорректный контекст интервью")
+
+    usage = {}
+    story = ""
+    if settings.yandex_api_key and settings.yandex_folder_id:
+        task = "рост повторных покупок" if payload["type"] == "discovery" else "диагностика просадки метрики"
+        for _ in range(2):
+            try:
+                candidate = call_yandex_gpt(
+                    "Ты интервьюер на русском языке. Одним коротким предложением оживи вводную,"
+                    " пригласи кандидата разобраться в задаче. Не добавляй фактов, чисел,"
+                    " названий компаний, причин, советов, разметки или вопросов.",
+                    f"Отрасль: {industry}. Сценарий: {transaction}. Задача: {task}.",
+                    temperature=0.4, max_tokens=60, max_retries=1, timeout=2, usage=usage,
+                ).strip()
+                if re.fullmatch(r"[A-Za-zА-Яа-яЁё ,–—-]{15,130}[.!]", candidate):
+                    story = candidate
+                    break
+                logging.getLogger(__name__).info("Interview briefing rejected: invalid overlay")
+            except RuntimeError:
+                logging.getLogger(__name__).info("Interview briefing fallback: model unavailable")
+
+    price_in = os.getenv("INTERVIEW_PRICE_INPUT_RUB_PER_1K")
+    price_out = os.getenv("INTERVIEW_PRICE_OUTPUT_RUB_PER_1K")
+    cost = None
+    if price_in and price_out:
+        try:
+            cost = (usage.get("input", 0) * float(price_in) + usage.get("output", 0) * float(price_out)) / 1000
+        except ValueError:
+            logging.getLogger(__name__).warning("Invalid interview model tariff")
+    if usage:
+        logging.getLogger("uvicorn.error").info("Interview briefing usage: %s rub=%s", usage, cost)
+    return {"story": story, "usage": {"input": usage.get("input", 0), "output": usage.get("output", 0), "cost": cost}}
 
 
 @app.get("/api/config")
