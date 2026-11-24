@@ -60,7 +60,7 @@ export function assessTurn(run, move, answer, choice, opened) {
     if (grade === 3 && unique < 9) grade = 2;
   }
   // Метрика без чисел — это перечисление слов, а не критерий успеха.
-  if (move.dimension === 'metrics' && move.kind !== 'CLARIFY') {
+  if (move.dimension === 'metrics' && move.kind !== 'CLARIFY' && !move.scoping) {
     const numbers = (text.match(/\d+(?:[.,]\d+)?/g) || []).length;
     if (numbers === 0) grade = Math.min(grade, 1);
     else if (numbers === 1) grade = Math.min(grade, 2);
