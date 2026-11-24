@@ -308,8 +308,11 @@ def generate_variant(payload, call_model):
             prompt += "\nПроверь формат: полные поля, два разных среза, минимум по два разных числа в каждом. Если нужен исходный путь в INTRO, напиши шаги и два исходных числа."
             continue
         fingerprints = story_fingerprints(story)
+        # Detailed interviews keep a distinct product, data set and route. One familiar
+        # analytical question is fine when it is applied to a different product.
+        distinct_fingerprints = fingerprints[:4] if detailed else fingerprints
         if (
-            seen.isdisjoint(fingerprints)
+            seen.isdisjoint(distinct_fingerprints)
             and not repeats_recent_story(story, payload.recentCases)
             and (not detailed or not recent_profile_repeated(story, payload.recentCases))
         ):

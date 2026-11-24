@@ -174,6 +174,8 @@ class MvpTests(unittest.TestCase):
                       "Ночью показывает остатки только у магазинов, которые продолжают работать.",
                       "Команда сравнивает полный каталог с фильтром по ночным остаткам.",
                       "За неделю 780 человек открыли сервис после полуночи. Из них 233 сделали заказ.", (780, 233))
+        # A shared analytical question is useful in both niches and must not block a different product.
+        night["choices"][0]["question"] = kids["choices"][0]["question"]
         model.side_effect = [json.dumps(kids),
                              json.dumps({**night, "change": "Новый функционал улучшает пользовательский опыт."}),
                              json.dumps(night)]
@@ -188,7 +190,8 @@ class MvpTests(unittest.TestCase):
         self.assertEqual(model.call_count, 3)
         self.assertIn("Владельцы питомцев покупают специализированный корм", model.call_args_list[1].args[1])
         self.assertIn("Сервис доставляет товары первой необходимости только ночью", model.call_args.args[1])
-        self.assertTrue(set(first.fingerprints).isdisjoint(second.fingerprints))
+        self.assertTrue(set(first.fingerprints[:4]).isdisjoint(second.fingerprints[:4]))
+        self.assertTrue(set(first.fingerprints) & set(second.fingerprints))
 
     @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","grades":[3]}')
     def test_mvp_score_applies_a_deduction_after_grading(self, model):
