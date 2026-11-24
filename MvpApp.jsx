@@ -13,6 +13,7 @@ import { guideCaseRoute } from './cases/caseWriting.js';
 import CaseFlow from './CaseFlow.jsx';
 import Interview from './interviews/Interview.jsx';
 import { readRuns } from './interviews/storage.js';
+import { CASES_KEY } from './home/attempts.js';
 import Home from './home/Home.jsx';
 import Progress from './home/Progress.jsx';
 import Onboarding from './home/Onboarding.jsx';
@@ -60,7 +61,7 @@ function PracticeStatus({ feedback }) {
 const interviewFields = type => INTERVIEWS.find(t => t.id === type)?.questions.map(q => [q.id, q.label, q.hint, 'Короткий ответ…']);
 const routeFields = route => route.map(step => [step.id, step.question, step.hint, 'Короткий ответ…']);
 
-export const STORAGE_KEY = 'htc_mvp_cases_v1';
+export const STORAGE_KEY = CASES_KEY;
 const LEGACY_FIELDS = [
   ['problem', 'Как ты понимаешь проблему?', 'Цель, пользователь, ограничения и критерий успеха.'],
   ['hypotheses', 'Какие гипотезы проверишь?', 'Возможные причины и порядок их проверки.'],
