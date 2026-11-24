@@ -25,7 +25,11 @@ it('resumes a saved draft offline and opens the full debrief with a flagged fact
   click(/Диагностика метрики/);
   const begin = screen.getByRole('button', { name: 'Начать интервью' });
   await waitFor(() => expect(begin.disabled).toBe(false));
+  const brief = latest().seed.intro;
   fireEvent.click(begin);
+  const condition = () => screen.getByText('Условие кейса').closest('details');
+  expect(condition().open).toBe(true);
+  expect(condition().textContent).toContain(brief);
   const text = calibration.diagnosis.scope;
   type(text);
   click('Не знаю, с чего начать');
@@ -35,6 +39,8 @@ it('resumes a saved draft offline and opens the full debrief with a flagged fact
   render(<Interview onExit={vi.fn()}/>);
   click(/Продолжить с хода 1/);
   expect(screen.getByRole('textbox').value).toBe(text);
+  expect(condition().open).toBe(true);
+  expect(condition().textContent).toContain(brief);
   expect(screen.getByText('−1 балл к итогу')).toBeTruthy();
   for (let i = 0; latest().status === 'active' && i < 17; i += 1) {
     const { queue: [turn], seed } = latest();
@@ -44,6 +50,10 @@ it('resumes a saved draft offline and opens the full debrief with a flagged fact
     }
     if (turn.kind === 'CHALLENGE') expect(screen.getByText('Перебивает')).toBeTruthy();
     click(turn.kind === 'DEMAND' ? 'Завершить интервью' : turn.evidence ? 'Запросить данные' : 'Ответить');
+    if (i === 0) {
+      expect(condition().open).toBe(false);
+      expect(condition().textContent).toContain(brief);
+    }
   }
   expect(screen.getByRole('heading', { name: 'Разбор интервью' })).toBeTruthy();
   expect(screen.getByRole('heading', { name: 'Сверка с данными' })).toBeTruthy();

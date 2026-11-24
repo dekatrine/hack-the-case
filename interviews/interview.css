@@ -41,6 +41,11 @@ button.iv-card:hover { border-color: var(--iv-lime); }
 .iv-phase-status div { display: flex; flex: 1; gap: 4px; }
 .iv-phase-status i { flex: 1; height: 4px; background: var(--iv-border); border-radius: 9px; }
 .iv-phase-status .iv-phase-on { background: var(--iv-lime); }
+.iv-condition { border: 1px solid var(--iv-border); border-radius: 14px; background: var(--iv-surface); }
+.iv-condition summary { padding: 0 13px; font-weight: 700; }
+.iv-condition summary::marker { color: var(--iv-lime); }
+.iv-condition-content { padding: 0 13px 13px; }
+.iv-condition-content p + p { margin-top: 8px; color: var(--iv-muted); }
 .iv-map summary { display: flex; gap: 6px; align-items: center; font-size: 11px; }
 .iv-map summary b { min-width: 0; max-width: 40%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 20px; background: #252a2c; padding: 5px 8px; }
 .iv-map dl { margin: 5px 0 0; }

@@ -277,6 +277,13 @@ export default function Interview({ onExit }) {
     {run?.status === 'active' && move && <>
       <div className="iv-progress"><button aria-label="Пауза" onClick={() => pause()}><X size={18}/></button><strong>Ход {run.history.length + 1} из {run.history.length + run.queue.length}</strong><span aria-label="Осталось времени"><Clock3 size={15}/> {clock}</span></div>
       <div className="iv-phase-status"><span>Фаза {phaseIndex + 1} из {run.skeleton.phases.length} · {run.skeleton.phases[phaseIndex].label}</span><div aria-hidden="true">{run.skeleton.phases.map((phase, i) => <i className={i <= phaseIndex ? 'iv-phase-on' : ''} key={phase.id}/>)}</div></div>
+      <details className="iv-condition" open={run.history.length === 0}>
+        <summary>Условие кейса</summary>
+        <div className="iv-condition-content">
+          <p>{run.seed.intro}</p>
+          {run.story && <p>{run.story}</p>}
+        </div>
+      </details>
       <Map entries={run.map}/>
       {seconds === 0 && <p className="iv-muted">Плановое время вышло. Можно закончить без штрафа.</p>}
       {run.lastReply && <div className="iv-bubble" role="status">{run.lastReply}</div>}
