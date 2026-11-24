@@ -1,0 +1,73 @@
+/* ============================================================
+   Single dark theme for the whole app, matching the interview screens.
+   Tokens first, then targeted overrides for components with hard-coded colors.
+   Loaded last (see main.jsx).
+   ============================================================ */
+:root {
+  --dk-bg: #0f1012;
+  --dk-surface: #191c1e;
+  --dk-surface-2: #14171a;
+  --dk-border: #373d40;
+  --dk-hair: #2b3033;
+  --dk-text: #f2f3f2;
+  --dk-muted: #b0b6ba;
+  --dk-faint: #8b9195;
+  --dk-lime: #d4ff3a;
+  --dk-on-lime: #111500;
+  --dk-lime-bg: #1f2a12;
+  --dk-lime-line: #4d6b1b;
+  color-scheme: dark;
+
+  /* clean tokens */
+  --surface-page: var(--dk-bg);
+  --surface-card: var(--dk-surface);
+  --surface-sunk: var(--dk-surface-2);
+  --surface-inverse: var(--dk-surface);
+  --surface-glass: rgba(15, 16, 18, 0.8);
+  --border-hairline: var(--dk-hair);
+  --border-hairline-strong: var(--dk-border);
+  --text-primary: var(--dk-text);
+  --text-secondary: var(--dk-muted);
+  --text-tertiary: var(--dk-faint);
+  --text-on-accent: var(--dk-on-lime);
+  --text-on-inverse: var(--dk-text);
+  --accent-primary: var(--dk-lime);
+  --accent-primary-deep: #c2eb2a;
+
+  /* legacy tokens in styles.css */
+  --ink: var(--dk-bg);
+  --ink-soft: var(--dk-surface);
+  --ink-card: var(--dk-surface);
+  --hair: rgba(255, 255, 255, 0.1);
+  --hair-strong: rgba(255, 255, 255, 0.18);
+  --paper: var(--dk-text);
+  --paper-dim: var(--dk-muted);
+  --paper-faint: var(--dk-faint);
+  --mint: var(--dk-lime);
+  --mint-deep: #c2eb2a;
+  --accent: var(--dk-lime);
+  --color-surface: var(--dk-surface);
+  --color-surface-muted: var(--dk-surface-2);
+  --color-surface-raised: var(--dk-surface);
+  --color-ink: var(--dk-text);
+  --color-ink-muted: var(--dk-muted);
+}
+html, body, #root { background: var(--dk-bg); color: var(--dk-text); }
+
+/* Home */
+.home-eyebrow, .home-label { color: var(--dk-faint); }
+.home-muted { color: var(--dk-muted); }
+.home-card { border-color: var(--dk-border); background: var(--dk-surface); color: var(--dk-text); }
+.home-main { border-color: var(--dk-lime-line); background: var(--dk-lime-bg); color: var(--dk-text); }
+.home-meter { background: var(--dk-border); }
+.home-meter b { background: var(--dk-lime); }
+.home-option { border-color: var(--dk-border); background: var(--dk-surface); color: var(--dk-text); }
+.home-option.on { border-color: var(--dk-lime); background: var(--dk-lime-bg); }
+.home-link { color: var(--dk-text); }
+
+/* Section tabs (Practice, Study) */
+.mvp-lib-filter button { border-color: var(--dk-border); background: var(--dk-surface); color: var(--dk-muted); }
+.mvp-lib-filter button:hover { border-color: var(--dk-lime); color: var(--dk-text); }
+.mvp-lib-filter button[aria-pressed="true"] { background: var(--dk-lime); color: var(--dk-on-lime); border-color: var(--dk-lime); font-weight: 700; }
+.mvp-lib-filter { justify-content: center; margin: 16px auto 8px; }
+@media(max-width:680px) { .mvp-header nav { background: var(--dk-surface-2); border-top-color: var(--dk-hair); } }

@@ -18,6 +18,7 @@ import { StepRailItem as CleanStepRail } from './design/components/StepRailItem.
 import './styles.css';
 import './design/clean-tokens.css';
 import './design/clean-screens.css';
+import './design/theme-dark.css';
 
 /* ───────────────────────────── Topbar ─────────────────────────────── */
 /* ──────────────────────────── Landing ─────────────────────────────── */

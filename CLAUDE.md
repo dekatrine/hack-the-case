@@ -59,7 +59,7 @@ localStorage keys: `htc_mvp_cases_v1` (cases and their attempts), `htc_interview
 
 Adding an interview scenario: new `skeletons/<id>.json`, a branch in `seeds.js` (groups, numbers, clues, intro, scenes, replies, a flag like `strategy`), a strong answer for every turn in `calibration.json`, an entry in `home/progress.js` `recommendedSkeleton`. Rules enforced by `engine.test.js`: every turn must be gradable from text (checks, evidence, or plain options); scoping questions that need no numbers carry `scoping: true`; weak runs average at most 40, strong at least 80.
 
-**Styling:** `styles.css`, `mvp.css`, plus per-module CSS (`interviews/interview.css`, `home/home.css`, `cases/case-library.css`). Vanilla CSS with custom properties. No Tailwind yet.
+**Styling:** one dark theme (matches the interview screens): `design/theme-dark.css` is loaded last in `main.jsx` and overrides the tokens in `styles.css` and `design/clean-tokens.css`; add new colors there, not as hard-coded light values. Files: `styles.css`, `mvp.css`, plus per-module CSS (`interviews/interview.css`, `home/home.css`, `cases/case-library.css`). Vanilla CSS with custom properties. No Tailwind yet.
 
 ### Backend
 
