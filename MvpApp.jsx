@@ -9,6 +9,7 @@ import LearningPath from './learning/LearningPath.jsx';
 import CaseLibrary from './cases/CaseLibrary.jsx';
 import { countHints, duplicateAsNewAttempt, hasAttemptChanges } from './cases/caseLibrary.js';
 import { hasStory, storyPath, storyAnswers } from './cases/storyPath.js';
+import { guideCaseRoute } from './cases/caseWriting.js';
 import CaseFlow from './CaseFlow.jsx';
 import Interview from './interviews/Interview.jsx';
 import SearchDiagnostic from './cases/SearchDiagnostic.jsx';
@@ -153,7 +154,7 @@ export default function MvpApp() {
   const story = hasStory(active?.caseRoute);
   const caseRoute = diagnosticSlice
     ? [SEARCH_ROUTE[0], { ...SEARCH_ROUTE[1], question: diagnosticSlice.question, evidence: diagnosticSlice.evidence }]
-    : story ? storyPath(active.caseRoute, active.answers) : active?.caseRoute || [];
+    : guideCaseRoute(active, story ? storyPath(active.caseRoute, active.answers) : active?.caseRoute || []);
   const fields = caseRoute.length ? routeFields(caseRoute) : interviewFields(active?.params?.interviewType) || FIELDS;
   const evidenceStep = caseRoute.find(step => step.evidence);
   const conditionText = story
@@ -297,7 +298,7 @@ export default function MvpApp() {
     const answers = { ...item.answers };
     try {
       const hintedSteps = Object.entries(item.hints || {}).filter(([, hint]) => hint?.basic || hint?.ai?.length).map(([id]) => id);
-      const reviewRoute = caseRoute.map(({ id, question, scene, evidence }) => ({ id, question, scene, evidence }));
+      const reviewRoute = caseRoute.map(({ id, question, scene, evidence, answerFormat }) => ({ id, question, scene, evidence, ...(answerFormat ? { hint: answerFormat } : {}) }));
       const result = await api.evaluate({
         caseText: story ? item.caseIntro || item.caseText : item.caseText,
         answers,
@@ -438,7 +439,7 @@ export default function MvpApp() {
           {selfCheck ? 'Самопроверка' : 'Фокус тренировки'}{active.focusSkill && skillLabel ? ` · ${skillLabel}` : ''}
         </p>}
         {!story && <p className="mvp-lead">Один кейс, {fields.length} шагов. Отвечай на один вопрос за раз — все мысли сложатся в полное решение.</p>}
-        <CaseFlow key={active.id} fields={fields} caseRoute={caseRoute} answers={active.answers} questionId={active.currentQuestionId}
+        <CaseFlow key={active.id} fields={fields} caseRoute={caseRoute} caseIntro={active.caseIntro} answers={active.answers} questionId={active.currentQuestionId}
           interviewType={active.params.interviewType} hints={active.hints} hintBusy={hintBusy} onRevealHint={revealHint} onRequestHint={requestHint} selfCheck={selfCheck}
           onQuestion={key => update(active.id, c => ({ ...c, currentQuestionId: key }))}
           onAnswer={(key, value) => update(active.id, c => ({

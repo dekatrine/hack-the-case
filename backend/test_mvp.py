@@ -100,6 +100,28 @@ class MvpTests(unittest.TestCase):
         checkpoint = next(step for step in focused.caseRoute if step.id == 'skill_checkpoint')
         self.assertEqual(checkpoint.nextStepId, 'variant_final')
 
+    @patch('app.main.call_yandex_gpt')
+    def test_product_sense_variant_retries_when_opening_has_no_baseline(self, model):
+        story = {
+            "title": "Первый заказ на маркетплейсе",
+            "intro": "Новые покупатели открывают карточки товаров и могут перейти к оформлению заказа.",
+            "openingQuestion": "Назови один переход в оформлении, который проверишь первым.",
+            "choices": [
+                {"option": "Оформление заказа", "evidence": "Из 80 переходов к доставке только 35 дошли до оплаты.", "question": "Сравни количество переходов к доставке и оплате."},
+                {"option": "Мобильные устройства", "evidence": "За неделю 22 клиента ушли на телефоне и 11 ушли на компьютере.", "question": "В какой группе больше уходов и каких данных не хватает?"},
+            ],
+            "twist": "До конца недели можно изменить только один экран оформления.",
+            "finalQuestion": "Назови одно изменение на выбранном экране и обоснуй его одним фактом.",
+        }
+        revised = {**story, "intro": story["intro"] + " За неделю карточки открыли 120 новых покупателей. В корзину перешли 90."}
+        model.side_effect = [json.dumps(story), json.dumps(revised)]
+        result = generate_case(GenerateCaseRequest(
+            industry="Маркетплейсы", difficulty="Начальный", mvp=True, interviewType="product_sense", variantId="onboarding",
+        ))
+        self.assertEqual(model.call_count, 2)
+        self.assertIn("120 новых покупателей", result.caseIntro)
+        self.assertNotIn("35", result.caseIntro)
+
     @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","grades":[3]}')
     def test_mvp_score_applies_a_deduction_after_grading(self, model):
         request = EvaluateRequest(caseText='Кейс', mvp=True, answers={'problem': 'Вывод'})

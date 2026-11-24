@@ -262,6 +262,24 @@ describe('MVP core flow', () => {
     expect(api.evaluate.mock.lastCall[0].answers).not.toHaveProperty('demand');
   });
 
+
+  it('makes the first question actionable in a saved marketplace case without inventing numbers', () => {
+    const title = 'Добавление функционала для увеличения конверсии на маркетплейсе';
+    const caseIntro = 'Маркетплейс привлекает новых покупателей, но до покупки доходит мало людей.';
+    const caseRoute = [{ id: 'variant_open', question: 'какие функции маркетплейса могут увеличить конверсию в покупки?', chapter: 1 }];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([{
+      id: 'marketplace-case', title, caseIntro, caseText: caseIntro, caseRoute,
+      params: { interviewType: 'product_sense' }, answers: { variant_open: 'Проверю переход к оплате.' }, attempts: [],
+    }]));
+    render(<MvpApp/>);
+    fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
+    expect(screen.getByRole('heading', { name: /Где новым покупателям/ })).toBeTruthy();
+    const context = screen.getByRole('region', { name: 'Данные для текущего шага' });
+    expect(context.textContent).toBe(caseIntro);
+    expect(screen.getByText(/Назови шаг, одно возможное препятствие и сравнение/)).toBeTruthy();
+    expect(screen.getByRole('textbox').value).toBe('Проверю переход к оплате.');
+  });
+
   it('restores a case-specific route and reviews answers to its own questions', async () => {
     const evidence = '| Версия | Ошибки |\n| --- | --- |\n| Новая | 14% |';
     const caseRoute = [
@@ -277,7 +295,7 @@ describe('MVP core flow', () => {
     expect(screen.queryByRole('table')).toBeNull();
     fireEvent.click(screen.getByRole('radio', { name: 'По версиям' }));
     fireEvent.click(screen.getByRole('button', { name: 'Дальше' }));
-    expect(screen.queryByRole('table')).toBeNull();
+    expect(within(screen.getByRole('region', { name: 'Данные для текущего шага' })).getByRole('table')).toBeTruthy();
     expect(openCondition().getByRole('table')).toBeTruthy();
     closeCondition();
     cleanup(); render(<MvpApp/>);

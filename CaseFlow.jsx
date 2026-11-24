@@ -33,11 +33,11 @@ export function initialQuestion(fields, answers, savedQuestion) {
   return missing < 0 ? 0 : missing;
 }
 
-export default function CaseFlow({ fields, caseRoute = [], answers, questionId, onQuestion, onAnswer, onEvaluate, condition, busy, saveError, reviewError, hasChanges, attempts, onReview, interviewType, hints = {}, hintBusy, onRevealHint, onRequestHint, selfCheck = false }) {
+export default function CaseFlow({ fields, caseRoute = [], caseIntro, answers, questionId, onQuestion, onAnswer, onEvaluate, condition, busy, saveError, reviewError, hasChanges, attempts, onReview, interviewType, hints = {}, hintBusy, onRevealHint, onRequestHint, selfCheck = false }) {
   const [currentKey, setCurrentKey] = useState(() => fields[initialQuestion(fields, answers, questionId)][0]);
   const index = Math.max(0, fields.findIndex(([id]) => id === currentKey));
   const [key, label, hint, placeholder] = fields[index];
-  const { evidence, options, scene, longAnswer, chapter, chapterTitle, nextByAnswer } = caseRoute[index] || {};
+  const { evidence, options, scene, longAnswer, chapter, chapterTitle, nextByAnswer, answerFormat } = caseRoute[index] || {};
   const story = !!chapter;
   const hasNext = index < fields.length - 1 || (story && Object.keys(nextByAnswer || {}).length > 0);
   const previous = story && index > 0 ? answers[fields[index - 1][0]] : '';
@@ -50,8 +50,10 @@ export default function CaseFlow({ fields, caseRoute = [], answers, questionId, 
     : longAnswer ? 'Начни с вывода, затем подкрепи его данными или ограничением из условия.'
     : interviewType === 'product_strategy' && key === 'analysis' ? 'Выбери одну цифру о рынке или ресурсах и объясни, почему она усиливает выбранный вариант.'
     : RESPONSE_GUIDANCE[key] || (evidence ? 'Открой данные шага и укажи, какое сравнение поддерживает твой вывод.' : 'Достаточно одного конкретного аргумента, который связан с условием.');
-  const guidance = [hint, detail].filter(Boolean).join(' ');
-  const answerDescription = [!selfCheck && `hint-${key}`, notice && 'case-step-error'].filter(Boolean).join(' ') || undefined;
+  const guidance = answerFormat || hint || detail;
+  const coaching = GUIDES[key] || (hint && hint !== answerFormat ? hint : guidance);
+  const openingContext = index === 0 && story && caseIntro && !scene;
+  const answerDescription = [(!selfCheck || answerFormat) && `hint-${key}`, notice && 'case-step-error'].filter(Boolean).join(' ') || undefined;
   const conditionSheet = useRef(null);
   const conditionBody = useRef(null);
   const conditionButton = useRef(null);
@@ -78,7 +80,7 @@ export default function CaseFlow({ fields, caseRoute = [], answers, questionId, 
   };
   const forward = () => {
     if (!answers[key]?.trim()) {
-      setNotice(options?.length ? 'Выбери один вариант.' : longAnswer ? 'Напиши решение и объясни свои аргументы.' : 'Напиши ответ на этот вопрос — достаточно одной-двух фраз.');
+      setNotice(options?.length ? 'Выбери один вариант.' : answerFormat || (longAnswer ? 'Напиши решение и объясни свои аргументы.' : 'Напиши ответ на этот вопрос — достаточно одной-двух фраз.'));
       input.current?.focus(); return;
     }
     if (hasNext && index < fields.length - 1) { move(index + 1); return; }
@@ -110,7 +112,12 @@ export default function CaseFlow({ fields, caseRoute = [], answers, questionId, 
           </button>
         </div>
         <h2 ref={heading} tabIndex={-1} id={`question-${key}`}>{label}</h2>
-        {!selfCheck && <p className="mvp-question-hint" id={`hint-${key}`}>{guidance}</p>}
+        {(scene || evidence || openingContext) && <section className="mvp-step-evidence" aria-label="Данные для текущего шага">
+          {openingContext && <CaseContent text={caseIntro}/>}
+          {scene && <CaseContent text={scene}/>}
+          {evidence && <CaseContent text={evidence}/>}
+        </section>}
+        {(!selfCheck || answerFormat) && <p className="mvp-question-hint" id={`hint-${key}`}>{answerFormat && <strong>Что написать. </strong>}{guidance}</p>}
         {story && Object.keys(nextByAnswer || {}).length > 0 && fields.slice(index + 1).some(([id]) => answers[id]?.trim()) &&
           <p className="mvp-question-hint">Если изменить выбор, ответы после этого шага начнутся заново.</p>}
         {options?.length ? <fieldset className="mvp-step-options" aria-labelledby={`question-${key}`} aria-describedby={answerDescription} disabled={!!busy}>
@@ -121,15 +128,15 @@ export default function CaseFlow({ fields, caseRoute = [], answers, questionId, 
         </fieldset> : <label className={`mvp-question-input${longAnswer ? ' mvp-question-input-long' : ''}`} htmlFor={`answer-${key}`}><span className="mvp-visually-hidden">{index + 1}. {label}</span><textarea ref={input} id={`answer-${key}`} aria-describedby={answerDescription} aria-invalid={notice ? true : undefined} placeholder={selfCheck ? 'Твой ответ…' : longAnswer ? 'Разверни аргументы и опирайся на данные…' : placeholder || 'Запиши ход своих мыслей…'} rows={longAnswer ? 9 : story ? 3 : 6} disabled={!!busy} value={answers[key] || ''} onChange={e => { setNotice(''); onAnswer(key, e.target.value); }}/></label>}
         {notice && <p id="case-step-error" role="alert" className="mvp-step-error">{notice}</p>}
         {!selfCheck && <><div className="mvp-step-help">
-          <button type="button" className="mvp-step-hint-toggle" disabled={!!busy || hintBusy} aria-expanded={showHint} aria-controls="case-step-hint" onClick={() => {
+          {coaching !== guidance && <button type="button" className="mvp-step-hint-toggle" disabled={!!busy || hintBusy} aria-expanded={showHint} aria-controls="case-step-hint" onClick={() => {
             if (!showHint && !hints[key]?.basic) onRevealHint(key);
             setShowHint(!showHint);
-          }}>{showHint ? 'Скрыть подсказку' : hints[key]?.basic ? 'Обычная подсказка' : 'Обычная подсказка · −1'}</button>
+          }}>{showHint ? 'Скрыть подсказку' : hints[key]?.basic ? 'Обычная подсказка' : 'Обычная подсказка · −1'}</button>}
           {stepHints.length < 2 && <button type="button" className="mvp-step-hint-toggle" disabled={!!busy || hintBusy} onClick={askForHint}>
             <Sparkles size={15} aria-hidden="true"/>{hintBusy ? 'Готовим подсказку…' : stepHints.length ? 'Ещё ИИ-подсказка · −2' : 'ИИ-подсказка · −2'}
           </button>}
         </div>
-        {showHint && <div id="case-step-hint" className="mvp-step-hint"><b>С чего начать</b><p>{GUIDES[key] || 'Запиши, что уже известно из условия, и отдельно назови одно допущение, которое меняет твой вывод.'}</p></div>}
+        {showHint && <div id="case-step-hint" className="mvp-step-hint"><b>С чего начать</b><p>{coaching}</p></div>}
         {!!stepHints.length && <div className="mvp-step-hint" aria-live="polite"><b>ИИ-подсказки</b>{stepHints.map(text => <p key={text}>{text}</p>)}</div>}
         {hintError?.key === key && <p className="mvp-step-error" role="alert">{hintError.message}</p>}</>}
         <p className="mvp-muted mvp-autosave" role="status">{saveError ? 'Сохранение недоступно' : 'Черновик сохраняется в этом браузере'}</p>

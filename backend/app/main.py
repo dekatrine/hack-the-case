@@ -999,7 +999,8 @@ def evaluate(payload: EvaluateRequest) -> EvaluateResponse:
         if case_route:
             answers = "\n\n".join(
                 "\n".join(filter(None, (
-                    f"[{step.id}] {step.question}", step.scene, step.evidence,
+                    f"[{step.id}] {step.question}",
+                    f"Что требуется в ответе: {step.hint}" if step.hint else "", step.scene, step.evidence,
                     "Ответ: " + (payload.answers.get(step.id, "").strip() or "(пропущено)"),
                 )))
                 for step in case_route
