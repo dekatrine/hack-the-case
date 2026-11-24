@@ -18,7 +18,7 @@ export function InterviewCondition({ run, label = 'Условие' }) {
   return <details className="iv-condition">
     <summary>{label}</summary>
     <div className="iv-condition-content">
-      {run.configured ? <CaseContent text={run.seed.intro}/> : <p>{run.seed.intro}</p>}
+      {run.configured ? <CaseContent text={run.seed.intro} highlightNumbers/> : <p>{run.seed.intro}</p>}
       {run.story && <p>{run.story}</p>}
     </div>
   </details>;

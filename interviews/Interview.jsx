@@ -417,6 +417,7 @@ export default function Interview({ onExit }) {
       {run.history.at(-1)?.opened.length > 0 && <p className="iv-feedback" role="status"><Check size={16}/> Улика открыта и добавлена в карту</p>}
       {run.history.at(-1)?.assessment?.error && <p className="iv-warning" role="status">{run.history.at(-1).assessment.error}</p>}
       <div className={move.kind === 'CHALLENGE' ? 'iv-bubble iv-challenge' : 'iv-bubble'}>
+        {['ASK', 'DATA', 'DEMAND'].includes(move.kind) && <div className="iv-who"><span aria-hidden="true">{run.seed.profile[0]}</span><small>{run.seed.profile} · интервьюер</small></div>}
         {['CHALLENGE', 'CLARIFY'].includes(move.kind) && <span className="iv-tag">Уточнение интервьюера</span>}
         {move.kind === 'TWIST' && <span className="iv-tag">Новое условие</span>}
         {selected && <blockquote>{selected.value !== selected.quote && <strong>{selected.value} · </strong>}«{selected.quote}»</blockquote>}

@@ -1,15 +1,15 @@
 import React from 'react';
 
 // Render the model's limited Markdown as React nodes, never as raw HTML.
-function inline(text) {
+function inline(text, highlight = false) {
   return text.split(/(\*\*[^*]+\*\*|__[^_]+__|`[^`]+`|\*[^*\n]+\*)/g).map((part, i) => {
     if (/^(\*\*|__)/.test(part)) return <strong key={i}>{part.slice(2, -2)}</strong>;
     if (part.startsWith('`')) return <code key={i}>{part.slice(1, -1)}</code>;
     if (part.startsWith('*') && part.endsWith('*')) return <em key={i}>{part.slice(1, -1)}</em>;
-    return part;
+    return highlight ? part.split(/(\d+(?:[.,]\d+)?\s?%|\d{2,})/g).map((piece, j) => j % 2 ? <b className="iv-num" key={`${i}-${j}`}>{piece}</b> : piece) : part;
   });
 }
-export default function CaseContent({ text }) {
+export default function CaseContent({ text, highlightNumbers = false }) {
   const lines = text.replace(/\r\n/g, '\n').split('\n');
   const nodes = [];
   let i = 0;
@@ -33,8 +33,8 @@ export default function CaseContent({ text }) {
       const List = ordered ? 'ol' : 'ul'; nodes.push(<List key={key}>{items.map((x,j) => <li key={j}>{inline(x)}</li>)}</List>); continue;
     }
     const fact = line.match(/^\*\*([^*]+?):?\*\*\s*:?\s+(.+)$/);
-    if (fact) nodes.push(<p className="mvp-case-fact" key={key}><strong>{fact[1].replace(/:$/, '')}</strong><span>{inline(fact[2])}</span></p>);
-    else nodes.push(<p key={key}>{inline(line)}</p>);
+    if (fact) nodes.push(<p className={`mvp-case-fact${/^Задача/.test(fact[1]) ? ' is-task' : ''}`} key={key}><strong>{fact[1].replace(/:$/, '')}</strong><span>{inline(fact[2], highlightNumbers)}</span></p>);
+    else nodes.push(<p key={key}>{inline(line, highlightNumbers)}</p>);
     i++;
   }
   return <div className="mvp-case-content">{nodes}</div>;
