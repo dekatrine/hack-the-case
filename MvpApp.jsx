@@ -160,6 +160,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
   const [savedTheory, setSavedTheory] = useState(readSavedTheory);
   const [bookChapter, setBookChapter] = useState(1);
   const [theorySavedOnly, setTheorySavedOnly] = useState(false);
+  const [studyLesson, setStudyLesson] = useState(null);
   const [theoryError, setTheoryError] = useState('');
   const toggleTheory = id => {
     const next = savedTheory.includes(id) ? savedTheory.filter(x => x !== id) : [...savedTheory, id];
@@ -371,7 +372,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
   };
   const hasChanges = active && hasAttemptChanges(active, attempts.at(-1));
 
-  if (screen === 'interviews') return <Interview start={interviewStart} onExit={() => { setInterviewStart(null); go('home'); }} onStudy={target => { setInterviewStart(null); if (target === 'cards') setTheorySavedOnly(false); go(target); }}/>;
+  if (screen === 'interviews') return <Interview start={interviewStart} onExit={() => { setInterviewStart(null); go('home'); }} onStudy={(target, params = {}) => { setInterviewStart(null); setStudyLesson(params.lessonId || null); if (params.chapter) setBookChapter(params.chapter); if (target === 'cards') setTheorySavedOnly(false); go(target); }}/>;
 
   return <div className="mvp-app">
     <header className="mvp-header">
@@ -388,9 +389,9 @@ export default function MvpApp({ initialScreen = 'home' }) {
       {error && <p role="alert" className="mvp-notice">{error}</p>}
       {theoryError && <p role="alert" className="mvp-notice">{theoryError}</p>}
       {['learning', 'theory', 'cards'].includes(screen) && <div className="mvp-lib-filter" role="group" aria-label="Раздел учёбы">
-        {[['learning', 'Путь'], ['theory', 'Теория'], ['cards', 'Карточки']].map(([key, label]) => <button type="button" key={key} aria-pressed={screen === key} onClick={() => { if (key === 'cards') setTheorySavedOnly(false); go(key); }}>{label}</button>)}
+        {[['learning', 'Путь'], ['theory', 'Теория'], ['cards', 'Карточки']].map(([key, label]) => <button type="button" key={key} aria-pressed={screen === key} onClick={() => { if (key === 'cards') setTheorySavedOnly(false); if (key === 'learning') setStudyLesson(null); go(key); }}>{label}</button>)}
       </div>}
-      {screen === 'learning' && <LearningPath onOpenCases={() => go('library')}/>}
+      {screen === 'learning' && <LearningPath key={studyLesson || 'path'} focusLessonId={studyLesson} onOpenCases={() => go('library')}/>}
       {screen === 'theory' && <BookTheoryPage initialChapter={bookChapter} savedIds={savedTheory} onToggle={toggleTheory} onResume={active ? () => go('solve') : null}/>}
       {screen === 'cards' && <TheoryPage onOpenChapter={number => { setBookChapter(number); go('theory'); }} savedIds={savedTheory} onToggle={toggleTheory} initialSavedOnly={theorySavedOnly} onResume={active ? () => go('solve') : null}/>}
       {screen === 'home' && !profile && cases.length === 0 && readRuns().length === 0 && <Onboarding onDone={answers => { setProfile(answers); }}/>}

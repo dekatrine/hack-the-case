@@ -13,7 +13,7 @@ function loadProgress() {
     return { completed: Array.isArray(raw.completed) ? raw.completed : [], mistakes: raw.mistakes && typeof raw.mistakes === 'object' ? raw.mistakes : {}, reviews: raw.reviews && typeof raw.reviews === 'object' ? raw.reviews : {} };
   } catch { return { completed: [], mistakes: {}, reviews: {} }; }
 }
-export default function LearningPath({ onOpenCases, onOpenCards, onOpenTheory }) {
+export default function LearningPath({ onOpenCases, focusLessonId }) {
   const [progress,setProgress] = useState(loadProgress);
   const [active,setActive] = useState(null);
   const [taskIndex,setTaskIndex] = useState(0);
@@ -32,13 +32,18 @@ export default function LearningPath({ onOpenCases, onOpenCards, onOpenTheory })
   const current = next < 0 ? lessons.length-1 : next;
   const due = dueReviews(progress.reviews || {}, completed);
   const challenge = chooseChallenge(progress.reviews?.[lessons[active ?? current]?.id]?.mastery);
-  function openLesson(index) {
-    if (index > current) return;
+  function openLesson(index, force = false) {
+    if (index > current && !force) return;
     setSimulator(false);
     setActive(index);setTaskIndex(0);setPhase('theory');setSelected(null);setNumeric('');setResult(null);
     setOrder([...(lessons[index].tasks?.[0]?.items || lessons[index].task?.items || [])].reverse());
     track('lesson_started',{lessonId:lessons[index].id,skillPath:SKILL_PATH.id});
   }
+  useEffect(() => {
+    const index = lessons.findIndex(l => l.id === focusLessonId);
+    if (index >= 0) openLesson(index, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusLessonId]);
   function getTask(lesson,index) {
     if (lesson.tasks) return lesson.tasks[index];
     const tier=chooseChallenge(progress.reviews?.[lesson.id]?.mastery);
@@ -74,7 +79,7 @@ export default function LearningPath({ onOpenCases, onOpenCards, onOpenTheory })
     <div className="lp-rail">{lessons.map((lesson,i)=><button type="button" key={lesson.id} className={['lp-node',completed.includes(lesson.id)?'complete':'',i===current?'current':'',lesson.final?'final':''].join(' ')} disabled={i>current} onClick={()=>openLesson(i)}>
       <span className="lp-node-number">{completed.includes(lesson.id)?'✓':String(i+1).padStart(2,'0')}</span><span className="lp-node-copy"><strong>{lesson.title}</strong><small>{lesson.skill} · {lesson.final?'Итоговая задача':'3–5 минут'}</small></span><span className="lp-node-meta">{completed.includes(lesson.id)?'Пройдено':i>current?'Закрыто':'Начать →'}</span>
     </button>)}</div>
-    <div className="lp-actions"><button className="lp-primary" onClick={()=>setDecisionOpen(true)}>Бизнес-кейс: решения и бюджет →</button><button className="lp-secondary" onClick={()=>setSimulator(true)}>Калькулятор метрик →</button><button className="lp-secondary" onClick={onOpenCases}>Перейти к полным кейсам →</button>{onOpenCards&&<button className="lp-secondary" onClick={onOpenCards}>Карточки по понятиям →</button>}{onOpenTheory&&<button className="lp-secondary" onClick={onOpenTheory}>Теория по главам →</button>}</div>
+    <div className="lp-actions"><button className="lp-primary" onClick={()=>setDecisionOpen(true)}>Бизнес-кейс: решения и бюджет →</button><button className="lp-secondary" onClick={()=>setSimulator(true)}>Калькулятор метрик →</button><button className="lp-secondary" onClick={onOpenCases}>Перейти к полным кейсам →</button></div>
   </div>;
   const lesson=lessons[active];const task=getTask(lesson,taskIndex);
   const canCheck=(task.type==='choice'||task.type==='chart')?selected!==null:task.type==='order'?order.length===task.items.length:numeric.trim()!=='';

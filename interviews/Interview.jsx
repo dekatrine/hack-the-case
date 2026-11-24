@@ -4,6 +4,7 @@ import { api } from '../api/client.js';
 import { track } from '../api/analytics.js';
 import { advance, createRun, currentTurn, optionLabel, plan, skeletons, targetEntry } from './engine.js';
 import { assessTurn, debrief } from './rubric.js';
+import { linksForSkill } from '../learning/skillLinks.js';
 import { compareWithPrevious } from './compare.js';
 import InterviewBrief, { InterviewCondition } from './InterviewBrief.jsx';
 import InterviewSetup, { defaultInterviewSettings } from './InterviewSetup.jsx';
@@ -83,6 +84,8 @@ function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError, onStud
   let evaluated;
   try { evaluated = JSON.parse(run.review?.evaluation || 'null'); } catch { /* Plain text feedback. */ }
   const { seed, skeleton } = run;
+  const weakest = result?.results?.length ? [...result.results].sort((a, b) => a.grade - b.grade)[0] : null;
+  const weakLinks = weakest && weakest.grade < 2.5 ? linksForSkill(weakest.id) : null;
   let comparison = null;
   try { comparison = compareWithPrevious(run, readRuns()); } catch { comparison = null; }
   return <>
@@ -149,8 +152,10 @@ function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError, onStud
     <section className="iv-bubble"><h2>Как усилить решение</h2><p>{result.recommendation}</p></section>
     <Drill run={run} result={result}/></>}
     {onStudy && <section className="iv-bubble iv-study" aria-label="Чтобы подтянуть слабое место"><h2>Чтобы подтянуть слабое место</h2>
-      <p>Короткая учёба по навыкам, которые просели в этом разборе.</p>
-      <div className="iv-study-links"><button className="iv-text-button" onClick={() => onStudy('learning')}>Уроки по навыкам →</button><button className="iv-text-button" onClick={() => onStudy('theory')}>Теория по главам →</button><button className="iv-text-button" onClick={() => onStudy('cards')}>Карточки по понятиям →</button></div>
+      {weakLinks ? <><p>Слабее всего в этом разборе: {weakest.label}.</p>
+        <div className="iv-study-links"><button className="iv-text-button" onClick={() => onStudy('learning', { lessonId: weakLinks.lessonId })}>Урок: {weakLinks.lessonTitle} →</button><button className="iv-text-button" onClick={() => onStudy('theory', { chapter: weakLinks.chapter })}>Глава {weakLinks.chapter}: {weakLinks.chapterTitle} →</button></div></>
+        : <><p>Короткая учёба по навыкам, которые просели в этом разборе.</p>
+        <div className="iv-study-links"><button className="iv-text-button" onClick={() => onStudy('learning')}>Уроки по навыкам →</button><button className="iv-text-button" onClick={() => onStudy('theory')}>Теория по главам →</button><button className="iv-text-button" onClick={() => onStudy('cards')}>Карточки по понятиям →</button></div></>}
     </section>}
     <button className="iv-primary" onClick={onNext}>Следующий кейс <ArrowRight size={18}/></button>
   </>;
