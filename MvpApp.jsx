@@ -13,6 +13,8 @@ import { guideCaseRoute } from './cases/caseWriting.js';
 import CaseFlow from './CaseFlow.jsx';
 import Interview from './interviews/Interview.jsx';
 import { readRuns } from './interviews/storage.js';
+import Home from './home/Home.jsx';
+import Progress from './home/Progress.jsx';
 import { debrief } from './interviews/rubric.js';
 import SearchDiagnostic from './cases/SearchDiagnostic.jsx';
 import { SEARCH_CASE_INTRO, SEARCH_CASE_TITLE, SEARCH_ROUTE, SEARCH_SLICES } from './cases/searchDiagnostic.js';
@@ -123,22 +125,35 @@ function Review({ value, score }) {
     ))}
   </>;
 }
-function InterviewEntry({ onOpen }) {
+function InterviewEntry({ onOpen, onOpenRun, showList }) {
   let finished = [];
   try { finished = readRuns(); } catch { finished = []; }
   const last = finished[0];
   let score = null;
-  try { score = last ? debrief(last).final : null; } catch { score = null; }
-  return <button type="button" className="mvp-starter mvp-search-starter" onClick={onOpen}>
-    <span className="mvp-starter-tag">Собеседование<ArrowUpRight size={17}/></span>
-    <b>{finished.length ? 'Пройти ещё одно собеседование' : 'Пройти кейс как собеседование'}</b>
-    <p>{finished.length
-      ? `Пройдено: ${finished.length}${score !== null ? `. Последний результат: ${score}/100` : ''}. Каждый раз новый кейс.`
-      : 'Интервьюер задаёт вопросы, ты запрашиваешь данные и защищаешь решения. В конце разбор с цитатами из твоих ответов.'}</p>
-  </button>;
+  try { score = last && !last.configured ? debrief(last).final : null; } catch { score = null; }
+  return <>
+    <button type="button" className="mvp-starter mvp-search-starter" onClick={onOpen}>
+      <span className="mvp-starter-tag">Собеседование<ArrowUpRight size={17}/></span>
+      <b>{finished.length ? 'Пройти ещё одно собеседование' : 'Пройти кейс как собеседование'}</b>
+      <p>{finished.length
+        ? `Пройдено: ${finished.length}${score !== null ? `. Последний результат: ${score}/100` : ''}. Каждый раз новый кейс.`
+        : 'Интервьюер задаёт вопросы, ты запрашиваешь данные и защищаешь решения. В конце разбор с цитатами из твоих ответов.'}</p>
+    </button>
+    {showList && finished.length > 0 && <div className="mvp-interview-list">
+      {finished.slice(0, 5).map(run => {
+        let value = null;
+        try { value = run.configured ? run.review?.score?.final ?? null : debrief(run).final; } catch { value = null; }
+        return <button type="button" className="mvp-starter" key={run.id} onClick={() => onOpenRun(run.id)}>
+          <span className="mvp-starter-tag">Собес · {new Date(run.updatedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}{value !== null ? ` · ${value}/100` : ''}<ArrowUpRight size={17}/></span>
+          <b>{run.configured ? run.skeleton.title : run.skeleton.label}</b>
+          <p>{run.seed.industry.split(' / ').at(-1)}</p>
+        </button>;
+      })}
+    </div>}
+  </>;
 }
 
-export default function MvpApp() {
+export default function MvpApp({ initialScreen = 'home' }) {
   const [savedTheory, setSavedTheory] = useState(readSavedTheory);
   const [bookChapter, setBookChapter] = useState(1);
   const [theorySavedOnly, setTheorySavedOnly] = useState(false);
@@ -149,7 +164,9 @@ export default function MvpApp() {
     catch { setTheoryError('Не удалось сохранить материал в браузере. Попробуй ещё раз.'); }
   };
   const [cases, setCases] = useState(loadCases);
-  const [screen, setScreen] = useState('library');
+  const [screen, setScreen] = useState(initialScreen);
+  const [interviewStart, setInterviewStart] = useState(null);
+  const [libFilter, setLibFilter] = useState('all');
   const [selected, setSelected] = useState(null);
   const [attemptIndex, setAttemptIndex] = useState(null);
   const [config, setConfig] = useState(null);
@@ -338,14 +355,16 @@ export default function MvpApp() {
   };
   const hasChanges = active && hasAttemptChanges(active, attempts.at(-1));
 
-  if (screen === 'interviews') return <Interview onExit={() => go('library')}/>;
+  if (screen === 'interviews') return <Interview start={interviewStart} onExit={() => { setInterviewStart(null); go('home'); }}/>;
 
   return <div className="mvp-app">
     <header className="mvp-header">
       <button className="clean-brand" disabled={!!busy} onClick={() => go('library')} aria-label="Hack the Case — мои кейсы"><span className="mark">H</span><b>Hack the Case</b></button>
       <nav aria-label="Основная навигация">
         <button disabled={!!busy} onClick={() => go('interviews')}>Интервью</button>
+        <button aria-current={screen === 'home' ? 'page' : undefined} disabled={!!busy} onClick={() => go('home')}>Главная</button>
         <button aria-current={screen === 'library' ? 'page' : undefined} disabled={!!busy} onClick={() => go('library')}>Мои кейсы</button>
+        <button aria-current={screen === 'progress' ? 'page' : undefined} disabled={!!busy} onClick={() => go('progress')}>Прогресс</button>
         <button aria-current={screen === 'learning' ? 'page' : undefined} disabled={!!busy} onClick={() => go('learning')}>Обучение</button>
         <button aria-current={screen === 'cards' ? 'page' : undefined} disabled={!!busy} onClick={() => { setTheorySavedOnly(false); go('cards'); }}>Карточки</button>
         <button aria-current={screen === 'theory' ? 'page' : undefined} disabled={!!busy} onClick={() => go('theory')}>Теория</button>
@@ -359,8 +378,13 @@ export default function MvpApp() {
       {screen === 'learning' && <LearningPath onOpenCases={() => go('library')}/>}
       {screen === 'theory' && <BookTheoryPage initialChapter={bookChapter} savedIds={savedTheory} onToggle={toggleTheory} onResume={active ? () => go('solve') : null}/>}
       {screen === 'cards' && <TheoryPage onOpenChapter={number => { setBookChapter(number); go('theory'); }} savedIds={savedTheory} onToggle={toggleTheory} initialSavedOnly={theorySavedOnly} onResume={active ? () => go('solve') : null}/>}
-      {screen === 'library' && <InterviewEntry onOpen={() => go('interviews')}/>}
-      {screen === 'library' && (cases.length === 0 ? <>
+      {screen === 'home' && <Home onStart={id => { setInterviewStart({ skeleton: id }); go('interviews'); }} onResume={id => { setInterviewStart({ open: id }); go('interviews'); }} onProgress={() => go('progress')} onLibrary={() => go('library')}/>}
+      {screen === 'progress' && <Progress onStart={id => { setInterviewStart({ skeleton: id }); go('interviews'); }}/>}
+      {screen === 'library' && <div className="mvp-lib-filter" role="group" aria-label="Тип практики">
+        {[['all', 'Все'], ['interview', 'Собесы'], ['self', 'В своём темпе']].map(([key, label]) => <button type="button" key={key} aria-pressed={libFilter === key} onClick={() => setLibFilter(key)}>{label}</button>)}
+      </div>}
+      {screen === 'library' && libFilter !== 'self' && <InterviewEntry onOpen={() => go('interviews')} onOpenRun={id => { setInterviewStart({ open: id }); go('interviews'); }} showList/>}
+      {screen === 'library' && libFilter !== 'interview' && (cases.length === 0 ? <>
         <div className="mvp-page-heading"><div><div className="clean-eyebrow">Твоя практика</div>
         <h1>Мои кейсы<span className="mvp-count">{String(cases.length).padStart(2, '0')}</span></h1>
         <p className="mvp-lead">От первой гипотезы до уверенного решения.</p></div><span className="mvp-small-note"><Clock3 size={15}/>15–20 минут на практику</span></div>

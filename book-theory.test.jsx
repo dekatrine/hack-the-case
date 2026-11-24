@@ -21,7 +21,7 @@ it('navigates book chapters and searches the table of contents', async () => {
   expect(screen.getByText(/Модуль 15 книги · с. 372–381/)).toBeTruthy();
 });
 it('opens the source chapter from a book card and saves it into My cards', async () => {
-  render(<MvpApp/>);
+  render(<MvpApp initialScreen="library"/>);
   fireEvent.click(screen.getByRole('button', { name: 'Карточки' }));
   fireEvent.change(screen.getByLabelText('Поиск по карточкам'), { target: { value: 'Velocity' } });
   fireEvent.click(screen.getByRole('button', { name: 'Читать главу 15 →' }));

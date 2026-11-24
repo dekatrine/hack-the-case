@@ -150,7 +150,7 @@ function shuffled(list, key) {
   return out;
 }
 
-export default function Interview({ onExit }) {
+export default function Interview({ onExit, start: startOptions }) {
   const [runs, setRuns] = useState(() => {
     const draft = readDraft();
     return draft ? [draft, ...readRuns()] : readRuns();
@@ -209,6 +209,17 @@ export default function Interview({ onExit }) {
       for (const item of next.slice(0, 5)) pushRun(item).catch(() => {});
     }).catch(() => {});
     return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!startOptions) return;
+    if (startOptions.open) {
+      const item = runsRef.current.find(entry => entry.id === startOptions.open);
+      if (item) setId(item.id);
+    } else if (startOptions.skeleton) {
+      const skeleton = skeletons.find(entry => entry.id === startOptions.skeleton);
+      if (skeleton) select(skeleton);
+    }
   }, []);
 
   useEffect(() => {

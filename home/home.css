@@ -1,0 +1,20 @@
+.home { display: grid; gap: 14px; max-width: 640px; margin: 0 auto; padding: 8px 0 40px; }
+.home h1 { margin: 0; font-size: clamp(26px, 6vw, 36px); letter-spacing: -.03em; line-height: 1.12; }
+.home h2 { margin: 4px 0 6px; font-size: 19px; }
+.home p { margin: 0; }
+.home-eyebrow, .home-label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #6a7078; font-weight: 650; }
+.home-muted { color: #5b6168; font-size: 14px; line-height: 1.5; }
+.home-card { border: 1px solid #dfe2dd; border-radius: 14px; padding: 16px; background: #fff; display: grid; gap: 6px; }
+.home-main { border-color: #1b1d1f; background: #111315; color: #f2f3f2; }
+.home-main .home-muted, .home-main .home-label { color: #b0b6ba; }
+.home-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; margin-top: 8px; border: 0; border-radius: 999px; background: #d4ff3a; color: #121700; font: inherit; font-weight: 700; cursor: pointer; padding: 0 18px; }
+.home-ghost { background: transparent; border: 1px solid #1b1d1f; color: inherit; }
+.home-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.home-grid strong { font-size: 34px; letter-spacing: -.03em; }
+.home-link { border: 0; background: transparent; font: inherit; font-weight: 650; text-decoration: underline; cursor: pointer; min-height: 44px; }
+.home-trend { width: 100%; height: 90px; }
+.home-skills { display: grid; gap: 10px; margin-top: 6px; }
+.home-meter { height: 6px; border-radius: 9px; background: #e6e9e4; overflow: hidden; margin-top: 4px; }
+.home-meter b { display: block; height: 100%; background: #6d8f00; }
+.home-next { border-left: 3px solid #d4ff3a; }

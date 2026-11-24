@@ -20,7 +20,7 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 async function newCase() {
-  render(<MvpApp/>);
+  render(<MvpApp initialScreen="library"/>);
   fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
   await screen.findByLabelText('02 / Отрасль');
   fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
@@ -48,7 +48,7 @@ describe('MVP core flow', () => {
     api.evaluate.mockResolvedValue({
       evaluation: JSON.stringify({ summary: 'Разбор', topTips: [feedback] }),
     });
-    render(<MvpApp/>);
+    render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Новый кейс' }));
     await screen.findByLabelText('02 / Отрасль');
     fireEvent.click(screen.getByRole('button', { name: /Падение заказов из поиска/ }));
@@ -94,13 +94,13 @@ describe('MVP core flow', () => {
     expect(screen.queryByText(versions.evidence)).toBeNull();
     expect(screen.getByRole('textbox').value).toBe('');
 
-    cleanup(); render(<MvpApp/>);
+    cleanup(); render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
     expect(screen.getByText(funnel.evidence)).toBeTruthy();
   });
 
   it('resumes a self-check with case data and shows the review after submission', async () => {
-    render(<MvpApp/>);
+    render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
     await screen.findByLabelText('02 / Отрасль');
     fireEvent.click(screen.getByRole('button', { name: 'Самопроверка' }));
@@ -115,7 +115,7 @@ describe('MVP core flow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Дальше' }));
     expect(api.evaluate).not.toHaveBeenCalled();
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY))[0].mode).toBe('self_check');
-    cleanup(); render(<MvpApp/>);
+    cleanup(); render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
     expect(screen.getByText('Самопроверка')).toBeTruthy();
     expect(screen.getByText('Шаг 2 из 8')).toBeTruthy();
@@ -145,7 +145,7 @@ describe('MVP core flow', () => {
       evaluation: review,
       practice: { skillId: 'validation', observation: 'Есть проверка и порог решения.', applied: true, assisted: false },
     });
-    render(<MvpApp/>);
+    render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Посмотреть AI-разбор' }));
     fireEvent.click(screen.getByRole('button', { name: 'Потренировать этот навык' }));
     await screen.findByRole('heading', { name: 'Запуск подписки' });
@@ -163,7 +163,7 @@ describe('MVP core flow', () => {
   });
 
   it('shows eight variants per direction and submits the chosen training', async () => {
-    render(<MvpApp/>);
+    render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
     await screen.findByLabelText('02 / Отрасль');
     for (const type of INTERVIEWS) {
@@ -191,7 +191,7 @@ describe('MVP core flow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'ИИ-подсказка · −2' }));
     await screen.findByText('Уточни, для кого актуальна проблема.');
     expect(api.coach).toHaveBeenLastCalledWith(expect.objectContaining({ stepHint: true, stepId: 'problem', answerText: 'Мой первый вывод' }));
-    cleanup(); render(<MvpApp/>);
+    cleanup(); render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
     expect(screen.getByText('Уточни, для кого актуальна проблема.')).toBeTruthy();
     fillCase();
@@ -210,7 +210,7 @@ describe('MVP core flow', () => {
       caseRoute: [{ id: 'practice_final', chapter: 4, question: 'Какое решение предложишь?' }],
       params: { interviewType: 'product_sense' }, answers: { practice_final: 'Запущу пилот.' }, attempts: [],
     }]));
-    render(<MvpApp/>);
+    render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
     fireEvent.click(screen.getByRole('button', { name: 'Получить ИИ-разбор' }));
     await screen.findByRole('heading', { name: 'Разбор решения' });
@@ -228,7 +228,7 @@ describe('MVP core flow', () => {
       { chapter: 4, chapterTitle: 'Решение', id: 'final', question: 'Напиши рекомендацию.', longAnswer: true },
     ];
     api.generate.mockResolvedValueOnce({ caseText: '# Пилот\nВ листе ожидания 80 заявок. Доступен один аналитик.', caseIntro: 'Команда обсуждает запуск.', caseRoute });
-    render(<MvpApp/>);
+    render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: /Как вырастить прибыль/ }));
     await screen.findByLabelText('02 / Отрасль');
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
@@ -246,7 +246,7 @@ describe('MVP core flow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
     fireEvent.click(screen.getByRole('radio', { name: 'Ресурсы' }));
     fireEvent.click(screen.getByRole('button', { name: 'Дальше' }));
-    cleanup(); render(<MvpApp/>);
+    cleanup(); render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
     const team = openCondition();
     expect(team.getByText('Доступен один аналитик.')).toBeTruthy();
@@ -271,7 +271,7 @@ describe('MVP core flow', () => {
       id: 'marketplace-case', title, caseIntro, caseText: caseIntro, caseRoute,
       params: { interviewType: 'product_sense' }, answers: { variant_open: 'Проверю переход к оплате.' }, attempts: [],
     }]));
-    render(<MvpApp/>);
+    render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
     expect(screen.getByRole('heading', { name: /Где новым покупателям/ })).toBeTruthy();
     const context = screen.getByRole('region', { name: 'Данные для текущего шага' });
@@ -287,7 +287,7 @@ describe('MVP core flow', () => {
       { id: 'release_read', question: 'Какой вывод сделаешь?', evidence },
     ];
     api.generate.mockResolvedValueOnce({ caseText: `# Проблема после релиза\n\n**Дополнительный срез данных**\n\n${evidence}`, caseRoute });
-    render(<MvpApp/>);
+    render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: /Почему падает конверсия/ }));
     await screen.findByLabelText('02 / Отрасль');
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
@@ -298,7 +298,7 @@ describe('MVP core flow', () => {
     expect(within(screen.getByRole('region', { name: 'Данные для текущего шага' })).getByRole('table')).toBeTruthy();
     expect(openCondition().getByRole('table')).toBeTruthy();
     closeCondition();
-    cleanup(); render(<MvpApp/>);
+    cleanup(); render(<MvpApp initialScreen="library"/>);
     expect(screen.getByText('1 из 2 ответов')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
     expect(screen.getByText('Шаг 2 из 2')).toBeTruthy();
@@ -319,7 +319,7 @@ describe('MVP core flow', () => {
     const [previous] = JSON.parse(localStorage.getItem(STORAGE_KEY));
     cleanup();
     localStorage.setItem(STORAGE_KEY, JSON.stringify([{ ...previous, archivedAt: new Date().toISOString() }]));
-    render(<MvpApp/>);
+    render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getAllByRole('button', { name: /Новый кейс/ })[0]);
     await screen.findByLabelText('02 / Отрасль');
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
@@ -360,7 +360,7 @@ describe('MVP core flow', () => {
     const error = within(await screen.findByRole('alert'));
     expect(error.getByText('Временная ошибка')).toBeTruthy();
     expect(error.getByText('Ответы сохранены в этом браузере.')).toBeTruthy();
-    cleanup(); render(<MvpApp/>);
+    cleanup(); render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
     expect(screen.getByText('Шаг 8 из 8')).toBeTruthy();
     expect(screen.getByRole('textbox').value).toBe('Мой ответ на вопрос 8');
@@ -396,7 +396,7 @@ describe('MVP core flow', () => {
   });
   it('resumes an older partial draft at its first unanswered question without changing its answers', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([{ id:'older-case', caseText:'Старое условие', title:'Сохранённый кейс', params:{interviewType:'product_sense'}, answers:{problem:'Старая мысль',risk:'Старый риск'}, attempts:[] }]));
-    render(<MvpApp/>);
+    render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name:'Продолжить' }));
     expect(screen.getByText('Шаг 2 из 8')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name:/^Шаг 1:/ }));
@@ -405,7 +405,7 @@ describe('MVP core flow', () => {
   });
   it('retries generation without creating empty cases or duplicate submissions', async () => {
     api.generate.mockRejectedValueOnce(new Error('Генерация недоступна'));
-    render(<MvpApp/>);
+    render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
     await screen.findByLabelText('02 / Отрасль');
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
@@ -417,7 +417,7 @@ describe('MVP core flow', () => {
   });
   it('opens a suggested topic and submits the selected direction and level', async () => {
     api.config.mockResolvedValue({ industries: ['Маркетплейсы'], difficultyLevels: { Начальный: 'Просто', Средний: 'Сложнее' } });
-    render(<MvpApp/>);
+    render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: /Как вырастить прибыль/ }));
     await screen.findByLabelText('02 / Отрасль');
     expect(screen.getByRole('button', { name: /Продуктовая стратегия/ }).getAttribute('aria-pressed')).toBe('true');
@@ -451,7 +451,7 @@ describe('MVP core flow', () => {
     expect(screen.getByRole('button', { name: 'Мои карточки · 1' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('heading', { name: 'Сегментация' })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Конверсия' })).toBeNull();
-    cleanup(); render(<MvpApp/>);
+    cleanup(); render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Карточки' }));
     fireEvent.click(screen.getByRole('button', { name: 'Мои карточки · 1' }));
     fireEvent.click(screen.getByRole('button', { name: 'В моих карточках · убрать' }));
@@ -461,7 +461,7 @@ describe('MVP core flow', () => {
   it('recovers config loading and handles invalid storage', async () => {
     localStorage.setItem(STORAGE_KEY, '{broken');
     api.config.mockRejectedValueOnce(new Error('Offline'));
-    render(<MvpApp/>);
+    render(<MvpApp initialScreen="library"/>);
     fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать кейс' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Повторить загрузку' }));
     await waitFor(() => expect(screen.getByLabelText('02 / Отрасль').value).toBe('Маркетплейсы'));

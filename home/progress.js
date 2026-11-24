@@ -1,0 +1,42 @@
+import { debrief } from '../interviews/rubric.js';
+
+export const SKILL_LABELS = {
+  structure: 'Структура', data: 'Данные', hypotheses: 'Гипотезы', choice: 'Выбор и приоритет',
+  metrics: 'Метрики', risks: 'Риски', communication: 'Коммуникация',
+};
+const DIAGNOSIS_SKILLS = ['metrics', 'data', 'risks'];
+
+// Сводка по завершённым интервью по скелету (у настраиваемых нет локальной оценки).
+export function summarize(runs) {
+  const scored = runs.filter(run => run.status === 'finished' && !run.configured)
+    .map(run => ({ run, result: debrief(run) }))
+    .sort((a, b) => a.run.updatedAt - b.run.updatedAt);
+  const skills = Object.keys(SKILL_LABELS).map(id => {
+    const grades = scored.map(({ result }) => result.results.find(row => row.id === id)?.grade).filter(Number.isFinite);
+    const recent = grades.slice(-3);
+    return { id, label: SKILL_LABELS[id], percent: recent.length ? Math.round(recent.reduce((s, g) => s + g, 0) / recent.length / 3 * 100) : null };
+  });
+  const known = skills.filter(skill => skill.percent !== null).sort((a, b) => a.percent - b.percent);
+  const weakest = known[0] || null;
+  return {
+    total: runs.filter(run => run.status === 'finished').length,
+    scores: scored.map(({ result }) => result.final),
+    average: scored.length ? Math.round(scored.reduce((s, { result }) => s + result.final, 0) / scored.length) : null,
+    skills, weakest, strongest: known.at(-1) || null,
+  };
+}
+
+export function recommendedSkeleton(summary) {
+  return summary.weakest && DIAGNOSIS_SKILLS.includes(summary.weakest.id) ? 'diagnosis' : 'discovery';
+}
+
+// Недельный ритм: сколько недель из последних четырёх есть хотя бы один собес.
+export function weeklyRhythm(runs, now = Date.now()) {
+  const week = 7 * 24 * 3600 * 1000;
+  const done = runs.filter(run => run.status === 'finished');
+  let active = 0;
+  for (let i = 0; i < 4; i += 1) {
+    if (done.some(run => now - run.updatedAt >= i * week && now - run.updatedAt < (i + 1) * week)) active += 1;
+  }
+  return active;
+}

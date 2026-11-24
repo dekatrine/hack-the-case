@@ -362,3 +362,8 @@ html:has(.mvp-condition-sheet[open]) { overflow:hidden; }
 .mvp-search-case .mvp-step-evidence > p { margin: 0 0 8px; }
 .mvp-search-case .mvp-step-navigation { flex-wrap: wrap; }
 .mvp-search-starter { margin-bottom: 20px; width: 100%; }
+
+.mvp-lib-filter { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
+.mvp-lib-filter button { min-height: 40px; padding: 0 14px; border: 1px solid #dfe2dd; border-radius: 999px; background: #fff; font: inherit; cursor: pointer; }
+.mvp-lib-filter button[aria-pressed="true"] { background: #111315; color: #f2f3f2; border-color: #111315; }
+.mvp-interview-list { display: grid; gap: 10px; margin-bottom: 14px; }
