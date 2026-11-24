@@ -31,12 +31,15 @@ function makeSeed(skeleton, axes) {
   const [twistId, twist] = twists[twistIndex];
   const discovery = skeleton.id === 'discovery';
   const experiments = skeleton.id === 'experiments';
-  const groups = experiments ? ['Новые', 'Вернувшиеся', 'Постоянные'] : discovery ? ['Разовые', 'Периодические', 'Регулярные'] : ['Группа A', 'Группа B', 'Группа C'];
+  const market = skeleton.id === 'market';
+  const groups = market ? ['Частные клиенты', 'Малый бизнес', 'Крупные компании'] : experiments ? ['Новые', 'Вернувшиеся', 'Постоянные'] : discovery ? ['Разовые', 'Периодические', 'Регулярные'] : ['Группа A', 'Группа B', 'Группа C'];
   const shares = [40 + industryIndex % 5, 34 - industryIndex % 5, 26];
   const focus = truthIndex % groups.length;
-  const base = experiments ? [3.2, 6.1, 9.4].map(rate => rate + industryIndex / 20) : discovery ? [6, 22, 32].map(rate => rate + industryIndex % 3) : [4, 4.5, 4.15].map(rate => rate + industryIndex / 10);
+  const marketRates = [12, 6, 3].map(rate => rate + industryIndex % 3);
+  const topDown = [2, 1.8, 2.4][trapIndex];
+  const base = market ? marketRates.map(rate => rate * topDown) : experiments ? [3.2, 6.1, 9.4].map(rate => rate + industryIndex / 20) : discovery ? [6, 22, 32].map(rate => rate + industryIndex % 3) : [4, 4.5, 4.15].map(rate => rate + industryIndex / 10);
   const effect = [1.6, 2.1, 1.2][trapIndex];
-  const rates = experiments ? base.map((rate, i) => i === focus ? rate + effect : rate) : discovery ? base : base.map((rate, i) => i === focus ? rate - 1.5 : rate);
+  const rates = market ? marketRates : experiments ? base.map((rate, i) => i === focus ? rate + effect : rate) : discovery ? base : base.map((rate, i) => i === focus ? rate - 1.5 : rate);
   const before = mean(shares, base);
   const current = mean(shares, rates);
   const recovery = [87, 80, 92][trapIndex];
@@ -45,7 +48,14 @@ function makeSeed(skeleton, axes) {
   const lift = [2, 3, 1][trapIndex];
   const guardrail = [8, 12, 6][trapIndex];
   const margin = [4, 6, 2][trapIndex];
-  const trapNote = experiments ? [
+  const audience = 5 + industryIndex;
+  const yearly = [600, 900, 1500][trapIndex];
+  const billions = value => (audience * value / 100 * yearly / 1000).toLocaleString('ru-RU', { maximumFractionDigits: 1 });
+  const trapNote = market ? [
+    'Оценка сверху складывает группы, которые частично пересекаются.',
+    'В расчёт вошли регионы, где услуга пока недоступна.',
+    'Опрос охватил только тех, кто уже пользуется услугой.',
+  ][trapIndex] : experiments ? [
     'Часть пользователей могла видеть оба варианта после смены устройства.',
     'Тест шёл в неделю распродажи, когда спрос выше обычного.',
     'Журнал назначения групп и аналитика показывают разное число людей.',
@@ -55,17 +65,27 @@ function makeSeed(skeleton, axes) {
     'Журнал операций и аналитика показывают разные числа. Проверь, что считает каждый источник.',
   ][trapIndex];
   const scenes = {
-    segments: table('Показатели по группам', experiments ? ['Группа', 'Доля пользователей', 'Контроль', 'Вариант'] : discovery ? ['Группа', 'Доля покупателей', 'Купили снова'] : ['Группа', 'Доля пользователей', 'Конверсия до', 'Конверсия после'],
-      groups.map((group, i) => [group, percent(shares[i]), percent(base[i]), ...(!discovery ? [percent(rates[i])] : [])])),
+    segments: table('Показатели по группам', market ? ['Группа', 'Доля аудитории', 'Готовы платить'] : experiments ? ['Группа', 'Доля пользователей', 'Контроль', 'Вариант'] : discovery ? ['Группа', 'Доля покупателей', 'Купили снова'] : ['Группа', 'Доля пользователей', 'Конверсия до', 'Конверсия после'],
+      groups.map((group, i) => market ? [group, percent(shares[i]), percent(rates[i])] : [group, percent(shares[i]), percent(base[i]), ...(!discovery ? [percent(rates[i])] : [])])),
     voice,
     experiment: `По сравнению с группой без изменений доля повторных заказов выросла на ${lift} п.п., а отписок стало на ${guardrail}% больше. Заработок с одного заказа снизился на ${margin}%. ${trapNote}`,
     pilot: table('Конверсия до и после исправления', ['До падения', 'На минимуме', 'После пробного исправления'], [[percent(before, 4), percent(current, 4), percent(pilot, 4)]]),
     channels: trapNote,
-    result: `Вариант: ${percent(current)} против ${percent(before)} в контроле, разница ${pp(current - before)} п.п. Заработок с одного заказа в варианте ниже на ${margin}%. ${trapNote}`,
+    result: market ? `Оценка сверху: ${billions(before)} млрд ₽ в год. Оценка снизу по данным: ${billions(current)} млрд ₽ в год. ${trapNote}` : `Вариант: ${percent(current)} против ${percent(before)} в контроле, разница ${pp(current - before)} п.п. Заработок с одного заказа в варианте ниже на ${margin}%. ${trapNote}`,
   };
   const sizeA = truthId === 'srm' ? 54 : 50;
   const days = truthId === 'novelty' ? [2.4, 0.9, 0.1] : [current - before, current - before, current - before];
-  const clues = experiments ? [
+  const clues = market ? [
+    evidence('funnel', 'воронк|доля|шаг|сколько|аудитор|доступн', table('Воронка до платящих клиентов', ['Шаг', 'Доля аудитории'], [
+      ['Вся аудитория', '100%'], [truthId === 'sam' ? 'Доступно в регионе' : 'Знают о продукте', truthId === 'sam' ? '35%' : '70%'], ['Готовы платить', percent(current)],
+    ]), true),
+    evidence('prices', 'цена|платят|чек|стоимост|платёж|платеж', table('Сколько платят на деле', ['Показатель', 'В расчёте', 'На деле'], [
+      ['Платёж в год, ₽', String(yearly), String(Math.round(yearly * (truthId === 'price' ? .6 : .95)))],
+    ]), true),
+    evidence('free', 'заменител|бесплатн|конкурент|аналог', table('Чем пользуются вместо продукта', ['Вариант', 'Доля аудитории'], [
+      ['Бесплатное приложение', truthId === 'substitute' ? '35%' : '8%'],
+    ])),
+  ] : experiments ? [
     evidence('split', 'дол|размер|групп|поровну|соотношен|назнач|числ', table('Размер групп в тесте', ['Группа', 'Попало в тест', 'По плану'], [
       ['Контроль', `${sizeA}%`, '50%'], ['Вариант', `${100 - sizeA}%`, '50%'],
     ]), true),
@@ -98,11 +118,13 @@ function makeSeed(skeleton, axes) {
   return {
     ...axes, id: `${industry}:${truthId}:${twistId}:${traps[trapIndex]}`,
     pair: `${industry}:${truthId}`, industry: label, transaction, groups,
-    truth: discovery || experiments ? truth : voice,
-    example: discovery || experiments ? diagnosticSignal : '',
+    truth: discovery || experiments || market ? truth : voice,
+    example: discovery || experiments || market ? diagnosticSignal : '',
     focusGroup: groups[focus], twist, trapNote, recovery,
     profile: names[(industryIndex + truthIndex) % names.length],
-    intro: experiments
+    intro: market
+      ? `Команда продукта из отрасли «${label}» хочет выйти с новым платным сервисом. Сверху рынок оценили в ${billions(before)} млрд ₽ в год. Нужно решить, стоит ли входить.`
+      : experiments
       ? `Команда продукта из отрасли «${label}» провела A/B-тест нового шага «${transaction}»: ${percent(current)} в варианте против ${percent(before)} в контроле. Решаем, раскатывать ли.`
       : discovery
       ? `${percent(before)} новых клиентов возвращаются за второй покупкой. Команда продукта из отрасли «${label}» хочет, чтобы больше клиентов возвращались, при этом важно сохранить заработок с заказа.`
@@ -112,7 +134,7 @@ function makeSeed(skeleton, axes) {
       discount: 'Со скидкой 10% доля повторных покупок выросла на 1 процентный пункт, а с заказа стали зарабатывать меньше.',
       competitors: 'У двух конкурентов легко найти прошлую покупку из истории. У нашего продукта история спрятана глубже.',
       test: 'Главная метрика — доля оформивших заказ среди всех зашедших. Тест шёл две недели, пользователей делили между контролем и вариантом по плану поровну.',
-      scope: `Сравниваем две соседние недели. Берём всех, кто начал, и считаем, какая их доля успешно завершила действие «${transaction}».`,
+      scope: market ? 'Считаем годовую выручку в одной стране от частных клиентов и малого бизнеса.' : `Сравниваем две соседние недели. Берём всех, кто начал, и считаем, какая их доля успешно завершила действие «${transaction}».`,
     },
     scenes, clues, numbers: { shares, rates, base, before, current, pilot },
   };
