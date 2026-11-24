@@ -118,7 +118,13 @@
           "options": "segments",
           "justify": true,
           "focus": true,
-          "scene": "segments"
+          "scene": "segments",
+          "checks": [
+            "эффект|прирост|рост|разниц",
+            "групп|сегмент|клиент",
+            "[0-9]+ ?%|процент|п\\. ?п\\.",
+            "потому|поэтому|так как|из-за|значит"
+          ]
         },
         {
           "id": "segment_defense",

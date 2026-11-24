@@ -49,6 +49,12 @@ function simulate(skeleton, index, strong) {
 }
 
 describe.each(skeletons)('$label', skeleton => {
+  it('every turn can be graded from text (checks, evidence or plain options)', () => {
+    for (const phase of skeleton.phases) for (const turn of phase.turns) {
+      const gradable = (turn.checks && turn.checks.length) || turn.evidence || (turn.options && !turn.justify);
+      expect(Boolean(gradable), `${skeleton.id}:${turn.id}`).toBe(true);
+    }
+  });
   it('generates 50 valid runs with no repeated industry and truth pair in a moving window', () => {
     const recent = [];
     for (let i = 0; i < 50; i += 1) {

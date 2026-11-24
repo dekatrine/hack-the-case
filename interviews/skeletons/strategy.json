@@ -97,7 +97,13 @@
           "options": "segments",
           "justify": true,
           "focus": true,
-          "scene": "segments"
+          "scene": "segments",
+          "checks": [
+            "доля|выруч|больш|крупн",
+            "маржа|прибыл|окуп",
+            "[0-9]+ ?%|процент|раз",
+            "потому|поэтому|так как|из-за|значит"
+          ]
         },
         {
           "id": "segment_defense",

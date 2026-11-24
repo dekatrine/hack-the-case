@@ -97,7 +97,13 @@
           "options": "segments",
           "justify": true,
           "focus": true,
-          "scene": "segments"
+          "scene": "segments",
+          "checks": [
+            "доля|размер|объём|объем|больш|крупн",
+            "групп|сегмент|клиент",
+            "[0-9]+ ?%|процент|млн|млрд|раз",
+            "потому|поэтому|так как|из-за|значит"
+          ]
         },
         {
           "id": "segment_defense",
