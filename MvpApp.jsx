@@ -10,6 +10,7 @@ import CaseLibrary from './cases/CaseLibrary.jsx';
 import { countHints, duplicateAsNewAttempt, hasAttemptChanges } from './cases/caseLibrary.js';
 import { hasStory, storyPath, storyAnswers } from './cases/storyPath.js';
 import CaseFlow from './CaseFlow.jsx';
+import Interview from './interviews/Interview.jsx';
 import SearchDiagnostic from './cases/SearchDiagnostic.jsx';
 import { SEARCH_CASE_INTRO, SEARCH_CASE_TITLE, SEARCH_ROUTE, SEARCH_SLICES } from './cases/searchDiagnostic.js';
 import ConditionAssistant from './ConditionAssistant.jsx';
@@ -319,10 +320,13 @@ export default function MvpApp() {
   };
   const hasChanges = active && hasAttemptChanges(active, attempts.at(-1));
 
+  if (screen === 'interviews') return <Interview onExit={() => go('library')}/>;
+
   return <div className="mvp-app">
     <header className="mvp-header">
       <button className="clean-brand" disabled={!!busy} onClick={() => go('library')} aria-label="Hack the Case — мои кейсы"><span className="mark">H</span><b>Hack the Case</b></button>
       <nav aria-label="Основная навигация">
+        <button disabled={!!busy} onClick={() => go('interviews')}>Интервью</button>
         <button aria-current={screen === 'library' ? 'page' : undefined} disabled={!!busy} onClick={() => go('library')}>Мои кейсы</button>
         <button aria-current={screen === 'learning' ? 'page' : undefined} disabled={!!busy} onClick={() => go('learning')}>Обучение</button>
         <button aria-current={screen === 'cards' ? 'page' : undefined} disabled={!!busy} onClick={() => { setTheorySavedOnly(false); go('cards'); }}>Карточки</button>
@@ -361,6 +365,11 @@ export default function MvpApp() {
           <p className="mvp-storage-note">Здесь появятся твои кейсы, черновики и разборы. Они сохраняются в этом браузере.</p>
         </> : <CaseLibrary cases={cases} interviewTypes={INTERVIEWS} onOpen={open} onNew={() => go('generate')} onArchive={archive} onRetry={retryCase} onLearn={() => go('learning')}/>)}
       {screen === 'generate' && <>
+        <button type="button" className="mvp-starter mvp-search-starter" onClick={() => go('interviews')}>
+          <span className="mvp-starter-tag">Кейс-интервью<ArrowUpRight size={17}/></span>
+          <b>Пройти интервью</b>
+          <p>Запрашивай данные, защищай решения и получай разбор по ходу интервью.</p>
+        </button>
         <div className="mvp-page-heading"><div><div className="clean-eyebrow">Новая тренировка</div><h1>Настрой свой кейс</h1>
         <p className="mvp-lead"><strong>Тренируйся на новых задачах сколько угодно.</strong> Как на собеседовании: знакомый навык, новая ситуация, другие данные и вопросы.</p></div><div className="mvp-flow"><b>01 Кейс</b><ArrowRight size={14}/><span>02 Решение</span><ArrowRight size={14}/><span>03 Разбор</span></div></div>
         <button type="button" className="mvp-starter mvp-search-starter" disabled={!!busy} onClick={startSearchDiagnostic}>

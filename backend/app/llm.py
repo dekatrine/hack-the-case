@@ -17,6 +17,8 @@ def call_yandex_gpt(
     temperature: float = 0.6,
     max_tokens: int = 4000,
     max_retries: int = 3,
+    timeout: float = 90,
+    usage: dict | None = None,
 ) -> str:
     settings = get_settings()
 
@@ -44,10 +46,17 @@ def call_yandex_gpt(
     last_error = None
     for attempt in range(max_retries):
         try:
-            response = requests.post(YANDEX_GPT_URL, headers=headers, json=body, timeout=90)
+            response = requests.post(YANDEX_GPT_URL, headers=headers, json=body, timeout=timeout)
             response.raise_for_status()
             data = response.json()
-            return data["result"]["alternatives"][0]["message"]["text"]
+            result = data["result"]
+            if usage is not None:
+                metrics = result.get("usage", {})
+                usage.update(
+                    input=usage.get("input", 0) + int(metrics.get("inputTextTokens") or 0),
+                    output=usage.get("output", 0) + int(metrics.get("completionTokens") or 0),
+                )
+            return result["alternatives"][0]["message"]["text"]
         except requests.exceptions.Timeout:
             last_error = "таймаут запроса"
         except requests.exceptions.HTTPError:

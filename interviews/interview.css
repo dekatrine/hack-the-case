@@ -1,0 +1,79 @@
+.iv-shell {
+  min-height: 100dvh;
+  background: #0d0f10;
+  color: #f2f3f2;
+  font: 400 15px/1.45 Inter, system-ui, sans-serif;
+  --iv-lime: #d4ff3a;
+  --iv-surface: #191c1e;
+  --iv-muted: #b0b6ba;
+  --iv-border: #373d40;
+}
+.iv-shell *, .iv-shell *::before, .iv-shell *::after { box-sizing: border-box; }
+.iv-panel { width: min(100%, 640px); min-height: 100dvh; margin: auto; padding: 16px 16px max(24px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; }
+.iv-panel h1 { margin: 5px 0; font-size: clamp(24px, 5.8vw, 34px); letter-spacing: -.04em; line-height: 1.14; }
+.iv-panel h2 { margin: 0 0 6px; font-size: 17px; }
+.iv-panel p { margin: 0; }
+.iv-panel button { min-height: 44px; cursor: pointer; font: inherit; color: inherit; }
+.iv-panel :is(button, textarea, summary):focus-visible { outline: 2px solid var(--iv-lime); outline-offset: 3px; }
+.iv-panel :focus:not(:focus-visible) { outline: 0; }
+.iv-panel small { color: var(--iv-muted); }
+.iv-panel button:disabled { cursor: default; opacity: .48; }
+.iv-text-button { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; border: 0; background: transparent; padding: 0 4px; }
+.iv-person { display: flex; align-items: center; gap: 10px; }
+.iv-person > span { width: 44px; height: 44px; display: grid; place-items: center; font-weight: 850; border-radius: 50%; background: var(--iv-lime); color: #111500; }
+.iv-person small, .iv-card small { display: block; }
+.iv-bubble, .iv-data, .iv-menu { border: 1px solid var(--iv-border); padding: 13px; border-radius: 14px; background: var(--iv-surface); }
+.iv-bubble p + p, .iv-bubble blockquote + p { margin-top: 8px; }
+.iv-menu { display: grid; gap: 7px; background: transparent; }
+.iv-card { padding: 12px; border: 1px solid var(--iv-border); border-radius: 11px; background: var(--iv-surface); display: flex; align-items: center; justify-content: space-between; text-align: left; gap: 8px; }
+button.iv-card:hover { border-color: var(--iv-lime); }
+.iv-upcoming { color: var(--iv-muted); }
+.iv-phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0; margin: 0; list-style-position: inside; }
+.iv-phases li { background: var(--iv-surface); border-radius: 9px; padding: 8px; font-size: 12px; }
+.iv-phases li::marker { color: var(--iv-lime); }
+.iv-muted { color: var(--iv-muted); font-size: 13px; }
+.iv-primary { display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%; background: var(--iv-lime); border: 0; border-radius: 999px; padding: 11px 16px; color: #121700 !important; font-weight: 750 !important; }
+.iv-panel > .iv-primary { margin-top: auto; }
+.iv-progress { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
+.iv-progress button, .iv-progress > span { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-width: 44px; background: var(--iv-surface); border: 1px solid var(--iv-border); border-radius: 999px; }
+.iv-progress > span { padding: 6px 9px; font-variant-numeric: tabular-nums; }
+.iv-phase-status { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--iv-muted); }
+.iv-phase-status div { display: flex; flex: 1; gap: 4px; }
+.iv-phase-status i { flex: 1; height: 4px; background: var(--iv-border); border-radius: 9px; }
+.iv-phase-status .iv-phase-on { background: var(--iv-lime); }
+.iv-map summary { display: flex; gap: 6px; align-items: center; font-size: 11px; }
+.iv-map summary b { min-width: 0; max-width: 40%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 20px; background: #252a2c; padding: 5px 8px; }
+.iv-map dl { margin: 5px 0 0; }
+.iv-map dl div { margin: 0 0 8px; }
+.iv-map dt { font-weight: 700; }
+.iv-map dd { margin: 0; color: var(--iv-muted); overflow-wrap: anywhere; }
+.iv-panel summary { cursor: pointer; min-height: 44px; align-content: center; }
+.iv-panel h1.iv-question { margin: 0; font-size: 20px; letter-spacing: -.025em; }
+.iv-panel blockquote { margin: 5px 0 8px; padding-left: 9px; border-left: 2px solid var(--iv-lime); color: #d5dbc4; overflow-wrap: anywhere; }
+.iv-challenge { border-color: #aa7632; background: #231b11; }
+.iv-challenge blockquote { border-color: #ffc970; }
+.iv-tag { display: inline-block; color: #ffc970; font-size: 11px; text-transform: uppercase; font-weight: 750; margin-bottom: 6px; }
+.iv-data { overflow-x: auto; background: #171e13; border-color: #526437; font-size: 13px; }
+.iv-data table { border-collapse: collapse; width: 100%; margin-top: 5px; text-align: left; }
+.iv-data th, .iv-data td { padding: 5px 5px 5px 0; border-top: 1px solid #3a4730; overflow-wrap: anywhere; }
+.iv-data thead th { color: var(--iv-muted); font-weight: 550; }
+.iv-locked, .iv-feedback { display: flex; gap: 7px; align-items: center; padding: 5px; color: var(--iv-muted); font-size: 13px; }
+.iv-feedback { color: var(--iv-lime); }
+.iv-opened .iv-data + .iv-data { margin-top: 6px; }
+.iv-form, .iv-form label, .iv-form fieldset { display: grid; gap: 8px; }
+.iv-form { margin-top: auto; }
+.iv-form fieldset { padding: 0; margin: 0; border: 0; min-width: 0; }
+.iv-form legend { margin-bottom: 5px; }
+.iv-form fieldset button, .iv-form textarea { border: 1px solid var(--iv-border); border-radius: 10px; background: var(--iv-surface); padding: 10px; color: inherit; text-align: left; }
+.iv-form fieldset button[aria-pressed="true"] { border-color: var(--iv-lime); background: #252d15; }
+.iv-form textarea { width: 100%; min-height: 74px; resize: vertical; font: inherit; }
+.iv-hint, .iv-warning { color: #ffc970; font-size: 14px; }
+.iv-hint small { display: block; }
+.iv-scores { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.iv-scores div { padding: 10px; border-radius: 12px; background: var(--iv-surface); display: grid; font-size: 12px; }
+.iv-scores strong { color: var(--iv-lime); font-size: 25px; }
+.iv-debrief-section details { border-bottom: 1px solid var(--iv-border); }
+.iv-debrief-section summary b { float: right; }
+.iv-debrief-section li p { overflow-wrap: anywhere; }
+.iv-debrief-section li { margin: 8px 0; }
+.iv-loading { background: var(--iv-surface); color: var(--iv-muted); border-radius: 10px; padding: 10px; border-left: 3px solid var(--iv-lime); }

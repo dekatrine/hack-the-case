@@ -9,6 +9,7 @@ on:
       - 'vite.config.js'
       - 'scripts/**'
       - 'cases/**'
+      - 'interviews/**'
       - 'package-lock.json'
       - '.github/workflows/learning-path.yml'
   push:
