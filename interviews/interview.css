@@ -149,3 +149,9 @@ button.iv-card:hover { border-color: var(--iv-lime); }
 .iv-form textarea { min-height: 96px; line-height: 1.45; }
 .iv-confirm { display: grid; gap: 8px; border-color: var(--iv-lime); }
 .iv-resume .iv-card { border-color: var(--iv-lime); }
+
+.iv-chip-field, .iv-presets { display: grid; gap: 8px; }
+.iv-chip-label { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--iv-muted); font-weight: 650; }
+.iv-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.iv-chip { min-height: 40px; padding: 0 14px; border: 1px solid var(--iv-border); border-radius: 999px; background: var(--iv-surface); color: inherit; font: inherit; cursor: pointer; }
+.iv-chip.on { border-color: var(--iv-lime); background: #252d15; }

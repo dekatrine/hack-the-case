@@ -81,9 +81,9 @@ it('creates a configured interview, opens the selected evidence and evaluates on
 
   render(<Interview onExit={vi.fn()}/>);
   click(/Настроить своё интервью/);
-  fireEvent.change(screen.getByLabelText('Сложность'), { target: { value: 'Средний' } });
+  fireEvent.click(screen.getByRole('radio', { name: 'Средний' }));
   fireEvent.change(screen.getByLabelText(/Пожелания к кейсу/), { target: { value: 'Первый заказ' } });
-  click('Создать интервью');
+  click('Собрать кейс');
   await screen.findByRole('heading', { name: 'Первый заказ на маркетплейсе' });
   expect(api.generate).toHaveBeenCalledWith(expect.objectContaining({
     interviewType: 'product_sense', difficulty: 'Средний', extraContext: 'Первый заказ', mvp: true, detailedInterview: true,
