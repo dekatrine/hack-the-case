@@ -122,6 +122,51 @@ class MvpTests(unittest.TestCase):
         self.assertIn("120 новых покупателей", result.caseIntro)
         self.assertNotIn("35", result.caseIntro)
 
+    @patch("app.variant_cases.sample", side_effect=lambda values, count: list(values)[:count])
+    @patch("app.main.call_yandex_gpt")
+    def test_detailed_marketplace_interviews_vary_the_product_across_directions(self, model, sample):
+        def story(title, product, audience, difference, change, intro, counts):
+            before, after = counts
+            return {
+                "title": title, "product": product, "audience": audience, "difference": difference,
+                "change": change, "intro": intro,
+                "openingQuestion": f"По каким данным проверишь идею команды сервиса {title}?",
+                "openingFormat": "Назови один показатель и две группы для сравнения.",
+                "choices": [
+                    {"option": "Товары в наличии", "evidence": f"За неделю пришло {before} заявок, из них {after} завершились.",
+                     "question": f"Как сравнишь число заявок с завершениями в сервисе {title}?"},
+                    {"option": "Сроки получения", "evidence": f"Срок выполнения снизился с {before // 2} до {after // 2} часов.",
+                     "question": f"Как изменился срок выполнения в сервисе {title}?"},
+                ],
+                "twist": "По выходным новый способ оформления доступен только у части продавцов.",
+                "finalQuestion": f"Оставишь ли новый способ оформления в сервисе {title}? Объясни выбор.",
+            }
+        kids = story("Малыш напрокат", "Маркетплейс аренды детской одежды и колясок.",
+                     "Родители малышей, которым нужна коляска на несколько недель.",
+                     "Подбирает детские вещи с учётом возраста и срока аренды.",
+                     "Команда сравнивает ручной выбор размера с подбором по росту ребёнка.",
+                     "За месяц 960 семей открыли карточку. Из них 310 выбрали срок аренды.", (960, 310))
+        night = story("Ночная полка", "Маркетплейс доставки товаров первой необходимости ночью.",
+                      "Покупатели, у которых срочная покупка возникает после закрытия магазинов.",
+                      "Ночью показывает остатки только у магазинов, которые продолжают работать.",
+                      "Команда сравнивает полный каталог с фильтром по ночным остаткам.",
+                      "За неделю 780 человек открыли сервис после полуночи. Из них 233 сделали заказ.", (780, 233))
+        model.side_effect = [json.dumps(kids),
+                             json.dumps({**night, "change": "Новый функционал улучшает пользовательский опыт."}),
+                             json.dumps(night)]
+        settings = dict(industry="E-commerce / Маркетплейсы", difficulty="Начальный", mvp=True, detailedInterview=True)
+        first = generate_case(GenerateCaseRequest(**settings, interviewType="product_sense", variantId="onboarding"))
+        self.assertIn("**Для кого** Родители малышей", first.caseIntro)
+        self.assertIn("**Задача команды** Команда сравнивает", first.caseIntro)
+        self.assertTrue(first.caseRoute[0].hint)
+        second = generate_case(GenerateCaseRequest(**settings, interviewType="product_experiment", variantId="ab",
+            seenFingerprints=first.fingerprints, recentCases=[first.caseIntro]))
+        self.assertIn("**Продукт** Маркетплейс доставки товаров первой необходимости ночью.", second.caseIntro)
+        self.assertEqual(model.call_count, 3)
+        self.assertIn("Владельцы питомцев покупают специализированный корм", model.call_args_list[1].args[1])
+        self.assertIn("Сервис доставляет товары первой необходимости только ночью", model.call_args.args[1])
+        self.assertTrue(set(first.fingerprints).isdisjoint(second.fingerprints))
+
     @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","grades":[3]}')
     def test_mvp_score_applies_a_deduction_after_grading(self, model):
         request = EvaluateRequest(caseText='Кейс', mvp=True, answers={'problem': 'Вывод'})

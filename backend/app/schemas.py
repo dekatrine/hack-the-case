@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 class GenerateCaseRequest(BaseModel):
     mvp: bool = False
+    detailedInterview: bool = False
     industry: str
     difficulty: str
     extraContext: str = ""

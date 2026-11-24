@@ -73,10 +73,10 @@ it('creates a configured interview, opens the selected evidence and evaluates on
   window.scrollTo = vi.fn();
   api.generate.mockResolvedValue({
     caseText: '# Первый заказ на маркетплейсе',
-    caseIntro: 'На маркетплейсе 1000 новых покупателей. Из них 200 оформили первый заказ.',
+    caseIntro: '**Продукт** Ночная доставка бытовых товаров.\n\n**Для кого** Те, кто покупает после закрытия магазинов.\n\nНа маркетплейсе 1000 новых покупателей. Из них 200 оформили первый заказ.',
     variantId: 'onboarding',
     caseRoute: [
-      { id: 'variant_open', question: 'Что уточнишь?', chapter: 1, chapterTitle: 'Контекст', nextStepId: 'variant_source' },
+      { id: 'variant_open', question: 'Что уточнишь про покупку ночью?', hint: 'Назови шаг, одно возможное препятствие и данные для проверки.', chapter: 1, chapterTitle: 'Контекст', nextStepId: 'variant_source' },
       { id: 'variant_source', question: 'Что запросишь?', chapter: 1, chapterTitle: 'Контекст',
         options: ['По этапам', 'По устройствам'], nextByAnswer: { 'По этапам': 'variant_read_0', 'По устройствам': 'variant_read_1' } },
       { id: 'variant_read_0', question: 'Сколько дошли до оплаты?', chapter: 2, chapterTitle: 'Данные',
@@ -103,9 +103,10 @@ it('creates a configured interview, opens the selected evidence and evaluates on
   click('Создать интервью');
   await screen.findByRole('heading', { name: 'Первый заказ на маркетплейсе' });
   expect(api.generate).toHaveBeenCalledWith(expect.objectContaining({
-    interviewType: 'product_sense', difficulty: 'Средний', extraContext: 'Первый заказ', mvp: true,
+    interviewType: 'product_sense', difficulty: 'Средний', extraContext: 'Первый заказ', mvp: true, detailedInterview: true,
   }));
   click('Начать интервью');
+  expect(screen.getByRole('heading', { name: 'Что уточнишь про покупку ночью?' })).toBeTruthy();
   answer('Корзина');
   expect(screen.getByRole('heading', { name: /Назови шаг, одно возможное препятствие/ })).toBeTruthy();
   answer('Проверю переход из корзины к оплате новых заказов.');

@@ -215,12 +215,15 @@ export default function Interview({ onExit }) {
     setGenerating(true);
     setGenerationError('');
     try {
-      const previous = runsRef.current.filter(item => item.configured && item.settings.interviewType === settings.interviewType).slice(0, 12);
+      const previous = runsRef.current.filter(item => item.configured);
+      const sameIndustry = previous.filter(item => item.settings.industry === settings.industry);
+      const sameDirection = previous.filter(item => item.settings.interviewType === settings.interviewType);
+      const relevant = [...new Set([...sameIndustry, ...sameDirection])].slice(0, 12);
       const result = await api.generate({
-        ...settings, trackId: 'product', mvp: true,
-        recentCases: previous.map(item => item.seed.intro),
-        seenVariants: [...new Set(previous.map(item => item.configured.variantId).filter(Boolean))],
-        seenFingerprints: [...new Set(previous.flatMap(item => item.configured.fingerprints))].slice(0, 240),
+        ...settings, trackId: 'product', mvp: true, detailedInterview: true,
+        recentCases: relevant.map(item => item.seed.intro.slice(0, 2000)),
+        seenVariants: [...new Set(sameDirection.map(item => item.configured.variantId).filter(Boolean))],
+        seenFingerprints: [...new Set([...sameIndustry, ...sameDirection].slice(0, 80).flatMap(item => item.configured.fingerprints))],
       });
       const item = save(configuredRun(result, settings, directionLabel));
       setSetup(null);

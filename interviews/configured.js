@@ -9,15 +9,21 @@ export function configuredRun(result, settings, directionLabel, now = Date.now()
   const title = result.caseText?.split('\n').find(line => line.trim())?.replace(/^#+\s*/, '').trim() || directionLabel;
   const phases = [...new Map(source.map(step => [step.chapter || 1, step.chapterTitle || 'Решение кейса']))]
     .map(([chapter, label]) => ({ id: String(chapter), label }));
+  const detailed = intro.startsWith('**Продукт** ');
   const steps = guideCaseRoute({ title, caseIntro: intro, params: settings }, source);
+  const opening = source[0];
+  const closing = source.find(step => step.id === 'variant_final');
   const graph = Object.fromEntries(steps.map(step => {
     const kind = step.id === 'variant_final' ? 'DEMAND'
       : step.id === 'variant_twist' ? 'TWIST'
         : /^(variant_gap_[01]|variant_result|variant_tradeoff)$/.test(step.id) ? 'CHALLENGE'
           : step.evidence ? 'DATA' : 'ASK';
+    const contextualQuestion = detailed && (step.id === opening.id ? opening : step.id === closing?.id ? closing : null);
+    const prompt = contextualQuestion?.question || step.question;
+    const answerFormat = (step.id === opening.id && contextualQuestion?.hint) || step.answerFormat || step.hint || '';
     return [step.id, {
-      id: step.id, phase: String(step.chapter || 1), label: step.question, prompt: step.question,
-      hint: step.hint || '', answerFormat: step.answerFormat || step.hint || '',
+      id: step.id, phase: String(step.chapter || 1), label: prompt, prompt,
+      hint: step.hint || '', answerFormat,
       options: step.options?.length ? step.options : undefined,
       nextByAnswer: step.nextByAnswer, nextStepId: step.nextStepId,
       scene: step.scene, caseEvidence: step.evidence, kind, longAnswer: step.longAnswer,

@@ -17,7 +17,7 @@ from .ratelimit import build_rate_limit_middleware
 from .data import CASE_STEPS, COURSE_MODULES, DIFFICULTY_LEVELS, INDUSTRIES, SOURCE_NOTES
 from .diagnostic_routes import diagnostic_route
 from .story_routes import build_story
-from .variant_cases import CHECKPOINT, PRACTICE_SKILLS, VARIANTS, generate_variant, variant_route, variant_text
+from .variant_cases import CHECKPOINT, PRACTICE_SKILLS, VARIANTS, generate_variant, variant_intro, variant_route, variant_text
 from .llm import call_yandex_gpt, stream_yandex_gpt
 from .prompts import (
     CASE_GENERATION_SYSTEM,
@@ -467,7 +467,7 @@ def _validate_variant(payload):
 def _selected_variant(payload):
     variant_id, story, fingerprints = generate_variant(payload, call_yandex_gpt)
     return GenerateCaseResponse(
-        caseText=variant_text(story), caseIntro=story.intro, caseRoute=variant_route(story, payload.focusSkill),
+        caseText=variant_text(story), caseIntro=variant_intro(story), caseRoute=variant_route(story, payload.focusSkill),
         variantId=variant_id, fingerprints=fingerprints, focusSkill=payload.focusSkill,
     )
 
