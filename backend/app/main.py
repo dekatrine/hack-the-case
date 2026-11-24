@@ -163,6 +163,11 @@ def read_interview_runs(authorization: str = Header(default="")) -> dict:
     return {"runs": db.get_interview_runs(_require_user(authorization))}
 
 
+@app.post("/api/interview-runs/discard-incomplete")
+def discard_incomplete_interviews(authorization: str = Header(default="")) -> dict:
+    return {"seen": db.discard_incomplete_interview_runs(_require_user(authorization))}
+
+
 @app.put("/api/interview-runs")
 def save_interview_run(payload: dict = Body(...), authorization: str = Header(default="")) -> dict:
     user_id = _require_user(authorization)
@@ -179,7 +184,8 @@ def save_interview_run(payload: dict = Body(...), authorization: str = Header(de
         or not isinstance(payload.get("queue"), list)
     ):
         raise HTTPException(status_code=422, detail="Некорректное прохождение")
-    db.put_interview_run(user_id, run_id, encoded, updated_at)
+    if payload["status"] == "finished":
+        db.put_interview_run(user_id, run_id, encoded, updated_at)
     return {"ok": True}
 
 

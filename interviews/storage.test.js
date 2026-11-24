@@ -11,9 +11,9 @@ it('serializes writes and sends the latest queued snapshot after the in-flight r
   let complete;
   apiFetch.mockImplementationOnce(() => new Promise(resolve => { complete = resolve; }));
   apiFetch.mockResolvedValue({ ok: true });
-  const first = pushRun({ id: 'test', updatedAt: 100 });
+  const first = pushRun({ id: 'test', updatedAt: 100, status: 'finished' });
   await vi.waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(1));
-  const second = pushRun({ id: 'test', updatedAt: 101 });
+  const second = pushRun({ id: 'test', updatedAt: 101, status: 'finished' });
   const last = pushRun({ id: 'test', updatedAt: 102, status: 'finished' });
   expect(apiFetch).toHaveBeenCalledTimes(1);
   complete({ ok: true });

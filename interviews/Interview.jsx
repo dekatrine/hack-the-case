@@ -8,14 +8,16 @@ import InterviewBrief, { InterviewCondition } from './InterviewBrief.jsx';
 import InterviewSetup, { defaultInterviewSettings } from './InterviewSetup.jsx';
 import { configuredRun, configuredRemaining, configuredReviewPayload } from './configured.js';
 import CaseContent from '../CaseContent.jsx';
-import { mergeRuns, pullRuns, pushRun, readRuns, saveRuns } from './storage.js';
+import {
+  discardLocalDrafts, discardRemoteDrafts, mergeRuns, pullRuns, pushRun,
+  readRuns, readSeenRuns, rememberRuns, saveRuns,
+} from './storage.js';
 import './interview.css';
 
-const configurableDirections = [
-  ['product_experiment', 'Эксперименты'],
-  ['product_strategy', 'Приоритизация и стратегия'],
-  ['product_estimation', 'Рынок и экономика'],
-];
+function previousRuns(runs) {
+  return [...new Map([...readSeenRuns(), ...runs].map(run => [run.id, run])).values()]
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
 
 function event(name, run, details = {}) {
   track(name, { schemaVersion: 1, runId: run.id, skeleton: run.skeleton.id, seed: run.seed.id, version: run.skeleton.version, ...details });
@@ -33,7 +35,7 @@ function Table({ value }) {
   </div>;
 }
 
-function Map({ entries }) {
+function DecisionMap({ entries }) {
   const latest = entries.filter(entry => !entries.some(other => other.revises === entry.id));
   return latest.length > 0 && <details className="iv-map">
     <summary aria-label="Карта решений"><span>Карта</span>
@@ -123,28 +125,36 @@ export default function Interview({ onExit }) {
   const reviewLock = useRef(false);
   const runsRef = useRef(runs);
   const started = useRef(null);
-  const persistedDraft = useRef(null);
   const heading = useRef(null);
   const run = runs.find(item => item.id === id);
   const move = currentTurn(run);
 
-  function setAll(next) {
+  function setAll(next, persist = true) {
     runsRef.current = next;
     setRuns(next);
+    if (!persist) return;
     try { saveRuns(next); setSaveError(false); }
     catch { setSaveError(true); }
   }
 
-  function save(item, online = true) {
+  function save(item) {
     const existing = runsRef.current.find(entry => entry.id === item.id);
     const nextItem = { ...item, updatedAt: Math.max(Date.now(), (existing?.updatedAt || 0) + 1) };
-    setAll([nextItem, ...runsRef.current.filter(entry => entry.id !== item.id)]);
-    if (online) pushRun(nextItem).catch(() => {});
+    const finished = nextItem.status === 'finished';
+    setAll([nextItem, ...runsRef.current.filter(entry => entry.id !== item.id)], finished);
+    if (!existing) {
+      try { rememberRuns([nextItem]); }
+      catch { setSaveError(true); }
+    }
+    if (finished) pushRun(nextItem).catch(() => {});
     return nextItem;
   }
 
   useEffect(() => {
     let mounted = true;
+    try { discardLocalDrafts(); }
+    catch { setSaveError(true); }
+    discardRemoteDrafts().catch(() => {});
     pullRuns().then(remote => {
       if (!mounted) return;
       const next = mergeRuns(runsRef.current, remote);
@@ -177,13 +187,10 @@ export default function Interview({ onExit }) {
       if (started.current !== null) setSessionSeconds(Math.floor((Date.now() - started.current) / 1000));
     }, 500);
     document.addEventListener('visibilitychange', setVisibility);
-    window.addEventListener('pagehide', checkpoint);
     return () => {
       clearInterval(timer);
       document.removeEventListener('visibilitychange', setVisibility);
-      window.removeEventListener('pagehide', checkpoint);
-      checkpoint();
-      clearTimeout(persistedDraft.current);
+      started.current = null;
     };
   }, [id, run?.status]);
 
@@ -205,8 +212,7 @@ export default function Interview({ onExit }) {
   }, [id, run?.status, Boolean(run?.storyUsage)]);
 
   function select(skeleton) {
-    const sorted = [...runsRef.current].sort((a, b) => b.createdAt - a.createdAt);
-    const item = save(createRun(skeleton, sorted));
+    const item = save(createRun(skeleton, previousRuns(runsRef.current)));
     setId(item.id);
   }
 
@@ -216,13 +222,13 @@ export default function Interview({ onExit }) {
     setGenerating(true);
     setGenerationError('');
     try {
-      const previous = runsRef.current.filter(item => item.configured);
+      const previous = previousRuns(runsRef.current).filter(item => item.configured);
       const sameIndustry = previous.filter(item => item.settings.industry === settings.industry);
       const sameDirection = previous.filter(item => item.settings.interviewType === settings.interviewType);
       const relevant = [...new Set([...sameIndustry, ...sameDirection])].slice(0, 12);
       const result = await api.generate({
         ...settings, trackId: 'product', mvp: true, detailedInterview: true,
-        recentCases: relevant.map(item => item.seed.intro.slice(0, 2000)),
+        recentCases: relevant.map(item => item.seed.intro?.slice(0, 2000)).filter(Boolean),
         seenVariants: [...new Set(sameDirection.map(item => item.configured.variantId).filter(Boolean))],
         seenFingerprints: [...new Set([...sameIndustry, ...sameDirection].slice(0, 80).flatMap(item => item.configured.fingerprints))],
       });
@@ -278,25 +284,31 @@ export default function Interview({ onExit }) {
   function open(item) {
     setId(item.id);
     window.scrollTo({ top: 0, behavior: 'auto' });
-    if (item.status === 'active') { event('resumed', item); shown(item); }
     if (item.status === 'finished') event('debrief_opened', item);
   }
 
-  function pause(exit = false) {
-    if (run?.status === 'active') {
-      const elapsed = started.current === null ? 0 : Date.now() - started.current;
+  useEffect(() => {
+    if (!run || run.status === 'finished') return;
+    const onRestore = event => {
+      if (event.persisted) leave();
+    };
+    window.addEventListener('pageshow', onRestore);
+    return () => window.removeEventListener('pageshow', onRestore);
+  }, [id, run?.status]);
+
+  function leave() {
+    if (run && run.status !== 'finished') {
       started.current = null;
-      save({ ...run, elapsed: run.elapsed + elapsed });
-      event('paused', run);
+      setAll(runsRef.current.filter(item => item.id !== run.id), false);
+      event('case_abandoned', run);
     }
-    if (exit) onExit();
-    else setId(null);
+    setId(null);
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
   function edit(patch) {
-    const snapshot = save({ ...run, ...patch }, false);
-    clearTimeout(persistedDraft.current);
-    persistedDraft.current = setTimeout(() => pushRun(snapshot).catch(() => {}), 800);
+    const current = runsRef.current.find(item => item.id === run.id);
+    if (current) save({ ...current, ...patch });
   }
 
   function useHint() {
@@ -314,7 +326,6 @@ export default function Interview({ onExit }) {
     if (item === current) return;
     started.current = document.hidden ? null : Date.now();
     setSessionSeconds(0);
-    clearTimeout(persistedDraft.current);
     save(item);
     window.scrollTo({ top: 0, behavior: 'auto' });
     const entry = item.history.at(-1);
@@ -340,35 +351,39 @@ export default function Interview({ onExit }) {
   const priorData = run?.configured ? run.history
     .map(entry => run.configured.graph[entry.id])
     .filter(step => step?.caseEvidence && step.caseEvidence !== move?.caseEvidence) : [];
+  const finishedRuns = runs.filter(item => item.status === 'finished');
   const remaining = run?.configured ? configuredRemaining(run) : run?.queue.length;
   const options = move?.options === 'segments' ? run.seed.groups : move?.options;
 
   return <div className="iv-shell"><div className="iv-panel">
-    {saveError && <p role="alert" className="iv-warning">Не удалось сохранить черновик в браузере.</p>}
+    {saveError && <p role="alert" className="iv-warning">Не удалось сохранить историю в браузере.</p>}
     {setup && <InterviewSetup initial={setup} busy={generating} error={generationError} onGenerate={generate} onBack={() => setSetup(null)}/>}
     {!run && !setup && <>
       <button className="iv-text-button" onClick={onExit}><ArrowLeft size={18}/> Мои кейсы</button>
       <h1 ref={heading} tabIndex={-1}>Кейс-интервью</h1>
-      {runs.length > 0 && <section className="iv-menu"><h2>Твои интервью</h2>
-        {runs.map(item => <button className="iv-card" key={item.id} onClick={() => open(item)}>
-          <span><strong>{item.configured ? item.skeleton.title : item.skeleton.label}</strong><small>{item.seed.industry} · {item.status === 'finished' ? 'Разбор' : item.status === 'briefing' ? 'Брифинг' : `Продолжить с хода ${item.history.length + 1}`}</small></span><ArrowRight size={18}/>
-        </button>)}
-      </section>}
-      <section className="iv-menu"><h2>Новое интервью</h2>
-        <button type="button" className="iv-card iv-configure" onClick={() => openSetup()}>
-          <span><strong>Настроить своё интервью</strong><small>Направление, отрасль, сложность и своя тема</small></span><ArrowRight size={18}/>
+      <section className="iv-menu iv-new-interview">
+        <h2>Новое интервью</h2>
+        <button type="button" className="iv-primary" onClick={() => openSetup()}>
+          Настроить своё интервью <ArrowRight size={18}/>
         </button>
-        {skeletons.map(skeleton => <button className="iv-card" key={skeleton.id} onClick={() => select(skeleton)}>
-          <span><strong>{skeleton.label}</strong><small>{skeleton.min}–{skeleton.max} ходов · около {skeleton.minutes} мин</small></span><ArrowRight size={18}/>
-        </button>)}
-        {configurableDirections.map(([interviewType, label]) => <button type="button" className="iv-card" key={interviewType}
-          onClick={() => openSetup({ ...defaultInterviewSettings, interviewType })}>
-          <span><strong>{label}</strong><small>Настроить интервью</small></span><ArrowRight size={18}/>
-        </button>)}
+        <div className="iv-ready" aria-label="Готовые сценарии">
+          {skeletons.map(skeleton => <button type="button" className="iv-card" key={skeleton.id} onClick={() => select(skeleton)}>
+            <span><strong>{skeleton.label}</strong><small>Около {skeleton.minutes} мин</small></span><ArrowRight size={17}/>
+          </button>)}
+        </div>
       </section>
+      {finishedRuns.length > 0 && <details className="iv-menu iv-review-history">
+        <summary>Прошлые разборы <span>{finishedRuns.length}</span></summary>
+        <div className="iv-ready">
+          {finishedRuns.map(item => <button type="button" className="iv-card" key={item.id} onClick={() => open(item)}>
+            <span><strong>{item.configured ? item.skeleton.title : item.skeleton.label}</strong><small>{item.seed.industry.split(' / ').at(-1)}</small></span>
+            <ArrowRight size={17}/>
+          </button>)}
+        </div>
+      </details>}
     </>}
     {run?.status === 'briefing' && <>
-      <button className="iv-text-button" onClick={() => pause()}><ArrowLeft size={18}/> Интервью</button>
+      <button className="iv-text-button" onClick={leave}><ArrowLeft size={18}/> Интервью</button>
       <h1 ref={heading} tabIndex={-1}>{run.skeleton.title}</h1>
       <div className="iv-person"><span>{run.seed.profile[0]}</span><div><strong>{run.seed.profile}</strong><small>Интервьюер · {run.seed.industry}</small></div></div>
       <InterviewBrief run={run}/>
@@ -376,12 +391,12 @@ export default function Interview({ onExit }) {
       <h2>Фазы интервью</h2>
       <ol className="iv-phases">{run.skeleton.phases.map(phase => <li key={phase.id}>{phase.label}</li>)}</ol>
       <p className="iv-muted">{run.configured ? `Около ${remaining} ходов. Вопросы и данные зависят от твоего выбора.` : `${plan(run.skeleton).length} ходов по плану. Вопросы меняются по ходу интервью.`}</p>
-      <p className="iv-muted">Запрашивай данные и защищай выбор. Можно сделать паузу.</p>
+      <p className="iv-muted">Если выйти, следующая попытка начнётся с нового кейса.</p>
       {preparing && !run.configured && <div className="iv-loading" role="status">Готовим брифинг…</div>}
       <button className="iv-primary" onClick={start} disabled={preparing && !run.configured}>Начать интервью <ArrowRight size={18}/></button>
     </>}
     {run?.status === 'active' && move && <>
-      <div className="iv-progress"><button aria-label="Пауза" onClick={() => pause()}><X size={18}/></button><strong>Ход {run.history.length + 1} из {run.history.length + remaining}</strong><span aria-label="Осталось времени"><Clock3 size={15}/> {clock}</span></div>
+      <div className="iv-progress"><button aria-label="Выйти из интервью" onClick={leave}><X size={18}/></button><strong>Ход {run.history.length + 1} из {run.history.length + remaining}</strong><span aria-label="Осталось времени"><Clock3 size={15}/> {clock}</span></div>
       <div className="iv-phase-status"><span>Фаза {phaseIndex + 1} из {run.skeleton.phases.length} · {run.skeleton.phases[phaseIndex].label}</span><div aria-hidden="true">{run.skeleton.phases.map((phase, i) => <i className={i <= phaseIndex ? 'iv-phase-on' : ''} key={phase.id}/>)}</div></div>
       <div className="iv-turn-context">
         <InterviewCondition key={move.id} run={run}/>
@@ -411,7 +426,7 @@ export default function Interview({ onExit }) {
       {run.opened.length > 0 && <details className="iv-opened" open={run.history.at(-1)?.opened.length > 0 || undefined}><summary>Открытые улики ({run.opened.length})</summary>
         {run.seed.clues.filter(clue => run.opened.includes(clue.id)).map(clue => <Table key={clue.id} value={clue}/>)}
       </details>}
-      <Map entries={run.map}/>
+      <DecisionMap entries={run.map}/>
       <form className="iv-form iv-turn-form" onSubmit={submit}>
         {options && <fieldset aria-describedby={move.answerFormat ? 'iv-answer-format' : undefined}><legend>{run.configured || move.justify ? 'Выбери один вариант' : 'Выбери один вопрос'}</legend>{options.map(option =>
           <button type="button" key={option} aria-pressed={run.choice === option} onClick={() => edit({ choice: option })}>{optionLabel(move, option)}</button>)}</fieldset>}
@@ -426,7 +441,7 @@ export default function Interview({ onExit }) {
         </button>
       </form>
     </>}
-    {run?.status === 'finished' && <Debrief run={run} onBack={() => pause()} onReview={() => review(run)} reviewing={reviewing === run.id} reviewError={reviewError?.id === run.id ? reviewError.message : ''}
+    {run?.status === 'finished' && <Debrief run={run} onBack={leave} onReview={() => review(run)} reviewing={reviewing === run.id} reviewError={reviewError?.id === run.id ? reviewError.message : ''}
       onNext={() => { event('next_case_clicked', run); if (run.configured) openSetup(run.settings); else select(run.skeleton); }}/>}
   </div></div>;
 }

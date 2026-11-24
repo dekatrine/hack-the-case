@@ -2,9 +2,7 @@ import React from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import Interview from './Interview.jsx';
-import calibration from './calibration.json';
-import { currentTurn, optionLabel } from './engine.js';
-import { readRuns } from './storage.js';
+import { readRuns, readSeenRuns } from './storage.js';
 import { api } from '../api/client.js';
 
 vi.mock('../api/analytics.js', () => ({ track: vi.fn() }));
@@ -17,58 +15,41 @@ vi.mock('../api/client.js', () => ({
 }));
 afterEach(cleanup);
 
-it('resumes a saved draft offline and opens the full debrief with a flagged factual error', async () => {
+it('discards unfinished interviews on exit and reload and starts with a fresh case', async () => {
   localStorage.clear();
   window.scrollTo = vi.fn();
-  const latest = () => readRuns()[0];
   const click = name => fireEvent.click(screen.getByRole('button', { name }));
-  const type = value => fireEvent.change(screen.getByRole('textbox'), { target: { value } });
+  const begin = async () => {
+    click(/Диагностика метрики/);
+    const button = screen.getByRole('button', { name: 'Начать интервью' });
+    await waitFor(() => expect(button.disabled).toBe(false));
+    fireEvent.click(button);
+  };
+
   render(<Interview onExit={vi.fn()}/>);
-  click(/Диагностика метрики/);
-  const begin = screen.getByRole('button', { name: 'Начать интервью' });
-  await waitFor(() => expect(begin.disabled).toBe(false));
-  const brief = latest().seed.intro;
-  fireEvent.click(begin);
-  const condition = () => screen.getByText('Условие', { exact: true }).closest('details');
-  expect(condition().open).toBe(false);
-  fireEvent.click(screen.getByText('Условие', { exact: true }));
-  expect(condition().open).toBe(true);
-  expect(condition().textContent).toContain(brief);
-  const text = calibration.diagnosis.scope;
-  type(text);
-  click('Не знаю, с чего начать');
-  click('Пауза');
+  await begin();
+  const first = readSeenRuns()[0];
+  const legacy = { ...first, status: 'active', queue: [], draft: 'Старый черновик' };
+  localStorage.setItem('htc_interview_runs_v1', JSON.stringify([legacy]));
+  fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Черновик' } });
+  click('Выйти из интервью');
+  expect(screen.queryByText(/Продолжить с хода/)).toBeNull();
+  expect(screen.queryByText(/Прошлые разборы/)).toBeNull();
+
   cleanup();
-
   render(<Interview onExit={vi.fn()}/>);
-  click(/Продолжить с хода 1/);
-  expect(screen.getByRole('textbox').value).toBe(text);
-  expect(condition().open).toBe(false);
-  expect(condition().textContent).toContain(brief);
-  expect(screen.getByText('−1 балл к итогу')).toBeTruthy();
-  for (let i = 0; latest().status === 'active' && i < 17; i += 1) {
-    const run = latest();
-    const turn = currentTurn(run);
-    const { seed } = run;
-    if (turn.options) click(turn.options === 'segments' ? seed.groups[0] : optionLabel(turn, turn.options[0]));
-    if (!turn.options || turn.justify) {
-      type(turn.fact ? 'Пилот отыграл две трети падения.' : (calibration.diagnosis[turn.id] || calibration.diagnosis[turn.id.replace('_clarify', '')]).replace('{recovery}', seed.recovery));
-    }
-    if (turn.kind === 'CHALLENGE') expect(screen.getByText('Уточнение интервьюера')).toBeTruthy();
-    click(turn.kind === 'DEMAND' ? 'Завершить интервью' : turn.evidence ? 'Запросить данные' : 'Ответить');
-    if (i === 0) {
-      expect(condition().open).toBe(false);
-      expect(condition().textContent).toContain(brief);
-    }
-  }
-  expect(screen.getByRole('heading', { name: 'Разбор интервью' })).toBeTruthy();
-  expect(screen.getByRole('heading', { name: 'Сверка с данными' })).toBeTruthy();
-  expect(latest().opened).toContain('independent');
-  const previous = latest().seed.pair;
-  click('Следующий кейс');
-  expect(latest().seed.pair).not.toBe(previous);
-});
+  expect(JSON.parse(localStorage.getItem('htc_interview_runs_v1'))).toEqual([]);
+  await begin();
+  const second = readSeenRuns().find(item => item.id !== first.id);
+  expect(second.seed).not.toEqual(first.seed);
+  expect(screen.getByRole('textbox').value).toBe('');
+  expect(readRuns()).toEqual([]);
 
+  cleanup();
+  render(<Interview onExit={vi.fn()}/>);
+  expect(screen.getByRole('heading', { name: 'Кейс-интервью' })).toBeTruthy();
+  expect(screen.queryByText(/Продолжить с хода/)).toBeNull();
+});
 
 it('creates a configured interview, opens the selected evidence and evaluates only the visited turns', async () => {
   localStorage.clear();
@@ -126,11 +107,7 @@ it('creates a configured interview, opens the selected evidence and evaluates on
   expect(screen.queryByText('В мобильном приложении оплатили 20%.')).toBeNull();
   expect(screen.getByText('«По этапам»')).toBeTruthy();
 
-  click('Пауза');
-  cleanup();
-  render(<Interview onExit={vi.fn()}/>);
-  click(/Продолжить с хода/);
-  expect(screen.getByText(/120 человек/)).toBeTruthy();
+  expect(readRuns()).toEqual([]);
   answer('До оплаты дошли сто двадцать покупателей из корзины.');
   expect(screen.getByText('До релиза можно изменить только один экран.')).toBeTruthy();
   answer('Исправлю вариант заполнения адреса на одном экране.');
@@ -141,4 +118,10 @@ it('creates a configured interview, opens the selected evidence and evaluates on
   ]);
   expect(api.evaluate.mock.lastCall[0].answers.variant_open).toContain('Уточнение: Проверю переход');
   expect(readRuns()[0].review.score.final).toBe(82);
+
+  cleanup();
+  render(<Interview onExit={vi.fn()}/>);
+  fireEvent.click(screen.getByText('Прошлые разборы', { exact: false }));
+  click(/Первый заказ на маркетплейсе/);
+  expect(screen.getByText('Аргумент связан с данными.')).toBeTruthy();
 });

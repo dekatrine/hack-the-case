@@ -83,7 +83,6 @@ button.iv-card:hover { border-color: var(--iv-lime); }
 .iv-debrief-section li { margin: 8px 0; }
 .iv-loading { background: var(--iv-surface); color: var(--iv-muted); border-radius: 10px; padding: 10px; border-left: 3px solid var(--iv-lime); }
 
-button.iv-configure { border-color: var(--iv-lime); }
 .iv-setup-form { margin-top: 0; }
 .iv-setup-form select {
   width: 100%;
@@ -118,3 +117,12 @@ button.iv-configure { border-color: var(--iv-lime); }
 .iv-answer-format strong { color: #f2f3f2; }
 .iv-form textarea { font-size: 16px; }
 .iv-turn-form { margin-top: 0; }
+
+.iv-new-interview { gap: 12px; }
+.iv-ready { display: grid; gap: 7px; }
+.iv-ready .iv-card { padding: 9px 11px; }
+.iv-ready .iv-card > svg { flex-shrink: 0; }
+.iv-review-history { padding-top: 0; padding-bottom: 0; }
+.iv-review-history[open] { padding-bottom: 12px; }
+.iv-review-history summary { font-weight: 700; }
+.iv-review-history summary span { margin-left: 6px; color: var(--iv-muted); font-weight: 400; }

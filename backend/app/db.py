@@ -154,10 +154,43 @@ def claim_link_code(code: str) -> Optional[dict]:
 def get_interview_runs(user_id: str) -> list[dict]:
     with _lock:
         rows = get_conn().execute(
-            "SELECT data FROM interview_runs WHERE user_id = ? ORDER BY updated_at DESC LIMIT 30",
+            """SELECT data FROM interview_runs
+               WHERE user_id = ? AND json_extract(data, '$.status') = 'finished'
+               ORDER BY updated_at DESC LIMIT 30""",
             (user_id,),
         ).fetchall()
     return [json.loads(row[0]) for row in rows]
+
+
+def discard_incomplete_interview_runs(user_id: str) -> list[dict]:
+    with _lock:
+        conn = get_conn()
+        condition = "user_id = ? AND json_extract(data, '$.status') IN ('briefing', 'active')"
+        with conn:
+            rows = conn.execute(
+                f"SELECT data FROM interview_runs WHERE {condition} ORDER BY updated_at DESC LIMIT 150",
+                (user_id,),
+            ).fetchall()
+            conn.execute(f"DELETE FROM interview_runs WHERE {condition}", (user_id,))
+
+    seen = []
+    for (data,) in rows:
+        run = json.loads(data)
+        skeleton, seed = run["skeleton"], run["seed"]
+        if not skeleton.get("id"):
+            continue
+        brief = {"id": run["id"], "createdAt": run.get("createdAt"), "skeleton": {"id": skeleton["id"]}}
+        configured, settings = run.get("configured"), run.get("settings")
+        if isinstance(configured, dict) and isinstance(settings, dict):
+            brief.update(
+                seed={"intro": seed.get("intro")},
+                configured={"variantId": configured.get("variantId"), "fingerprints": configured.get("fingerprints")},
+                settings={"industry": settings.get("industry"), "interviewType": settings.get("interviewType")},
+            )
+        else:
+            brief["seed"] = {key: seed.get(key) for key in ("industryIndex", "truthIndex")}
+        seen.append(brief)
+    return seen
 
 
 def put_interview_run(user_id: str, run_id: str, data: str, updated_at: int) -> None:

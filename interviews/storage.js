@@ -1,14 +1,46 @@
 import { ensureAuth, apiFetch } from '../api/sync.js';
 
 const KEY = 'htc_interview_runs_v1';
+const SEEN_KEY = 'htc_interview_seen_v1';
 
-export function readRuns() {
+function readList(key) {
   try {
-    const value = JSON.parse(localStorage.getItem(KEY) || '[]');
-    return Array.isArray(value) ? value.filter(run => run?.skeleton?.id && run.seed && Array.isArray(run.queue)) : [];
+    const data = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
+}
+
+const storedRuns = () => readList(KEY).filter(run => run?.skeleton?.id && run.seed && Array.isArray(run.queue));
+export const readRuns = () => storedRuns().filter(run => run.status === 'finished');
+export const readSeenRuns = () => readList(SEEN_KEY);
+
+function seenRun(run) {
+  const { id, createdAt, skeleton, seed, configured, settings } = run;
+  const base = { id, createdAt, skeleton: { id: skeleton.id } };
+  if (configured && settings) {
+    return {
+      ...base, seed: { intro: seed.intro },
+      configured: { variantId: configured.variantId, fingerprints: configured.fingerprints || [] },
+      settings: { industry: settings.industry, interviewType: settings.interviewType },
+    };
+  }
+  return { ...base, seed: { industryIndex: seed.industryIndex, truthIndex: seed.truthIndex } };
+}
+
+export function rememberRuns(runs) {
+  const entries = new Map(readSeenRuns().map(run => [run.id, run]));
+  for (const run of runs) entries.set(run.id, seenRun(run));
+  const recent = [...entries.values()].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 150);
+  localStorage.setItem(SEEN_KEY, JSON.stringify(recent));
+}
+
+export function discardLocalDrafts() {
+  const drafts = storedRuns().filter(run => run.status !== 'finished');
+  if (!drafts.length) return;
+  rememberRuns(drafts);
+  saveRuns(readRuns());
 }
 
 export function mergeRuns(local, remote) {
@@ -20,7 +52,7 @@ export function mergeRuns(local, remote) {
 }
 
 export function saveRuns(runs) {
-  localStorage.setItem(KEY, JSON.stringify(runs));
+  localStorage.setItem(KEY, JSON.stringify(runs.filter(run => run.status === 'finished')));
 }
 
 let authentication;
@@ -36,8 +68,15 @@ async function login() {
 export async function pullRuns() {
   await login();
   const { runs } = await apiFetch('/api/interview-runs');
-  for (const run of runs) markSent(run);
-  return runs;
+  const finished = runs.filter(run => run.status === 'finished');
+  for (const run of finished) markSent(run);
+  return finished;
+}
+
+export async function discardRemoteDrafts() {
+  await login();
+  const { seen } = await apiFetch('/api/interview-runs/discard-incomplete', { method: 'POST' });
+  if (seen?.length) rememberRuns(seen);
 }
 
 function markSent(run) {
@@ -87,9 +126,10 @@ async function flushRuns() {
 }
 
 export function pushRun(run) {
+  if (run.status !== 'finished') return Promise.resolve();
   if ((sent.get(run.id) || 0) >= run.updatedAt) return Promise.resolve();
   if ((pending.get(run.id)?.updatedAt || 0) < run.updatedAt) pending.set(run.id, run);
-  // A single request stays in flight while newer drafts replace the queued snapshot.
+  // A single request stays in flight while newer versions replace the queued snapshot.
   flushing ||= flushRuns().finally(() => { flushing = undefined; });
   return flushing;
 }
