@@ -376,7 +376,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
   if (screen === 'interviews') return <Interview start={interviewStart} onExit={() => { setInterviewStart(null); go('home'); }} onStudy={(target, params = {}) => { setInterviewStart(null); setStudyLesson(params.lessonId || null); if (params.chapter) setBookChapter(params.chapter); if (target === 'cards') setTheorySavedOnly(false); go(target); }}/>;
 
   return <div className="mvp-app">
-    <header className="mvp-header">
+    <header className="mvp-header" data-focus={screen === 'solve' ? 'true' : undefined}>
       <button className="clean-brand" disabled={!!busy} onClick={() => go('library')} aria-label="Hack the Case — практика"><span className="mark">H</span><b>Hack the Case</b></button>
       <nav aria-label="Основная навигация">
         <button aria-current={screen === 'home' || screen === 'progress' ? 'page' : undefined} disabled={!!busy} onClick={() => go('home')}>Главная</button>
@@ -494,8 +494,8 @@ export default function MvpApp({ initialScreen = 'home' }) {
           onEvaluate={evaluate} onReview={() => { setAttemptIndex(null); go('review'); }}/>
       </>}
       {screen === 'solve' && active && !diagnostic && <>
-        <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
-        <button className="mvp-back" disabled={!!busy} onClick={() => startInterviewFor(active)}>Пройти как собес →</button>
+        <div className="mvp-solve-top"><button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
+        <button className="mvp-back" disabled={!!busy} onClick={() => startInterviewFor(active)}>Пройти как собес →</button></div>
         {!story && <div className="clean-eyebrow">Шаг 2 · Решение</div>}<h1>{story ? active.title : 'Твой ход'}</h1>
         {(selfCheck || (active.focusSkill && skillLabel)) && <p className="mvp-muted">
           {selfCheck ? 'Самопроверка' : 'Фокус тренировки'}{active.focusSkill && skillLabel ? ` · ${skillLabel}` : ''}

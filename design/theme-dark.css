@@ -95,3 +95,12 @@ html, body, #root { background: var(--dk-bg); color: var(--dk-text); }
 .mvp-review-interview { width: 100%; margin-top: 14px; min-height: 48px; border: 0; border-radius: 999px; background: var(--dk-lime); color: var(--dk-on-lime); font: inherit; font-weight: 700; cursor: pointer; }
 .mvp-summary-card .mvp-summary { font-size: 16px; line-height: 1.5; font-weight: 500; }
 .mvp-review-score > p { color: var(--dk-muted); font-size: 14px; }
+
+/* Solving a case is a focused flow: no bottom bar on phones */
+.mvp-solve-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+@media(max-width:680px) {
+  .mvp-header[data-focus="true"] nav { display: none; }
+}
+.mycases-learning-tip { border: 1px solid #6b5420; background: #221c10; border-radius: 14px; padding: 14px 16px; margin: 12px 0; color: var(--dk-text); }
+.mycases-learning-tip p { color: var(--dk-muted); font-size: 13px; margin: 4px 0 8px; }
+.mycases-learning-tip button { background: none; border: 0; color: #ffb347; font: inherit; font-weight: 650; padding: 0; cursor: pointer; }
