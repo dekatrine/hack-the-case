@@ -221,6 +221,11 @@ class MvpTests(unittest.TestCase):
         self.assertIn("Сервис доставляет товары первой необходимости только ночью", model.call_args.args[1])
         self.assertTrue(set(first.fingerprints[:4]).isdisjoint(second.fingerprints[:4]))
         self.assertTrue(set(first.fingerprints) & set(second.fingerprints))
+        # When every attempt only repeats earlier cases, a well-formed repeat beats an error.
+        model.side_effect = [json.dumps(night)] * 3
+        third = generate_case(GenerateCaseRequest(**settings, interviewType="product_experiment", variantId="ab",
+            extraContext="Ночная доставка", seenFingerprints=second.fingerprints, recentCases=[second.caseIntro]))
+        self.assertIn("**Продукт** Маркетплейс доставки товаров первой необходимости ночью.", third.caseIntro)
 
     @patch('app.main.call_yandex_gpt', return_value='{"summary":"OK","grades":[3]}')
     def test_mvp_score_applies_a_deduction_after_grading(self, model):

@@ -322,6 +322,7 @@ def generate_variant(payload, call_model):
             fallback_profiles = MARKETPLACE_PROFILES
         elif variant_id == "onboarding" and re.search(r"edtech|образован", industry):
             fallback_profiles = EDTECH_PROFILES
+    best = None  # a well-formed story that only repeated an earlier one; better than an error
     for angle, (world, premise, marker) in zip(angles, candidates):
         scenario = ""
         if detailed:
@@ -371,9 +372,15 @@ def generate_variant(payload, call_model):
             if detailed:
                 fingerprints.append(fingerprint("world", f"{industry}:{world}"))
             return variant_id, story, fingerprints
+        if detailed:
+            fingerprints.append(fingerprint("world", f"{industry}:{world}"))
+        best = (variant_id, story, fingerprints)
         prompt += "\nСовпали данные или вопросы. Возьми другую бизнес-ситуацию и другие численные сравнения."
     if fallback_profiles and (fallback := onboarding_fallback(payload, seen, fallback_profiles)):
         return fallback
+    if best:
+        logger.info("Generation returned a repeated but well-formed variant after %d attempts", len(angles))
+        return best
     raise RuntimeError("Не удалось создать новый вариант. Попробуй сгенерировать ещё раз.")
 
 
