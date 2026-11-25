@@ -131,9 +131,9 @@ export default function CaseFlow({ fields, caseRoute = [], caseIntro, answers, q
           {coaching !== guidance && <button type="button" className="mvp-step-hint-toggle" disabled={!!busy || hintBusy} aria-expanded={showHint} aria-controls="case-step-hint" onClick={() => {
             if (!showHint && !hints[key]?.basic) onRevealHint(key);
             setShowHint(!showHint);
-          }}>{showHint ? 'Скрыть подсказку' : hints[key]?.basic ? 'Обычная подсказка' : 'Обычная подсказка · −1'}</button>}
+          }}>{showHint ? 'Скрыть подсказку' : hints[key]?.basic ? 'Подсказка' : 'Подсказка · −1 балл'}</button>}
           {stepHints.length < 2 && <button type="button" className="mvp-step-hint-toggle" disabled={!!busy || hintBusy} onClick={askForHint}>
-            <Sparkles size={15} aria-hidden="true"/>{hintBusy ? 'Готовим подсказку…' : stepHints.length ? 'Ещё ИИ-подсказка · −2' : 'ИИ-подсказка · −2'}
+            <Sparkles size={15} aria-hidden="true"/>{hintBusy ? 'Готовим подсказку…' : stepHints.length ? 'Подсказка ИИ · 2 из 2 · −2 балла' : 'Подсказка ИИ · 1 из 2 · −2 балла'}
           </button>}
         </div>
         {showHint && <div id="case-step-hint" className="mvp-step-hint"><b>С чего начать</b><p>{coaching}</p></div>}

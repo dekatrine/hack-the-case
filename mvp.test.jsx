@@ -182,13 +182,13 @@ describe('MVP core flow', () => {
   it('counts revealed hints once, persists AI hints and reports the score adjustment', async () => {
     await newCase();
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Мой первый вывод' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Обычная подсказка · −1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Подсказка · −1 балл' }));
     fireEvent.click(screen.getByRole('button', { name: 'Скрыть подсказку' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Обычная подсказка' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Подсказка' }));
     api.coach.mockRejectedValueOnce(new Error('Сбой')).mockResolvedValueOnce({ message: 'Уточни, для кого актуальна проблема.' });
-    fireEvent.click(screen.getByRole('button', { name: 'ИИ-подсказка · −2' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Подсказка ИИ · 1 из 2 · −2 балла' }));
     await screen.findByText('Сбой');
-    fireEvent.click(screen.getByRole('button', { name: 'ИИ-подсказка · −2' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Подсказка ИИ · 1 из 2 · −2 балла' }));
     await screen.findByText('Уточни, для кого актуальна проблема.');
     expect(api.coach).toHaveBeenLastCalledWith(expect.objectContaining({ stepHint: true, stepId: 'problem', answerText: 'Мой первый вывод' }));
     cleanup(); render(<MvpApp initialScreen="library"/>);
