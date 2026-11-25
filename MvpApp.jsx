@@ -103,6 +103,7 @@ function titleOf(text) {
 function ReviewScore({ score }) {
   if (!score) return null;
   return <section className="mvp-review-score" aria-label="Итоговая оценка">
+    <span className="mvp-review-label" aria-hidden="true">Итоговая оценка</span>
     {Number.isInteger(score.final) && <strong>{score.final} из 100</strong>}
     <p>{Number.isInteger(score.quality) && `Качество решения · ${score.quality} из 100. `}
       {score.hintPenalty ? `За подсказки · −${score.hintPenalty}.` : 'Подсказки не использовались.'}
@@ -120,11 +121,11 @@ function Review({ value, score }) {
     {steps.length > 0 && <p className="mvp-muted">
       Полный балл на {steps.filter(grade => grade === 3).length} из {steps.length} шагов
     </p>}
-    <p className="mvp-summary">{parsed.summary}</p>
+    <section className="mvp-summary-card"><span className="mvp-review-label">Коротко</span><p className="mvp-summary">{parsed.summary}</p></section>
     {[['strengths', 'Что получилось'], ['improvements', 'Что стоит улучшить'], ['topTips', 'Что исправить в первую очередь']].map(([key, label]) => (
-      Array.isArray(parsed[key]) && parsed[key].length > 0 && <section key={key}>
-        <h3>{label}</h3><ul>{parsed[key].filter(x => typeof x === 'string').map((item, i) => <li key={i}>{item}</li>)}</ul>
-      </section>
+      Array.isArray(parsed[key]) && parsed[key].length > 0 && <details className="mvp-review-block" key={key} open={key === 'strengths'}>
+        <summary>{label}</summary><ul>{parsed[key].filter(x => typeof x === 'string').map((item, i) => <li key={i}>{item}</li>)}</ul>
+      </details>
     ))}
   </>;
 }
@@ -524,7 +525,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
         <div className="clean-eyebrow">Шаг 3 · Обратная связь</div><h1>Разбор решения</h1><p className="mvp-lead">{titleOf(active.title || active.caseText)}</p>
         {selfCheck && <p className="mvp-muted">Результат самопроверки</p>}
         <label className="mvp-version">Версия решения<select value={attemptIndex ?? attempts.length - 1} onChange={e => setAttemptIndex(Number(e.target.value))}>{attempts.map((a, i) => <option key={i} value={i}>Версия {i + 1} · {new Date(a.createdAt).toLocaleString('ru-RU')}</option>)}</select></label>
-        <article className="mvp-card mvp-review"><Review value={attempt.evaluation} score={attempt.score}/>{/(конверс|воронк|метрик|conversion|funnel|metric)/i.test(attempt.evaluation) && <div className="mycases-learning-tip"><strong>Хочешь потренировать метрики?</strong><p>Это дополнительная практика по теме разбора, а не автоматическая оценка твоих навыков.</p><button type="button" onClick={() => go('learning')}>Перейти к урокам по метрикам →</button></div>}<details><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div>{(!diagnostic && (!story || fields.some(([id]) => id === key))) && <button className="mvp-edit-step" onClick={() => { update(active.id, c => ({ ...c, currentQuestionId: key })); go('solve'); }}>Доработать этот шаг</button>}</section>)}</details></article>
+        <article className="mvp-card mvp-review"><Review value={attempt.evaluation} score={attempt.score}/>{/(конверс|воронк|метрик|conversion|funnel|metric)/i.test(attempt.evaluation) && <div className="mycases-learning-tip"><strong>Хочешь потренировать метрики?</strong><p>Это дополнительная практика по теме разбора, а не автоматическая оценка твоих навыков.</p><button type="button" onClick={() => go('learning')}>Перейти к урокам по метрикам →</button></div>}<details className="mvp-review-block"><summary>Ответ этой версии</summary>{(attempt.questions || (attempt.questionVersion === 2 ? FIELDS : LEGACY_FIELDS)).map(([key, label]) => <section key={key}><h3>{label}</h3><div className="mvp-prose">{attempt.answers[key] || 'Не заполнено'}</div>{(!diagnostic && (!story || fields.some(([id]) => id === key))) && <button className="mvp-edit-step" onClick={() => { update(active.id, c => ({ ...c, currentQuestionId: key })); go('solve'); }}>Доработать этот шаг</button>}</section>)}</details><button type="button" className="mvp-review-interview" onClick={() => startInterviewFor(active)}>Пройти как собес →</button></article>
         {canPractice && <section className="mvp-card mvp-practice-link">
           <h2>{skillLabel}</h2>
           {priorPractice ? <div className="mvp-practice-comparison">

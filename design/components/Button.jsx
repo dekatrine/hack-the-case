@@ -62,9 +62,9 @@ export function Button({
       };
 
   const cleanPalette = {
-    primary: { background: 'var(--c-black)', color: '#fff', boxShadow: 'var(--shadow-clean-1)' },
+    primary: { background: 'var(--text-primary)', color: 'var(--surface-page)', boxShadow: 'var(--shadow-clean-1)' },
     accent: { background: 'var(--accent-primary)', color: 'var(--c-black)', boxShadow: 'var(--shadow-clean-accent)' },
-    neutral: { background: 'var(--c-white)', color: 'var(--c-black)', border: '1px solid var(--border-hairline)' },
+    neutral: { background: 'var(--surface-card)', color: 'var(--text-primary)', border: '1px solid var(--border-hairline-strong)' },
     ghost: { background: 'transparent', color: 'var(--text-secondary)' },
   };
   const questPalette = {
