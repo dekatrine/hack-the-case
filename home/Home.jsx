@@ -19,8 +19,13 @@ export function useProgress() {
 export function Trend({ scores }) {
   if (scores.length < 2) return <p className="home-muted">График появится после двух занятий с оценкой.</p>;
   const last = scores.slice(-8);
-  const points = last.map((score, i) => `${10 + i * (300 / (last.length - 1))},${80 - score * 0.7}`).join(' ');
-  return <svg className="home-trend" viewBox="0 0 320 90" role="img" aria-label={`Баллы: ${last.join(', ')}`}><polyline fill="none" stroke="#6d8f00" strokeWidth="3" points={points}/></svg>;
+  const coords = last.map((score, i) => [10 + i * (300 / (last.length - 1)), 80 - score * 0.7]);
+  const points = coords.map(point => point.join(',')).join(' ');
+  return <svg className="home-trend" viewBox="0 0 320 90" role="img" aria-label={`Баллы: ${last.join(', ')}`}>
+    <line x1="10" x2="310" y1="45" y2="45" stroke="#373d40" strokeDasharray="3 5"/>
+    <polyline fill="none" stroke="#d4ff3a" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" points={points}/>
+    {coords.map(([x, y], i) => <circle key={i} cx={x} cy={y} r={i === coords.length - 1 ? 5 : 3.5} fill={i === coords.length - 1 ? '#d4ff3a' : '#0f1012'} stroke="#d4ff3a" strokeWidth="2"/>)}
+  </svg>;
 }
 
 export default function Home({ preferred = 'discovery', split = false, onStart, onResume, onProgress, onLibrary }) {
@@ -63,7 +68,7 @@ export default function Home({ preferred = 'discovery', split = false, onStart, 
     </section>
     <div className="home-row home-links">
       <button type="button" className="home-link" onClick={onProgress}>Прогресс</button>
-      <button type="button" className="home-link" onClick={onLibrary}>Мои кейсы</button>
+      <button type="button" className="home-link" onClick={onLibrary}>Практика</button>
     </div>
   </div>;
 }

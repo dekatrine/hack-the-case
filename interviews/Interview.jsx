@@ -466,7 +466,7 @@ export default function Interview({ onExit, start: startOptions, onStudy }) {
     {saveError && <p role="alert" className="iv-warning">Не удалось сохранить историю в браузере.</p>}
     {setup && <InterviewSetup presets={skeletons} onPreset={skeleton => { setSetup(null); select(skeleton); }} initial={setup} busy={generating} error={generationError} onGenerate={generate} onBack={() => setSetup(null)}/>}
     {!run && !setup && <>
-      <button className="iv-text-button" onClick={onExit}><ArrowLeft size={18}/> Мои кейсы</button>
+      <button className="iv-text-button" onClick={onExit}><ArrowLeft size={18}/> Практика</button>
       <h1 ref={heading} tabIndex={-1}>Кейс-интервью</h1>
       {draftRun && <section className="iv-menu iv-resume">
         <h2>Продолжить собес</h2>

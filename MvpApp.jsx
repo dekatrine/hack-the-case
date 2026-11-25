@@ -489,7 +489,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
         </form><aside className="mvp-setup-aside"><span className="mvp-kicker">Твоя тренировка</span><h2>{selectedType.label}</h2><p>{selectedType.description}. Условие, вопросы и разбор адаптируются под выбранный тип.</p><div className="mvp-setup-spec"><span>Направление<b>Продуктовое</b></span><span>Уровень<b>{params.difficulty}</b></span><span>Формат<b>Письменный кейс</b></span></div><div className="mvp-aside-bottom"><Sparkles size={20}/><b>Обратная связь по делу</b><p>Что получилось, где не хватает аргументов и что улучшить в следующей попытке.</p></div></aside></div>}
       </>}
       {screen === 'solve' && active && diagnostic && <>
-        <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
+        <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Практика</button>
         <h1>{active.title}</h1>
         <SearchDiagnostic key={active.id} item={active} slice={diagnosticSlice} attempt={attempts.at(-1)} busy={busy}
           reviewError={reviewError} hasChanges={hasChanges} onRequest={requestDiagnosticSlice}
@@ -503,7 +503,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
           onEvaluate={evaluate} onReview={() => { setAttemptIndex(null); go('review'); }}/>
       </>}
       {screen === 'solve' && active && !diagnostic && <>
-        <div className="mvp-solve-top"><button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
+        <div className="mvp-solve-top"><button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Практика</button>
         <button className="mvp-back" disabled={!!busy} onClick={() => startInterviewFor(active)}>Пройти как собес →</button></div>
         {!story && <div className="clean-eyebrow">Шаг 2 · Решение</div>}<h1>{story ? active.title : 'Твой ход'}</h1>
         {(selfCheck || (active.focusSkill && skillLabel)) && <p className="mvp-muted">
@@ -530,7 +530,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
           </>}/>
       </>}
       {screen === 'review' && active && attempt && <div className="mvp-narrow">
-        <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Мои кейсы</button>
+        <button className="mvp-back" disabled={!!busy} onClick={() => go('library')}>← Практика</button>
         <div className="clean-eyebrow">Шаг 3 · Обратная связь</div><h1>Разбор решения</h1><p className="mvp-lead">{titleOf(active.title || active.caseText)}</p>
         {selfCheck && <p className="mvp-muted">Результат самопроверки</p>}
         <label className="mvp-version">Версия решения<select value={attemptIndex ?? attempts.length - 1} onChange={e => setAttemptIndex(Number(e.target.value))}>{attempts.map((a, i) => <option key={i} value={i}>Версия {i + 1} · {new Date(a.createdAt).toLocaleString('ru-RU')}</option>)}</select></label>

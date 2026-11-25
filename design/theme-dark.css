@@ -105,3 +105,7 @@ html, body, #root { background: var(--dk-bg); color: var(--dk-text); }
 .mycases-learning-tip p { color: var(--dk-muted); font-size: 13px; margin: 4px 0 8px; }
 .mycases-learning-tip button { background: none; border: 0; color: #ffb347; font: inherit; font-weight: 650; padding: 0; cursor: pointer; }
 .home-nudge { color: var(--dk-lime); font-size: 14px; margin: 4px 0; }
+
+/* Theory table of contents: the active chapter is lime, so its text must be dark. */
+.book-toc nav button[aria-current="page"], .book-toc nav button[aria-current="page"] > span { color: #111500; }
+.book-toc nav button { color: var(--text-primary); }
