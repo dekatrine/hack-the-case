@@ -71,3 +71,14 @@ html, body, #root { background: var(--dk-bg); color: var(--dk-text); }
 .mvp-lib-filter button[aria-pressed="true"] { background: var(--dk-lime); color: var(--dk-on-lime); border-color: var(--dk-lime); font-weight: 700; }
 .mvp-lib-filter { justify-content: center; margin: 16px auto 8px; }
 @media(max-width:680px) { .mvp-header nav { background: var(--dk-surface-2); border-top-color: var(--dk-hair); } }
+
+/* Lessons: readable options, clear selected and result states */
+.lp-answer, .lp-answer:disabled { color: var(--dk-text); opacity: 1; }
+.lp-answer[aria-pressed="true"] { border-color: var(--dk-lime); background: var(--dk-lime-bg); }
+.lp-feedback.ok { background: var(--dk-lime-bg); border: 1px solid var(--dk-lime-line); }
+.lp-feedback.ok strong { color: var(--dk-lime); }
+.lp-feedback.bad { background: #2a1714; border: 1px solid #6b2b22; }
+.lp-feedback.bad strong { color: #ff8a7a; }
+.mvp-lib-filter { margin-bottom: 20px; }
+@media(max-width:680px) { .mvp-lib-head .mvp-btn, .lib-head .lib-new { display: none; } }
+.lp-answers .lp-answer, .lp-answers .lp-answer:disabled, .lp-answers .lp-answer span { color: var(--dk-text) !important; -webkit-text-fill-color: var(--dk-text); }
