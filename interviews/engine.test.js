@@ -4,6 +4,7 @@ import { advance, createRun, currentTurn, optionLabel, plan, skeletons, targetEn
 import { assessTurn, debrief } from './rubric.js';
 import { chooseSeed, validateSeed } from './seeds.js';
 import { compareWithPrevious } from './compare.js';
+import { summarize } from '../home/progress.js';
 
 const weakExamples = [
   'Не знаю.',
@@ -224,5 +225,15 @@ describe('comparison with the previous interview', () => {
     expect(result.changes.length).toBeGreaterThan(0);
     expect(result.changes.every(skill => skill.delta >= 0.5 || skill.delta <= -0.5)).toBe(true);
     expect(compareWithPrevious(weak, [weak, strong])).toBeNull();
+  });
+});
+
+describe('weak skill is named only when it is actually weak', () => {
+  const skeleton = skeletons.find(item => item.id === 'discovery');
+  it('names a weakest skill after a weak interview and none after a strong one', () => {
+    const weak = { ...simulate(skeleton, 0, false), id: 'w', updatedAt: 1000 };
+    const strong = { ...simulate(skeleton, 0, true), id: 's', updatedAt: 2000 };
+    expect(summarize([weak]).weakest).toBeTruthy();
+    expect(summarize([strong]).weakest).toBeNull();
   });
 });

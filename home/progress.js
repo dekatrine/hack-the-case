@@ -24,7 +24,8 @@ export function summarize(runs, practice = []) {
     return { id, label: SKILL_LABELS[id], percent: recent.length ? Math.round(recent.reduce((s, g) => s + g, 0) / recent.length / 3 * 100) : null };
   });
   const known = skills.filter(skill => skill.percent !== null).sort((a, b) => a.percent - b.percent);
-  const weakest = known[0] || null;
+  // A skill counts as weak only when it is actually below the bar; at 97/100 there is nothing to fix.
+  const weakest = known[0] && known[0].percent < 83 ? known[0] : null;
   return {
     total: runs.filter(run => run.status === 'finished').length + practice.length,
     scores: timeline.map(item => item.final),

@@ -51,7 +51,7 @@ function DecisionMap({ entries }) {
 function Drill({ run, result }) {
   const [text, setText] = useState('');
   const [checked, setChecked] = useState(null);
-  const target = result.results.filter(row => row.turnId && row.grade < 3).sort((a, b) => a.grade - b.grade)[0];
+  const target = result.results.filter(row => row.turnId && row.grade < 2.5).sort((a, b) => a.grade - b.grade)[0];
   const entry = target && run.history.find(item => item.id === target.turnId);
   const move = entry && plan(run.skeleton).find(turn => turn.id === entry.id.replace(/_clarify$/, ''));
   if (!entry || !move) return null;
