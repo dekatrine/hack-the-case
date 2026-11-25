@@ -50,7 +50,7 @@ VITE_API_BASE_URL=http://localhost:8000 npm run dev
 
 Modules:
 - `interviews/` — interview engine. `skeletons/*.json` define phases and turns (kinds ASK, DATA, CLARIFY, CHALLENGE, TWIST, DEMAND); `seeds.js` builds a random case per run (industry × hidden truth × twist × trap, with numbers, scenes, clues); `engine.js` runs a session; `rubric.js` grades answers locally by 7 skills (checks are regexes, plus `numberCheck` against the seed's numbers); `compare.js` compares with the previous interview; `configured.js` builds an LLM-generated interview ("configured"), graded by `/api/evaluate`; `Interview.jsx` is the UI (draft kept 24 h, drill on the weakest answer). `calibration.json` holds a strong answer for every turn of every skeleton.
-- `home/` — home, progress, onboarding. `attempts.js` is the single read model over interviews and case attempts; `progress.js` computes the summary, weekly rhythm and which scenario to recommend for the weakest skill.
+- `home/` — home, progress, onboarding. `attempts.js` is the single read model over interviews and case attempts; `progress.js` computes the summary, weekly rhythm and which scenario to recommend for the weakest skill; `reminder.js` gives the calm nudge after 5+ idle days and the weekly calendar (.ics) reminder.
 - `cases/` — case library and the self-paced case flow (`CaseFlow.jsx`, `caseWriting.js`).
 - `learning/` — lessons, theory, flashcards.
 - `api/client.js` — fetch wrapper (base URL from `VITE_API_BASE_URL`); `api/sync.js` mirrors some localStorage keys to the server.

@@ -1,3 +1,4 @@
+import { downloadReminder, nudge } from './reminder.js';
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { readDraft, readRuns } from '../interviews/storage.js';
@@ -50,6 +51,8 @@ export default function Home({ preferred = 'discovery', split = false, onStart, 
     <section className="home-card">
       <div className="home-row"><span className="home-label">Недельный ритм</span><b>{rhythm} из 4 недель</b></div>
       <p className="home-muted">Хотя бы одно занятие в неделю: собес или кейс. Пропуск ничего не сбрасывает.</p>
+      {nudge(attempts) && <p className="home-nudge" role="status">{nudge(attempts)}</p>}
+      <button type="button" className="home-link" onClick={downloadReminder}>Напоминать раз в неделю в календаре</button>
     </section>
     <div className="home-row home-links">
       <button type="button" className="home-link" onClick={onProgress}>Прогресс</button>
