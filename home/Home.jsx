@@ -1,4 +1,5 @@
-import { downloadReminder, nudge } from './reminder.js';
+import { downloadReminder } from './reminder.js';
+import { clearReview, dueReview } from './review.js';
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { readDraft, readRuns } from '../interviews/storage.js';
@@ -25,11 +26,18 @@ export function Trend({ scores }) {
 export default function Home({ preferred = 'discovery', split = false, onStart, onResume, onProgress, onLibrary }) {
   const { attempts, summary, rhythm } = useProgress();
   const draft = readDraft();
+  const due = dueReview();
+  const dueSkeleton = due ? recommendedSkeleton({ weakest: { id: due.skillId } }) : null;
   const skeletonId = summary.weakest ? recommendedSkeleton(summary) : preferred;
   const skeleton = skeletons.find(item => item.id === skeletonId) || skeletons[0];
   return <div className="home">
     <div className="home-eyebrow">Сегодня</div>
     <h1>{attempts.length ? 'Следующий собес готов' : 'Начни с первого собеса'}</h1>
+    {due && <section className="home-card home-due" aria-label="Пора повторить"><span className="home-label">Пора повторить</span>
+      <h2>Проверим навык «{due.label}»</h2>
+      <p className="home-muted">Прошло 3 дня после слабого места. Один собес покажет, что изменилось.</p>
+      <button type="button" className="home-btn" onClick={() => { clearReview(); onStart(dueSkeleton); }}>Повторить навык <ArrowRight size={18}/></button>
+      <button type="button" className="home-link" onClick={clearReview}>Не сейчас</button></section>}
     <section className="home-card home-main">
       <span className="home-label">{attempts.length ? 'Рекомендуем сегодня' : 'Первый шаг'}</span>
       <h2>{skeleton.label} · около {skeleton.minutes} мин</h2>
@@ -51,7 +59,6 @@ export default function Home({ preferred = 'discovery', split = false, onStart, 
     <section className="home-card">
       <div className="home-row"><span className="home-label">Недельный ритм</span><b>{rhythm} из 4 недель</b></div>
       <p className="home-muted">Хотя бы одно занятие в неделю: собес или кейс. Пропуск ничего не сбрасывает.</p>
-      {nudge(attempts) && <p className="home-nudge" role="status">{nudge(attempts)}</p>}
       <button type="button" className="home-link" onClick={downloadReminder}>Напоминать раз в неделю в календаре</button>
     </section>
     <div className="home-row home-links">

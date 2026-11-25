@@ -23,3 +23,13 @@ it('shows onboarding once, then the home with a recommended interview', () => {
   render(<MvpApp/>);
   expect(screen.queryByText('Готовишься к кейс-собесу?')).toBeNull();
 });
+
+it('shows the due skill re-check on the home and clears it on start', () => {
+  localStorage.clear(); window.scrollTo = vi.fn();
+  localStorage.setItem('htc_onboarding_v1', JSON.stringify({ done: true, role: 'analyst', level: 'new', time: 15 }));
+  localStorage.setItem('htc_skill_review_v1', JSON.stringify({ runId: 'x', skillId: 'hypotheses', label: 'Гипотезы', due: Date.now() - 1000 }));
+  render(<MvpApp/>);
+  expect(screen.getByText('Проверим навык «Гипотезы»')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: /Не сейчас/ }));
+  expect(localStorage.getItem('htc_skill_review_v1')).toBeNull();
+});

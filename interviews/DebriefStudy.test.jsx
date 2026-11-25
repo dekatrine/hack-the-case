@@ -35,4 +35,7 @@ it('links the weakest skill of a finished interview to its lesson and book chapt
   expect(onStudy).toHaveBeenCalledWith('learning', { lessonId: expect.any(String) });
   fireEvent.click([...region.querySelectorAll('button')].find(b => b.textContent.startsWith('Глава')));
   expect(onStudy).toHaveBeenLastCalledWith('theory', { chapter: expect.any(Number) });
+  const stored = JSON.parse(localStorage.getItem('htc_skill_review_v1'));
+  expect(stored.runId).toBe(run.id);
+  expect(screen.getByRole('region', { name: 'Повторная проверка' })).toBeTruthy();
 });

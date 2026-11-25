@@ -5,6 +5,8 @@ import { track } from '../api/analytics.js';
 import { advance, createRun, currentTurn, optionLabel, plan, skeletons, targetEntry } from './engine.js';
 import { assessTurn, debrief } from './rubric.js';
 import { linksForSkill } from '../learning/skillLinks.js';
+import { scheduleReview, REVIEW_DAYS } from '../home/review.js';
+import { downloadFile, reviewIcs } from '../home/reminder.js';
 import { compareWithPrevious } from './compare.js';
 import InterviewBrief, { InterviewCondition } from './InterviewBrief.jsx';
 import InterviewSetup, { defaultInterviewSettings } from './InterviewSetup.jsx';
@@ -86,6 +88,10 @@ function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError, onStud
   const { seed, skeleton } = run;
   const weakest = result?.results?.length ? [...result.results].sort((a, b) => a.grade - b.grade)[0] : null;
   const weakLinks = weakest && weakest.grade < 2.5 ? linksForSkill(weakest.id) : null;
+  const [review, setReview] = useState(null);
+  useEffect(() => {
+    if (weakLinks && run.id) setReview(scheduleReview({ runId: run.id, skillId: weakest.id, label: weakest.label }));
+  }, [run.id]); // eslint-disable-line react-hooks/exhaustive-deps
   let comparison = null;
   try { comparison = compareWithPrevious(run, readRuns()); } catch { comparison = null; }
   return <>
@@ -157,6 +163,9 @@ function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError, onStud
         : <><p>Короткая учёба по навыкам, которые просели в этом разборе.</p>
         <div className="iv-study-links"><button className="iv-text-button" onClick={() => onStudy('learning')}>Уроки по навыкам →</button><button className="iv-text-button" onClick={() => onStudy('theory')}>Теория по главам →</button><button className="iv-text-button" onClick={() => onStudy('cards')}>Карточки по понятиям →</button></div></>}
     </section>}
+    {review && <section className="iv-bubble iv-recheck" aria-label="Повторная проверка"><h2>Проверим через {REVIEW_DAYS} дня</h2>
+      <p>Навык «{review.label}» вернётся на главную, когда придёт время повторить.</p>
+      <button className="iv-text-button" onClick={() => downloadFile(reviewIcs(review.due, review.label), 'hack-the-case-check.ics')}>Добавить в календарь →</button></section>}
     <button className="iv-primary" onClick={onNext}>Следующий кейс <ArrowRight size={18}/></button>
   </>;
 }
