@@ -29,7 +29,7 @@ function makeSeed(skeleton, axes) {
   const [industry, label, transaction] = industries[industryIndex];
   const [truthId, truth, voice, diagnosticSignal] = skeleton.truths[truthIndex];
   const [twistId, twist] = twists[twistIndex];
-  const discovery = skeleton.id === 'discovery';
+  const discovery = skeleton.id === 'discovery' || skeleton.id === 'segmentation';
   const experiments = skeleton.id === 'experiments';
   const market = skeleton.id === 'market';
   const strategy = skeleton.id === 'strategy';

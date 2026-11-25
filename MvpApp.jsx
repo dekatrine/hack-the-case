@@ -44,7 +44,7 @@ export const SKELETON_BY_DIRECTION = {
   product_strategy: 'strategy',
   product_experiment: 'experiments',
   product_estimation: 'market',
-  product_segmentation: 'discovery',
+  product_segmentation: 'segmentation',
 };
 const DEFAULT_PRACTICE = {
   product_sense: 'evidence',

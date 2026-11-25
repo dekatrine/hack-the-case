@@ -105,7 +105,7 @@ function Debrief({ run, onNext, onBack, onReview, reviewing, reviewError, onStud
       {comparison.changes.length > 0 && comparison.unchanged > 0 && <small>Остальные навыки без заметных изменений.</small>}
     </section>}
     <section className="iv-bubble">
-      <h2>{skeleton.id === 'discovery' ? 'Что показали данные' : 'Что произошло'}</h2>
+      <h2>{['discovery', 'segmentation'].includes(skeleton.id) ? 'Что показали данные' : 'Что произошло'}</h2>
       <p>{seed.truth}</p>
       {seed.example && <p>Точка для сравнения с твоим решением — {seed.example.toLowerCase()}.</p>}
     </section></>}
