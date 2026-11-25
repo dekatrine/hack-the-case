@@ -25,7 +25,7 @@ export default function Progress({ onStart }) {
     <section className="home-card"><span className="home-label">История</span>
       <div className="home-skills">{attempts.slice(0, 8).map(item => <div className="home-row" key={item.id}>
         <span>{KIND[item.kind]} · {item.title}</span>
-        <span className="home-muted">{new Date(item.at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}{item.score !== null ? ` · ${item.score}` : ''}</span></div>)}</div></section>
+        <span className="home-muted" style={{ whiteSpace: "nowrap" }}>{new Date(item.at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}{item.score !== null ? ` · ${item.score}` : ''}</span></div>)}</div></section>
     {weakest && <section className="home-card home-next"><span className="home-label">Следующий шаг</span>
       <p>{weakest.label} — слабее всего. Один собес на этот навык даст больше всего.</p>
       <button type="button" className="home-btn" onClick={() => onStart(recommendedSkeleton(summary))}>Начать собес <ArrowRight size={18}/></button></section>}
