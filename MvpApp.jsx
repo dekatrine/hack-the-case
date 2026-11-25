@@ -37,6 +37,15 @@ const DIRECTION_ICONS = {
   product_estimation: Calculator,
   product_segmentation: UsersRound,
 };
+// Ready-made interview for each direction; used when a case has no data route of its own.
+export const SKELETON_BY_DIRECTION = {
+  product_sense: 'discovery',
+  product_execution: 'diagnosis',
+  product_strategy: 'strategy',
+  product_experiment: 'experiments',
+  product_estimation: 'market',
+  product_segmentation: 'discovery',
+};
 const DEFAULT_PRACTICE = {
   product_sense: 'evidence',
   product_execution: 'validation',
@@ -238,7 +247,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
         result: { caseText: item.caseText, caseIntro: item.caseIntro, caseRoute: route, variantId: item.params?.variantId, fingerprints: item.fingerprints || [] },
         settings: item.params, label: INTERVIEWS.find(type => type.id === item.params?.interviewType)?.label || item.title || 'Кейс',
       } }
-      : { skeleton: item?.params?.interviewType === 'product_execution' ? 'diagnosis' : 'discovery' });
+      : { skeleton: SKELETON_BY_DIRECTION[item?.params?.interviewType] || 'discovery' });
     go('interviews');
   };
   const go = (next) => { setError(''); setReviewError(''); if (next === 'generate') setVariantId('surprise'); setScreen(next); };

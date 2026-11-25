@@ -36,3 +36,11 @@ it('shows interviews, cases and history as tabs of Practice', () => {
   click('Кейсы');
   expect(screen.getByRole('button', { name: 'Кейсы' }).getAttribute('aria-pressed')).toBe('true');
 });
+
+it('maps every direction to an existing ready-made interview', async () => {
+  const { SKELETON_BY_DIRECTION } = await import('./MvpApp.jsx');
+  const { skeletons } = await import('./interviews/engine.js');
+  const ids = skeletons.map(item => item.id);
+  expect(Object.keys(SKELETON_BY_DIRECTION)).toHaveLength(6);
+  for (const id of Object.values(SKELETON_BY_DIRECTION)) expect(ids).toContain(id);
+});
