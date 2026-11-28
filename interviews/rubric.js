@@ -49,6 +49,20 @@ export function numberCheck(answer, seed) {
   return {};
 }
 
+const tokens = text => new Set((text.toLowerCase().match(/[\p{L}\p{N}]{4,}/gu) || []).map(word => word.slice(0, 6)));
+
+// Один и тот же текст, вставленный в разные ходы, не должен набирать баллы дважды.
+export function repeatsEarlier(run, text) {
+  const now = tokens(text);
+  if (now.size < 5) return false;
+  return (run.history || []).some(entry => {
+    const before = tokens(entry.assessment?.quote || '');
+    if (before.size < 5) return false;
+    const common = [...now].filter(word => before.has(word)).length;
+    return common / Math.min(now.size, before.size) >= 0.7;
+  });
+}
+
 export function assessTurn(run, move, answer, choice, opened) {
   const text = answer.trim();
   const matches = (move.checks || []).filter(pattern => new RegExp(pattern, 'i').test(text)).length;
@@ -72,7 +86,9 @@ export function assessTurn(run, move, answer, choice, opened) {
   const fact = move.fact === 'recovery' ? recoveryCheck(text, run.seed.recovery) : numberCheck(text, run.seed);
   if (fact.error) grade = Math.min(1, grade);
   if (fact.missing) grade = Math.min(1, grade);
-  return { grade, error: fact.error, quote: text || choice, dimension: move.dimension };
+  const repeat = repeatsEarlier(run, text);
+  if (repeat) grade = Math.min(1, grade);
+  return { grade, error: fact.error, repeat, quote: text || choice, dimension: move.dimension };
 }
 
 export function debrief(run) {

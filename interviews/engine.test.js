@@ -182,6 +182,17 @@ describe('калибровка слабых ответов, которые вы�
   it('W5: гладкая вода без действия и итога не набирает баллов', () => {
     expect(grade('pain_choice', 'Важно системно подойти к проблеме, учесть интересы пользователей и бизнеса, выстроить процессы и обеспечить взаимодействие для достижения результата.').grade).toBeLessThanOrEqual(1);
   });
+  it('W6: один и тот же текст в разных ходах не набирает баллы дважды', () => {
+    const strong = calibration.discovery.metric.replace('{recovery}', run.seed.recovery);
+    const first = assessTurn(run, turn('metric'), strong, '', []);
+    expect(first.grade).toBeGreaterThanOrEqual(2);
+    const history = [{ id: 'metric', label: 'm', kind: 'ASK', assessment: first }];
+    const again = assessTurn({ ...run, history }, turn('goal'), strong, '', []);
+    expect(again.repeat).toBe(true);
+    expect(again.grade).toBeLessThanOrEqual(1);
+    const fresh = assessTurn({ ...run, history }, turn('metric'), 'Совсем другой ответ: порог 25%, период 30 дней, остановлю тест, если отписки вырастут на 2%.', '', []);
+    expect(fresh.repeat).toBe(false);
+  });
   it('слабая попытка не попадает в карту решений до уточнения', () => {
     let state = { ...createRun(discovery, []), status: 'active' };
     state = advance(state, 'норм', '', 1000);
