@@ -388,6 +388,18 @@ CASE_ANGLES = {
     ),
 }
 
+def _checked(generate, label: str = "case") -> str:
+    """Run a generator; retry once if the case is structurally unusable."""
+    from app.case_check import case_problems
+    text = generate()
+    problems = case_problems(text) if text.strip() else ["пустой ответ"]
+    if problems:
+        retry = generate()
+        if retry.strip() and len(case_problems(retry)) <= len(problems):
+            return retry
+    return text
+
+
 def _generate_distinct_case(prompt: str, recent_cases: list[str], interview_type: str | None) -> str:
     available_angles = CASE_ANGLES.get(interview_type, ())
     evidence_by_angle = EXECUTION_ANGLES if interview_type == "product_execution" else {}
@@ -405,7 +417,7 @@ def _generate_distinct_case(prompt: str, recent_cases: list[str], interview_type
         angle = angles[0]
         if angle:
             prompt += f"\nИспользуй этот ракурс внутри выбранного контекста: {angle}. Покажи соответствующие данные и не раскрывай вывод."
-        candidate = call_yandex_gpt(CASE_GENERATION_SYSTEM, prompt, temperature=0.8)
+        candidate = _checked(lambda: call_yandex_gpt(CASE_GENERATION_SYSTEM, prompt, temperature=0.8))
         if candidate.strip() and angle in unused_angles:
             return f"{candidate}\n\n**Дополнительный срез данных**\n\n{unused_angles[angle]}"
         return candidate
@@ -419,7 +431,7 @@ def _generate_distinct_case(prompt: str, recent_cases: list[str], interview_type
                 "Данные должны явно отражать сравнение из заданного ракурса. Если контекст фиксирует причину, "
                 "адаптируй сравнение к ней. Не раскрывай готовый вывод."
             )
-        candidate = call_yandex_gpt(CASE_GENERATION_SYSTEM, generation_prompt, temperature=0.9)
+        candidate = _checked(lambda: call_yandex_gpt(CASE_GENERATION_SYSTEM, generation_prompt, temperature=0.9))
         words = tuple(re.findall(r"[^\W_]+", candidate.casefold()))
         if words and words not in previous_words:
             exhibit = unused_angles.get(angle)
@@ -548,6 +560,10 @@ def generate_case_stream(payload: GenerateCaseRequest) -> StreamingResponse:
                     yield sse({"type": "chunk", "text": delta})
             if not case_text.strip():
                 raise RuntimeError("пустой ответ модели")
+            from app.case_check import case_problems
+            if case_problems(case_text):
+                # Показанный текст неполный: пересоздаём, финальный объект заменит его.
+                case_text = _checked(lambda: call_yandex_gpt(CASE_GENERATION_SYSTEM, prompt, temperature=0.8)) or case_text
             yield sse({"type": "status", "stage": "route"})
             result = _case_response(payload, track_name, case_text)
             yield sse({"type": "done", **result.model_dump()})
