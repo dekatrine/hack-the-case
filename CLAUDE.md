@@ -69,6 +69,7 @@ Six ready-made interviews cover the six directions (`SKELETON_BY_DIRECTION` in `
 - `prompts.py` — all system prompts as constants
 - `data.py` — `CASE_STEPS`, `INDUSTRIES`, `DIFFICULTY_LEVELS`, `COURSE_MODULES`
 - `ratelimit.py` — sliding-window limiter keyed by `X-Client-Id`, with a higher per-IP ceiling; `case_check.py` — structural check for generated cases (structure + model coherence check, one retry)
+- `db.py` — storage: SQLite by default (`DB_PATH`), Postgres when `DATABASE_URL` is set (same SQL through a thin adapter); tests in `test_db.py` run on both (`TEST_DATABASE_URL` enables Postgres)
 - `schemas.py` — Pydantic request/response models
 - `config.py` — `Settings` reads env vars, falls back to `Secrets.toml` / `secrets.toml`
 

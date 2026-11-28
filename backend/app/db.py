@@ -1,8 +1,9 @@
-"""Хранилище пользователей и прогресса на SQLite (stdlib, без зависимостей).
+"""Хранилище пользователей и прогресса: SQLite (по умолчанию) или Postgres.
 
-Путь к базе задаётся env-переменной DB_PATH (по умолчанию backend/data/app.db).
-На Render подключи Persistent Disk и укажи DB_PATH на него, иначе диск
-эфемерный и база обнулится при redeploy. Локально работает из коробки.
+Если задана env-переменная DATABASE_URL (postgres://…, например Neon или
+Supabase), данные лежат в Postgres и переживают любой redeploy. Иначе SQLite:
+путь в DB_PATH (по умолчанию backend/data/app.db); на Render без Persistent
+Disk файл обнуляется при redeploy. Локально SQLite работает из коробки.
 
 Схема:
   users(id, token, created_at)
@@ -20,49 +21,109 @@ from pathlib import Path
 from threading import Lock
 from typing import Optional
 
+try:  # Postgres нужен только при DATABASE_URL
+    import psycopg
+except ImportError:  # pragma: no cover
+    psycopg = None
+
 _DEFAULT_PATH = Path(__file__).resolve().parents[1] / "data" / "app.db"
 _lock = Lock()
-_conn: Optional[sqlite3.Connection] = None
+_conn = None
 
 CODE_ALPHABET = string.ascii_uppercase + string.digits
 CODE_TTL_SECONDS = 600
 
 
-def _connect() -> sqlite3.Connection:
+SCHEMA = [
+    """CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        token TEXT UNIQUE NOT NULL,
+        created_at BIGINT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS progress (
+        user_id TEXT PRIMARY KEY REFERENCES users(id),
+        data TEXT NOT NULL,
+        updated_at BIGINT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS interview_runs (
+        user_id TEXT NOT NULL REFERENCES users(id),
+        id TEXT NOT NULL,
+        data TEXT NOT NULL,
+        updated_at BIGINT NOT NULL,
+        PRIMARY KEY (user_id, id)
+    )""",
+    """CREATE TABLE IF NOT EXISTS link_codes (
+        code TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        expires_at BIGINT NOT NULL
+    )""",
+]
+
+
+def database_url() -> str:
+    url = os.getenv("DATABASE_URL", "").strip()
+    # Некоторые хостинги отдают устаревшую схему postgres://
+    return "postgresql://" + url[len("postgres://"):] if url.startswith("postgres://") else url
+
+
+def using_postgres() -> bool:
+    return bool(database_url())
+
+
+def _status_sql() -> str:
+    """Выражение «поле status внутри JSON-колонки data»."""
+    return "(data::json->>'status')" if using_postgres() else "json_extract(data, '$.status')"
+
+
+class _PgConn:
+    """Тонкая обёртка над psycopg с интерфейсом sqlite3 (? → %s, autocommit,
+    одно переподключение, если соединение закрыл сервер: Neon так делает при простое)."""
+
+    def __init__(self, url: str) -> None:
+        self.url = url
+        self.conn = None
+        self._open()
+
+    def _open(self) -> None:
+        self.conn = psycopg.connect(self.url, autocommit=True, connect_timeout=15)
+
+    def execute(self, sql: str, params: tuple = ()):
+        sql = sql.replace("?", "%s")
+        try:
+            return self.conn.execute(sql, params)
+        except (psycopg.OperationalError, psycopg.InterfaceError):
+            self._open()
+            return self.conn.execute(sql, params)
+
+    def commit(self) -> None:  # autocommit
+        pass
+
+    def close(self) -> None:
+        try:
+            self.conn.close()
+        except Exception:
+            pass
+
+
+def _connect():
+    if using_postgres():
+        if psycopg is None:
+            raise RuntimeError("DATABASE_URL задан, но пакет psycopg не установлен")
+        conn = _PgConn(database_url())
+        for statement in SCHEMA:
+            conn.execute(statement)
+        return conn
     db_path = Path(os.getenv("DB_PATH", str(_DEFAULT_PATH)))
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(db_path), check_same_thread=False)
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.executescript(
-        """
-        CREATE TABLE IF NOT EXISTS users (
-            id TEXT PRIMARY KEY,
-            token TEXT UNIQUE NOT NULL,
-            created_at INTEGER NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS progress (
-            user_id TEXT PRIMARY KEY REFERENCES users(id),
-            data TEXT NOT NULL,
-            updated_at INTEGER NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS interview_runs (
-            user_id TEXT NOT NULL REFERENCES users(id),
-            id TEXT NOT NULL,
-            data TEXT NOT NULL,
-            updated_at INTEGER NOT NULL,
-            PRIMARY KEY (user_id, id)
-        );
-        CREATE TABLE IF NOT EXISTS link_codes (
-            code TEXT PRIMARY KEY,
-            user_id TEXT NOT NULL REFERENCES users(id),
-            expires_at INTEGER NOT NULL
-        );
-        """
-    )
+    for statement in SCHEMA:
+        conn.execute(statement)
+    conn.commit()
     return conn
 
 
-def get_conn() -> sqlite3.Connection:
+def get_conn():
     global _conn
     if _conn is None:
         _conn = _connect()
@@ -123,7 +184,9 @@ def create_link_code(user_id: str) -> dict:
         conn = get_conn()
         conn.execute("DELETE FROM link_codes WHERE expires_at < ?", (int(time.time()),))
         conn.execute(
-            "INSERT OR REPLACE INTO link_codes (code, user_id, expires_at) VALUES (?, ?, ?)",
+            """INSERT INTO link_codes (code, user_id, expires_at) VALUES (?, ?, ?)
+               ON CONFLICT(code) DO UPDATE SET user_id = excluded.user_id,
+                   expires_at = excluded.expires_at""",
             (code, user_id, expires_at),
         )
         conn.commit()
@@ -154,8 +217,8 @@ def claim_link_code(code: str) -> Optional[dict]:
 def get_interview_runs(user_id: str) -> list[dict]:
     with _lock:
         rows = get_conn().execute(
-            """SELECT data FROM interview_runs
-               WHERE user_id = ? AND json_extract(data, '$.status') = 'finished'
+            f"""SELECT data FROM interview_runs
+               WHERE user_id = ? AND {_status_sql()} = 'finished'
                ORDER BY updated_at DESC LIMIT 30""",
             (user_id,),
         ).fetchall()
@@ -165,13 +228,13 @@ def get_interview_runs(user_id: str) -> list[dict]:
 def discard_incomplete_interview_runs(user_id: str) -> list[dict]:
     with _lock:
         conn = get_conn()
-        condition = "user_id = ? AND json_extract(data, '$.status') IN ('briefing', 'active')"
-        with conn:
-            rows = conn.execute(
-                f"SELECT data FROM interview_runs WHERE {condition} ORDER BY updated_at DESC LIMIT 150",
-                (user_id,),
-            ).fetchall()
-            conn.execute(f"DELETE FROM interview_runs WHERE {condition}", (user_id,))
+        condition = f"user_id = ? AND {_status_sql()} IN ('briefing', 'active')"
+        rows = conn.execute(
+            f"SELECT data FROM interview_runs WHERE {condition} ORDER BY updated_at DESC LIMIT 150",
+            (user_id,),
+        ).fetchall()
+        conn.execute(f"DELETE FROM interview_runs WHERE {condition}", (user_id,))
+        conn.commit()
 
     seen = []
     for (data,) in rows:
