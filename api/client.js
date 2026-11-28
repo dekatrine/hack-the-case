@@ -15,10 +15,51 @@ function apiBase() {
   return configuredApiBaseUrl || detectedLocalBase || defaultApiBaseUrl;
 }
 
+// Анонимный идентификатор браузера: лимит ИИ считается на студента, а не на IP университета.
+export function clientId() {
+  try {
+    let id = localStorage.getItem('htc_client_id');
+    if (!id) {
+      id = (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+      localStorage.setItem('htc_client_id', id);
+    }
+    return id;
+  } catch {
+    return '';
+  }
+}
+
+function baseHeaders(extra = {}) {
+  const id = clientId();
+  return { 'Content-Type': 'application/json', ...(id ? { 'X-Client-Id': id } : {}), ...extra };
+}
+
+// Бесплатный хостинг засыпает: первый запрос может идти до минуты.
+// Если запрос длится дольше 5 секунд, показываем сообщение «сервер просыпается».
+let slowTimers = 0;
+function emitSlow(on) {
+  try { window.dispatchEvent(new CustomEvent('htc:api-slow', { detail: on })); } catch { /* no window */ }
+}
+export function warmServer() {
+  if (import.meta.env.DEV && !configuredApiBaseUrl) return;
+  try { fetch(`${apiBase()}/health`, { method: 'GET', cache: 'no-store' }).catch(() => {}); } catch { /* ignore */ }
+}
+
 async function fetchApi(path, options = {}) {
+  let slow = false;
+  const timer = setTimeout(() => { slow = true; slowTimers += 1; emitSlow(true); }, 5000);
+  try {
+    return await fetchApiInner(path, options);
+  } finally {
+    clearTimeout(timer);
+    if (slow) { slowTimers -= 1; if (slowTimers <= 0) { slowTimers = 0; emitSlow(false); } }
+  }
+}
+
+async function fetchApiInner(path, options = {}) {
   const opts = {
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options,
+    headers: baseHeaders(options.headers || {}),
   };
   const candidates = detectedLocalBase !== null || devCandidates.length === 0
     ? [apiBase()] : devCandidates;
@@ -92,7 +133,7 @@ function withEvent(promise, event, params) {
 async function generateStream(payload, onChunk) {
   const response = await fetch(`${apiBase()}/api/cases/generate/stream`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: baseHeaders(),
     body: JSON.stringify(payload),
   });
   if (!response.ok || !response.body) {

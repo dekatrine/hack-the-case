@@ -57,21 +57,40 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+def client_token(request: Request) -> str:
+    """Anonymous student token (X-Client-Id). Empty if absent or malformed."""
+    value = request.headers.get("x-client-id", "").strip()
+    if 8 <= len(value) <= 128 and value.replace("-", "").replace("_", "").isalnum():
+        return value
+    return ""
+
+
+# A classroom shares one IP (university NAT). The per-student limit is the
+# real budget; the IP ceiling only stops someone rotating fake ids.
+IP_CEILING_FACTOR = 8
+
+
 def build_rate_limit_middleware(general_limit: int, llm_limit: int):
     general = SlidingWindowLimiter(general_limit)
     llm = SlidingWindowLimiter(llm_limit)
+
+    general_ip = SlidingWindowLimiter(general_limit * IP_CEILING_FACTOR)
+    llm_ip = SlidingWindowLimiter(llm_limit * IP_CEILING_FACTOR)
 
     async def middleware(request: Request, call_next):
         path = request.url.path
         if path.startswith("/api"):
             ip = client_ip(request)
-            limiter = (
-                llm
-                if request.method == "POST"
-                and path.startswith(LLM_PATH_PREFIXES)
-                else general
-            )
-            if not limiter.allow(ip):
+            token = client_token(request)
+            is_llm = request.method == "POST" and path.startswith(LLM_PATH_PREFIXES)
+            if token:
+                checks = [
+                    ((llm if is_llm else general), f"t:{token}"),
+                    ((llm_ip if is_llm else general_ip), ip),
+                ]
+            else:
+                checks = [((llm if is_llm else general), ip)]
+            if not all(limiter.allow(key) for limiter, key in checks):
                 return JSONResponse(
                     status_code=429,
                     content={

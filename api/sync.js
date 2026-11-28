@@ -56,6 +56,7 @@ export async function apiFetch(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(localStorage.getItem('htc_client_id') ? { 'X-Client-Id': localStorage.getItem('htc_client_id') } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     ...options,

@@ -188,6 +188,12 @@ export default function MvpApp({ initialScreen = 'home' }) {
   const [configError, setConfigError] = useState('');
   const [error, setError] = useState('');
   const [saveError, setSaveError] = useState('');
+  const [serverSlow, setServerSlow] = useState(false);
+  useEffect(() => {
+    const onSlow = event => setServerSlow(Boolean(event.detail));
+    window.addEventListener('htc:api-slow', onSlow);
+    return () => window.removeEventListener('htc:api-slow', onSlow);
+  }, []);
   const [reviewError, setReviewError] = useState('');
   const [busy, setBusy] = useState('');
   const [hintBusy, setHintBusy] = useState(false);
@@ -395,6 +401,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
       </nav>
     </header>
     <main className={`mvp-main mvp-screen-${screen}`}>
+      {serverSlow && <p role="status" className="mvp-notice">Сервер просыпается после простоя — первый запрос может идти до минуты. Подожди, ничего не потеряется.</p>}
       {saveError && <p role="alert" className="mvp-notice">{saveError}</p>}
       {error && <p role="alert" className="mvp-notice">{error}</p>}
       {theoryError && <p role="alert" className="mvp-notice">{theoryError}</p>}
