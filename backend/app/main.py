@@ -390,9 +390,13 @@ CASE_ANGLES = {
 
 def _checked(generate, label: str = "case") -> str:
     """Run a generator; retry once if the case is structurally unusable."""
-    from app.case_check import case_problems
+    from app.case_check import case_problems, coherence_problem
     text = generate()
     problems = case_problems(text) if text.strip() else ["пустой ответ"]
+    if not problems and re.search(r"\*\*(Проблема|Данные)", text):
+        reason = coherence_problem(text, call_yandex_gpt)
+        if reason:
+            problems = [reason]
     if problems:
         retry = generate()
         if retry.strip() and len(case_problems(retry)) <= len(problems):

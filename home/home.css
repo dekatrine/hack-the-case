@@ -22,3 +22,8 @@
 .home-option { text-align: left; min-height: 48px; padding: 0 16px; border: 1px solid #dfe2dd; border-radius: 12px; background: #fff; font: inherit; cursor: pointer; }
 .home-option.on { border-color: #111315; background: #f3ffc2; font-weight: 650; }
 .home-btn:disabled { opacity: .45; cursor: default; }
+
+.home-consent { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: rgba(15, 16, 18, .88); }
+.home-consent-card { max-width: 520px; max-height: 90vh; overflow: auto; padding: 24px; border: 1px solid #373d40; border-radius: 16px; background: #191c1e; color: #f2f3f2; }
+.home-consent-card h2 { margin: 0 0 12px; }
+.home-consent-card ul { padding-left: 20px; margin: 0 0 12px; display: grid; gap: 8px; line-height: 1.45; }

@@ -37,3 +37,18 @@ def case_problems(text: str) -> list[str]:
     if text.strip() and not re.search(r"[.!?»)\d]\s*$", text.strip()):
         problems.append("текст обрывается")
     return problems
+
+
+def coherence_problem(text: str, call_model) -> str:
+    """Ask the model whether title, conditions and question agree. Empty string = fine
+    (or the check itself failed: a broken checker must never block generation)."""
+    import json
+    from app.prompts import CASE_COHERENCE_SYSTEM
+    try:
+        raw = call_model(CASE_COHERENCE_SYSTEM, text, temperature=0, max_tokens=80)
+        parsed = json.loads(re.sub(r"^\s*```(?:json)?\s*|\s*```\s*$", "", raw))
+    except Exception:
+        return ""
+    if isinstance(parsed, dict) and parsed.get("consistent") is False:
+        return str(parsed.get("reason") or "вопрос не согласован с условием")
+    return ""

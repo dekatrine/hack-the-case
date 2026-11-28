@@ -8,7 +8,7 @@ import { SEARCH_SLICES } from './cases/searchDiagnostic.js';
 vi.mock('./api/client.js', () => ({ api: { config: vi.fn(), generate: vi.fn(), requestEvidence: vi.fn(), evaluate: vi.fn(), coach: vi.fn() } }));
 const review = JSON.stringify({ summary: 'Проверь конверсию по этапам.', strengths: ['Есть гипотеза'], improvements: ['Нет расчёта'], topTips: ['Посчитай воронку'] });
 beforeEach(() => {
-  localStorage.clear(); vi.resetAllMocks(); window.scrollTo = vi.fn();
+  localStorage.clear(); localStorage.setItem('htc_consent_v1', '{}'); vi.resetAllMocks(); window.scrollTo = vi.fn();
   HTMLDialogElement.prototype.showModal ??= function () { this.open = true; };
   HTMLDialogElement.prototype.close ??= function () {
     this.open = false;

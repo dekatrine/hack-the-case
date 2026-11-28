@@ -2,7 +2,7 @@
 // при очистке сайта или смене устройства.
 const KEYS = [
   'htc_mvp_cases_v1', 'htc_interview_runs_v1', 'htc_interview_seen_v1', 'htc_onboarding_v1',
-  'htc_learning_path_v1', 'htc_skill_review_v1', 'htc_saved_theory_v1',
+  'htc_learning_path_v1', 'htc_skill_review_v1', 'htc_saved_theory_v1', 'htc_consent_v1',
 ];
 export const BACKUP_KEYS = KEYS;
 const FORMAT = 'hack-the-case-backup';

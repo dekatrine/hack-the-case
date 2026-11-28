@@ -33,9 +33,23 @@ class CaseCheckTests(unittest.TestCase):
         calls = iter(["**Проблема:** Падают продажи.", GOOD])
         self.assertEqual(_checked(lambda: next(calls)), GOOD)
 
+    def test_incoherent_case_is_regenerated_via_model_check(self):
+        other = GOOD.replace("Падает повторная покупка.", "Падает конверсия оплаты.")
+        gen = iter([GOOD, other])
+        verdicts = iter(['{"consistent": false, "reason": "вопрос про другое"}', '{"consistent": true}'])
+        with patch("app.main.call_yandex_gpt", side_effect=lambda *a, **k: next(verdicts)):
+            self.assertEqual(_checked(lambda: next(gen)), other)
+
+    def test_broken_checker_never_blocks(self):
+        from app.case_check import coherence_problem
+        self.assertEqual(coherence_problem(GOOD, lambda *a, **k: "не json"), "")
+        def boom(*a, **k): raise RuntimeError("down")
+        self.assertEqual(coherence_problem(GOOD, boom), "")
+
     def test_good_case_is_not_regenerated(self):
         count = []
-        _checked(lambda: count.append(1) or GOOD)
+        with patch("app.main.call_yandex_gpt", return_value='{"consistent": true}'):
+            _checked(lambda: count.append(1) or GOOD)
         self.assertEqual(len(count), 1)
 
 

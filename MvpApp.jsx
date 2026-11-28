@@ -17,6 +17,7 @@ import { CASES_KEY } from './home/attempts.js';
 import Home from './home/Home.jsx';
 import Progress from './home/Progress.jsx';
 import Onboarding from './home/Onboarding.jsx';
+import Consent from './home/Consent.jsx';
 import { needsSplit, preferredSkeleton, readOnboarding } from './home/onboarding.js';
 import { debrief } from './interviews/rubric.js';
 import SearchDiagnostic from './cases/SearchDiagnostic.jsx';
@@ -391,6 +392,7 @@ export default function MvpApp({ initialScreen = 'home' }) {
   if (screen === 'interviews') return <Interview start={interviewStart} onExit={() => { setInterviewStart(null); go('home'); }} onStudy={(target, params = {}) => { setInterviewStart(null); setStudyLesson(params.lessonId || null); if (params.chapter) setBookChapter(params.chapter); if (target === 'cards') setTheorySavedOnly(false); go(target); }}/>;
 
   return <div className="mvp-app">
+    <Consent/>
     <header className="mvp-header" data-focus={screen === 'solve' ? 'true' : undefined}>
       <button className="clean-brand" disabled={!!busy} onClick={() => go('library')} aria-label="Hack the Case — практика"><span className="mark">H</span><b>Hack the Case</b></button>
       <nav aria-label="Основная навигация">
