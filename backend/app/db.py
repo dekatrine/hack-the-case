@@ -85,7 +85,7 @@ class _PgConn:
         self._open()
 
     def _open(self) -> None:
-        self.conn = psycopg.connect(self.url, autocommit=True, connect_timeout=15)
+        self.conn = psycopg.connect(self.url, autocommit=True, connect_timeout=15, prepare_threshold=None)  # без prepared statements: совместимо с пулером Neon (PgBouncer)
 
     def execute(self, sql: str, params: tuple = ()):
         sql = sql.replace("?", "%s")
