@@ -23,7 +23,7 @@ export default function Onboarding({ onDone }) {
   return <div className="home">
     <div className="home-eyebrow">{step + 1} из {STEPS.length}</div>
     <h1>{step === 0 ? 'Готовишься к кейс-собесу?' : title}</h1>
-    <p className="home-muted">{step === 0 ? 'Три вопроса, чтобы подобрать первый собес. Займёт 30 секунд. Без регистрации.' : 'Это нужно, чтобы подобрать первый собес.'}</p>
+    <p className="home-muted">{step === 0 ? 'Три вопроса, чтобы подобрать первый собес. Займёт 30 секунд. Без регистрации. Прогресс хранится в твоём браузере.' : 'Это нужно, чтобы подобрать первый собес.'}</p>
     {step === 0 && <span className="home-label">{title}</span>}
     <div className="home-options" role="radiogroup" aria-label={title}>
       {options.map(([value, label]) => <button type="button" role="radio" aria-checked={answers[id] === value} key={value}

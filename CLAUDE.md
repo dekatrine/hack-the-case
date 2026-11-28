@@ -50,10 +50,10 @@ VITE_API_BASE_URL=http://localhost:8000 npm run dev
 
 Modules:
 - `interviews/` — interview engine. `skeletons/*.json` define phases and turns (kinds ASK, DATA, CLARIFY, CHALLENGE, TWIST, DEMAND); `seeds.js` builds a random case per run (industry × hidden truth × twist × trap, with numbers, scenes, clues); `engine.js` runs a session; `rubric.js` grades answers locally by 7 skills (checks are regexes, plus `numberCheck` against the seed's numbers); `compare.js` compares with the previous interview; `configured.js` builds an LLM-generated interview ("configured"), graded by `/api/evaluate`; `Interview.jsx` is the UI (draft kept 24 h, drill on the weakest answer). `calibration.json` holds a strong answer for every turn of every skeleton.
-- `home/` — home, progress, onboarding. `attempts.js` is the single read model over interviews and case attempts; `progress.js` computes the summary, weekly rhythm and which scenario to recommend for the weakest skill; `reminder.js` builds calendar (.ics) files (weekly, and one-off skill check); `review.js` keeps one 3-day skill re-check (`htc_skill_review_v1`) scheduled by the debrief when the weakest skill is under 2.5; Home shows «Пора повторить» when it is due.
+- `home/` — home, progress, onboarding. `attempts.js` is the single read model over interviews and case attempts; `progress.js` computes the summary, weekly rhythm and which scenario to recommend for the weakest skill; `reminder.js` builds calendar (.ics) files (weekly, and one-off skill check); `review.js` keeps one 3-day skill re-check (`htc_skill_review_v1`) scheduled by the debrief when the weakest skill is under 2.5; Home shows «Пора повторить» when it is due; `backup.js` + `BackupCard.jsx` export/import progress as a JSON file (Progress screen).
 - `cases/` — case library and the self-paced case flow (`CaseFlow.jsx`, `caseWriting.js`).
 - `learning/` — lessons, theory, flashcards.
-- `api/client.js` — fetch wrapper (base URL from `VITE_API_BASE_URL`); `api/sync.js` mirrors some localStorage keys to the server.
+- `api/client.js` — fetch wrapper (sends `X-Client-Id`, a random per-browser id used for per-student rate limits; emits `htc:api-slow` after 5 s so the app shows a «server is waking up» notice) (base URL from `VITE_API_BASE_URL`); `api/sync.js` mirrors some localStorage keys to the server.
 
 localStorage keys: `htc_mvp_cases_v1` (cases and their attempts), `htc_interview_runs_v1` (finished interviews only), `htc_interview_draft_v1` (unfinished interview, 24 h), `htc_interview_seen_v1` (repeat protection), `htc_onboarding_v1`, `htc_skill_review_v1`. Cases and onboarding are local-only; finished interviews are pushed to the server by `interviews/storage.js`.
 
@@ -68,6 +68,7 @@ Six ready-made interviews cover the six directions (`SKELETON_BY_DIRECTION` in `
 - `llm.py` — `call_yandex_gpt()` — single function wrapping YandexGPT with retry logic
 - `prompts.py` — all system prompts as constants
 - `data.py` — `CASE_STEPS`, `INDUSTRIES`, `DIFFICULTY_LEVELS`, `COURSE_MODULES`
+- `ratelimit.py` — sliding-window limiter keyed by `X-Client-Id`, with a higher per-IP ceiling; `case_check.py` — structural check for generated cases (one retry)
 - `schemas.py` — Pydantic request/response models
 - `config.py` — `Settings` reads env vars, falls back to `Secrets.toml` / `secrets.toml`
 

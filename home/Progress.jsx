@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { recommendedSkeleton } from './progress.js';
 import { Trend, useProgress } from './Home.jsx';
+import BackupCard from './BackupCard.jsx';
 
 const KIND = { interview: 'Собес', case: 'Кейс' };
 import './home.css';
@@ -11,7 +12,8 @@ export default function Progress({ onStart }) {
   const { scores, skills, weakest } = summary;
   if (!scores.length) return <div className="home"><div className="home-eyebrow">Прогресс</div><h1>Здесь появится твой рост</h1>
     <p className="home-muted">Пройди первый собес, и тут будут баллы и навыки.</p>
-    <button type="button" className="home-btn" onClick={() => onStart('discovery')}>Начать собес <ArrowRight size={18}/></button></div>;
+    <button type="button" className="home-btn" onClick={() => onStart('discovery')}>Начать собес <ArrowRight size={18}/></button>
+    <BackupCard/></div>;
   const change = scores.length > 1 ? scores.at(-1) - scores[0] : null;
   return <div className="home">
     <div className="home-eyebrow">Прогресс · {summary.total} занятий</div>
@@ -29,6 +31,7 @@ export default function Progress({ onStart }) {
     {weakest && <section className="home-card home-next"><span className="home-label">Следующий шаг</span>
       <p>{weakest.label} — слабее всего. Один собес на этот навык даст больше всего.</p>
       <button type="button" className="home-btn" onClick={() => onStart(recommendedSkeleton(summary))}>Начать собес <ArrowRight size={18}/></button></section>}
+    <BackupCard/>
     <p className="home-muted">Навыки считаются только по собесам из готовых сценариев ({summary.skillRuns}). У настроенных интервью в график попадает итоговый балл после ИИ-разбора.</p>
   </div>;
 }
